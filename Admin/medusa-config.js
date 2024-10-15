@@ -35,9 +35,9 @@ const VENDOR_CORS = process.env.VENDOR_CORS || "http://localhost:8009";
 const UPLOADS_CORS = process.env.UPLOADS_CORS || "http://localhost:8003";
 
 // Comment out the old DATABASE_URL
-//const DATABASE_URL = process.env.DATABASE_URL || "postgres://default:tqfuhs07uyxe@ep-muddy-dew-a1j7hwiv.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require";
+const DATABASE_URL = process.env.DATABASE_URL || "postgres://default:tqfuhs07uyxe@ep-muddy-dew-a1j7hwiv.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require";
 
-// DigitalOcean setup: New database connection configuration
+/*DigitalOcean setup: New database connection configuration
 const DB_USERNAME = process.env.DB_USERNAME;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 const DB_HOST = process.env.DB_HOST;
@@ -47,7 +47,7 @@ const DB_DATABASE = process.env.DB_DATABASE;
 // DigitalOcean setup: Construct DATABASE_URL
 const DATABASE_URL =
   `postgres://${DB_USERNAME}:${DB_PASSWORD}` +
-  `@${DB_HOST}:${DB_PORT}/${DB_DATABASE}`;
+  `@${DB_HOST}:${DB_PORT}/${DB_DATABASE}`;  */
 
 const POSTGRES_SCHEMA = process.env.POSTGRES_SCHEMA;
 
