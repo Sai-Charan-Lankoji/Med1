@@ -1,7 +1,8 @@
-import { EntityManager } from 'typeorm';
+import { EntityManager, ILike, IsNull } from 'typeorm';
 import { buildQuery, FindConfig, PublishableApiKey, Selector, TransactionBaseService } from '@medusajs/medusa';
 import { PublishableApiKeySalesChannel } from '@medusajs/medusa';
 import { Vendor } from '../models/vendor';
+import { notNull } from 'jest-mock-extended';
 
 class PublishableApiKeyService extends TransactionBaseService {
   private readonly publishableapikeyRepository: any;
@@ -41,13 +42,19 @@ class PublishableApiKeyService extends TransactionBaseService {
     const [publishableapikeys] = await this.listAndCount(selector, config);
     return publishableapikeys;
   }
-
-  async getAllKeys(): Promise<[PublishableApiKey[], number]> {
-    return await this.runAtomicPhase(async (manager) => {
+   
+  
+  async retrieve_(selector: Selector<PublishableApiKey>, config?: FindConfig<PublishableApiKey>): Promise<PublishableApiKey | never>{
+    return this.runAtomicPhase(async (manager) => {
       const publishableapikeyRepo = manager.withRepository(this.publishableapikeyRepository);
-      return await publishableapikeyRepo.findAndCount();
+      const apiKey = await publishableapikeyRepo.findOne(selector, config);
+      if (!apiKey) {
+        throw new Error("Publishable API not found");
+      }
+      return apiKey;
     });
   }
+    
 
   async getSalesChannelKeys(salesChannelId: string): Promise<PublishableApiKeySalesChannel[]> {
     return await this.runAtomicPhase(async (manager) => {

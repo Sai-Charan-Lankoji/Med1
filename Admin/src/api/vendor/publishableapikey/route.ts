@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import PublishableApiKeyService from "../../../services/publishableapikey";
+import { ILike } from 'typeorm';
 
 const getPublishableApiKeyService = (req: MedusaRequest) => {
   try {
@@ -9,32 +10,23 @@ const getPublishableApiKeyService = (req: MedusaRequest) => {
     return null;
   }
 };
-
+export const GET = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+    const publishableApiKeyService = getPublishableApiKeyService(req);
+    if (!publishableApiKeyService) {
+      console.error("PublishableApiKeyService could not be resolved.");
+      res.status(500).json({ error: "PublishableApiKeyService could not be resolved." });
+      return;
+    }
+    const selector = { title: ILike('%') };
+    const publishableApiKeys = await publishableApiKeyService.listAndCount(selector);
+    res.status(200).json(publishableApiKeys);
+  } catch (error) {
+    console.error("Error in GET /publishableapikeys:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+};
  
-
-// POST route to create a new publishable API key
-// export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<void> => {
-//   try {
-//     const publishableApiKeyService = getPublishableApiKeyService(req);
-    
-//     if (!publishableApiKeyService) {
-//       res.status(500).json({ error: "Publishable API Key service could not be resolved." });
-//       return;
-//     }
-
-//     const { salesChannelId, keyData } = req.body;
-
-//     if (!salesChannelId || !keyData) {
-//       res.status(400).json({ error: "Sales channel ID and key data are required." });
-//       return;
-//     }
-
-//     // Create a new API key
-//     const newApiKey = await publishableApiKeyService.create(salesChannelId, keyData);
-    
-//     res.status(201).json({ status: "success", apiKey: newApiKey });
-//   } catch (error) {
-//     console.error("Error in POST /vendor/publishable-api-keys:", error);
-//     res.status(500).json({ error: error.message || "An unknown error occurred." });
-//   }
-// };

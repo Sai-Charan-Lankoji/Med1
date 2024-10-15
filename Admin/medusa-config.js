@@ -51,7 +51,7 @@ const DATABASE_URL =
 
 const POSTGRES_SCHEMA = process.env.POSTGRES_SCHEMA;
 
-const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
+//const REDIS_URL = process.env.REDIS_URL || "redis://localhost:6379";
 
 const plugins = [
   `medusa-fulfillment-manual`,
@@ -67,7 +67,7 @@ const plugins = [
     /** @type {import('@medusajs/admin').PluginOptions} */
     options: {
       autoRebuild: true,
-     // serve: process.env.NODE_ENV === "development", //ensures that admin only works in development mode
+      serve: process.env.NODE_ENV === "development", //ensures that admin only works in development mode
       develop: {
         open: process.env.OPEN_BROWSER !== "false",
       },
