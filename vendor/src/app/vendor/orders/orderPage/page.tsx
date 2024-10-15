@@ -272,7 +272,7 @@ const Order = () => {
       <div className="flex flex-col gap-4">
         {currentOrders.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
-            <p>No Orders placed yet</p>
+            <p>No Orders placed yet.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
