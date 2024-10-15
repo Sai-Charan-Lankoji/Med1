@@ -309,7 +309,7 @@ const Order = () => {
                     className="hover:bg-gray-50 text-[rgb(17, 24, 39)] hover:cursor-pointer"
                   >
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center hover:text-violet-500">
-                      #{index+1}
+                      {order.display_id}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center">
                       <Tooltip
