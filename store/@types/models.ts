@@ -159,7 +159,7 @@ export const designApparels: IApparel[] = [
   },
   {
     url: "https://ik.imagekit.io/zz7harqme/20200311103921748.png?updatedAt=1727375559699",
-    side: "leftsholder",
+    side: "leftshoulder",
     selected: false,
     color: "#ffffff",
     width: 130,
@@ -167,7 +167,7 @@ export const designApparels: IApparel[] = [
   },
   {
     url: "https://ik.imagekit.io/zz7harqme/202003111039219177.png?updatedAt=1727375961359",
-    side: "rightshulder",
+    side: "rightshoulder",
     selected: false,
     color: "#ffffff",
     width: 130,
