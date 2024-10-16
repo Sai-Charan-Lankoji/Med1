@@ -37,7 +37,7 @@ function setReducer(
     }
     case "RESTORE_DESIGN": {
       if (!state.canvas) return state;
-      if (action.payload != null){
+      if (action.payload != null) {
         state.canvas.loadFromJSON(action.payload, () => {
           state.canvas?.renderAll();
         });
@@ -253,10 +253,10 @@ function setReducer(
       if (!state.canvas) {
         return state;
       }
-      state.canvas.isDrawingMode = false; 
+      state.canvas.isDrawingMode = false;
       fabric.Image.fromURL(
-        action.payload, 
-       
+        action.payload,
+
         function (image) {
           if (!image.width) return;
           // @ts-ignore
@@ -275,8 +275,8 @@ function setReducer(
           });
           state.canvas?.add(image);
           state.canvas?.centerObject(image);
-        }, 
-        
+        },
+
         { crossOrigin: "anonymous" }
       );
       if (!state.pauseSaving) state.undoStack.push(state.canvas?.toJSON());
@@ -358,32 +358,41 @@ function setReducer(
     case "UNDO":
       {
         state.pauseSaving = true;
-        if (state.undoStack.length == 0) return state;
-        state.redoStack.push(state.undoStack.pop());
-        let previousState = state.undoStack[state.undoStack.length - 1];
-        if (previousState == null) {
-          previousState = "{}";
-        }
-        state.canvas?.loadFromJSON(previousState, () => {
-          state.canvas?.renderAll();
-        });
-        state.pauseSaving = false;
-      }
-      return state;
-    case "REDO":
-      {
-        state.pauseSaving = true;
-        if (state.redoStack.length == 0) return state;
-        let state1 = state.redoStack.pop();
-        if (state1 != null) {
-          state.undoStack.push(state1);
-          state.canvas?.loadFromJSON(state1, () => {
+        if (state.undoStack.length === 0) return state; // Ensure undoStack has items
+
+        const previousState = state.undoStack.pop();
+        state.redoStack.push(previousState);
+
+        const lastState = state.undoStack[state.undoStack.length - 1] || "{}";
+
+        // Check if lastState exists before loading
+        if (lastState !== "{}") {
+          state.canvas?.loadFromJSON(lastState, () => {
             state.canvas?.renderAll();
           });
         }
+
         state.pauseSaving = false;
       }
-      return state;
+      return { ...state }; // Return updated state copy
+
+    case "REDO":
+      {
+        state.pauseSaving = true;
+        if (state.redoStack.length === 0) return state; // Ensure redoStack has items
+
+        const nextState = state.redoStack.pop();
+        if (nextState) {
+          state.undoStack.push(nextState);
+          state.canvas?.loadFromJSON(nextState, () => {
+            state.canvas?.renderAll();
+          });
+        }
+
+        state.pauseSaving = false;
+      }
+      return { ...state }; // Return updated state copy
+
     default:
       return state;
   }
