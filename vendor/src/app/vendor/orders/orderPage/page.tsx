@@ -28,8 +28,6 @@ const Order = () => {
   const { data: OrdersData } = useGetOrders();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { data: customersData } = useGetCustomers();
-  console.log("Saleschannel Data is: ", saleschannelsData);
-  console.log("PAGE Orders Data: ", OrdersData);
   const [currentPage, setCurrentPage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
@@ -60,7 +58,6 @@ const Order = () => {
     };
   });
 
-  console.log("Matching Sales Channel:", storesWithMatchingSalesChannels)
   const handleInputChange = (e: { target: { name: any; checked: any; }; }) => {
     const { name, checked } = e.target;
     setFilters((prevFilters) => ({ ...prevFilters, [name]: checked }));
