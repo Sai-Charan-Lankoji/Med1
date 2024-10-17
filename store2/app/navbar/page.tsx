@@ -74,7 +74,7 @@ const Navbar: React.FC = () => {
               <Image
                 src={navlogoS}
                 alt="Logo"
-                className="h-12 w-auto transition-transform duration-200 hover:scale-105"
+                className="h-20 w-auto transition-transform duration-200 hover:scale-105"
                 height={60}
                 width={60}
               />
