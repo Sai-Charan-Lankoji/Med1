@@ -33,6 +33,7 @@ import { Vendor } from "../../../models/vendor";
 import VendorNew from "./createVendor/page";
 import CircularLetter from "../../components/cust-utils/circular-letter";
 import { RouteConfig } from "@medusajs/admin";
+import { MEDUSA_BACKEND_URL } from "../../components/constants/medusa-backend-url";
 
 const PAGE_SIZE = 10;
 const TABLE_HEIGHT = (PAGE_SIZE + 1) * 48;
@@ -44,7 +45,7 @@ const Vendors = () => {
   const navigate = useNavigate();
 
   async function getVendors(query: string) {
-    const url = `http://localhost:9000/admin/vendors?selector=${query}`;
+    const url = `${MEDUSA_BACKEND_URL}/admin/vendors?selector=${query}`;
     try {
       const response = await fetch(url, {
         method: "GET",
@@ -254,7 +255,7 @@ const VendorTableRowActions = ({ row }: any) => {
 
     try {
       const deleteResponse = await fetch(
-        `http://localhost:9000/admin/vendors/${row.original.id}`,
+        `${MEDUSA_BACKEND_URL}/admin/vendors/${row.original.id}`,
         {
           method: "DELETE",
           headers: {
