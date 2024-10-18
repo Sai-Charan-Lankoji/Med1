@@ -26,14 +26,19 @@ import * as React from "react";
 import { GetTextStyles } from "../shared/draw";
 import { useCart } from "@/context/cartContext";
 import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
-import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
+import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload"; 
+import {useUserContext} from "../context/userContext" 
+import { useRouter } from "next/navigation";
+
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
 const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
-export default function DesignArea(): React.ReactElement {
+export default function DesignArea(): React.ReactElement {  
+  const router = useRouter() 
+  const {customerToken} = useUserContext()
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
   const { svgcolors, dispatchColorPicker } =
@@ -268,20 +273,27 @@ export default function DesignArea(): React.ReactElement {
       dispatchMenu({ type: "SWITCH_TO_TEXT", payload: true, props: textProps });
       dispatchProps({ type: "SELECTED_PROPS", payload: textProps });
     }
-  };
+  };   
 
-  const addDesignToCart = () => {
+
+
+  const addDesignToCart = () => { 
+    if (!customerToken) {
+      router.push("/auth");
+    
+    }else{
+
+    
     if (!design?.pngImage) return;
     const newItem = {
       title: "product",
-      thumbnail: design.pngImage ,
+      thumbnail: design.pngImage,
       price: 100,
       color: design.apparel.color,
       id: nanoid(),
       quantity: 1,
       side: design.apparel.side,
       is_active: design.isactive,
-
     };
     addToCart(newItem);
 
@@ -293,7 +305,7 @@ export default function DesignArea(): React.ReactElement {
         side: newItem.side,
         quantity: newItem.quantity,
       },
-      thumbnail_images: newItem.thumbnail,
+      thumbnail_images: design.uploadedImages?.[0] || newItem.thumbnail,
       is_active: newItem.is_active,
       archive: "false",
       customer_id: sessionStorage.getItem("customerId"),
@@ -308,24 +320,26 @@ export default function DesignArea(): React.ReactElement {
       },
     });
 
-      const ApparelUploadData = {
-        url: design.uploadedImages?.[0],
-        apparelDesign_id: nanoid(),
-      };
+    const ApparelUploadData = {
+      url: design.uploadedImages?.[0],
+      apparelDesign_id: nanoid(),
+    };
 
-      createApparelUpload(ApparelUploadData, {
-        onSuccess: () => {
-          console.log("Image uploaded successfully", ApparelUploadData);
-        },
-        onError: (err) => {
-          console.error("Error uploading image:", err);
-        },
-      });
-    //  else {
-    //   console.log("No valid upload URL, skipping API call");
-    // }
-  };
+    createApparelUpload(ApparelUploadData, {
+      onSuccess: () => {
+        console.log("Image uploaded successfully", ApparelUploadData);
+      },
+      onError: (err) => {
+        console.error("Error uploading image:", err);
+      },
+    }); 
 
+  }
+  }; 
+
+
+
+  
   return (
     <div>
       <div className="flex justify-between  mb-1 ">

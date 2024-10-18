@@ -1,6 +1,7 @@
 import type { LineItem, MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import CartService from "../../../services/cart"; // Adjust the import path as necessary
-import { CartCreateProps } from "@medusajs/medusa/dist/types/cart";
+import { CartCreateProps } from "@medusajs/medusa/dist/types/cart"; 
+
 
 const getCartService = (req: MedusaRequest): CartService | null => {
   try {

@@ -8,7 +8,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useCreateOrder } from "../hooks/useCreateOrder";
-import { XMarkMini } from "@medusajs/icons";
+import { XMarkMini } from "@medusajs/icons"; 
 
 interface OrderData {
   line_items: Array<{
