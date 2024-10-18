@@ -1,17 +1,13 @@
-"use client";
+import React, { useState, useContext } from "react";
 import { FaArrowLeft, FaUpload } from "react-icons/fa";
 import { IconContext } from "react-icons/lib";
-import { useState, ChangeEvent, useContext, useEffect } from "react";
 import { MenuContext } from "../context/menucontext";
 import { DesignContext } from "../context/designcontext";
 import { useDispatch } from "react-redux";
-import { DesignEnums, Item } from "@/@types/models"; 
-import { useUploadImage } from "@/app/hooks/useUploadImage";
+import { DesignEnums, Item } from "@/@types/models";
+import Image from 'next/image';
 
-const imageMimeType = /image\/(png|jpg|jpeg)/i;
-
-export function UploadImage(): React.ReactElement { 
-  const {  mutate: uploadImage } = useUploadImage();
+export function UploadImage(): React.ReactElement {
   const { menus, dispatchMenu } = useContext(MenuContext)!;
   const dispatchForCanvas = useDispatch();
   const { designs, dispatchDesign } = useContext(DesignContext)!;
@@ -23,93 +19,53 @@ export function UploadImage(): React.ReactElement {
     menus.addText ||
     menus.uploadDesign;
 
-  const [imageUrl, setImageUrl] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if(!file)return; 
+  const onImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) {
+      console.warn("No file was chosen");
+      return;
+    }
+
+    setIsUploading(true);
+
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
     try {
-      const fileUrl = await uploadImage(file); 
-      console.log("this is file url: " + fileUrl); 
-      setImageUrl(fileUrl);
-      dispatchDesign({ type: "UPLOADED_IMAGE", payload: fileUrl });
-      
-    } catch (error) {
-      console.error("Error during file upload:", error);
-      
-    }
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
 
+      const data = await res.json();
 
-    // if (file && file.type.match(imageMimeType)) {
-    //   setFile(file);
-    // } else {
-    //   alert("Image mime type is not valid");
-    // }
-  };
-
-  useEffect(() => {
-    let fileReader: FileReader | null = null;
-    let isCancel = false;
-
-    if (file) {
-      fileReader = new FileReader();
-      fileReader.onload = (e: ProgressEvent<FileReader>) => {//+
-        const result = e.target?.result;//+
-        if (result && !isCancel && typeof result === 'string') {//+
-          dispatchDesign({ type: "UPLOADED_IMAGE", payload: result });//+
-        }//+
-      };//+
-      fileReader.readAsDataURL(file);
-    }
-    return () => {
-      isCancel = true;
-      if (fileReader?.readyState === 1) {
-        fileReader.abort();
+      if (!res.ok) {
+        throw new Error(data.error || 'Upload failed');
       }
-    };
-  }, [file, dispatchDesign]);
 
-  const uploadImageToServer = async (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-  
-    // const formData = new FormData();
-    // formData.append("file", file);
-  
-    try { 
+      console.log('Upload image Url: ' + data.fileUrl);
+      dispatchDesign({ type: "UPLOADED_IMAGE", payload: data.fileUrl });
 
-      const fileUrl = await uploadImage(file); 
-      console.log("this is file url: " + fileUrl);
-
-      // Change this URL to your server endpoint
-      // const res = await fetch("YOUR_SERVER_URL/upload", {
-      //   method: "POST",
-      //   body: formData,
-      // }); 
-
-      setImageUrl(fileUrl);
-      dispatchDesign({ type: 'UPLOADED_IMAGE', payload: fileUrl });
-  
-      // if (!res.ok) {
-      //   console.error("Error uploading image");
-      //   return;
-      // }
-  
-      // const data: { fileUrl: string } = await res.json();
-      // setImageUrl(data.fileUrl);
-      // dispatchDesign({ type: "UPLOADED_IMAGE", payload: data.fileUrl });
+      const imageItem: Item = {
+        uploadImageUrl: data.fileUrl,
+        designItem: DesignEnums.image,
+        isNew: true,
+      };
+      dispatchDesign({ type: "ADD_UPLOAD_DESIGN", payload: imageItem });
+      dispatchForCanvas({ type: "IMAGE", payload: data.fileUrl });
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error uploading image:", error);
+      alert(`Failed to upload image: ${error instanceof Error ? error.message : String(error)}`);
+    } finally {
+      setIsUploading(false);
     }
-  
-    // Reset file input type to trigger change event
-    e.target.type = "text";
-    e.target.type = "file";
-  };
-  
 
-  const handleImageClick = (e: any, imageUrl: string) => {
+    e.target.value = ""; // Reset file input
+  };
+
+  const handleImageClick = (e: React.MouseEvent, imageUrl: string) => {
     e.preventDefault();
     const imageItem: Item = {
       uploadImageUrl: imageUrl,
@@ -125,40 +81,47 @@ export function UploadImage(): React.ReactElement {
       <div className="border-r items-center text-black bg-white p-3 mt-1 min-h-full">
         <button
           className="relative inline-flex items-center justify-center p-0.5 mb-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-b from-purple-800 to-purple-800 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800"
-          onClick={() => dispatchMenu({ type: "TO_UPLOAD_IMAGE", payload: false })}
+          onClick={() =>
+            dispatchMenu({ type: "TO_UPLOAD_IMAGE", payload: false })
+          }
         >
-          <IconContext.Provider value={{ color: "white" }}>
+          <IconContext.Provider
+            value={{ color: "white", className: "global-class-name" }}
+          >
             <div className="p-3">
               <FaArrowLeft />
             </div>
           </IconContext.Provider>
-          <div className="relative px-2 py-2 bg-white dark:bg-gray-900 rounded-md">
+          <div className="relative px-2 py-2 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
             <p className="pl-4">Back</p>
           </div>
         </button>
-
         <div className="text-center">
           <div className="uploadOuter">
             <span className="dragBox">
               Drag and Drop image here
-              <input type="file" onChange={handleFileChange} />
+              <input type="file" id="uploadFile" onChange={onImageFileChange} accept="image/*" />
             </span>
           </div>
           <strong>OR</strong>
           <br />
-          <button className="relative inline-flex items-center justify-center mt-2 p-0.5 mb-2 text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-b from-purple-800 to-purple-800 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white">
-            <IconContext.Provider value={{ color: "white" }}>
+          <button className="relative inline-flex items-center justify-center mt-2 p-0.5 mb-2 overflow-hidden text-sm font-medium text-gray-900 rounded-lg group bg-gradient-to-b from-purple-800 to-purple-800 group-hover:from-purple-600 group-hover:to-blue-500 hover:text-white dark:text-white focus:ring-4 focus:outline-none focus:ring-blue-300 dark:focus:ring-blue-800" disabled={isUploading}>
+            <IconContext.Provider
+              value={{ color: "white", className: "global-class-name" }}
+            >
               <div className="p-3">
                 <FaUpload />
               </div>
             </IconContext.Provider>
-            <div className="relative px-2 py-2 bg-white dark:bg-gray-900 rounded-md">
-              <label className="relative overflow-hidden">
-                <p className="pl-4">Select Image</p>
+            <div className="relative px-2 py-2 transition-all ease-in duration-75 bg-white dark:bg-gray-900 rounded-md group-hover:bg-opacity-0">
+              <label className="relative overflow-hidden cursor-pointer">
+                <p className="pl-4">{isUploading ? 'Uploading...' : 'Select Image'}</p>
                 <input
-                  style={{ display: "none" }}
                   type="file"
-                  onChange={uploadImageToServer}
+                  onChange={onImageFileChange}
+                  className="hidden"
+                  accept="image/*"
+                  disabled={isUploading}
                 />
               </label>
             </div>
@@ -166,18 +129,20 @@ export function UploadImage(): React.ReactElement {
         </div>
 
         <div className="grid grid-cols-4 gap-4 my-5">
-          {design?.uploadedImages?.map((image) => (
-            <div key={image}>
-              <img
+          {design?.uploadedImages?.map((image, index) => (
+            <div key={index} className="">
+              <Image
                 src={image}
+                width={100}
+                height={100}
                 onClick={(e) => handleImageClick(e, image)}
-                alt="Uploaded Images"
-                className="border rounded hover:bg-zinc-200 hover:border-zinc-400 cursor-pointer w-full"
+                alt={`Uploaded Image ${index + 1}`}
+                className="border rounded hover:bg-zinc-200 hover:border-zinc-400 border-zinc-500 cursor-pointer w-full"
               />
             </div>
           ))}
         </div>
       </div>
-    )) || <div></div>
+    )) || <></>
   );
 }

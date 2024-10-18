@@ -3,11 +3,10 @@ import ApparelDesignService from '../../../services/apparelDesign';
 
 type CreateApparelDesign = {
     design: object;
-    thumbnail_images?: string;
+    thumbnail_images?: string | null;
     isActive?: string;
     archive?: string;
     customer_id?: string;
-    vendor_id?: string;
 };
 
 const getApparelDesignService = (req: MedusaRequest): ApparelDesignService | null => {
@@ -59,16 +58,16 @@ export const POST = async (
         return;
       }
   
-      const { design, thumbnail_images, isActive, archive, customer_id, vendor_id } = req.body as CreateApparelDesign;
+      const { design, thumbnail_images, isActive, archive, customer_id } = req.body as CreateApparelDesign;
       // if (!vendor_id) {
       //   res.status(400).json({ error: "Vendor ID is required to create an apparel design." });
       //   return;
       // }
   
-      // if (!customer_id) {
-      //   res.status(400).json({ error: "Customer ID is required to create an apparel design." });
-      //   return;
-      // }
+      if (!customer_id) {
+        res.status(400).json({ error: "Customer ID is required to create an apparel design." });
+        return;
+      }
   
       const newDesign = await apparelDesignService.create({
         design,
@@ -76,11 +75,10 @@ export const POST = async (
         isActive,
         archive,
         customer_id,
-        vendor_id,
       });
       res.status(201).json({ newDesign });
     } catch (error) {
       console.error("Error in POST /apparel-design:", error);
-      res.status(500).json({ error: error.message || "An unknown error occurred." });
+      res.status(500).json({ error: error.message });
     }
   };

@@ -4,10 +4,9 @@ import { FaDownload, FaRedo, FaUndo } from "react-icons/fa";
 import { VscBriefcase } from "react-icons/vsc";
 import { BiPurchaseTag } from "react-icons/bi";
 import { IconContext } from "react-icons/lib";
-// import { v4 as uuidv4 } from 'uuid'; 
-import {nanoid} from 'nanoid'
+import { nanoid } from "nanoid";
 import { fabric } from "fabric";
-import { DesignContext, TextPropsContext } from "../context/designcontext"; 
+import { DesignContext, TextPropsContext } from "../context/designcontext";
 import { FiShoppingBag } from "react-icons/fi";
 import {
   initControls,
@@ -24,27 +23,17 @@ import { ColorPickerContext } from "../context/colorpickercontext";
 import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
 import * as React from "react";
-import { GetTextStyles } from "../shared/draw";  
-import { useCart } from "@/context/cartContext"; 
+import { GetTextStyles } from "../shared/draw";
+import { useCart } from "@/context/cartContext";
 import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
-import { useUploadImage } from "@/app/hooks/useUploadImage";
-import { request } from "http"; 
 import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
-
-
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
 const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
-export default function DesignArea(): React.ReactElement {     
- 
-  // const { mutate: createOrder, isLoading, isError } = useCreateOrder(); // Custom hook
-// const {mutate:uploadImage , isError , isLoading} = useUploadImage()
-  const {mutate:CreateApparelDesign , isLoading, isError} = UseCreateApparelDesign() 
-  const { mutate: createApparelUpload} = useCreateApparelUpload();
-  const {addToCart} = useCart()
+export default function DesignArea(): React.ReactElement {
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
   const { svgcolors, dispatchColorPicker } =
@@ -61,9 +50,53 @@ export default function DesignArea(): React.ReactElement {
   const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
   let selectionCreated: fabric.Object[] | undefined;
   const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
+  const { addToCart } = useCart();
+  const {
+    mutate: CreateApparelDesign,
+    isLoading,
+    isError,
+  } = UseCreateApparelDesign();
+  const { mutate: createApparelUpload } = useCreateApparelUpload();
+
+  const handleImagePlacement = (imageUrl: string) => {
+    if (canvas) {
+      fabric.Image.fromURL(imageUrl, (img) => {
+        img.scaleToWidth(200); // Adjust the size as needed
+        canvas.add(img);
+        canvas.renderAll();
+      });
+    }
+  };
+
+  React.useEffect(() => {
+    let canvas = new fabric.Canvas("canvas", {
+      height: design?.apparel.height,
+      width: design?.apparel.width,
+    });
+    setCanvas(canvas);
+    dispatchForCanvas({ type: "INIT", canvas: canvas });
+    dispatchForCanvas({ type: "RESTORE_DESIGN", payload: design?.jsonDesign });
+
+    // Listen for new image uploads
+    const handleNewImage = (event: CustomEvent) => {
+      const imageUrl = event.detail.imageUrl;
+      handleImagePlacement(imageUrl);
+    };
+    window.addEventListener(
+      "newImageUploaded",
+      handleNewImage as EventListener
+    );
+
+    return () => {
+      canvas.dispose();
+      window.removeEventListener(
+        "newImageUploaded",
+        handleNewImage as EventListener
+      );
+    };
+  }, [design]);
 
   canvas?.on("selection:created", function (options) {
-    //console.log(options);
     if (options.e) {
       options.e.preventDefault();
       options.e.stopPropagation();
@@ -76,8 +109,8 @@ export default function DesignArea(): React.ReactElement {
       }
     }
   });
+
   canvas?.on("selection:updated", function (options) {
-    //console.log(options);
     if (options.e) {
       options.e.preventDefault();
       options.e.stopPropagation();
@@ -90,6 +123,7 @@ export default function DesignArea(): React.ReactElement {
       }
     }
   });
+
   canvas?.on("selection:cleared", function (options) {
     let deselectedObj = options.deselected;
     if (deselectedObj && deselectedObj.length > 0) {
@@ -98,6 +132,7 @@ export default function DesignArea(): React.ReactElement {
       }
     }
   });
+
   canvas?.on("object:removed", function (options) {
     console.log(options);
     console.log(options.target?.type);
@@ -112,26 +147,16 @@ export default function DesignArea(): React.ReactElement {
   canvas?.on("object:moving", (e) => {
     dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
   });
+
   canvas?.on("object:scaling", (e) => {
     dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
   });
+
   canvas?.on("object:rotating", (e) => {
     dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
   });
 
   initControls();
-  React.useEffect(() => {
-    let canvas = new fabric.Canvas("canvas", {
-      height: design?.apparel.height,
-      width: design?.apparel.width,
-    });
-    setCanvas(canvas);
-    dispatchForCanvas({ type: "INIT", canvas: canvas });
-    dispatchForCanvas({ type: "RESTORE_DESIGN", payload: design?.jsonDesign });
-    return () => {
-      canvas.dispose();
-    };
-  }, [design]);
 
   const getCanvasClass = () => {
     if (design?.apparel.url === designApparels[0].url) {
@@ -177,7 +202,7 @@ export default function DesignArea(): React.ReactElement {
     setBgColor(value);
     dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
   };
-  console.log("Json Design:", designs)
+
   const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
@@ -185,7 +210,6 @@ export default function DesignArea(): React.ReactElement {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    // Setting filename received in response
     link.setAttribute("download", "design");
     document.body.appendChild(link);
     link.click();
@@ -200,8 +224,6 @@ export default function DesignArea(): React.ReactElement {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-
-    // Setting filename received in response
     link.setAttribute("download", design?.apparel.side ?? "design");
     document.body.appendChild(link);
     link.click();
@@ -215,9 +237,7 @@ export default function DesignArea(): React.ReactElement {
       }) ?? "";
     const link = document.createElement("a");
     link.href = pngImage;
-
-    // Setting filename received in response
-    link.setAttribute("download", design?.apparel.side ?? "design" + ".png");
+    link.setAttribute("download", (design?.apparel.side ?? "design") + ".png");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -250,92 +270,60 @@ export default function DesignArea(): React.ReactElement {
     }
   };
 
-  const clearDesignObject = () => {}; 
-
-  // const vendorId = request.cookies.get("vendor_id"); 
-
-  // const thumbnail = useUploadImage(design?.pngImage) 
-  // const vendorIdFromCookie = Cookies.get('vendor_id') 
-  // console.log("vendorIdFromCookie  " + vendorIdFromCookie)
-
-
-  const addDesignToCart  = () => {
-    if (!design?.pngImage) return; // Ensure there's an image to add
-    console.log("my designs : ",designs)
+  const addDesignToCart = () => {
+    if (!design?.pngImage) return;
     const newItem = {
       title: "product",
-      thumbnail: design.pngImage,
-      price : 100,
-      color : design.apparel.color,
-      id : nanoid(),
-      quantity : 1,
-      side : design.apparel.side,
-      is_active : design.isactive, 
+      thumbnail: design.pngImage ,
+      price: 100,
+      color: design.apparel.color,
+      id: nanoid(),
+      quantity: 1,
+      side: design.apparel.side,
+      is_active: design.isactive,
+
     };
     addToCart(newItem);
-    console.log("Item added to cart:", newItem); 
 
- const ApparelDesigns = {
-  design : {
-    title : newItem.title,
-    price : newItem.price,
-    color : newItem.color,
-    side : newItem.side,
-    quantity : newItem.quantity,
-  } ,
-  thumbnail_images : newItem.thumbnail,
-  is_active : newItem.is_active,
-  archive : 'false',
-  customer_id : sessionStorage.getItem('customerId'), 
-  
- }  
+    const ApparelDesigns = {
+      design: {
+        title: newItem.title,
+        price: newItem.price,
+        color: newItem.color,
+        side: newItem.side,
+        quantity: newItem.quantity,
+      },
+      thumbnail_images: newItem.thumbnail,
+      is_active: newItem.is_active,
+      archive: "false",
+      customer_id: sessionStorage.getItem("customerId"),
+    };
 
- CreateApparelDesign(ApparelDesigns,
-  {
-    onSuccess: () => {
-      console.log('data fatched confirmation ' , ApparelDesigns)
-      
-    },
-    onError: (err) => {
-      console.error("Error placing order:", err);
-    },
- })  
- 
+    CreateApparelDesign(ApparelDesigns, {
+      onSuccess: () => {
+        console.log("data fetched confirmation", ApparelDesigns);
+      },
+      onError: (err) => {
+        console.error("Error placing order:", err);
+      },
+    });
 
- 
- // Check if there's a valid upload URL
-if (design.uploadedImages && design.uploadedImages.length > 0) {
-  const ApparelUploadData = {
-    url: design.uploadedImages[0], 
-    apparelDesign_id: nanoid(),    
-  };
+      const ApparelUploadData = {
+        url: design.uploadedImages?.[0],
+        apparelDesign_id: nanoid(),
+      };
 
-  // Call the createApparelUpload API if a valid URL is present
-  createApparelUpload(ApparelUploadData, {
-    onSuccess: () => {
-      console.log("Image uploaded successfully", ApparelUploadData);
-    },
-    onError: (err) => {
-      console.error("Error uploading image:", err);
-    },
-  });
-} else {
-  console.log("No valid upload URL, skipping API call");
-}
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
+      createApparelUpload(ApparelUploadData, {
+        onSuccess: () => {
+          console.log("Image uploaded successfully", ApparelUploadData);
+        },
+        onError: (err) => {
+          console.error("Error uploading image:", err);
+        },
+      });
+    //  else {
+    //   console.log("No valid upload URL, skipping API call");
+    // }
   };
 
   return (
@@ -489,27 +477,24 @@ if (design.uploadedImages && design.uploadedImages.length > 0) {
               ></div>
             ))}
           </div>
-        </div> 
+        </div>
 
-        
-        <div className="col-span-12 sm:col-span-12  md:col-span-12 lg:col-span-4 text-right"> 
-          
-      {/* Add to Cart Button  */}
-       <button
-        type="button"
-        onClick={addDesignToCart }
-        className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
-      >
-        <IconContext.Provider
-          value={{
-            size: "24px",
-            className: "btn-add-to-cart inline-block",
-          }}
-        >
-          <FiShoppingBag /> 
-        </IconContext.Provider>
-        <span className="ml-3">Add to Cart</span>
-      </button>
+        <div className="col-span-12 sm:col-span-12  md:col-span-12 lg:col-span-4 text-right">
+          <button
+            type="button"
+            onClick={addDesignToCart}
+            className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
+          >
+            <IconContext.Provider
+              value={{
+                size: "24px",
+                className: "btn-add-to-cart inline-block",
+              }}
+            >
+              <FiShoppingBag />
+            </IconContext.Provider>
+            <span className="ml-3">Add to Cart</span>
+          </button>
 
           {/* <span className="text-purple-800">$24.92 AUD </span> &nbsp;
           <br /> */}
@@ -528,28 +513,19 @@ if (design.uploadedImages && design.uploadedImages.length > 0) {
             </IconContext.Provider>
             <span className="ml-3">Order Options</span>
           </button> */}
-        </div> 
-
-
-        
+        </div>
       </div>
 
      
-
-     
-
-      {/* Cart Items */}
       <div>
         <h3>Cart Items:</h3>
-        {cart.map((item, index) => (
+        {cart.map((item: any, index: any) => (
           <div key={index}>
             <p>{item.name}</p>
             <img src={item.image} alt={item.name} width="100" />
           </div>
         ))}
       </div>
-
-     
     </div>
   );
 }

@@ -1,63 +1,38 @@
-import mime from "mime";
-import { join } from "path";
-import { stat, mkdir, writeFile } from "fs/promises";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { writeFile } from 'fs/promises';
+import path from 'path';
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) { 
+  try {
     const formData = await request.formData();
-    const vendorId = request.cookies.get("vendor_id");
-    console.log("Vendor Dashboard Vendor ID is: ",vendorId)
-    const file = formData.get("file") as Blob | null;
-    const fileName = (formData.get("file") as any).name;
+    const file = formData.get('file') as File;
+
     if (!file) {
-        return NextResponse.json(
-            { error: "File blob is required." },
-            { status: 400 }
-        );
+      return NextResponse.json({ error: 'No file received.' }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const relativeUploadDir = `/uploads/images`;
-    const uploadDir = join(process.cwd(), "public", relativeUploadDir);
-    console.log(uploadDir);
+    // Generate a unique filename to avoid overwriting
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const originalName = file.name.replace(/\.[^/.]+$/, "");
+    const fileExtension = path.extname(file.name);
+    const filename = `${originalName}-${uniqueSuffix}${fileExtension}`;
+
+    // Save file to the public/uploads directory
+    const bytes = await file.arrayBuffer(); 
     
-    try {
-       
-         if(! (await stat(uploadDir)).isDirectory){
-            await mkdir(uploadDir, { recursive: true });
-        }
-    } catch (e: any) {
-        console.log(e);
-        
-        if (e.code === "ENOENT") {
-            await mkdir(uploadDir, { recursive: true });
-        } else {
-            console.error(
-                "Error while trying to create directory when uploading a file\n",
-                e
-            );
-            return NextResponse.json(
-                { error: "Something went wrong." },
-                { status: 500 }
-            );
-        }
-    }
 
-    try {
-        const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-        const filename = `${fileName.replace(
-            /\.[^/.]+$/,
-            ""
-        )}-${uniqueSuffix}.${mime.getExtension(file.type)}`;
-        console.log(`${uploadDir}/${filename}`);
-        
-        await writeFile(`${uploadDir}/${filename}`, buffer);
-        return NextResponse.json({ fileUrl: `${relativeUploadDir}/${filename}` });
-    } catch (e) {
-        console.error("Error while trying to upload a file\n", e);
-        return NextResponse.json(
-            { error: "Something went wrong." },
-            { status: 500 }
-        );
-    }
+    const buffer = Buffer.from(bytes);
+    const filepath = path.join(process.cwd(), 'public', 'uploads', filename); 
+    await writeFile(filepath, buffer);
+
+    // Generate the URL for the saved file
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = request.headers.get('host') || 'localhost:8004';
+    const fileUrl = `${protocol}://${host}/uploads/${filename}`;
+
+    return NextResponse.json({ fileUrl });
+  } catch (error : any) {
+    console.error('Error uploading file:', error);
+    return NextResponse.json({ error: 'Error uploading file', details: error.message }, { status: 500 });
+  }
 }
