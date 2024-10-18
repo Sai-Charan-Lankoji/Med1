@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 type CreateApparelUploadInput = {
-  url: string;
+  url: any;
   apparelDesign_id?: string;
 };
 
