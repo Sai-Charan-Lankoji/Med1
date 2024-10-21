@@ -56,7 +56,7 @@ export function UploadImage(): React.ReactElement {
       dispatchDesign({ type: "ADD_UPLOAD_DESIGN", payload: imageItem });
   
       // Check if the canvas is available before dispatching the image to it
-      const canvas = document.getElementById('yourCanvasId');
+      const canvas = document.getElementById('yourCanvasId') as HTMLCanvasElement;
       if (canvas) {
         const ctx = canvas.getContext('2d');
         if (ctx) {
