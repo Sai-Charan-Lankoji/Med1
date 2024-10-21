@@ -27,43 +27,57 @@ export function UploadImage(): React.ReactElement {
       console.warn("No file was chosen");
       return;
     }
-
+  
     setIsUploading(true);
-
+  
     const formData = new FormData();
     formData.append("file", selectedFile);
-
+  
     try {
       const res = await fetch("/api/upload", {
         method: "POST",
         body: formData,
       });
-
+  
       const data = await res.json();
-
+  
       if (!res.ok) {
         throw new Error(data.error || 'Upload failed');
       }
-
+  
       console.log('Upload image Url: ' + data.fileUrl);
       dispatchDesign({ type: "UPLOADED_IMAGE", payload: data.fileUrl });
-
+  
       const imageItem: Item = {
         uploadImageUrl: data.fileUrl,
         designItem: DesignEnums.image,
         isNew: true,
       };
       dispatchDesign({ type: "ADD_UPLOAD_DESIGN", payload: imageItem });
-      dispatchForCanvas({ type: "IMAGE", payload: data.fileUrl });
+  
+      // Check if the canvas is available before dispatching the image to it
+      const canvas = document.getElementById('yourCanvasId');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          dispatchForCanvas({ type: "IMAGE", payload: data.fileUrl });
+        } else {
+          console.error("Canvas context is null");
+        }
+      } else {
+        console.error("Canvas is null");
+      }
+      
     } catch (error) {
       console.error("Error uploading image:", error);
       alert(`Failed to upload image: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       setIsUploading(false);
     }
-
+  
     e.target.value = ""; // Reset file input
   };
+  
 
   const handleImageClick = (e: React.MouseEvent, imageUrl: string) => {
     e.preventDefault();
