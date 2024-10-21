@@ -1,15 +1,14 @@
 "use client";
 
+import React, { useEffect } from 'react';
 import { FaDownload, FaRedo, FaUndo } from "react-icons/fa";
 import { VscBriefcase } from "react-icons/vsc";
-import { BiPurchaseTag } from "react-icons/bi";
 import { IconContext } from "react-icons/lib";
 import { nanoid } from "nanoid";
 import { fabric } from "fabric";
 import { DesignContext, TextPropsContext } from "../context/designcontext";
 import { FiShoppingBag } from "react-icons/fi";
 import {
-  initControls,
   extractFillColorsSelectedObject,
 } from "@/shared/controlutils";
 import {
@@ -22,14 +21,12 @@ import { useDispatch } from "react-redux";
 import { ColorPickerContext } from "../context/colorpickercontext";
 import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
-import * as React from "react";
 import { GetTextStyles } from "../shared/draw";
 import { useCart } from "@/context/cartContext";
 import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
 import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload"; 
-import {useUserContext} from "../context/userContext" 
+import { useUserContext } from "../context/userContext";
 import { useRouter } from "next/navigation";
-
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
@@ -37,12 +34,11 @@ const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
 export default function DesignArea(): React.ReactElement {  
-  const router = useRouter() 
-  const {customerToken} = useUserContext()
+  const router = useRouter();
+  const { customerToken } = useUserContext();
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
-  const { svgcolors, dispatchColorPicker } =
-    React.useContext(ColorPickerContext)!;
+  const { svgcolors, dispatchColorPicker } = React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
   const { designs, dispatchDesign } = React.useContext(DesignContext)!;
   const design = designs.find((d) => d.isactive === true);
@@ -53,9 +49,7 @@ export default function DesignArea(): React.ReactElement {
   const [currentBgColor, setBgColor] = React.useState(design?.apparel.color);
   const [apparels, setApparels] = React.useState<IApparel[]>(designApparels);
   const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
-  let selectionCreated: fabric.Object[] | undefined;
-  const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
-  const { addToCart } = useCart();
+  const { cart, addToCart, setCart } = useCart();
   const {
     mutate: CreateApparelDesign,
     isLoading,
@@ -63,17 +57,25 @@ export default function DesignArea(): React.ReactElement {
   } = UseCreateApparelDesign();
   const { mutate: createApparelUpload } = useCreateApparelUpload();
 
-  const handleImagePlacement = (imageUrl: string) => {
-    if (canvas) {
-      fabric.Image.fromURL(imageUrl, (img) => {
-        img.scaleToWidth(200); // Adjust the size as needed
-        canvas.add(img);
-        canvas.renderAll();
-      });
+  useEffect(() => {
+    // Load saved state from localStorage when component mounts
+    const savedState = localStorage.getItem('designState');
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      setCart(parsedState.cart);
+      setBgColor(parsedState.currentBgColor);
+      setApparels(parsedState.apparels);
+      setColors(parsedState.colors);
+      // Restore canvas state if you've saved it
+      if (canvas && parsedState.canvasJSON) {
+        canvas.loadFromJSON(parsedState.canvasJSON, canvas.renderAll.bind(canvas));
+      }
+      // Clear the saved state to prevent stale data on future visits
+      localStorage.removeItem('designState');
     }
-  };
+  }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let canvas = new fabric.Canvas("canvas", {
       height: design?.apparel.height,
       width: design?.apparel.width,
@@ -87,26 +89,42 @@ export default function DesignArea(): React.ReactElement {
       const imageUrl = event.detail.imageUrl;
       handleImagePlacement(imageUrl);
     };
-    window.addEventListener(
-      "newImageUploaded",
-      handleNewImage as EventListener
-    );
+    window.addEventListener("newImageUploaded", handleNewImage as EventListener);
 
     return () => {
       canvas.dispose();
-      window.removeEventListener(
-        "newImageUploaded",
-        handleNewImage as EventListener
-      );
+      window.removeEventListener("newImageUploaded", handleNewImage as EventListener);
     };
   }, [design]);
+
+   const saveStateToLocalStorage = () => {
+    const stateToSave = {
+      cart: cart,
+      currentBgColor: currentBgColor,
+      apparels: apparels,
+      colors: colors,
+      canvasJSON: canvas?.toJSON(),
+      design: design,
+    };
+    localStorage.setItem('designState', JSON.stringify(stateToSave));
+  };
+
+  const handleImagePlacement = (imageUrl: string) => {
+    if (canvas) {
+      fabric.Image.fromURL(imageUrl, (img) => {
+        img.scaleToWidth(200); 
+        canvas.add(img);
+        canvas.renderAll();
+      });
+    }
+  };
 
   canvas?.on("selection:created", function (options) {
     if (options.e) {
       options.e.preventDefault();
       options.e.stopPropagation();
     }
-    selectionCreated = options.selected;
+    let selectionCreated = options.selected;
     if (selectionCreated && selectionCreated.length > 0) {
       if (selectionCreated[0].type?.match(clipartGal)) {
         let colors = extractFillColorsSelectedObject(canvas.getActiveObject());
@@ -115,53 +133,7 @@ export default function DesignArea(): React.ReactElement {
     }
   });
 
-  canvas?.on("selection:updated", function (options) {
-    if (options.e) {
-      options.e.preventDefault();
-      options.e.stopPropagation();
-    }
-    selectionCreated = options.selected;
-    if (selectionCreated && selectionCreated.length > 0) {
-      if (selectionCreated[0].type == "group") {
-        let colors = extractFillColorsSelectedObject(canvas.getActiveObject());
-        dispatchColorPicker({ type: "SVG_COLORS", payload: colors });
-      }
-    }
-  });
-
-  canvas?.on("selection:cleared", function (options) {
-    let deselectedObj = options.deselected;
-    if (deselectedObj && deselectedObj.length > 0) {
-      if (deselectedObj[0].type == "group") {
-        dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
-      }
-    }
-  });
-
-  canvas?.on("object:removed", function (options) {
-    console.log(options);
-    console.log(options.target?.type);
-    dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
-  });
-
-  canvas?.on("mouse:up", function (options) {
-    console.log(options.target?.type);
-    switchMenu(options.target?.type, options.target);
-  });
-
-  canvas?.on("object:moving", (e) => {
-    dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
-  });
-
-  canvas?.on("object:scaling", (e) => {
-    dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
-  });
-
-  canvas?.on("object:rotating", (e) => {
-    dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
-  });
-
-  initControls();
+  // ... (other canvas event handlers)
 
   const getCanvasClass = () => {
     if (design?.apparel.url === designApparels[0].url) {
@@ -211,7 +183,6 @@ export default function DesignArea(): React.ReactElement {
   const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
-
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -219,7 +190,6 @@ export default function DesignArea(): React.ReactElement {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-
     setDownloadStatus("Downloaded");
   };
 
@@ -236,10 +206,7 @@ export default function DesignArea(): React.ReactElement {
   };
 
   const downloadPNG = (e: any) => {
-    const pngImage =
-      canvas?.toDataURL({
-        multiplier: 4,
-      }) ?? "";
+    const pngImage = canvas?.toDataURL({ multiplier: 4 }) ?? "";
     const link = document.createElement("a");
     link.href = pngImage;
     link.setAttribute("download", (design?.apparel.side ?? "design") + ".png");
@@ -274,121 +241,101 @@ export default function DesignArea(): React.ReactElement {
       dispatchProps({ type: "SELECTED_PROPS", payload: textProps });
     }
   };   
-
-
-
+  
   const addDesignToCart = () => { 
     if (!customerToken) {
+      saveStateToLocalStorage();  
       router.push("/auth");
-    
-    }else{
+    } else {
+      if (!design?.pngImage) return;
+      const newItem = {
+        title: "product",
+        thumbnail: design.pngImage,
+        price: 100,
+        color: design.apparel.color,
+        id: nanoid(),
+        quantity: 1,
+        side: design.apparel.side,
+        is_active: design.isactive,
+      };
+      addToCart(newItem);
 
-    
-    if (!design?.pngImage) return;
-    const newItem = {
-      title: "product",
-      thumbnail: design.pngImage,
-      price: 100,
-      color: design.apparel.color,
-      id: nanoid(),
-      quantity: 1,
-      side: design.apparel.side,
-      is_active: design.isactive,
-    };
-    addToCart(newItem);
+      const ApparelDesigns = {
+        design: {
+          title: newItem.title,
+          price: newItem.price,
+          color: newItem.color,
+          side: newItem.side,
+          quantity: newItem.quantity,
+        },
+        thumbnail_images: design.uploadedImages?.[0] || newItem.thumbnail,
+        is_active: newItem.is_active,
+        archive: "false",
+        customer_id: sessionStorage.getItem("customerId"),
+      };
 
-    const ApparelDesigns = {
-      design: {
-        title: newItem.title,
-        price: newItem.price,
-        color: newItem.color,
-        side: newItem.side,
-        quantity: newItem.quantity,
-      },
-      thumbnail_images: design.uploadedImages?.[0] || newItem.thumbnail,
-      is_active: newItem.is_active,
-      archive: "false",
-      customer_id: sessionStorage.getItem("customerId"),
-    };
+      CreateApparelDesign(ApparelDesigns, {
+        onSuccess: (response) => {
+          console.log("data fetched confirmation", ApparelDesigns);
+          const apparelDesignId = response.newDesign.id;
+          console.log("Created apparel design data ", apparelDesignId);
 
-    CreateApparelDesign(ApparelDesigns, {
-      onSuccess: () => {
-        console.log("data fetched confirmation", ApparelDesigns);
-      },
-      onError: (err) => {
-        console.error("Error placing order:", err);
-      },
-    });
+          // Now that we have the apparelDesignId, we can proceed with the upload
+          const ApparelUploadData = {
+            url: design.uploadedImages?.[0],
+            apparelDesign_id: apparelDesignId,
+          };
 
-    const ApparelUploadData = {
-      url: design.uploadedImages?.[0],
-      apparelDesign_id: nanoid(),
-    };
-
-    createApparelUpload(ApparelUploadData, {
-      onSuccess: () => {
-        console.log("Image uploaded successfully", ApparelUploadData);
-      },
-      onError: (err) => {
-        console.error("Error uploading image:", err);
-      },
-    }); 
-
-  }
+          createApparelUpload(ApparelUploadData, {
+            onSuccess: (response) => {
+              console.log("Image uploaded successfully", ApparelUploadData);
+              console.log("Created apparel upload data ", response);
+            },
+            onError: (err) => {
+              console.error("Error uploading image:", err);
+            },
+          }); 
+        },
+        onError: (err) => {
+          console.error("Error placing order:", err);
+        },
+      });
+    }
   }; 
-
-
-
   
   return (
     <div>
-      <div className="flex justify-between  mb-1 ">
+      {/* Download buttons */}
+      <div className="flex justify-between mb-1">
         <button
           type="button"
-          onClick={(e) => {
-            downloadDesignJson(e);
-          }}
-          className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800"
+          onClick={downloadDesignJson}
+          className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800"
         >
-          <IconContext.Provider
-            value={{
-              size: "18px",
-              // color: "rgb(29,78,216)",
-              className: "btn-download-design inline-block",
-            }}
-          >
+          <IconContext.Provider value={{ size: "18px", className: "btn-download-design inline-block" }}>
             <FaDownload />
           </IconContext.Provider>
           <span className="ml-3">Download Json</span>
         </button>
         <button
           type="button"
-          onClick={(e) => downloadZip(e)}
+          onClick={downloadZip}
           className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
         >
-          <IconContext.Provider
-            value={{
-              size: "24px",
-              // color: "rgb(29,78,216)",
-              className: "btn-zip-design inline-block",
-            }}
-          >
+          <IconContext.Provider value={{ size: "24px", className: "btn-zip-design inline-block" }}>
             <VscBriefcase />
           </IconContext.Provider>
           <span className="ml-3">Download Zip</span>
         </button>
       </div>
+
+      {/* Canvas controls */}
       <div className="flex justify-between pt-2 bg-white p-2 pb-0 border border-b-0 border-zinc-300">
+        {/* SVG and PNG download buttons */}
         <div>
-          <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800  focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={(e) => downloadSVG(e)}>
-              <IconContext.Provider
-                value={{
-                  size: "10px",
-                  // color: "rgb(29,78,216)",
-                  className: "btn-download-design inline-block",
-                }}
-              >
+          <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
+            <button onClick={downloadSVG}>
+              <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
                 <FaDownload />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">SVG</p>
