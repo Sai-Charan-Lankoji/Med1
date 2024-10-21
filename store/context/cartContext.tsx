@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
 interface CartItem {
-  id:  any | number
+  id: any | number
   title: string
   price: number
   color: any
@@ -14,6 +14,7 @@ interface CartItem {
 
 interface CartContextProps {
   cart: CartItem[]
+  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>
   addToCart: (item: CartItem) => void
   removeFromCart: (id: number) => void
   updateQuantity: (id: number, quantity: number) => void
@@ -128,6 +129,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <CartContext.Provider value={{ 
       cart, 
+      setCart,
       addToCart, 
       removeFromCart, 
       updateQuantity, 
