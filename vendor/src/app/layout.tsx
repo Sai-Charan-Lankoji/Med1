@@ -18,8 +18,8 @@ export default function  RootLayout({
   children: React.ReactNode;
 }>): React.ReactElement {
   const pathname = usePathname();
-  const showHeader = pathname !== '/';
-  const showSidebar = pathname !== '/';
+  const showHeader = pathname !== '/' && pathname !== '/login';
+  const showSidebar = pathname !== '/' && pathname !== '/login';
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-gray-100`}>

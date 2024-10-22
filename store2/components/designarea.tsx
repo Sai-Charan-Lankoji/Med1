@@ -26,14 +26,16 @@ import { useCart } from "@/context/cartContext";
 import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
 import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload"; 
 import { useUserContext } from "../context/userContext";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; 
+import { useSvgContext } from '@/context/svgcontext';
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
 const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
-export default function DesignArea(): React.ReactElement {  
+export default function DesignArea(): React.ReactElement {   
+  const {svgUrl} = useSvgContext()
   const router = useRouter();
   const { customerToken } = useUserContext();
   const dispatchForCanvas = useDispatch();
@@ -250,13 +252,14 @@ export default function DesignArea(): React.ReactElement {
       if (!design?.pngImage) return;
       const newItem = {
         title: "product",
-        thumbnail: design.pngImage,
+        thumbnail: svgUrl || design.uploadedImages?.[0],
         price: 100,
         color: design.apparel.color,
         id: nanoid(),
         quantity: 1,
         side: design.apparel.side,
         is_active: design.isactive,
+        UploadImage: design.uploadedImages?.[0]
       };
       addToCart(newItem);
 
@@ -278,7 +281,7 @@ export default function DesignArea(): React.ReactElement {
         onSuccess: (response) => {
           console.log("data fetched confirmation", ApparelDesigns);
           const apparelDesignId = response.newDesign.id;
-          console.log("Created apparel design data ", apparelDesignId);
+          console.log("Created apparel design data ", response);
 
           // Now that we have the apparelDesignId, we can proceed with the upload
           const ApparelUploadData = {

@@ -7,18 +7,42 @@ import { MenuContext } from "../context/menucontext";
 import * as React from "react";
 import { useDispatch } from "react-redux";
 import { ColorPicker } from '../components/colorpicker'
-import { randomId } from "../shared/draw";
+import { randomId } from "../shared/draw"; 
+import { useSvgContext } from "@/context/svgcontext";
 
-export function ClipartGallery(): React.ReactElement {
+export function ClipartGallery(): React.ReactElement { 
+  const {setSvgUrl } = useSvgContext(); 
 
   const dispatchForCanvas = useDispatch();
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
 
 
 
-  const handleSvgUrl = (e: React.MouseEvent, svgurl: string) => {
+  const handleSvgUrl = async (e: React.MouseEvent, svgurl: string) => {
     e.stopPropagation();
-    console.log(svgurl);
+    console.log(svgurl); 
+
+    const response  = await fetch(svgurl) 
+    const blob = await response.blob();
+    const formData = new FormData();
+    formData.append('file', new File([blob], "image.svg"));
+
+
+    const res = await fetch("/api/svguploads", {
+      method: "POST",
+      body: formData,
+  });
+  const data = await res.json();  
+  if(data?.fileUrl) {
+    console.log("this is the data : " , data?.fileUrl)  
+    // add the svg item to the canvas
+    setSvgUrl(data?.fileUrl); 
+  } else {
+    console.log("Error in uploading image")
+  }
+
+    
+
 
     const svgItem: Item = {
       url: svgurl,

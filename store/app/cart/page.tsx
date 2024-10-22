@@ -8,7 +8,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useCreateOrder } from "../hooks/useCreateOrder";
-import { XMarkMini } from "@medusajs/icons"; 
+import { XMarkMini } from "@medusajs/icons";
+import { DesignContext } from "@/context/designcontext";
+import React from "react";
 
 interface OrderData {
   line_items: Array<{
@@ -32,15 +34,12 @@ const CartPage = () => {
   const { isLogin, customerToken } = useUserContext();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // const pathname = usePathname();
-  const router = useRouter();
   const { mutate: createOrder, isLoading, isError } = useCreateOrder();
-
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<number | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
-
-  const openModal = (itemId: number) => {
+   const openModal = (itemId: number) => {
     setItemToRemove(itemId);
     setIsModalOpen(true);
   };
@@ -103,6 +102,10 @@ const CartPage = () => {
       line_items: cart.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
+        price: item.price,
+        thumbnail_url  : item.thumbnail,
+        // uploadImage_url : item.UploadImage
+         
       })),
       total_amount: total,
       currency_code: "usd",
@@ -120,7 +123,7 @@ const CartPage = () => {
       onSuccess: async () => {
         try {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          router.push('./order-confirmation')
+          router.push("./order-confirmation");
           // clearCart();
         } catch (err) {
           console.error("Navigation error:", err);

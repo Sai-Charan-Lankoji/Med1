@@ -7,6 +7,7 @@ import { CartProvider } from "@/context/cartContext"
 import { UserProvider } from "@/context/userContext"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MedusaProvider } from "medusa-react"
+import { SvgProvider } from "@/context/svgcontext"
 
 const queryClient = new QueryClient()
 const inter = Inter({ subsets: ["latin"] })
@@ -27,13 +28,15 @@ export default function RootLayout({
             publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
           >
             <CartProvider>
-              <UserProvider>
+              <UserProvider> 
+              <SvgProvider>
                 <main className="min-h-screen">
                   <Navbar />
                   <div className="pt-20 px-2 sm:px-6 lg:px-8 max-w-8xl mx-auto">
                     {children}
                   </div>
-                </main>
+                </main> 
+                </SvgProvider>
               </UserProvider>
             </CartProvider>
           </MedusaProvider>
