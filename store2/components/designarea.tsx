@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { FaDownload, FaRedo, FaUndo } from "react-icons/fa";
+import { FaDownload, FaRedo, FaUndo,FaSync } from "react-icons/fa";
 import { VscBriefcase } from "react-icons/vsc";
 import { IconContext } from "react-icons/lib";
 import { nanoid } from "nanoid";
@@ -227,6 +227,12 @@ export default function DesignArea(): React.ReactElement {
     dispatchForCanvas({ type: "REDO" });
   };
 
+  const reset = (e: any) => {
+    dispatchForCanvas({ type: "RESET" });
+    
+    //clearDesignObject();
+  };
+
   const switchMenu = (type: any, object: fabric.Object | undefined) => {
     if (!type) return;
     if (type.match(clipartGal)) {
@@ -384,6 +390,20 @@ export default function DesignArea(): React.ReactElement {
                 <FaUndo />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">Undo</p>
+            </button>
+          </div>
+          <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
+            <button onClick={(e) => reset(e)}>
+              <IconContext.Provider
+                value={{
+                  size: "10px",
+                  // color: "rgb(29,78,216)",
+                  className: "btn-download-design inline-block",
+                }}
+              >
+                <FaSync />
+              </IconContext.Provider>
+              <p className="px-2 text-[10px]">Reset</p>
             </button>
           </div>
         </div>
