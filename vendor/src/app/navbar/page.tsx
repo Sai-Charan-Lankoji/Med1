@@ -15,8 +15,7 @@ const { contactName } = useAuth() || { contactName: "" };
   return (
     <nav className="flex justify-between p-4 bg-transparent text-gray-500 h-16 ml-62  border-b border-gray-300">
       <div className="flex items-center space-x-4">
-        <h1 className="text-xl font-bold">{contactName} store</h1>
-      </div>
+       </div>
 
       <div className="flex justify-center items-center mr-6">
         <Drawer>

@@ -207,12 +207,6 @@ const Store = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <Button variant="secondary">
-                <CloudArrowDown /> Import Store
-              </Button>
-              <Button variant="secondary">
-                <CloudArrowUp /> Export Store
-              </Button>
               <Button variant="secondary" onClick={openModal}>
                 <Plus /> New Store
               </Button>

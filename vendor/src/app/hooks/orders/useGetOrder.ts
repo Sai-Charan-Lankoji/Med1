@@ -3,7 +3,7 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 
 const fetchOrderDetails = async (id: string) => {
-  const url = `${baseUrl}/vendor/orders?id=${id}`;
+  const url = `${baseUrl}/vendor/orders/${id}`;
   
   const response = await fetch(url, {
     method: 'GET',

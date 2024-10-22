@@ -25,11 +25,7 @@ const menuItems: MenuItem[] = [
   { name: "Orders", href: "/vendor/orders", icon: <ShoppingCart /> },
   { name: "Products", href: "/vendor/products", icon: <Tag /> },
   { name: "Customers", href: "/vendor/customers", icon: <UsersSolid /> },
-  { name: "Discount", href: "/vendor/discount", icon: <ReceiptPercent /> },
-  { name: "GiftCards", href: "/vendor/giftcards", icon: <Gift /> },
-  { name: "Pricing", href: "/vendor/pricing", icon: <CurrencyDollar /> },
   { name: "Settings", href: "/vendor/settings", icon: <CogSixTooth /> },
-  { name: "Business Type", href: "/vendor/businessType", icon: <MdBusinessCenter size={20} />  },
   { name: "Store", href: "/vendor/store", icon: <BuildingStorefront />}
 ];
 

@@ -4,17 +4,15 @@ import React from 'react'
 import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { useGetOrder } from '@/app/hooks/orders/useGetOrder'
-import { useGetCustomers } from '@/app/hooks/customer/useGetCustomers'
+import { useGetCustomerByEmail } from '@/app/hooks/customer/useGetCustomerByEmail'
 import { BackButton } from "@/app/utils/backButton"
 import { FiPackage, FiCreditCard, FiUser, FiChevronDown, FiChevronUp } from 'react-icons/fi'
 
 const OrderDetailsView = () => {
   const { id } = useParams()
   const { data: order, isLoading } = useGetOrder(id as string)
-  const { data: customers } = useGetCustomers()
-  console.log("Customer: ", customers)
-  const customer = customers?.find(customer => customer.email === order.email);
-  console.log("Customer: ", customer)
+  const email = order?.email
+  const { data: customers } = useGetCustomerByEmail(email) // Fetching customer data by email
   const [expandedItem, setExpandedItem] = React.useState<number | null>(null)
 
   if (isLoading) {
@@ -54,7 +52,17 @@ const OrderDetailsView = () => {
                 <FiUser className="mr-2" />
                 Customer Information
               </h2>
+              
               <p><span className="font-medium">Email:</span> {order.email}</p>
+              
+              {/* Display additional customer details */}
+              {customers && customers.length > 0 && (
+                <>
+                  <p><span className="font-medium">Name:</span> {`${customers[0].first_name} ${customers[0].last_name}`}</p>
+                  <p><span className="font-medium">Phone:</span> {customers[0].phone}</p>
+                   {/* You can add more fields as needed */}
+                </>
+              )}
             </div>
             <div className="bg-gray-50 p-4 rounded-lg">
               <h2 className="text-xl font-semibold mb-4 flex items-center">
@@ -89,8 +97,8 @@ const OrderDetailsView = () => {
                     />
                   </div>
                   <div className="flex-grow">
-                    <p className="font-medium">{item.title || `Product ${item.product_id}`}</p>
-                    <p>Quantity: {item.quantity}</p>
+                     <p>Quantity: {item.quantity}</p>
+                     <p>Tax Price: 10</p>
                     <p>Price: {order.currency_code.toUpperCase()} {item.price.toFixed(2)}</p>
                   </div>
                   <button
