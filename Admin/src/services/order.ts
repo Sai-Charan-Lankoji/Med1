@@ -5,8 +5,7 @@ import {
 } from "@medusajs/medusa";
 import OrderRepository from "@medusajs/medusa/dist/repositories/order";
 import { DeepPartial, FindOptionsWhere } from "typeorm";
-import { CreateOrderInput, UpdateOrderInput } from "@medusajs/medusa/dist/types/orders";
-
+ 
 enum OrderStatus {
   Pending = "pending",
   Completed = "completed",
@@ -34,7 +33,7 @@ class OrderService extends MedusaOrderService {
         this.orderRepository_ = container.orderRepository;
     }
 
-    async retrieveOrder(orderId: string): Promise<Order> {
+    async retrieve(orderId: string): Promise<Order> {
         if (!orderId) {
             throw new Error("Order ID is required.");
         }

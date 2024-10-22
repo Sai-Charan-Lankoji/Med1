@@ -23,7 +23,7 @@ import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 import { format, parseISO } from "date-fns";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
-
+import { useRouter } from "next/navigation";
 const Order = () => {
   const { data: OrdersData } = useGetOrders();
   const { data: saleschannelsData } = useGetSalesChannels();
@@ -32,6 +32,7 @@ const Order = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
+  const router = useRouter();
   const pageSize = 6;
   const [filters, setFilters] = useState({
     status: false,
@@ -303,6 +304,9 @@ const Order = () => {
                 {currentOrders.map((order: any, index: any) => (
                   <Table.Row
                     key={order.id}
+                    onClick={() => {
+                      router.push(`/vendor/orders/orderPage/${order.id}`);
+                    }}
                     className="hover:bg-gray-50 text-[rgb(17, 24, 39)] hover:cursor-pointer"
                   >
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center hover:text-violet-500">
