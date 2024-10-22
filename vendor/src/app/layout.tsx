@@ -9,6 +9,7 @@ import Sidebar from "./sidebar/page";
 import { usePathname } from "next/navigation";
 import { AuthProvider } from "./context/AuthContext"; 
 
+
 const inter = Inter({ subsets: ["latin"] });
 const queryClient = new QueryClient();
 
@@ -18,8 +19,9 @@ export default function  RootLayout({
   children: React.ReactNode;
 }>): React.ReactElement {
   const pathname = usePathname();
-  const showHeader = pathname !== '/';
-  const showSidebar = pathname !== '/';
+  const isVendorRoute = pathname.startsWith('/vendor')
+  const showHeader =   isVendorRoute;
+  const showSidebar =  isVendorRoute;
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-gray-100`}>
