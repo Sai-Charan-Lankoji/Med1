@@ -3,7 +3,7 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
 
 const fetchOrderDetails = async (id: string) => {
-  const url = `${baseUrl}/vendor/orders/${id}`;
+  const url = `${baseUrl}/vendor/orders?id=${id}`;
   
   const response = await fetch(url, {
     method: 'GET',
@@ -23,7 +23,7 @@ const fetchOrderDetails = async (id: string) => {
 export const useGetOrder = (id: string) => {
   return useQuery(['order', id], () => fetchOrderDetails(id), {
     onError: (error) => {
-      console.error('Error fetching product details:', error);
+      console.error('Error fetching order details:', error);
     },
   });
 };
