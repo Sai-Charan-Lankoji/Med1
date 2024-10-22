@@ -16,12 +16,14 @@ function setReducer(
     undoStack: any[];
     redoStack: any[];
     pauseSaving: boolean;
+    initialState: any;
   } = {
     canvas: undefined,
     color: "#ff0000",
     undoStack: [],
     redoStack: [],
     pauseSaving: false,
+    initialState: null,
   },
   action: any
 ) {
@@ -30,7 +32,9 @@ function setReducer(
   switch (action.type) {
     case "INIT": {
       if (!state.pauseSaving) state.undoStack.push(action.canvas?.toJSON());
-      return { ...state, canvas: action.canvas };
+      //return { ...state, canvas: action.canvas };
+      const initialState = action.canvas?.toJSON();
+      return { ...state, canvas: action.canvas,initialState };
     }
     case "REINIT": {
       return { ...state, canvas: action.canvas };
@@ -354,6 +358,19 @@ function setReducer(
         state.undoStack.push(state.canvas?.toJSON());
       }
       return state;
+    }
+    case "RESET": {
+      if (!state.canvas || !state.initialState) return state;
+      
+      state.canvas.loadFromJSON(state.initialState, () => {
+        state.canvas?.renderAll();
+      });
+      
+      return {
+        ...state,
+        undoStack: [],
+        redoStack: [],
+      };
     }
     case "UNDO":
       {

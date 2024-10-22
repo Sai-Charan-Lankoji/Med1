@@ -16,14 +16,14 @@ function setReducer(
     undoStack: any[];
     redoStack: any[];
     pauseSaving: boolean;
-    initialState: any; // Add this to store the initial state
+    initialState: any;
   } = {
     canvas: undefined,
     color: "#ff0000",
     undoStack: [],
     redoStack: [],
     pauseSaving: false,
-    initialState: null, // Initialize with null
+    initialState: null,
   },
   action: any
 ) {
@@ -32,6 +32,7 @@ function setReducer(
   switch (action.type) {
     case "INIT": {
       if (!state.pauseSaving) state.undoStack.push(action.canvas?.toJSON());
+      //return { ...state, canvas: action.canvas };
       const initialState = action.canvas?.toJSON();
       return { ...state, canvas: action.canvas,initialState };
     }
@@ -40,7 +41,7 @@ function setReducer(
     }
     case "RESTORE_DESIGN": {
       if (!state.canvas) return state;
-      if (action.payload != null){
+      if (action.payload != null) {
         state.canvas.loadFromJSON(action.payload, () => {
           state.canvas?.renderAll();
         });
@@ -256,10 +257,10 @@ function setReducer(
       if (!state.canvas) {
         return state;
       }
-      state.canvas.isDrawingMode = false; 
+      state.canvas.isDrawingMode = false;
       fabric.Image.fromURL(
-        action.payload, 
-       
+        action.payload,
+
         function (image) {
           if (!image.width) return;
           // @ts-ignore
@@ -278,8 +279,8 @@ function setReducer(
           });
           state.canvas?.add(image);
           state.canvas?.centerObject(image);
-        }, 
-        
+        },
+
         { crossOrigin: "anonymous" }
       );
       if (!state.pauseSaving) state.undoStack.push(state.canvas?.toJSON());
@@ -358,7 +359,6 @@ function setReducer(
       }
       return state;
     }
-
     case "RESET": {
       if (!state.canvas || !state.initialState) return state;
       
@@ -372,7 +372,6 @@ function setReducer(
         redoStack: [],
       };
     }
-    
     case "UNDO":
       {
         state.pauseSaving = true;
@@ -393,8 +392,6 @@ function setReducer(
         state.pauseSaving = false;
       }
       return { ...state }; // Return updated state copy
-
-      
 
     case "REDO":
       {

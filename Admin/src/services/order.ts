@@ -1,10 +1,12 @@
 import { Lifetime } from "awilix";
 import {
+    FindConfig,
     Order as MedusaOrder,
     OrderService as MedusaOrderService,
+    Selector,
 } from "@medusajs/medusa";
-import OrderRepository from "@medusajs/medusa/dist/repositories/order";
 import { DeepPartial, FindOptionsWhere } from "typeorm";
+import OrderRepository from "@medusajs/medusa/dist/repositories/order";
  
 enum OrderStatus {
   Pending = "pending",
@@ -33,16 +35,27 @@ class OrderService extends MedusaOrderService {
         this.orderRepository_ = container.orderRepository;
     }
 
-    async retrieve(orderId: string): Promise<Order> {
+//     async list(selector: Selector<Order>, config?: FindConfig<Order>): Promise<Order[]> {
+//     config = config || {};
+//     return await this.orderRepository_.find({ where: selector, ...config });
+//   }
+
+//   async listAndCount(selector: Selector<Order>, config?:  FindConfig<Order>): Promise<[Order[], number]> {
+//     config = config || {};
+//     return await this.orderRepository_.findAndCount({ where: selector, ...config });
+//   }
+
+    async retrieve(orderId: string, config?: FindConfig<Order>): Promise<Order> {
+        config = config || {};
         if (!orderId) {
             throw new Error("Order ID is required.");
         }
-
-        const order = await this.orderRepository_.findOne({ where: { id: orderId } });
+        console.log(`Fetching order with ID: ${orderId}`);
+        const order = await this.orderRepository_.findOne({ where: { id: orderId } });        
+        console.log(`Order retrieved: ${order ? order.id : 'not found'}`);
         if (!order) {
-            throw new Error("Order not found.");
+            throw new Error(`Order with ID ${orderId} not found.`);
         }
-
         return order;
     }
 

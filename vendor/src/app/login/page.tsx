@@ -5,8 +5,9 @@ import medusaIcon from "../../../public/medusaIcon.jpeg";
 import Image from "next/image";
 import { useVendorLogin } from "../hooks/auth/useVendorLogin";
 import { useRouter } from "next/navigation"; 
+import withAuth from "@/lib/withAuth";
 
-export default function Login() {
+const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -93,3 +94,5 @@ export default function Login() {
     </div>
   );
 }
+
+export default Login;
