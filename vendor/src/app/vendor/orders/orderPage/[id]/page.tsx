@@ -4,17 +4,21 @@ import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import { useGetOrder } from '@/app/hooks/orders/useGetOrder';
 import { useGetCustomers } from '@/app/hooks/customer/useGetCustomers';
+import { BackButton } from "@/app/utils/backButton";
 
 const OrderDetailsView = () => {
   const { id } = useParams();
   const { data: order } = useGetOrder(id as string);
   const { data: customers} = useGetCustomers()
-    
+
   if (!order) {
     return <p>Loading...</p>;
   }
 
   return (
+    <>
+          <BackButton name="orders" />
+
     <div className="bg-white shadow-lg rounded-lg p-6 max-w-2xl mx-auto my-8">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Order Details</h1>
       
@@ -68,6 +72,7 @@ const OrderDetailsView = () => {
         </p>
       </div>
     </div>
+    </>
   );
 };
 
