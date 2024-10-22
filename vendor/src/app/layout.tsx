@@ -19,9 +19,8 @@ export default function  RootLayout({
   children: React.ReactNode;
 }>): React.ReactElement {
   const pathname = usePathname();
-  const isVendorRoute = pathname.startsWith('/vendor')
-  const showHeader =   isVendorRoute;
-  const showSidebar =  isVendorRoute;
+  const showHeader = pathname !== '/';
+  const showSidebar = pathname !== '/';
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-gray-100`}>

@@ -2,15 +2,18 @@
 import React, { useEffect } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter } from "next/navigation"; 
-import { useCart } from "@/context/cartContext";
+import { useCart } from "@/context/cartContext"; 
+import { useSvgContext } from "@/context/svgcontext";
 
 const OrderConform = () => {
   const router = useRouter(); 
-  const {clearCart} = useCart();
+  const {clearCart} = useCart(); 
+  const {clearSvgItems} = useSvgContext();
 
   useEffect(() => {
     const timer = setTimeout(() => { 
       clearCart();
+      clearSvgItems();
       router.push("/"); 
     }, 2000);
 

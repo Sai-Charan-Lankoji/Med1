@@ -53,9 +53,9 @@ class OrderService extends MedusaOrderService {
         console.log(`Fetching order with ID: ${orderId}`);
         const order = await this.orderRepository_.findOne({ where: { id: orderId } });        
         console.log(`Order retrieved: ${order ? order.id : 'not found'}`);
-        if (!order) {
-            throw new Error(`Order with ID ${orderId} not found.`);
-        }
+        // if (!order) {
+        //     throw new Error(`Order with ID ${orderId} not found.`);
+        // }
         return order;
     }
 
@@ -74,9 +74,9 @@ class OrderService extends MedusaOrderService {
   }
 
     async listOrdersByVendor(vendorId: string): Promise<Order[]> {
-        if (!vendorId) {
-            throw new Error("Vendor ID is required.");
-        }
+        // if (!vendorId) {
+        //     throw new Error("Vendor ID is required.");
+        // }
 
         const whereClause: FindOptionsWhere<Order> = { vendor_id: vendorId };
 

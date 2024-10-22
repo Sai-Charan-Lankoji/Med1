@@ -15,6 +15,18 @@ export default (phase, { defaultConfig }) => {
           pathname: '/uploads/**',  
         },
         {
+          protocol: 'http',
+          hostname: 'localhost',
+          port: '8003',  
+          pathname: '/uploads/**',  
+        },
+        {
+          protocol: 'http',
+          hostname: 'localhost',
+          port: '8004',  
+          pathname: '/uploads/**',  
+        },
+        {
           protocol: 'https',
           hostname: 'medusa-public-images.s3.eu-west-1.amazonaws.com',
           pathname: '/**',  

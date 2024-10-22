@@ -10,6 +10,7 @@ interface CartItem {
   thumbnail: any
   quantity: number
   side: string
+  UploadImage: string | undefined;
 }
 
 interface CartContextProps {
