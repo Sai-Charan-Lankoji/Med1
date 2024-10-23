@@ -16,11 +16,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [vendorId, setVendorId] = useState<string | null>(null);
 
   // Persist email, contact name, and vendor ID in session storage
-  useEffect(() => {
-    if (email) sessionStorage.setItem('email', email);
-    if (contactName) sessionStorage.setItem('contactName', contactName);
-    if (vendorId) sessionStorage.setItem('vendor_id', vendorId);
-  }, [email, contactName, vendorId]);
+  // useEffect(() => {
+  //   if (email) sessionStorage.setItem('email', email);
+  //   if (contactName) sessionStorage.setItem('contactName', contactName);
+  //   if (vendorId) sessionStorage.setItem('vendor_id', vendorId);
+  // }, [email, contactName, vendorId]);
 
   // Restore session data on reload
   useEffect(() => {

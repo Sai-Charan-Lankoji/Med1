@@ -63,11 +63,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
     }
 
     // Check if the customer already exists
-    const existingCustomer = await customerService.checkCustomerExists({ email });
-    if (existingCustomer) {
-      res.status(409).json({ error: "Customer with this email already exists." });
-      return;
-    }
+    // const existingCustomer = await customerService.checkCustomerExists({ email });
+    // if (existingCustomer) {
+    //   res.status(409).json({ error: "Customer with this email already exists.",
+    //     message: "Customer with this email already exists."
+    //    });
+    //   return;
+    // }
 
     // Hash the customer's password
     const password_hash = await bcrypt.hash(password, 10);

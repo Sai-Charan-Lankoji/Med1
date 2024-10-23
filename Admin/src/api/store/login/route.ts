@@ -45,10 +45,12 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
       return;
     }
 
-    const { email, password } = req.body as { email: string; password: string };
+    const { email, password, vendorId } = req.body as { email: string; password: string; vendorId: any};
 
     if (!email || !password) {
-      res.status(400).json({ error: "Email and password are required." });
+      res.status(400).json({ error: "Email and password are required.",
+        message: "Please enter the email and password."
+       });
       return;
     }
 
@@ -57,10 +59,13 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
     if (!existingCustomer) {
       res.status(404).json({ error: "Customer not found." });
       return;
-    }
+    } 
 
     if (!existingCustomer.password_hash) {
-      res.status(500).json({ error: "Password hash is missing in the customer record." });
+      res.status(500).json({ error: "Password hash is missing in the customer record.",
+        message: "Please enter a valid existing password."
+
+       });
       return;
     }
 
@@ -71,15 +76,29 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
       return;
     }
 
-    const token = jwt.sign({ id: existingCustomer.id, email: existingCustomer.email }, process.env.JWT_SECRET!, {
-      expiresIn: "1h",
-    });
-
+    // Check vendor association
     const vendor = await vendorService.findByBussinessType(BusinessModel.FootballFranchise);
     if (!vendor) {
       res.status(404).json({ error: "Vendor not found." });
       return;
     }
+
+    // Function to check if customer is associated with vendor
+    const isAssociatedWithVendor = await customerService.checkCustomerVendorAssociation(existingCustomer.id, vendorId);
+
+    if (!isAssociatedWithVendor) {
+      // If not associated, return a message to register first
+      res.status(403).json({
+        error: "Customer is not associated with the vendor.",
+        message: "Please register with the store first."
+      });
+      return;
+    }
+
+    // Generate JWT token
+    const token = jwt.sign({ id: existingCustomer.id, email: existingCustomer.email }, process.env.JWT_SECRET!, {
+      expiresIn: "1h",
+    });
 
     // Create or get the publishable API key
     const publishableApiKey = await publishableApiKeyService.create(vendor.id, { title: "New API Key" });
@@ -96,3 +115,4 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
     res.status(500).json({ error: error.message || "An unknown error occurred." });
   }
 };
+

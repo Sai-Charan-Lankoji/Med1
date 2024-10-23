@@ -57,6 +57,14 @@ class CustomerService extends TransactionBaseService {
         return await this.customerRepository.save(newCustomer);
     }
 
+    async checkCustomerVendorAssociation(customerId: string, vendorId: string): Promise<boolean> {
+        // Check if the customer is already associated with the vendor
+        const association = await this.customerRepository.findOne({
+          where: { id: customerId, vendor_id: vendorId }
+        });
+        return !!association;
+      }
+
     // In customerService (or repository), ensure you fetch the `password_hash`
     async checkCustomerExists({ email }: { email: string }) {
         const customer = await this.customerRepository.findOne({
