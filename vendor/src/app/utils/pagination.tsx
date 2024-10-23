@@ -50,7 +50,7 @@ const Pagination = <T extends { [key: string]: any }>({
   return (
     <div className="flex justify-between items-center mt-4 text-gray-500 text-xs">
       <div className="mr-4">
-        Showing {start} to {end} of {totalItems} items
+        Showing {start} - {end} of {totalItems} items
       </div>
       <div className="flex space-x-2">
         <button 

@@ -46,7 +46,7 @@ const Order = () => {
 
   const getCustomerFirstName = (customerId: any) => {
     const customer = customersData?.find((customer: { id: any; }) => customer.id === customerId);
-    return customer ? customer.first_name : 'N/A';
+    return customer ? `${customer.first_name} ${customer.last_name}` : 'N/A';
   };
 
   const storesWithMatchingSalesChannels = OrdersData?.map((order: { vendor_id: any; }) => {
@@ -353,7 +353,7 @@ const Order = () => {
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center flex flex-row justify-center space-x-2">
                       <span className="text-[14px] font-medium text-slate-600">
-                        ${order.total_amount}
+                        {order.total_amount}
                       </span>{" "}
                       <span className="text-[12px] font-medium text-gray-400">
                         {order.currency_code.toUpperCase()}
@@ -362,11 +362,11 @@ const Order = () => {
                         className="font-semibold text-[rgb(107, 114, 128)] text-[12px] md:text-[14px]"
                         content={order.currency_code}
                       >
-                        <Button variant="transparent">
+                        {/*<Button variant="transparent">
  
                              {order.currency_code}
                           
-                        </Button>
+                        </Button> */}
                       </Tooltip>
                     </Table.Cell>
                   </Table.Row>
