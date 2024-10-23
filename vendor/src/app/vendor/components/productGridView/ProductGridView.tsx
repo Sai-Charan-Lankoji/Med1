@@ -3,7 +3,7 @@ import { EllipsisHorizontal, PencilSquare, Trash } from "@medusajs/icons";
 import { DropdownMenu, IconButton } from "@medusajs/ui";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Product } from "../../products/productsPage/page";
+import { Product } from "../../products/page";
 import { useDeleteProduct } from "@/app/hooks/products/useDeleteProduct";
 // import { useState } from "react";
 

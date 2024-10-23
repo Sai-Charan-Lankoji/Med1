@@ -44,7 +44,8 @@ export const useVendorLogin = () => {
       const data: VendorLoginResponse = await response.json();
       if (data.token) {
         console.log('Login successful'); 
-        
+        sessionStorage.setItem('email',data.vendor.contact_email)
+        sessionStorage.setItem('contactName', data.vendor.contact_name)
         sessionStorage.setItem('vendor_id', data.vendor.id); 
         sessionStorage.setItem('business_type', data.vendor.business_type);
         setAuthEmail(data.vendor.contact_email);

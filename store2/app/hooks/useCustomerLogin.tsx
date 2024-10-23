@@ -57,7 +57,7 @@ export const useCustomerLogin = () => {
     }
   };
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string, vendorId: any) => {
     setLoading(true);
     setError(null);
 
@@ -69,7 +69,7 @@ export const useCustomerLogin = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, vendorId }),
       });
 
       if (!response.ok) {
