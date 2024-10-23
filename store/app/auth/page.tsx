@@ -19,6 +19,7 @@ export default function SignIn() {
     email: "",
     password: "",
     phone: "",
+    has_account: true,
     vendor_id: vendorId
   });
   const [showPassword, setShowPassword] = useState<boolean>(false);
@@ -36,7 +37,7 @@ export default function SignIn() {
   // Handle form submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { email, password, firstName, lastName, phone, vendor_id } = formData;
+    const { email, password, firstName, lastName, phone, has_account, vendor_id } = formData;
 
     if (!email || !password) {
       console.log("Email and password are required");
@@ -44,13 +45,12 @@ export default function SignIn() {
     }
 
     if (isSignup) {
-      await signup( email, password, firstName, lastName, phone, vendor_id );
+      await signup( email, password, firstName, lastName, phone, has_account, vendor_id );
     } else {
       await login(email, password);
     }
   };
 
-  // Check if loading state should be applied (either login or signup)
   const isLoading = loginLoading || signupLoading;
 
   return (

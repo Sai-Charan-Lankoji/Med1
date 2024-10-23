@@ -46,18 +46,19 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
       
 
 
-    const { email, password, first_name, last_name, phone, vendor_id } = req.body as {
+    const { email, password, first_name, last_name, phone, has_account, vendor_id } = req.body as {
       email: string;
       password: string;
       first_name: string;
       last_name: string;
       phone: string;
+      has_account: boolean;
       vendor_id: string;  
     };
 
     // Ensure all required fields are present
-    if (!email || !password || !first_name || !last_name || !phone || !vendor_id) {
-      res.status(400).json({ error: "All fields (email, password, first name, last name, phone, vendor_id) are required." });
+    if (!email || !password || !first_name || !last_name || !phone || !has_account || !vendor_id) {
+      res.status(400).json({ error: "All fields (email, password, first name, last name, phone, has_account, vendor_id) are required." });
       return;
     }
 
@@ -78,6 +79,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
       first_name,
       last_name,
       phone,
+      has_account,
       vendor_id
     });
 

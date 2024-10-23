@@ -42,7 +42,7 @@ export const useCustomerSignup = () => {
     }
   };
 
-  const signup = async (email: string, password: string, first_name: string, last_name: string, phone: string, vendor_id: string | null) => {
+  const signup = async (email: string, password: string, first_name: string, last_name: string, phone: string, has_account: boolean, vendor_id: string | null) => {
     setLoading(true);
     setError(null);
   
@@ -54,7 +54,7 @@ export const useCustomerSignup = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ email, password, first_name, last_name, phone, vendor_id }),
+        body: JSON.stringify({ email, password, first_name, last_name, phone, has_account, vendor_id }),
       });
   
       if (!response.ok) {

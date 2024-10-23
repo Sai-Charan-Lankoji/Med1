@@ -50,6 +50,7 @@ class CustomerService extends TransactionBaseService {
             first_name: customerObject.first_name,
             last_name: customerObject.last_name,
             phone: customerObject.phone,
+            has_account: customerObject.has_account,
             vendor_id: customerObject.vendor_id, 
         });
 

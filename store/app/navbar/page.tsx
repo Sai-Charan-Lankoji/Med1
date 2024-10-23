@@ -117,7 +117,7 @@ const Navbar: React.FC = () => {
                 )}
               </button>
               
-              {isProfileOpen && (
+              {/* {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1 transform opacity-100 scale-100 transition-all duration-200">
                   <Link 
                     href="./changepassword"
@@ -126,7 +126,7 @@ const Navbar: React.FC = () => {
                     Change Password
                   </Link>
                 </div>
-              )}
+              )} */}
             </div>
 
             <div className="relative cart-dropdown">
