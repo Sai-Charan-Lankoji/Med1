@@ -1,7 +1,8 @@
 import { Lifetime } from "awilix";
 import {
     TransactionBaseService,
-    Customer as MedusaCustomer
+    Customer as MedusaCustomer,
+    FindConfig
 } from "@medusajs/medusa";
 import { EntityManager } from "typeorm";
 import { CreateCustomerInput as MedusaCreateCustomerInput, UpdateCustomerInput } from "@medusajs/medusa/dist/types/customers";
@@ -81,6 +82,19 @@ class CustomerService extends TransactionBaseService {
         return await this.customerRepository.save(updatedCustomer);
     }
 
+    async retrieve(customerId: string, config?: FindConfig<Customer>): Promise<Customer>{
+        if (!customerId) {
+            throw new Error("Customer ID is required to retrieve a customer");
+        }
+
+        const customer = await this.customerRepository.findOne({ where: { id: customerId } });
+
+        if (!customer) {
+            throw new Error(`Customer with ID ${customerId} not found`);
+        }
+        return  customer;
+    }
+
     async delete(customerId: string): Promise<void> {
         if (!customerId) {
             throw new Error("Customer ID is required to delete a customer");
@@ -102,6 +116,17 @@ class CustomerService extends TransactionBaseService {
 
         const customers = await this.customerRepository.find({
             where: { vendor_id: vendorId }
+        });
+
+        return customers;
+    }
+    async retrieveByEmail(email: string): Promise<Customer[]> {
+        if (!email) {
+            throw new Error("Email ID is required to retrieve customers");
+        }
+
+        const customers = await this.customerRepository.find({
+            where: { email: email }
         });
 
         return customers;

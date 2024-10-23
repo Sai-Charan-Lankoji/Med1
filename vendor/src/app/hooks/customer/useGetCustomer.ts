@@ -1,15 +1,9 @@
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useQuery } from '@tanstack/react-query';
 
-const fetchCustomers = async () => {
-  const vendorId = sessionStorage.getItem('vendor_id');
-  
-  if (!vendorId) {
-    console.log('No vendor ID found in sessionStorage');
-    return []; 
-  }
+const fetchCustomer = async (id: string) => {
 
-  const url = `${baseUrl}/vendor/customers?vendor_id=${vendorId}`;
+  const url = `${baseUrl}/vendor/customers/${id}`;
 
   try {
     const response = await fetch(url, {
@@ -26,7 +20,7 @@ const fetchCustomers = async () => {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
 
       if (response.status === 404 || response.status === 500) {
-        console.log('No customers found or server error. Returning empty array.');
+        console.log('No customer found or server error. Returning empty array.');
         return []; 
       }
 
@@ -46,8 +40,8 @@ const fetchCustomers = async () => {
 };
 
 
-export const useGetCustomers = () => {
-  return useQuery(['customers'], fetchCustomers, {
+export const useGetCustomer = (id: string) => {
+  return useQuery(['customer', id], () => fetchCustomer(id), {
     refetchOnWindowFocus: true,  
     refetchOnMount: true,        
     cacheTime: 0,                
@@ -56,7 +50,7 @@ export const useGetCustomers = () => {
 
     onError: (error: unknown) => {
       if (error instanceof Error) {
-        console.error('Error occurred while fetching customers:', error.message);
+        console.error('Error occurred while fetching customer:', error.message);
       } else {
         console.error('An unknown error occurred:', error);
       }

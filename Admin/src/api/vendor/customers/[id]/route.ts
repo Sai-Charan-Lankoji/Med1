@@ -1,5 +1,5 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
-import CustomerService from "../../../services/customer";
+import CustomerService from "../../../../services/customer";
 
 interface CustomerData {
   email: string;
@@ -33,10 +33,8 @@ export const GET = async (
       return;
     }
 
-    const vendor_id = req.query.vendor_id as string | undefined;
-    const email = req.query.email as string | undefined;
     const customer_id = req.params.id as string | undefined;
-
+    console.log("Customer Id: Backend customer service", customer_id);
     let customers;
 
     // Fetch customer by customer_id if provided
@@ -48,24 +46,7 @@ export const GET = async (
         return;
       }
     } 
-    // Fetch all customers associated with the vendor
-    else if (vendor_id) {
-      customers = await customerService.getCustomersByVendorId(vendor_id);
-      if (!customers || customers.length === 0) {
-        console.log(`No customers found for vendor ID: ${vendor_id}`);
-        res.status(404).json({ error: "No customers found for this vendor." });
-        return;
-      }
-    } 
-    // Fetch customer by email if provided
-    else if (email) {
-      customers = await customerService.retrieveByEmail(email);
-      if (!customers || customers.length === 0) {
-        console.log("No customers found for given email.");
-        res.status(404).json({ error: "No customers found for given email address." });
-        return;
-      }
-    } else {
+     else {
       res.status(400).json({ error: "No valid query parameters provided." });
       return;
     }

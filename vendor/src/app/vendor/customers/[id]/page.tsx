@@ -8,6 +8,8 @@ import { ChevronDownMini, ChevronUpMini, EllipsisHorizontal, PencilSquare, Trash
 import Image from "next/image";
 import Pagination from "@/app/utils/pagination";
 import { BackButton } from "@/app/utils/backButton";
+import { useGetCustomer } from "@/app/hooks/customer/useGetCustomer";
+import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 
 const Customer = () => {
   const [currentPage, setCurrentPage] = useState(0); 
@@ -17,10 +19,8 @@ const Customer = () => {
 
   const params = useParams();
   const customerId = params?.id as string | undefined;
-  const { isLoading, customer } = useAdminCustomer(customerId!, {
-    enabled: !!customerId,
-  });
-  const { orders } = useAdminOrders();
+  const { data:customer } = useGetCustomer(customerId);
+  const { data: orders } = useGetOrders();
 
   const getOrderCountForCustomer = (customerId: string) => {
     if (!orders) return 0;
@@ -39,7 +39,7 @@ const Customer = () => {
   return (
     <div> 
         <BackButton name = "Customers"/>
-      {isLoading && <span>Loading...</span>}
+      {!customer && <span>Loading...</span>}
       {!customerId && <span>Customer ID not provided in the URL</span>}
       {customer && (
         <>
