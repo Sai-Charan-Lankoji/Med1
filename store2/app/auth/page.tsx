@@ -7,8 +7,6 @@ import { HiEye, HiEyeOff } from "react-icons/hi";
 import { useCustomerLogin } from "../hooks/useCustomerLogin";
 import { useCustomerSignup } from "../hooks/useCustomerSignup";
 
-<<<<<<< HEAD
-=======
 type Errors = {
   firstName?: string;
   lastName?: string;
@@ -16,7 +14,6 @@ type Errors = {
   email?: string;
   password?: string;
 };
->>>>>>> f3bb79d91a094e6774ec3c8d3e83f50845532c55
 export default function SignIn() {
   const vendorId = process.env.NEXT_PUBLIC_VENDOR_ID  || null;
 
