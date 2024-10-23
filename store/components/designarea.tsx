@@ -501,7 +501,7 @@ export default function DesignArea(): React.ReactElement {
       </div>
 
      
-      <div>
+     {/* <div>
         <h3>Cart Items:</h3>
         {cart.map((item: any, index: any) => (
           <div key={index}>
@@ -509,7 +509,7 @@ export default function DesignArea(): React.ReactElement {
             <img src={item.image} alt={item.name} width="100" />
           </div>
         ))}
-      </div>
+      </div> */}
     </div>
   );
 }
