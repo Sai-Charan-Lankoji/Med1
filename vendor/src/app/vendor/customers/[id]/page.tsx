@@ -55,39 +55,7 @@ const Customer = () => {
                   </h2>
                   <p className="text-gray-500 text-sm">{customer.email}</p>
                 </div>
-                <div className="ml-auto">
-                  <DropdownMenu>
-                    <DropdownMenu.Trigger asChild>
-                      <IconButton
-                        variant="transparent"
-                        className="rounded-full w-8 h-8 flex justify-center items-center hover:bg-gray-300 active:bg-gray-200"
-                      >
-                        <EllipsisHorizontal className="w-6 h-6 text-gray-500" />
-                      </IconButton>
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content className=" bg-white ">
-                      <DropdownMenu.Label>Actions</DropdownMenu.Label>
-                      <DropdownMenu.Item
-                        className="bg-white text-gray-500  hover:text-white"
-                        // onClick={() => {
-                        //   router.push(`/vendor/customers/cusomerPage/${customer.id}`);
-                        // }}
-                      >
-                        <PencilSquare className="mr-2" />
-                        Edit
-                      </DropdownMenu.Item>
-                      <DropdownMenu.Item
-                        // onClick={() => {
-                        //   handleDelete(product.id);
-                        // }}
-                        className="bg-white text-gray-500  hover:text-white"
-                      >
-                        <Trash className="mr-2" />
-                        Delete
-                      </DropdownMenu.Item>
-                    </DropdownMenu.Content>
-                  </DropdownMenu>
-                </div>
+               
               </div>
 
               <div className="flex mt-8">
@@ -118,7 +86,7 @@ const Customer = () => {
                 <div className="border border-r-gray-300 mx-4"></div>
 
                 <div className="">
-                  <p className="text-sm text-gray-400">User</p>
+                  <p className="text-sm text-gray-400">Customer</p>
                   <p className="text-gray-600 flex items-center text-sm">
                     <span
                       className={`w-2 h-2 rounded-full mr-2 ${
@@ -232,7 +200,7 @@ const Customer = () => {
 
 
           <Container className=" mt-4 bg-white shadow-none rounded-lg ">
-        <h1 className="text-[24px] mb-2">Raw Product</h1>
+        <h1 className="text-[24px] mb-2">Raw Customer Details</h1>
         <div className="flex flex-row justify-between ">
           <Button
             variant="transparent"
