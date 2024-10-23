@@ -17,7 +17,7 @@ export const SideNavBar = () => {
           <p className="lg:text-3xl sm:text-xl items-center w-full bg-purple-800 text-white p-4 border-spacing-2 border-zinc-800 rounded rounded-s-md">
             Create your Design
           </p>
-          <div className="lg:h-[500px] xs:h-auto overflow-y-auto overflow-x-hidden scrollbar scrollbar-thin pb-5">
+          <div className="lg:h-[500px] xs:h-auto overflow-y-auto overflow-x-hidden scrollbar pb-5">
             <MainMenu></MainMenu>
             <ClipartGallery></ClipartGallery>
             <ShapeGallery></ShapeGallery>
