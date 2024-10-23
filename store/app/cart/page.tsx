@@ -2,20 +2,24 @@
 
 import { useCart } from "@/context/cartContext";
 import { useUserContext } from "@/context/userContext";
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useCreateOrder } from "../hooks/useCreateOrder";
 import { XMarkMini } from "@medusajs/icons";
-import { DesignContext } from "@/context/designcontext";
-import React from "react";
+import imageCompression from "browser-image-compression";
 
 interface OrderData {
   line_items: Array<{
-    product_id: number | any;
+    product_id: number | string;
     quantity: number;
+    price: number;
+    thumbnail_url: any; 
+    upload_url: any;
+    background_image_url : string;
+    background_image_color : string;
   }>;
   total_amount: number;
   currency_code: string;
@@ -31,7 +35,7 @@ interface OrderData {
 
 const CartPage = () => {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const { isLogin, customerToken } = useUserContext();
+  const { customerToken } = useUserContext();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { mutate: createOrder, isLoading, isError } = useCreateOrder();
@@ -39,7 +43,8 @@ const CartPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<number | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
-   const openModal = (itemId: number) => {
+
+  const openModal = (itemId: number) => {
     setItemToRemove(itemId);
     setIsModalOpen(true);
   };
@@ -49,11 +54,9 @@ const CartPage = () => {
     setItemToRemove(null);
   };
 
-  // Explicitly type our price calculations
-  const shippingCost: number = 0; // Free shipping
-  const taxRate: number = 0.1; // 10% tax rate
+  const shippingCost: number = 0;
+  const taxRate: number = 0.1;
 
-  // Calculate cart totals with explicit number typing
   const subtotal: number = cart.reduce((total, item) => {
     return total + item.price * item.quantity;
   }, 0);
@@ -93,7 +96,8 @@ const CartPage = () => {
 
   const public_api_key = process.env.NEXT_PUBLIC_API_KEY || null;
   const vendorId = process.env.NEXT_PUBLIC_VENDOR_ID || null;
-
+  
+   
   const handleProceedToOrder = () => {
     if (isProcessingOrder) return;
     setIsProcessingOrder(true);
@@ -103,9 +107,11 @@ const CartPage = () => {
         product_id: item.id,
         quantity: item.quantity,
         price: item.price,
-        thumbnail_url  : item.thumbnail,
-        // uploadImage_url : item.UploadImage
-         
+        thumbnail_url: item.upload ? item.upload : item.thumbnail, // Use upload if available, otherwise fallback to thumbnail
+        upload_url: item.upload,
+        background_image_url: item.backgroundTShirt.url, 
+        background_image_color: item.backgroundTShirt.color
+
       })),
       total_amount: total,
       currency_code: "usd",
@@ -124,7 +130,6 @@ const CartPage = () => {
         try {
           await new Promise((resolve) => setTimeout(resolve, 100));
           router.push("./order-confirmation");
-          // clearCart();
         } catch (err) {
           console.error("Navigation error:", err);
           setError("Failed to navigate to order confirmation page.");
@@ -167,7 +172,7 @@ const CartPage = () => {
             <div className="text-center py-12">
               <h2 className="text-xl font-medium mb-4">Your cart is empty</h2>
               <p className="text-gray-600 mb-6">
-                Looks like you haven`t added any items to your cart yet.
+                Looks like you haven &apos t added any items to your cart yet.
               </p>
               <Link
                 href="/"
@@ -193,17 +198,30 @@ const CartPage = () => {
                     <tr key={item.id} className="border-b">
                       <td className="py-4">
                         <div className="flex items-center space-x-4">
-                          <Image
-                            src={item.thumbnail}
-                            alt={item.title}
-                            width={80}
-                            height={80}
-                            className="rounded-md object-cover"
-                          />
+                          <div className="relative w-10 h-20">
+                            <Image
+                              src={item.backgroundTShirt.url}
+                              alt={item.title}
+                              layout="fill"
+                              objectFit="cover"
+                              className="rounded-md"
+                              style={{ backgroundColor: item.backgroundTShirt.color }}
+                            />
+                            <Image
+                              src={item.thumbnail}
+                              alt={item.title}
+                              layout="fill"
+                              objectFit="contain"
+                              className="rounded-md" 
+                              
+                              
+                              
+                            />
+                          </div>
                           <div>
                             <h3 className="font-medium">{item.title}</h3>
                             <p className="text-sm text-gray-500">
-                              Color: {item.color}
+                              Color: {item.backgroundTShirt.color}
                             </p>
                             <p className="text-sm text-gray-500">
                               Side: {item.side}
@@ -293,7 +311,7 @@ const CartPage = () => {
               <button
                 className="w-full mt-6 bg-black text-white py-3 rounded-md font-medium hover:bg-gray-800 transition duration-200 disabled:bg-gray-400"
                 onClick={handleProceedToOrder}
-                disabled={isLoading} // Disable if loading
+                disabled={isLoading}
               >
                 {isLoading && customerToken
                   ? "Processing..."

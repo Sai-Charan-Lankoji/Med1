@@ -1,69 +1,75 @@
-'use client'
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import React, { useState, useEffect } from "react"
-import { FaUserCircle, FaShoppingCart } from "react-icons/fa"
+import Image from "next/image";
+import Link from "next/link";
+import React, { useState, useEffect } from "react";
+import { FaUserCircle, FaShoppingCart } from "react-icons/fa";
 import navlogoS from "../../public/navlogoS.png";
-import { useCart } from "@/context/cartContext"
-import { MdDeleteForever } from "react-icons/md"
-import { useUserContext } from "@/context/userContext"
-import { useCustomerLogout } from "../hooks/useCustomerLogout"
-import { useRouter } from "next/navigation"
+import { useCart } from "@/context/cartContext";
+import { MdDeleteForever } from "react-icons/md";
+import { useUserContext } from "@/context/userContext";
+import { useCustomerLogout } from "../hooks/useCustomerLogout";
+import { useRouter } from "next/navigation";
 
 const Navbar: React.FC = () => {
-  const { cart, removeFromCart } = useCart()
-  const { email,  customerToken } = useUserContext() // Access customerToken here
-  const { logout } = useCustomerLogout()
-  const router = useRouter()
-  const [isCartOpen, setIsCartOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [cartItemsCount, setCartItemsCount] = useState(0)
-  const [cartTotal, setCartTotal] = useState(0)
+  const { cart, removeFromCart } = useCart();
+  const { email, customerToken } = useUserContext(); // Access customerToken here
+  const { logout } = useCustomerLogout();
+  const router = useRouter();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
+  const [cartTotal, setCartTotal] = useState(0);
 
   useEffect(() => {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
-    setCartItemsCount(totalItems)
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    setCartTotal(total)
-  }, [cart])
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    setCartItemsCount(totalItems);
+    const total = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    setCartTotal(total);
+  }, [cart]);
 
   const handleCartClick = () => {
-    setIsCartOpen((prevState) => !prevState)
-    setIsProfileOpen(false)
-  }
+    setIsCartOpen((prevState) => !prevState);
+    setIsProfileOpen(false);
+  };
 
   const handleProfileClick = () => {
-    setIsProfileOpen((prevState) => !prevState)
-    setIsCartOpen(false)
-  }
+    setIsProfileOpen((prevState) => !prevState);
+    setIsCartOpen(false);
+  };
 
-  const handleLogout = () => {  
-    setIsCartOpen(false)
-    setIsProfileOpen(false)
-    logout()
-  }
+  const handleLogout = () => {
+    setIsCartOpen(false);
+    setIsProfileOpen(false);
+    logout();
+  };
 
   const handleViewCart = () => {
-    if (!customerToken) { 
-      router.push("/auth")
+    if (!customerToken) {
+      router.push("/auth");
     } else {
-      router.push("/cart")
+      router.push("/cart");
     }
-  }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (!target.closest('.cart-dropdown') && !target.closest('.profile-dropdown')) {
-        setIsCartOpen(false)
-        setIsProfileOpen(false)
+      const target = event.target as HTMLElement;
+      if (
+        !target.closest(".cart-dropdown") &&
+        !target.closest(".profile-dropdown")
+      ) {
+        setIsCartOpen(false);
+        setIsProfileOpen(false);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <nav className="bg-white backdrop-blur-sm bg-opacity-90 fixed w-full top-0 z-50 border-b border-gray-200 shadow-sm">
@@ -105,7 +111,7 @@ const Navbar: React.FC = () => {
             )}
 
             <div className="relative profile-dropdown">
-              <button 
+              <button
                 onClick={handleProfileClick}
                 className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
               >
@@ -116,7 +122,7 @@ const Navbar: React.FC = () => {
                   </span>
                 )}
               </button>
-              
+
               {/* {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1 transform opacity-100 scale-100 transition-all duration-200">
                   <Link 
@@ -130,7 +136,7 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="relative cart-dropdown">
-              <button 
+              <button
                 onClick={handleCartClick}
                 className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
               >
@@ -146,9 +152,13 @@ const Navbar: React.FC = () => {
                 <div className="absolute right-0 mt-3 w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 transform opacity-100 scale-100 transition-all duration-200">
                   <div className="p-4">
                     <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-                      <h3 className="text-lg font-semibold text-gray-900">Cart Items</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Cart Items
+                      </h3>
                       {cart.length > 0 && (
-                        <span className="text-lg font-bold text-green-600">${cartTotal.toFixed(2)}</span>
+                        <span className="text-lg font-bold text-green-600">
+                          ${cartTotal.toFixed(2)}
+                        </span>
                       )}
                     </div>
 
@@ -161,17 +171,36 @@ const Navbar: React.FC = () => {
                                 key={item.id}
                                 className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition duration-200"
                               >
-                                <Image
-                                  src={item.thumbnail}
-                                  alt={item.title}
-                                  height={50}
-                                  width={50}
-                                  className="rounded-md object-cover h-16 w-16"
-                                />
+                                <div className="relative w-10 h-20">
+                                  <Image
+                                    src={item.backgroundTShirt.url}
+                                    alt={item.title}
+                                    layout="fill"
+                                    objectFit="cover"
+                                    className="rounded-md"
+                                    style={{
+                                      backgroundColor:
+                                        item.backgroundTShirt.color,
+                                    }}
+                                  />
+                                  <Image
+                                    src={item.thumbnail}
+                                    alt={item.title}
+                                    layout="fill"
+                                    objectFit="contain"
+                                    className="rounded-md"
+                                  />
+                                </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                                  <p className="text-sm text-gray-500">{item.side}</p>
-                                  <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                                  <p className="text-sm font-medium text-gray-900 truncate">
+                                    {item.title}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {item.side}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    Qty: {item.quantity}
+                                  </p>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                   <span className="text-sm font-semibold text-gray-900">
@@ -190,19 +219,25 @@ const Navbar: React.FC = () => {
                           </ul>
                         </div>
                       ) : (
-                        <p className="py-8 text-center text-gray-500">Your cart is empty</p>
+                        <p className="py-8 text-center text-gray-500">
+                          Your cart is empty
+                        </p>
                       )
                     ) : (
-                      <p className="py-8 text-center text-gray-500">Please log in to view your cart</p>
+                      <p className="py-8 text-center text-gray-500">
+                        Please log in to view your cart
+                      </p>
                     )}
 
-                    <button 
+                    <button
                       onClick={handleViewCart}
                       className="mt-4 w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 transition duration-200 flex items-center justify-center space-x-2 shadow-md"
                     >
                       <span>View Cart</span>
                       {cartTotal > 0 && (
-                        <span className="font-semibold">(${cartTotal.toFixed(2)})</span>
+                        <span className="font-semibold">
+                          (${cartTotal.toFixed(2)})
+                        </span>
                       )}
                     </button>
                   </div>
@@ -213,7 +248,7 @@ const Navbar: React.FC = () => {
         </div>
       </div>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;

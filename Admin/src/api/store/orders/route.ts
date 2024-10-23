@@ -6,7 +6,7 @@ interface OrderData {
     fulfillment_status: string; // Add fulfillment_status field
     payment_status: string; // Add payment_status field
     customer_id: string; // Include customer_id
-    // vendor_id: string; // Make vendor_id required
+    vendor_id: string; // Make vendor_id required
     email: string; // Add email field
     region_id: string; // Add region_id field
     currency_code: string; // Add currency_code field
@@ -14,6 +14,11 @@ interface OrderData {
     line_items: { // Specify structure for line items
         product_id: string;
         quantity: number;
+        price: number;
+        thumbnail_url: any;
+        upload_url: any
+        background_image_url : string;
+        background_image_color : string;
     }[];
     total_amount: string; // Include total_amount
 }

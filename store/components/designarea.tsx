@@ -1,13 +1,26 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { FaDownload, FaRedo, FaUndo,FaSync } from "react-icons/fa";
-import { VscBriefcase } from "react-icons/vsc";
-import { IconContext } from "react-icons/lib";
+import { useRouter } from "next/navigation";
 import { nanoid } from "nanoid";
 import { fabric } from "fabric";
-import { DesignContext, TextPropsContext } from "../context/designcontext";
+import { useDispatch } from "react-redux";
+import { FaDownload, FaRedo, FaUndo, FaSync } from "react-icons/fa";
+import { VscBriefcase } from "react-icons/vsc";
 import { FiShoppingBag } from "react-icons/fi";
+import { IconContext } from "react-icons/lib";
+
+import { DesignContext, TextPropsContext } from "../context/designcontext";
+import { ColorPickerContext } from "../context/colorpickercontext";
+import { MenuContext } from "../context/menucontext";
+import { useUserContext } from "../context/userContext";
+import { useSvgContext } from '@/context/svgcontext';
+import { useCart } from "@/context/cartContext";
+import { useDownload } from "../shared/download";
+import { GetTextStyles } from "../shared/draw";
+import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
+import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
+
 import {
   extractFillColorsSelectedObject,
 } from "@/shared/controlutils";
@@ -16,18 +29,10 @@ import {
   bgColours,
   designApparels,
   IApparel,
-} from "../@types/models";
-import { useDispatch } from "react-redux";
-import { ColorPickerContext } from "../context/colorpickercontext";
-import { MenuContext } from "../context/menucontext";
-import { useDownload } from "../shared/download";
-import { GetTextStyles } from "../shared/draw";
-import { useCart } from "@/context/cartContext";
-import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
-import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload"; 
-import { useUserContext } from "../context/userContext";
-import { useRouter } from "next/navigation"; 
-import { useSvgContext } from '@/context/svgcontext';
+} from "../@types/models"; 
+
+import imageCompression from 'browser-image-compression';
+
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
@@ -35,7 +40,7 @@ const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
 export default function DesignArea(): React.ReactElement {   
-  const {svgUrl} = useSvgContext()
+  const {svgUrl} = useSvgContext();
   const router = useRouter();
   const { customerToken } = useUserContext();
   const dispatchForCanvas = useDispatch();
@@ -60,7 +65,6 @@ export default function DesignArea(): React.ReactElement {
   const { mutate: createApparelUpload } = useCreateApparelUpload();
 
   useEffect(() => {
-    // Load saved state from localStorage when component mounts
     const savedState = localStorage.getItem('designState');
     if (savedState) {
       const parsedState = JSON.parse(savedState);
@@ -68,11 +72,9 @@ export default function DesignArea(): React.ReactElement {
       setBgColor(parsedState.currentBgColor);
       setApparels(parsedState.apparels);
       setColors(parsedState.colors);
-      // Restore canvas state if you've saved it
       if (canvas && parsedState.canvasJSON) {
         canvas.loadFromJSON(parsedState.canvasJSON, canvas.renderAll.bind(canvas));
       }
-      // Clear the saved state to prevent stale data on future visits
       localStorage.removeItem('designState');
     }
   }, []);
@@ -86,7 +88,6 @@ export default function DesignArea(): React.ReactElement {
     dispatchForCanvas({ type: "INIT", canvas: canvas });
     dispatchForCanvas({ type: "RESTORE_DESIGN", payload: design?.jsonDesign });
 
-    // Listen for new image uploads
     const handleNewImage = (event: CustomEvent) => {
       const imageUrl = event.detail.imageUrl;
       handleImagePlacement(imageUrl);
@@ -99,7 +100,7 @@ export default function DesignArea(): React.ReactElement {
     };
   }, [design]);
 
-   const saveStateToLocalStorage = () => {
+  const saveStateToLocalStorage = () => {
     const stateToSave = {
       cart: cart,
       currentBgColor: currentBgColor,
@@ -135,8 +136,6 @@ export default function DesignArea(): React.ReactElement {
     }
   });
 
-  // ... (other canvas event handlers)
-
   const getCanvasClass = () => {
     if (design?.apparel.url === designApparels[0].url) {
       return "canvas-style1";
@@ -150,7 +149,7 @@ export default function DesignArea(): React.ReactElement {
     return "";
   };
 
-  const handleImageClick = (e: any, apparel: IApparel) => {
+  const handleImageClick = (e: React.MouseEvent, apparel: IApparel) => {
     e.preventDefault();
     setApparels(
       apparels.map((product) =>
@@ -182,60 +181,58 @@ export default function DesignArea(): React.ReactElement {
     dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
   };
 
-  const downloadDesignJson = (e: any) => {
+  const downloadDesignJson = () => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "design");
+    link.setAttribute("download", "design.json");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     setDownloadStatus("Downloaded");
   };
 
-  const downloadSVG = (e: any) => {
+  const downloadSVG = () => {
     const svgImage = canvas?.toSVG() ?? "";
     const blob = new Blob([svgImage], { type: "image/svg+xml" });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", design?.apparel.side ?? "design");
+    link.setAttribute("download", `${design?.apparel.side ?? "design"}.svg`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const downloadPNG = (e: any) => {
+  const downloadPNG = () => {
     const pngImage = canvas?.toDataURL({ multiplier: 4 }) ?? "";
     const link = document.createElement("a");
     link.href = pngImage;
-    link.setAttribute("download", (design?.apparel.side ?? "design") + ".png");
+    link.setAttribute("download", `${design?.apparel.side ?? "design"}.png`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  const downloadZip = (e: any) => {
+  const downloadZip = () => {
     handleZip(designs);
   };
 
-  const undo = (e: any) => {
+  const undo = () => {
     dispatchForCanvas({ type: "UNDO" });
   };
 
-  const redo = (e: any) => {
+  const redo = () => {
     dispatchForCanvas({ type: "REDO" });
   };
 
-  const reset = (e: any) => {
+  const reset = () => {
     dispatchForCanvas({ type: "RESET" });
-    
-    //clearDesignObject();
   };
 
-  const switchMenu = (type: any, object: fabric.Object | undefined) => {
+  const switchMenu = (type: string, object: fabric.Object | undefined) => {
     if (!type) return;
     if (type.match(clipartGal)) {
       dispatchMenu({ type: "SWITCH_TO_CLIPART", payload: true });
@@ -248,25 +245,68 @@ export default function DesignArea(): React.ReactElement {
       dispatchMenu({ type: "SWITCH_TO_TEXT", payload: true, props: textProps });
       dispatchProps({ type: "SELECTED_PROPS", payload: textProps });
     }
-  };   
+  };  
   
-  const addDesignToCart = () => { 
+  
+
+
+
+
+
+
+
+  
+  const addDesignToCart = async () => {  
+
+
+    
+
+
+
+
     if (!customerToken) {
       saveStateToLocalStorage();  
       router.push("/auth");
     } else {
       if (!design?.pngImage) return;
+
+      const canvasItems = canvas?.getObjects() || [];
+      console.log("this are the canvas items" , canvasItems)
+      const cliparts = canvasItems.filter(item => item.type === 'group' || item.type === 'path');
+      const uploadedImages = canvasItems.filter(item => item.type === 'image');
+
+
+
+       
+
+
+
       const newItem = {
-        title: "product",
-        thumbnail: svgUrl || design.uploadedImages?.[0],
+        title: "Custom T-Shirt Design",
+        thumbnail: design?.pngImage,
+        upload: design?.uploadedImages?.[0],
         price: 100,
-        color: design.apparel.color,
+        color: currentBgColor,
         id: nanoid(),
         quantity: 1,
         side: design.apparel.side,
         is_active: design.isactive,
-        UploadImage: design.uploadedImages?.[0]
-      };
+        backgroundTShirt: {
+          url: design.apparel.url,
+          color: currentBgColor,
+        },
+        // cliparts: cliparts.map(clipart => ({
+        //   type: clipart.type,
+        //   src: (clipart as fabric.Object).toDataURL(),
+        // })),
+        // uploadedImages: uploadedImages.map(img => ({
+        //   src: (img as fabric.Image).toDataURL() ,
+        // })),
+        svgUrl: svgUrl, 
+      }; 
+
+      console.log("this is new Item : " ,newItem)
+
       addToCart(newItem);
 
       const ApparelDesigns = {
@@ -276,8 +316,9 @@ export default function DesignArea(): React.ReactElement {
           color: newItem.color,
           side: newItem.side,
           quantity: newItem.quantity,
+          backgroundTShirt: newItem.backgroundTShirt,
         },
-        thumbnail_images: design.uploadedImages?.[0] || newItem.thumbnail,
+        thumbnail_images: design.uploadedImages?.[0] || svgUrl,
         is_active: newItem.is_active,
         archive: "false",
         customer_id: sessionStorage.getItem("customerId"),
@@ -285,28 +326,29 @@ export default function DesignArea(): React.ReactElement {
 
       CreateApparelDesign(ApparelDesigns, {
         onSuccess: (response) => {
-          console.log("data fetched confirmation", ApparelDesigns);
-          const apparelDesignId = response.newDesign.id;
           console.log("Created apparel design data ", response);
+          const apparelDesignId = response.newDesign.id;
 
-          // Now that we have the apparelDesignId, we can proceed with the upload
           const ApparelUploadData = {
             url: design.uploadedImages?.[0],
             apparelDesign_id: apparelDesignId,
-          };
+          }; 
 
-          createApparelUpload(ApparelUploadData, {
-            onSuccess: (response) => {
-              console.log("Image uploaded successfully", ApparelUploadData);
-              console.log("Created apparel upload data ", response);
-            },
-            onError: (err) => {
-              console.error("Error uploading image:", err);
-            },
-          }); 
+          if(ApparelUploadData.url){
+            createApparelUpload(ApparelUploadData, {
+              onSuccess: (response) => {
+                console.log("Uploaded apparel design image data:", response);
+              },
+              onError: (err) => {
+                console.error("Error uploading apparel design image:", err);
+              },
+            });
+          }
+
+         
         },
         onError: (err) => {
-          console.error("Error placing order:", err);
+          console.error("Error creating apparel design:", err);
         },
       });
     }
@@ -314,7 +356,6 @@ export default function DesignArea(): React.ReactElement {
   
   return (
     <div>
-      {/* Download buttons */}
       <div className="flex justify-between mb-1">
         <button
           type="button"
@@ -328,8 +369,9 @@ export default function DesignArea(): React.ReactElement {
         </button>
         <button
           type="button"
+          
           onClick={downloadZip}
-          className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
+          className="text-purple-700 hover:text-white border-purple-700  hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
         >
           <IconContext.Provider value={{ size: "24px", className: "btn-zip-design inline-block" }}>
             <VscBriefcase />
@@ -338,9 +380,7 @@ export default function DesignArea(): React.ReactElement {
         </button>
       </div>
 
-      {/* Canvas controls */}
       <div className="flex justify-between pt-2 bg-white p-2 pb-0 border border-b-0 border-zinc-300">
-        {/* SVG and PNG download buttons */}
         <div>
           <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={downloadSVG}>
@@ -355,7 +395,6 @@ export default function DesignArea(): React.ReactElement {
               <IconContext.Provider
                 value={{
                   size: "10px",
-                  // color: "rgb(29,78,216)",
                   className: "btn-download-design inline-block",
                 }}
               >
@@ -372,7 +411,6 @@ export default function DesignArea(): React.ReactElement {
               <IconContext.Provider
                 value={{
                   size: "10px",
-                  // color: "rgb(29,78,216)",
                   className: "btn-download-design inline-block",
                 }}
               >
@@ -386,7 +424,6 @@ export default function DesignArea(): React.ReactElement {
               <IconContext.Provider
                 value={{
                   size: "10px",
-                  // color: "rgb(29,78,216)",
                   className: "btn-download-design inline-block",
                 }}
               >
@@ -400,7 +437,6 @@ export default function DesignArea(): React.ReactElement {
               <IconContext.Provider
                 value={{
                   size: "10px",
-                  // color: "rgb(29,78,216)",
                   className: "btn-download-design inline-block",
                 }}
               >
@@ -479,37 +515,8 @@ export default function DesignArea(): React.ReactElement {
             </IconContext.Provider>
             <span className="ml-3">Add to Cart</span>
           </button>
-
-          {/* <span className="text-purple-800">$24.92 AUD </span> &nbsp;
-          <br /> */}
-          {/* <button
-            type="button"
-            className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border  focus:outline-none items-end focus:ring-blue-100 font-medium rounded-lg  text-sm px-5 py-1.5 text-center mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
-          >
-            <IconContext.Provider
-              value={{
-                size: "24px",
-                // color: "rgb(29,78,216)",
-                className: "btn-order-design inline-block",
-              }}
-            >
-              <BiPurchaseTag />
-            </IconContext.Provider>
-            <span className="ml-3">Order Options</span>
-          </button> */}
         </div>
       </div>
-
-     
-     {/* <div>
-        <h3>Cart Items:</h3>
-        {cart.map((item: any, index: any) => (
-          <div key={index}>
-            <p>{item.name}</p>
-            <img src={item.image} alt={item.name} width="100" />
-          </div>
-        ))}
-      </div> */}
     </div>
   );
 }
