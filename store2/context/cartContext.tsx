@@ -22,7 +22,7 @@ interface CartItem {
   upload: any;
   price: number;
   color: string;
-  id: string | number;
+  id: number;
   quantity: number;
   side: string;
   is_active: boolean;

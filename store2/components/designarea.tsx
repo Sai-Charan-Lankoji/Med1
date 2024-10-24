@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect , useState} from 'react'; 
-
+import { compressBase64Image } from '@/app/utils/imageCompression';
 import { useRouter } from "next/navigation";
 import { nanoid } from "nanoid";
 import { fabric } from "fabric";
@@ -316,7 +316,7 @@ export default function DesignArea(): React.ReactElement {
 
 
   
-  const addDesignToCart = async () => {  
+  // const addDesignToCart = async () => {  
 
 
     
@@ -324,21 +324,119 @@ export default function DesignArea(): React.ReactElement {
 
 
 
+  //   if (!customerToken) {
+  //     saveStateToLocalStorage();  
+  //     router.push("/auth");
+  //   } else {
+  //     if (!design?.pngImage) return;
+
+  //     const canvasItems = canvas?.getObjects() || [];
+  //     console.log("this are the canvas items" , canvasItems)
+  //     const cliparts = canvasItems.filter(item => item.type === 'group' || item.type === 'path');
+  //     const uploadedImages = canvasItems.filter(item => item.type === 'image');
+
+  //     const newItem = {
+  //       title: "Custom T-Shirt Design",
+  //       thumbnail: design?.pngImage,
+  //       upload: design?.uploadedImages?.[0],
+  //       price: 100,
+  //       color: currentBgColor,
+  //       id: nanoid(),
+  //       quantity: 1,
+  //       side: design.apparel.side,
+  //       is_active: design.isactive,
+  //       backgroundTShirt: {
+  //         url: design.apparel.url,
+  //         color: currentBgColor,
+  //       },
+  //       // cliparts: cliparts.map(clipart => ({
+  //       //   type: clipart.type,
+  //       //   src: (clipart as fabric.Object).toDataURL(),
+  //       // })),
+  //       // uploadedImages: uploadedImages.map(img => ({
+  //       //   src: (img as fabric.Image).toDataURL() ,
+  //       // })),
+  //       svgUrl: svgUrl, 
+  //     }; 
+
+  //     console.log("this is new Item : " ,newItem)
+
+  //     addToCart(newItem);
+
+  //     const ApparelDesigns = {
+  //       design: {
+  //         title: newItem.title,
+  //         price: newItem.price,
+  //         color: newItem.color,
+  //         side: newItem.side,
+  //         quantity: newItem.quantity,
+  //         backgroundTShirt: newItem.backgroundTShirt,
+  //       },
+  //       thumbnail_images: design.uploadedImages?.[0] || svgUrl,
+  //       is_active: newItem.is_active,
+  //       archive: "false",
+  //       customer_id: sessionStorage.getItem("customerId"),
+  //     };
+
+  //     CreateApparelDesign(ApparelDesigns, {
+  //       onSuccess: (response) => {
+  //         console.log("Created apparel design data ", response);
+  //         const apparelDesignId = response.newDesign.id;
+
+  //         const ApparelUploadData = {
+  //           url: design.uploadedImages?.[0],
+  //           apparelDesign_id: apparelDesignId,
+  //         }; 
+
+  //         if(ApparelUploadData.url){
+  //           createApparelUpload(ApparelUploadData, {
+  //             onSuccess: (response) => {
+  //               console.log("Uploaded apparel design image data:", response);
+  //             },
+  //             onError: (err) => {
+  //               console.error("Error uploading apparel design image:", err);
+  //             },
+  //           });
+  //         }
+
+         
+  //       },
+  //       onError: (err) => {
+  //         console.error("Error creating apparel design:", err);
+  //       },
+  //     });
+  //   }
+  // }; 
+  
+
+
+
+  const addDesignToCart = async () => {  
     if (!customerToken) {
       saveStateToLocalStorage();  
       router.push("/auth");
     } else {
       if (!design?.pngImage) return;
-
+  
+      // Compress the base64 image
+       // Compress the base64 image with resizing and transparency support
+    let compressedThumbnail;
+    try {
+      compressedThumbnail = await compressBase64Image(design.pngImage, 100, 500, 500); // Compress to below 100KB with max 800px width/height
+    } catch (error) {
+      console.error('Error compressing image:', error);
+      return;
+    }
+  
       const canvasItems = canvas?.getObjects() || [];
-      console.log("this are the canvas items" , canvasItems)
+      console.log("this are the canvas items" , canvasItems);
       const cliparts = canvasItems.filter(item => item.type === 'group' || item.type === 'path');
       const uploadedImages = canvasItems.filter(item => item.type === 'image');
-
+  
       const newItem = {
         title: "Custom T-Shirt Design",
-        thumbnail: design?.pngImage,
-        upload: design?.uploadedImages?.[0],
+        thumbnail: compressedThumbnail,  // Use compressed thumbnail here
+        upload: design?.uploadedImages?.[0] ?? "",
         price: 100,
         color: currentBgColor,
         id: nanoid(),
@@ -349,20 +447,13 @@ export default function DesignArea(): React.ReactElement {
           url: design.apparel.url,
           color: currentBgColor,
         },
-        // cliparts: cliparts.map(clipart => ({
-        //   type: clipart.type,
-        //   src: (clipart as fabric.Object).toDataURL(),
-        // })),
-        // uploadedImages: uploadedImages.map(img => ({
-        //   src: (img as fabric.Image).toDataURL() ,
-        // })),
-        svgUrl: svgUrl, 
+        svgUrl: svgUrl,
       }; 
-
-      console.log("this is new Item : " ,newItem)
-
+  
+      console.log("this is new Item : " ,newItem);
+  
       addToCart(newItem);
-
+  
       const ApparelDesigns = {
         design: {
           title: newItem.title,
@@ -377,17 +468,17 @@ export default function DesignArea(): React.ReactElement {
         archive: "false",
         customer_id: sessionStorage.getItem("customerId"),
       };
-
+  
       CreateApparelDesign(ApparelDesigns, {
         onSuccess: (response) => {
           console.log("Created apparel design data ", response);
           const apparelDesignId = response.newDesign.id;
-
+  
           const ApparelUploadData = {
             url: design.uploadedImages?.[0],
             apparelDesign_id: apparelDesignId,
           }; 
-
+  
           if(ApparelUploadData.url){
             createApparelUpload(ApparelUploadData, {
               onSuccess: (response) => {
@@ -398,16 +489,13 @@ export default function DesignArea(): React.ReactElement {
               },
             });
           }
-
-         
         },
         onError: (err) => {
           console.error("Error creating apparel design:", err);
         },
       });
     }
-  }; 
-  
+  };
   return (
     <div>
       <div className="flex justify-between mb-1">

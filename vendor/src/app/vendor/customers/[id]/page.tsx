@@ -143,14 +143,26 @@ const Customer = () => {
                       <Table.Cell className="text-ui-fg-muted">
                         {order?.items?.length > 0 && (
                           <div className="flex items-center">
-                            <div className="mr-2">
-                              <Image
-                                src={order.items[0]?.thumbnail}
-                                width={40}
-                                height={40}
-                                alt="Item Thumbnail"
-                              />
-                            </div>
+                             <div className="relative w-10 h-20">
+                            <Image
+                              src={order.bacbackground_image_url}
+                              alt={order.title}
+                              layout="fill"
+                              objectFit="cover"
+                              className="rounded-md"
+                              style={{ backgroundColor: order.background_image_color }}
+                            />
+                            <Image
+                              src={order.thumbnail_url}
+                              alt={order.title}
+                              layout="fill"
+                              objectFit="contain"
+                              className="rounded-md" 
+                              
+                              
+                              
+                            />
+                          </div>
 
                             {order.items.length > 1 && (
                               <span className="text-gray-500">
