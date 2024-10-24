@@ -2,7 +2,7 @@
 const nextConfig = {
     reactStrictMode: false, 
     images: {
-      domains: ['localhost'],
+      domains: ['localhost','ik.imagekit.io'],
     },
     webpack: (config) => {
       config.externals.push({

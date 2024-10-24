@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect , useState} from 'react'; 
+
 import { useRouter } from "next/navigation";
 import { nanoid } from "nanoid";
 import { fabric } from "fabric";
@@ -52,17 +53,20 @@ export default function DesignArea(): React.ReactElement {
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
 
-  const [canvas, setCanvas] = React.useState<fabric.Canvas>();
-  const [currentBgColor, setBgColor] = React.useState(design?.apparel.color);
-  const [apparels, setApparels] = React.useState<IApparel[]>(designApparels);
-  const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
+  const [canvas, setCanvas] = React.useState<fabric.Canvas | null>(null);
+  const [currentBgColor, setBgColor] = useState(design?.apparel.color);
+  const [apparels, setApparels] = useState<IApparel[]>(designApparels);
+  const [colors, setColors] = useState<IBgcolor[]>(bgColours);
   const { cart, addToCart, setCart } = useCart();
+
   const {
     mutate: CreateApparelDesign,
     isLoading,
     isError,
   } = UseCreateApparelDesign();
-  const { mutate: createApparelUpload } = useCreateApparelUpload();
+  const { mutate: createApparelUpload } = useCreateApparelUpload(); 
+  const [isStateRestored, setIsStateRestored] = useState(false);
+
 
   useEffect(() => {
     const savedState = localStorage.getItem('designState');
@@ -72,21 +76,48 @@ export default function DesignArea(): React.ReactElement {
       setBgColor(parsedState.currentBgColor);
       setApparels(parsedState.apparels);
       setColors(parsedState.colors);
-      if (canvas && parsedState.canvasJSON) {
-        canvas.loadFromJSON(parsedState.canvasJSON, canvas.renderAll.bind(canvas));
+      
+      // Added: Restore the design state
+      if (parsedState.design) {
+        dispatchDesign({
+          type: "STORE_DESIGN",
+          currentDesign: parsedState.design,
+          selectedApparal: parsedState.design.apparel,
+          jsonDesign: parsedState.canvasJSON,
+          pngImage: parsedState.design.pngImage,
+          svgImage: parsedState.design.svgImage,
+        });
       }
-      localStorage.removeItem('designState');
     }
   }, []);
 
+
   useEffect(() => {
-    let canvas = new fabric.Canvas("canvas", {
+    // Changed: Get canvas element directly
+    const canvasElement = document.getElementById('canvas') as HTMLCanvasElement;
+    if (!canvasElement) return;
+
+    // Changed: Create canvas using the DOM element
+    const newCanvas = new fabric.Canvas(canvasElement, {
       height: design?.apparel.height,
       width: design?.apparel.width,
     });
-    setCanvas(canvas);
-    dispatchForCanvas({ type: "INIT", canvas: canvas });
-    dispatchForCanvas({ type: "RESTORE_DESIGN", payload: design?.jsonDesign });
+    setCanvas(newCanvas);
+    dispatchForCanvas({ type: "INIT", canvas: newCanvas });
+
+    // Modified: Check for saved canvas state and restore if available
+    const savedState = localStorage.getItem('designState');
+    if (savedState) {
+      const parsedState = JSON.parse(savedState);
+      if (parsedState.canvasJSON) {
+        newCanvas.loadFromJSON(parsedState.canvasJSON, () => {
+          newCanvas.renderAll();
+          setIsStateRestored(true);
+        });
+      }
+    } else {
+      dispatchForCanvas({ type: "RESTORE_DESIGN", payload: design?.jsonDesign });
+    }
 
     const handleNewImage = (event: CustomEvent) => {
       const imageUrl = event.detail.imageUrl;
@@ -95,10 +126,18 @@ export default function DesignArea(): React.ReactElement {
     window.addEventListener("newImageUploaded", handleNewImage as EventListener);
 
     return () => {
-      canvas.dispose();
+      newCanvas.dispose();
       window.removeEventListener("newImageUploaded", handleNewImage as EventListener);
     };
   }, [design]);
+
+  // Added: New useEffect to remove localStorage data after state is restored
+  useEffect(() => {
+    if (isStateRestored && canvas) {
+      localStorage.removeItem('designState');
+      setIsStateRestored(false);
+    }
+  }, [isStateRestored, canvas]);
 
   const saveStateToLocalStorage = () => {
     const stateToSave = {
@@ -120,21 +159,42 @@ export default function DesignArea(): React.ReactElement {
         canvas.renderAll();
       });
     }
-  };
+  };  
 
-  canvas?.on("selection:created", function (options) {
-    if (options.e) {
-      options.e.preventDefault();
-      options.e.stopPropagation();
-    }
-    let selectionCreated = options.selected;
-    if (selectionCreated && selectionCreated.length > 0) {
-      if (selectionCreated[0].type?.match(clipartGal)) {
-        let colors = extractFillColorsSelectedObject(canvas.getActiveObject());
-        dispatchColorPicker({ type: "SVG_COLORS", payload: colors });
+
+  useEffect(() => {
+    if (!canvas) return;
+    canvas.on("selection:created", function (options) {
+      if (options.e) {
+        options.e.preventDefault();
+        options.e.stopPropagation();
       }
-    }
-  });
+      let selectionCreated = options.selected;
+      if (selectionCreated && selectionCreated.length > 0) {
+        if (selectionCreated[0].type?.match(clipartGal)) {
+          let colors = extractFillColorsSelectedObject(canvas.getActiveObject());
+          dispatchColorPicker({ type: "SVG_COLORS", payload: colors });
+        }
+      }
+    });
+  }, [canvas]);
+
+
+
+
+  // canvas?.on("selection:created", function (options) {
+  //   if (options.e) {
+  //     options.e.preventDefault();
+  //     options.e.stopPropagation();
+  //   }
+  //   let selectionCreated = options.selected;
+  //   if (selectionCreated && selectionCreated.length > 0) {
+  //     if (selectionCreated[0].type?.match(clipartGal)) {
+  //       let colors = extractFillColorsSelectedObject(canvas.getActiveObject());
+  //       dispatchColorPicker({ type: "SVG_COLORS", payload: colors });
+  //     }
+  //   }
+  // });
 
   const getCanvasClass = () => {
     if (design?.apparel.url === designApparels[0].url) {
@@ -275,12 +335,6 @@ export default function DesignArea(): React.ReactElement {
       const cliparts = canvasItems.filter(item => item.type === 'group' || item.type === 'path');
       const uploadedImages = canvasItems.filter(item => item.type === 'image');
 
-
-
-       
-
-
-
       const newItem = {
         title: "Custom T-Shirt Design",
         thumbnail: design?.pngImage,
@@ -391,7 +445,7 @@ export default function DesignArea(): React.ReactElement {
             </button>
           </div>
           <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={(e) => downloadPNG(e)}>
+            <button onClick={() => downloadPNG()}>
               <IconContext.Provider
                 value={{
                   size: "10px",
@@ -407,7 +461,7 @@ export default function DesignArea(): React.ReactElement {
 
         <div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={(e) => redo(e)}>
+            <button onClick={() => redo()}>
               <IconContext.Provider
                 value={{
                   size: "10px",
@@ -420,7 +474,7 @@ export default function DesignArea(): React.ReactElement {
             </button>
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={(e) => undo(e)}>
+            <button onClick={() => undo()}>
               <IconContext.Provider
                 value={{
                   size: "10px",
@@ -433,7 +487,7 @@ export default function DesignArea(): React.ReactElement {
             </button>
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={(e) => reset(e)}>
+            <button onClick={() => reset()}>
               <IconContext.Provider
                 value={{
                   size: "10px",

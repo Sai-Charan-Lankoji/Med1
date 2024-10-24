@@ -5,16 +5,7 @@ import jwt from "jsonwebtoken";
 import VendorService from "../../../services/vendor";
 import { BusinessModel } from "../../../models/vendor";
 
-// const footballfranchise = BusinessModel.FootballFranchise;
-
-// const getVendorService = (req: MedusaRequest): VendorService | null => {
-//   try {
-//     return req.scope.resolve("vendorService") as VendorService;
-//   } catch (error) {
-//     console.error("Failed to resolve vendorService:", error);
-//     return null;
-//   }
-// };
+ 
 
 
 const getCustomerService = (req: MedusaRequest): CustomerService | null => {
@@ -29,22 +20,10 @@ const getCustomerService = (req: MedusaRequest): CustomerService | null => {
 export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<void> => {
   try {
     const customerService = getCustomerService(req);
-    // const vendorService = getVendorService(req);
     if (!customerService ) {
       res.status(500).json({ error: "Services could not be resolved." });
       return;
     }
-
-    // Fetch the vendor associated with the business type
-    // const vendor = await vendorService.findByBussinessType(footballfranchise);
-    // if (!vendor) {
-    //   res.status(404).json({ error: "Vendor not found." });
-    //   return;
-    // }
-
-    // Generate the publishable API key
-      
-
 
     const { email, password, first_name, last_name, phone, has_account, vendor_id } = req.body as {
       email: string;
@@ -61,15 +40,6 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
       res.status(400).json({ error: "All fields (email, password, first name, last name, phone, has_account, vendor_id) are required." });
       return;
     }
-
-    // Check if the customer already exists
-    // const existingCustomer = await customerService.checkCustomerExists({ email });
-    // if (existingCustomer) {
-    //   res.status(409).json({ error: "Customer with this email already exists.",
-    //     message: "Customer with this email already exists."
-    //    });
-    //   return;
-    // }
 
     // Hash the customer's password
     const password_hash = await bcrypt.hash(password, 10);

@@ -1,4 +1,6 @@
 'use client'
+
+import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "../public/globals.css"
 import Navbar from "./navbar/page"
@@ -12,6 +14,10 @@ import { SvgProvider } from "@/context/svgcontext"
 const queryClient = new QueryClient()
 const inter = Inter({ subsets: ["latin"] })
 
+// export const metadata: Metadata = {
+//   title: "Customized Football Jersey Design",
+//   description: "Design and order your custom football jersey",
+// }
 
 export default function RootLayout({
   children,

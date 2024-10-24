@@ -16,10 +16,10 @@ interface OrderData {
     product_id: number | string;
     quantity: number;
     price: number;
-    thumbnail_url: any; 
+    thumbnail_url: any;
     upload_url: any;
-    background_image_url : string;
-    background_image_color : string;
+    background_image_url: string;
+    background_image_color: string;
   }>;
   total_amount: number;
   currency_code: string;
@@ -96,8 +96,7 @@ const CartPage = () => {
 
   const public_api_key = process.env.NEXT_PUBLIC_API_KEY || null;
   const vendorId = process.env.NEXT_PUBLIC_VENDOR_ID || null;
-  
-   
+
   const handleProceedToOrder = () => {
     if (isProcessingOrder) return;
     setIsProcessingOrder(true);
@@ -109,9 +108,8 @@ const CartPage = () => {
         price: item.price,
         thumbnail_url: item.upload ? item.upload : item.thumbnail, // Use upload if available, otherwise fallback to thumbnail
         upload_url: item.upload,
-        background_image_url: item.backgroundTShirt.url, 
-        background_image_color: item.backgroundTShirt.color
-
+        background_image_url: item.backgroundTShirt.url,
+        background_image_color: item.backgroundTShirt.color,
       })),
       total_amount: total,
       currency_code: "usd",
@@ -205,24 +203,31 @@ const CartPage = () => {
                               layout="fill"
                               objectFit="cover"
                               className="rounded-md"
-                              style={{ backgroundColor: item.backgroundTShirt.color }}
+                              style={{
+                                backgroundColor: item.backgroundTShirt.color,
+                              }}
                             />
                             <Image
                               src={item.thumbnail}
                               alt={item.title}
                               layout="fill"
                               objectFit="contain"
-                              className="rounded-md" 
-                              
-                              
-                              
+                              className="rounded-md"
                             />
                           </div>
                           <div>
                             <h3 className="font-medium">{item.title}</h3>
-                            <p className="text-sm text-gray-500">
-                              Color: {item.backgroundTShirt.color}
-                            </p>
+                            <div className="flex items-center">
+                              <p className="text-sm text-gray-500 mr-2">
+                                Color:
+                              </p>
+                              <div
+                                className={`w-6 h-6 flex items-center justify-center rounded-full border border-gray-500`}
+                                style={{
+                                  backgroundColor: item.backgroundTShirt.color,
+                                }}
+                              ></div>
+                            </div>
                             <p className="text-sm text-gray-500">
                               Side: {item.side}
                             </p>

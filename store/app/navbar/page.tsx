@@ -141,7 +141,7 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Title */}
           <Link href="/" className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
+            <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
               Customized Football Jersey Design
             </h1>
           </Link>
@@ -180,7 +180,7 @@ const Navbar: React.FC = () => {
                   className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                 >
                   <FaUserCircle className="text-2xl text-gray-700" />
-                  <span className="hidden md:block text-sm font-medium text-gray-700  max-w-[150px]">
+                  <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
                     {email}
                   </span>
                 </button>
@@ -235,13 +235,26 @@ const Navbar: React.FC = () => {
                                 key={item.id}
                                 className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition duration-200"
                               >
-                                <Image
-                                  src={item.thumbnail}
-                                  alt={item.title}
-                                  height={50}
-                                  width={50}
-                                  className="rounded-md object-cover h-16 w-16"
-                                />
+                                  <div className="relative w-10 h-20">
+                            <Image
+                              src={item.backgroundTShirt.url}
+                              alt={item.title}
+                              layout="fill"
+                              objectFit="cover"
+                              className="rounded-md"
+                              style={{ backgroundColor: item.backgroundTShirt.color }}
+                            />
+                            <Image
+                              src={item.thumbnail}
+                              alt={item.title}
+                              layout="fill"
+                              objectFit="contain"
+                              className="rounded-md" 
+                              
+                              
+                              
+                            />
+                          </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-gray-900 truncate">
                                     {item.title}

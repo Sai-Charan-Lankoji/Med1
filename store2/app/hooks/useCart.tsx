@@ -13,7 +13,7 @@ const useCart = (customerId: string) => {
     try {
       const response = await axios.get(`/api/cart?customerId=${customerId}`);
       setCart(response.data.cart);
-    } catch (error : any) { 
+    } catch (error:any) {
       setError(error.message);
     } finally {
       setLoading(false);

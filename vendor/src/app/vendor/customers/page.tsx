@@ -11,53 +11,32 @@ import { useRouter } from "next/navigation";
 const Customer = () => {
   const { data: customers, error, isLoading } = useGetCustomers();
   const { data: orders } = useGetOrders();
-  const [currentPage, setCurrentPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
-  const pageSize = 6;
 
-  const getOrderCountForCustomer = (customerId: string) => {
+  const getOrderCountForCustomer = (customerId) => {
     if (!orders) return 0;
-    return orders.filter(
-      (order: { customer_id: string }) => order.customer_id === customerId
-    ).length;
+    return orders.filter((order) => order.customer_id === customerId).length;
   };
 
-  const filteredCustomers = useMemo(() => {
-    if (!customers || !orders) return [];
-
-    return customers.filter(
-      (customer: {
-        vendor_id: any;
-        email: string;
-        first_name: string;
-        last_name: string;
-      }) => {
-        const hasOrders = orders.some(
-          (order: { vendor_id: any }) => order.vendor_id === customer.vendor_id
-        );
-
-        const searchLower = searchQuery.toLowerCase();
-        const matchesSearch =
-          customer.email?.toLowerCase().includes(searchLower) ||
-          customer.first_name?.toLowerCase().includes(searchLower) ||
-          customer.last_name?.toLowerCase().includes(searchLower);
-
-        return hasOrders && matchesSearch;
-      }
-    );
-  }, [customers, orders, searchQuery]);
-
-  const currentCustomers = useMemo(() => {
-    const offset = currentPage * pageSize;
-    const limit = Math.min(offset + pageSize, filteredCustomers.length);
-    return filteredCustomers.slice(offset, limit);
-  }, [currentPage, pageSize, filteredCustomers]);
-
-  const formatDate = (timestamp: string) => {
+  const formatDate = (timestamp) => {
     const date = parseISO(timestamp);
     return format(date, "dd MMM yyyy");
   };
+
+  const filteredCustomers = useMemo(() => {
+    if (!customers) return [];
+    
+    const searchLower = searchQuery.toLowerCase();
+
+    return customers.filter((customer) => {
+      const fullName = `${customer.first_name} ${customer.last_name}`.toLowerCase();
+      return (
+        fullName.includes(searchLower) ||
+        customer.email.toLowerCase().includes(searchLower)
+      );
+    });
+  }, [customers, searchQuery]);
 
   if (isLoading) {
     return (
@@ -105,53 +84,53 @@ const Customer = () => {
           </Table.Header>
           
           <Table.Body>
-            {filteredCustomers.map((customer: any, index: any) => (
-              <Table.Row
-                key={customer.id}
-                onClick={() => router.push(`/vendor/customers/${customer.id}`)}
-                className="cursor-pointer transition-colors hover:bg-ui-bg-base-hover"
-              >
-                <Table.Cell className="w-1/4 px-6 py-4 text-sm text-ui-fg-subtle">
-                  {formatDate(customer.created_at)}
-                </Table.Cell>
-                
-                <Table.Cell className="w-1/4 px-6 py-4">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`w-8 h-8 flex items-center justify-center rounded-full text-white text-sm font-medium ${getColors(
-                        index
-                      )}`}
-                    >
-                      {customer.first_name.charAt(0).toUpperCase()}
+            {filteredCustomers.length > 0 ? (
+              filteredCustomers.map((customer, index) => (
+                <Table.Row
+                  key={customer.id}
+                  onClick={() => router.push(`/vendor/customers/${customer.id}`)}
+                  className="cursor-pointer transition-colors hover:bg-ui-bg-base-hover"
+                >
+                  <Table.Cell className="w-1/4 px-6 py-4 text-sm text-ui-fg-subtle">
+                    {formatDate(customer.created_at)}
+                  </Table.Cell>
+                  
+                  <Table.Cell className="w-1/4 px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      <div
+                        className={`w-8 h-8 flex items-center justify-center rounded-full text-white text-sm font-medium ${getColors(index)}`}
+                      >
+                        {customer.first_name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm font-medium text-ui-fg-base whitespace-nowrap">
+                        {customer.first_name} {customer.last_name}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-ui-fg-base whitespace-nowrap">
-                      {customer.first_name} {customer.last_name}
+                  </Table.Cell>
+                  
+                  <Table.Cell className="w-1/4 px-6 py-4">
+                    <span className="text-sm text-ui-fg-subtle">
+                      {customer.email}
                     </span>
-                  </div>
-                </Table.Cell>
-                
-                <Table.Cell className="w-1/4 px-6 py-4">
-                  <span className="text-sm text-ui-fg-subtle">
-                    {customer.email}
-                  </span>
-                </Table.Cell>
-                
-                <Table.Cell className="w-1/4 px-6 py-4 text-right">
-                  <span className="text-sm font-medium text-ui-fg-base">
-                    {getOrderCountForCustomer(customer.id)}
-                  </span>
+                  </Table.Cell>
+                  
+                  <Table.Cell className="w-1/4 px-6 py-4 text-right">
+                    <span className="text-sm font-medium text-ui-fg-base">
+                      {getOrderCountForCustomer(customer.id)}
+                    </span>
+                  </Table.Cell>
+                </Table.Row>
+              ))
+            ) : (
+              <Table.Row>
+                <Table.Cell colSpan={4} className="py-10 text-center">
+                  <span className="text-[28px] text-black">No customers found</span>
                 </Table.Cell>
               </Table.Row>
-            ))}
+            )}
           </Table.Body>
         </Table>
       </div>
-      
-      {filteredCustomers.length === 0 && (
-        <div className="flex items-center justify-center py-10 border-t border-ui-border-base">
-          <span className="text-ui-fg-subtle">No customers found</span>
-        </div>
-      )}
     </div>
   );
 };

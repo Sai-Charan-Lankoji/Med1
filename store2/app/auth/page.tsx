@@ -95,11 +95,7 @@ export default function SignIn() {
 
   const isLoading = loginLoading || signupLoading;
 
-<<<<<<< HEAD
-  return (
-=======
  return (
->>>>>>> f3bb79d91a094e6774ec3c8d3e83f50845532c55
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
       <div className="w-[400px] p-10 bg-white rounded-xl shadow-lg">
         <Image

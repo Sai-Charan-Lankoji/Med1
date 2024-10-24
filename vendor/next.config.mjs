@@ -7,6 +7,7 @@ export default (phase, { defaultConfig }) => {
       MEDUSA_BACKEND_URL: 'http://localhost:9000',  
     },
     images: {
+      domains: ['localhost','ik.imagekit.io'],
       remotePatterns: [
         {
           protocol: 'http',

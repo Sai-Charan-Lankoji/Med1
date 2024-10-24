@@ -2,14 +2,34 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
+interface Clipart {
+  type: string;
+  src: string;
+}
+
+interface UploadedImage {
+  src: string;
+}
+
+interface BackgroundTShirt {
+  url: string;
+  color: string;
+}
+
 interface CartItem {
-  id: any | number
-  title: string
-  price: number
-  color: any
-  thumbnail: any
-  quantity: number
-  side: string
+  title: string;
+  thumbnail: any;
+  upload: any;
+  price: number;
+  color: string;
+  id: string | number;
+  quantity: number;
+  side: string;
+  is_active: boolean;
+  backgroundTShirt: BackgroundTShirt;
+  cliparts: Clipart[];
+  uploadedImages: UploadedImage[];
+  svgUrl: string | null;
 }
 
 interface CartContextProps {
@@ -37,12 +57,30 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (customerId) {
         const userCart = localStorage.getItem(`cart_${customerId}`)
         if (userCart) {
-          setCart(JSON.parse(userCart))
+          try {
+            const parsedCart = JSON.parse(userCart)
+            setCart(parsedCart.map((item: CartItem) => ({
+              ...item,
+              backgroundTShirt: item.backgroundTShirt || { url: '', color: '' }
+            })))
+          } catch (error) {
+            console.error('Error parsing user cart:', error)
+            setCart([])
+          }
         }
       } else {
         const guestCart = localStorage.getItem('guest_cart')
         if (guestCart) {
-          setCart(JSON.parse(guestCart))
+          try {
+            const parsedCart = JSON.parse(guestCart)
+            setCart(parsedCart.map((item: CartItem) => ({
+              ...item,
+              backgroundTShirt: item.backgroundTShirt || { url: '', color: '' }
+            })))
+          } catch (error) {
+            console.error('Error parsing guest cart:', error)
+            setCart([])
+          }
         }
       }
     }
@@ -51,10 +89,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const customerId = sessionStorage.getItem('customerId')
+      const cartToSave = cart.map(item => ({
+        ...item,
+        backgroundTShirt: item.backgroundTShirt || { url: '', color: '' }
+      }))
       if (customerId) {
-        localStorage.setItem(`cart_${customerId}`, JSON.stringify(cart))
+        localStorage.setItem(`cart_${customerId}`, JSON.stringify(cartToSave))
       } else {
-        localStorage.setItem('guest_cart', JSON.stringify(cart))
+        localStorage.setItem('guest_cart', JSON.stringify(cartToSave))
       }
     }
   }, [cart])
@@ -76,8 +118,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const existingItem = mergedCart.find((item) => item.id === guestItem.id)
           if (existingItem) {
             existingItem.quantity += guestItem.quantity
+            existingItem.backgroundTShirt = guestItem.backgroundTShirt || existingItem.backgroundTShirt
           } else {
-            mergedCart.push(guestItem)
+            mergedCart.push({
+              ...guestItem,
+              backgroundTShirt: guestItem.backgroundTShirt || { url: '', color: '' }
+            })
           }
         })
 
