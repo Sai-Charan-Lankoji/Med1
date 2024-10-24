@@ -124,7 +124,38 @@ body {
 /* Previous CSS remains the same until the media queries */
 
 /* Responsive Styles - Desktop */
+
 @media (min-width: 1024px) {
+  .canvas_section img.img-fluid {
+    width: 90%; /* lg:w-3/4 */
+  }
+  
+  .canvas-style1 canvas {
+    position: absolute !important;
+    left: 145px !important;  
+    top: 85px !important;   
+  }
+  
+  .canvas-style2 canvas {
+    position: absolute !important;
+    left: 150px !important;  
+    top: 65px !important;    
+  }
+  
+  .canvas-style3 canvas {
+    position: absolute !important;
+    left: 145px !important;  
+    top: 200px !important;   
+  }
+  
+  .canvas-style4 canvas {
+    position: absolute !important;
+    left: 170px !important;  
+    top: 200px !important;   
+  }
+}
+
+@media (min-width: 1238px) {
   .canvas_section img.img-fluid {
     width: 75%; /* lg:w-3/4 */
   }
@@ -188,30 +219,30 @@ body {
 /* Responsive Styles - Mobile */
 @media (max-width: 639px) {
   .canvas_section img.img-fluid {
-    width: 90%; /* sm:w-11/12 */
+    width: 100%; 
   }
   
   .canvas-style1 canvas {
     position: absolute !important;
-    left: 120px !important;  /* Increased from 170px */
-    top: 100px !important;   /* Increased from 160px */
+    left: 80px !important;  
+    top: 50px !important;  
   }
   
   .canvas-style2 canvas {
     position: absolute !important;
-    left: 216px !important;  /* Increased from 180px */
-    top: 156px !important;   /* Increased from 130px */
+    left: 80px !important; 
+    top: 30px !important;   
   }
   
   .canvas-style3 canvas {
     position: absolute !important;
-    left: 216px !important;  /* Increased from 180px */
-    top: 324px !important;   /* Increased from 270px */
+    left: 95px !important;  
+    top: 110px !important;   
   }
   
   .canvas-style4 canvas {
     position: absolute !important;
-    left: 264px !important;  /* Increased from 220px */
-    top: 324px !important;   /* Increased from 270px */
+    left: 95px !important;  /* Increased from 220px */
+    top: 110px !important;   /* Increased from 270px */
   }
 }
