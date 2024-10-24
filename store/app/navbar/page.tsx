@@ -1,101 +1,114 @@
-'use client'
+"use client";
 
-import Image from "next/image"
-import Link from "next/link"
-import React, { useState, useEffect } from "react"
-import { FaUserCircle, FaShoppingCart } from "react-icons/fa"
-import navlogoS from "../../public/navlogoS.png";
-import { useCart } from "@/context/cartContext"
-import { MdDeleteForever } from "react-icons/md"
-import { useUserContext } from "@/context/userContext"
-import { useCustomerLogout } from "../hooks/useCustomerLogout"
-import { useRouter } from "next/navigation"
+import React, { useState, useEffect } from "react";
+import { FaUserCircle, FaShoppingCart } from "react-icons/fa";
+import { HiMenu, HiX } from "react-icons/hi";
+import Link from "next/link";
+import Image from "next/image";
+import { useCart } from "@/context/cartContext";
+import { MdDeleteForever } from "react-icons/md";
+import { useUserContext } from "@/context/userContext";
+import { useCustomerLogout } from "../hooks/useCustomerLogout";
+import { useRouter } from "next/navigation";
 
 const Navbar: React.FC = () => {
-  const { cart, removeFromCart } = useCart()
-  const { email,  customerToken } = useUserContext() // Access customerToken here
-  const { logout } = useCustomerLogout()
-  const router = useRouter()
-  const [isCartOpen, setIsCartOpen] = useState(false)
-  const [isProfileOpen, setIsProfileOpen] = useState(false)
-  const [cartItemsCount, setCartItemsCount] = useState(0)
-  const [cartTotal, setCartTotal] = useState(0)
+  const { cart, removeFromCart } = useCart();
+  const { email, customerToken } = useUserContext();
+  const { logout } = useCustomerLogout();
+  const router = useRouter();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartItemsCount, setCartItemsCount] = useState(0);
+  const [cartTotal, setCartTotal] = useState(0);
 
   useEffect(() => {
-    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
-    setCartItemsCount(totalItems)
-    const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    setCartTotal(total)
-  }, [cart])
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    setCartItemsCount(totalItems);
+    const total = cart.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    setCartTotal(total);
+  }, [cart]);
 
-  const handleCartClick = () => {
-    setIsCartOpen((prevState) => !prevState)
-    setIsProfileOpen(false)
-  }
+  const handleCartClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsCartOpen((prev) => !prev);
+    setIsProfileOpen(false);
+  };
 
-  const handleProfileClick = () => {
-    setIsProfileOpen((prevState) => !prevState)
-    setIsCartOpen(false)
-  }
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsProfileOpen((prev) => !prev);
+    setIsCartOpen(false);
+  };
 
-  const handleLogout = () => {  
-    setIsCartOpen(false)
-    setIsProfileOpen(false)
-    logout()
-  }
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen((prev) => !prev);
+  };
+
+  const handleLogout = () => {
+    setIsCartOpen(false);
+    setIsProfileOpen(false);
+    setIsMobileMenuOpen(false);
+    logout();
+  };
 
   const handleViewCart = () => {
-    if (!customerToken) { 
-      router.push("/auth")
+    if (!customerToken) {
+      router.push("/auth");
     } else {
-      router.push("/cart")
+      router.push("/cart");
     }
-  }
+    setIsCartOpen(false);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      if (!target.closest('.cart-dropdown') && !target.closest('.profile-dropdown')) {
-        setIsCartOpen(false)
-        setIsProfileOpen(false)
+      const target = event.target as HTMLElement;
+      if (
+        !target.closest(".cart-dropdown") &&
+        !target.closest(".profile-dropdown") &&
+        !target.closest(".mobile-menu-button")
+      ) {
+        setIsCartOpen(false);
+        setIsProfileOpen(false);
       }
-    }
+    };
 
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <nav className="bg-white backdrop-blur-sm bg-opacity-90 fixed w-full top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center">
-              <Image
-                src={navlogoS}
-                alt="Logo"
-                className="h-12 w-auto transition-transform duration-200 hover:scale-105"
-                height={60}
-                width={60}
-              />
-            </Link>
-          </div>
-
-          <div className="hidden md:block">
-            <h1 className="text-2xl font-bold text-gray-700">
+          {/* Website Name as Link */}
+          <Link href="/" className="flex-shrink-0">
+            <h1 className="text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
               Customized Football Jersey Design
             </h1>
+          </Link>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={handleMobileMenuToggle}
+              className="mobile-menu-button p-2 text-gray-700 hover:bg-gray-100 rounded-md"
+            >
+              {isMobileMenuOpen ? (
+                <HiX className="h-6 w-6" />
+              ) : (
+                <HiMenu className="h-6 w-6" />
+              )}
+            </button>
           </div>
 
-          <div className="flex items-center space-x-6">
-            {email ? (
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 transition duration-200 ease-in-out"
-              >
-                Logout
-              </button>
-            ) : (
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-6">
+            {!email && (
               <Link
                 href="./auth"
                 className="px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-md hover:from-blue-600 hover:to-purple-600 transition duration-200 ease-in-out shadow-md"
@@ -104,33 +117,33 @@ const Navbar: React.FC = () => {
               </Link>
             )}
 
-            <div className="relative profile-dropdown">
-              <button 
-                onClick={handleProfileClick}
-                className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
-              >
-                <FaUserCircle className="text-2xl text-gray-700" />
-                {email && (
+            {email && (
+              <div className="relative profile-dropdown">
+                <button
+                  onClick={handleProfileClick}
+                  className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                >
+                  <FaUserCircle className="text-2xl text-gray-700" />
                   <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
                     {email}
                   </span>
+                </button>
+
+                {isProfileOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1 transform opacity-100 scale-100 transition-all duration-200">
+                    <button
+                      onClick={handleLogout}
+                      className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left"
+                    >
+                      Logout
+                    </button>
+                  </div>
                 )}
-              </button>
-              
-              {/* {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1 transform opacity-100 scale-100 transition-all duration-200">
-                  <Link 
-                    href="./changepassword"
-                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out"
-                  >
-                    Change Password
-                  </Link>
-                </div>
-              )} */}
-            </div>
+              </div>
+            )}
 
             <div className="relative cart-dropdown">
-              <button 
+              <button
                 onClick={handleCartClick}
                 className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
               >
@@ -146,13 +159,17 @@ const Navbar: React.FC = () => {
                 <div className="absolute right-0 mt-3 w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 transform opacity-100 scale-100 transition-all duration-200">
                   <div className="p-4">
                     <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-                      <h3 className="text-lg font-semibold text-gray-900">Cart Items</h3>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Cart Items
+                      </h3>
                       {cart.length > 0 && (
-                        <span className="text-lg font-bold text-green-600">${cartTotal.toFixed(2)}</span>
+                        <span className="text-lg font-bold text-green-600">
+                          ${cartTotal.toFixed(2)}
+                        </span>
                       )}
                     </div>
 
-                    {customerToken ? ( // Check for token from context
+                    {customerToken ? (
                       cart.length > 0 ? (
                         <div className="mt-4 max-h-[400px] overflow-y-auto">
                           <ul className="space-y-4">
@@ -169,9 +186,15 @@ const Navbar: React.FC = () => {
                                   className="rounded-md object-cover h-16 w-16"
                                 />
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                                  <p className="text-sm text-gray-500">{item.side}</p>
-                                  <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                                  <p className="text-sm font-medium text-gray-900 truncate">
+                                    {item.title}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {item.side}
+                                  </p>
+                                  <p className="text-sm text-gray-600">
+                                    Qty: {item.quantity}
+                                  </p>
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
                                   <span className="text-sm font-semibold text-gray-900">
@@ -190,19 +213,25 @@ const Navbar: React.FC = () => {
                           </ul>
                         </div>
                       ) : (
-                        <p className="py-8 text-center text-gray-500">Your cart is empty</p>
+                        <p className="py-8 text-center text-gray-500">
+                          Your cart is empty
+                        </p>
                       )
                     ) : (
-                      <p className="py-8 text-center text-gray-500">Please log in to view your cart</p>
+                      <p className="py-8 text-center text-gray-500">
+                        Please log in to view your cart
+                      </p>
                     )}
 
-                    <button 
+                    <button
                       onClick={handleViewCart}
                       className="mt-4 w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-medium hover:from-blue-600 hover:to-purple-600 transition duration-200 flex items-center justify-center space-x-2 shadow-md"
                     >
                       <span>View Cart</span>
                       {cartTotal > 0 && (
-                        <span className="font-semibold">(${cartTotal.toFixed(2)})</span>
+                        <span className="font-semibold">
+                          (${cartTotal.toFixed(2)})
+                        </span>
                       )}
                     </button>
                   </div>
@@ -211,9 +240,60 @@ const Navbar: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              <div className="flex flex-col space-y-2">
+                {email ? (
+                  /* Profile Section when logged in */
+                  <div className="px-3 py-2">
+                    <button
+                      onClick={handleProfileClick}
+                      className="flex items-center space-x-2 w-full"
+                    >
+                      <FaUserCircle className="text-xl text-gray-700" />
+                      <span className="text-sm text-gray-700">{email}</span>
+                    </button>
+                    {isProfileOpen && (
+                      <div className="mt-2 pl-8">
+                        <button
+                          onClick={handleLogout}
+                          className="block py-2 text-sm text-gray-700 hover:text-gray-900"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Login/Signup button when logged out */
+                  <Link
+                    href="./auth"
+                    className="mx-3 px-4 py-2 text-sm font-medium text-white bg-gray-700 rounded-md text-center"
+                  >
+                    LogIn / SignUp
+                  </Link>
+                )}
+
+                {/* Cart Section */}
+                <button
+                  onClick={handleCartClick}
+                  className="flex items-center space-x-2 px-3 py-2"
+                >
+                  <FaShoppingCart className="text-xl text-gray-700" />
+                  <span className="text-sm text-gray-700">
+                    Cart ({cartItemsCount})
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
