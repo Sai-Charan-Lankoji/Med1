@@ -59,7 +59,7 @@ console.log("Hi ",matchingRecord);
               <div className="flex items-center gap-x-2">
                 <FocusModal>
                   <FocusModal.Trigger asChild>
-                    <Button variant="secondary" className="border">
+                    <Button variant="secondary" className="border hidden">
                       Create API key
                     </Button>
                   </FocusModal.Trigger>
@@ -179,7 +179,7 @@ console.log("Hi ",matchingRecord);
                             ></span>
                              {apiKey.revoked_at ? "Revoked" : "Live"}
                           </Table.Cell>
-                          <Table.Cell className="px-4 py-3 text-[13px] text-gray-500 border-b text-end border-gray-300">
+                          <Table.Cell className="px-4 py-3 text-[13px] text-gray-500 border-b text-end border-gray-300 hidden">
                             <DropdownMenu>
                               <DropdownMenu.Trigger asChild>
                                 <IconButton
