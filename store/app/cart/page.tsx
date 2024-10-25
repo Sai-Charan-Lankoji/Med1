@@ -18,7 +18,9 @@ interface OrderData {
     thumbnail_url: any;
     upload_url: any;
     background_image_url: string ;
-    background_image_color: string | undefined;
+    background_image_color: string | undefined; 
+    height: number | undefined;
+    width: number | undefined;
   }>;
   total_amount: number;
   currency_code: string;
@@ -109,6 +111,8 @@ const CartPage = () => {
         upload_url: item.upload,
         background_image_url: item.backgroundTShirt.url,
         background_image_color: item.backgroundTShirt.color,
+        height: item.backgroundTShirt.height,
+        width: item.backgroundTShirt.width,
       })),
       total_amount: total,
       currency_code: "usd",
