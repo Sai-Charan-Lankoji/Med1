@@ -123,7 +123,7 @@ const Customer = () => {
               ))
             ) : (
               <Table.Row>
-                <Table.Cell colSpan={4} className="py-10 text-center">
+                <Table.Cell className="py-10 text-center">
                   <span className="text-[28px] text-black">No customers found</span>
                 </Table.Cell>
               </Table.Row>

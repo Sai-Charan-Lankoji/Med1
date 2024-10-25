@@ -258,7 +258,7 @@ const OrderDetailsView = () => {
                     <span className="text-gray-500">Subtotal</span>
                     <span className="text-gray-900 font-medium">
                       {order.currency_code.toUpperCase()}{" "}
-                      {parseFloat(subtotalAmount).toFixed(2)}
+                      {(subtotalAmount).toFixed(2)}
 
                     </span>
                   </div>
@@ -266,7 +266,7 @@ const OrderDetailsView = () => {
                     <span className="text-gray-500">Tax</span>
                     <span className="text-gray-900 font-medium">
                       {order.currency_code.toUpperCase()}{" "}
-                      {parseFloat(taxAmount).toFixed(2)}
+                      {(taxAmount).toFixed(2)}
                     </span>
                   </div>
                   <div className="pt-4 border-t">
