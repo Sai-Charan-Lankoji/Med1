@@ -9,7 +9,6 @@ import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useCreateOrder } from "../hooks/useCreateOrder";
 import { XMarkMini } from "@medusajs/icons";
-import imageCompression from "browser-image-compression";
 
 interface OrderData {
   line_items: Array<{
@@ -19,7 +18,9 @@ interface OrderData {
     thumbnail_url: any; 
     upload_url: any;
     background_image_url : string;
-    background_image_color : string;
+    background_image_color :  string | undefined; 
+    height : number | undefined;
+    width : number | undefined;
   }>;
   total_amount: number;
   currency_code: string;
@@ -110,7 +111,10 @@ const CartPage = () => {
         thumbnail_url: item.upload ? item.upload : item.thumbnail, // Use upload if available, otherwise fallback to thumbnail
         upload_url: item.upload,
         background_image_url: item.backgroundTShirt.url, 
-        background_image_color: item.backgroundTShirt.color
+        background_image_color: item.backgroundTShirt.color,
+        height: item.backgroundTShirt.height,
+        width: item.backgroundTShirt.width,
+
 
       })),
       total_amount: total,
@@ -198,25 +202,32 @@ const CartPage = () => {
                     <tr key={item.id} className="border-b">
                       <td className="py-4">
                         <div className="flex items-center space-x-4">
-                          <div className="relative w-10 h-20">
-                            <Image
-                              src={item.backgroundTShirt.url}
-                              alt={item.title}
-                              layout="fill"
-                              objectFit="cover"
-                              className="rounded-md"
-                              style={{ backgroundColor: item.backgroundTShirt.color }}
-                            />
-                            <Image
-                              src={item.thumbnail}
-                              alt={item.title}
-                              layout="fill"
-                              objectFit="contain"
-                              className="rounded-md" 
-                              
-                              
-                              
-                            />
+                        <div className="relative w-20 h-24 flex-shrink-0">
+                            {/* Background T-shirt image */}
+                            <div className="absolute inset-0">
+                              <Image
+                                src={item.backgroundTShirt.url}
+                                alt="T-shirt background"
+                                layout="fill"
+                                objectFit="contain"
+                                className="rounded-md"
+                                style={{
+                                  backgroundColor: item.backgroundTShirt.color,
+                                }}
+                              />
+                            </div>
+                            {/* Overlay thumbnail image */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
+                                <Image
+                                  src={item.thumbnail}
+                                  alt={item.title}
+                                  layout="fill"
+                                  objectFit="contain"
+                                  className="rounded-md"
+                                />
+                              </div>
+                            </div>
                           </div>
                           <div>
                             <h3 className="font-medium">{item.title}</h3>

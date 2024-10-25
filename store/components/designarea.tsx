@@ -446,8 +446,10 @@ export default function DesignArea(): React.ReactElement {
         backgroundTShirt: {
           url: design.apparel.url,
           color: currentBgColor,
+          height : design.apparel.height,
+          width : design.apparel.width,
         },
-        svgUrl: svgUrl,
+     
       }; 
   
       console.log("this is new Item : " ,newItem);

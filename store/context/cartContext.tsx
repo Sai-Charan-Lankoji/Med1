@@ -6,6 +6,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react'
 interface BackgroundTShirt {
   url: string ;
   color: string | undefined;
+  height: number | undefined;
+  width: number | undefined;
 }
 
 interface CartItem {
@@ -19,7 +21,7 @@ interface CartItem {
   side: string;
   is_active: boolean;
   backgroundTShirt: BackgroundTShirt;
-  svgUrl: string | null;
+  // svgUrl: string | null;
 }
 
 interface CartContextProps {
