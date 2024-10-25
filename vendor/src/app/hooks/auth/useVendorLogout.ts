@@ -25,6 +25,8 @@ export const useVendorLogout = () => {
         sessionStorage.removeItem("vendor_id")
         sessionStorage.removeItem("contactName")
         sessionStorage.removeItem("email")
+        sessionStorage.removeItem("business_type")
+        sessionStorage.removeItem("company_name")
 
         router.push('/');
       } else {

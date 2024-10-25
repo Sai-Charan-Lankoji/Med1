@@ -15,7 +15,6 @@ import React, { useMemo, useState } from "react";
 import { Input } from "@medusajs/ui";
 import { XMarkMini } from "@medusajs/icons";
 import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
-import { format, parseISO } from "date-fns";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
 import { useRouter } from "next/navigation";
@@ -24,6 +23,7 @@ import { getColors } from "@/app/utils/dummyData";
 import Filter from "@/app/utils/filter";
 import Pagination from "@/app/utils/pagination";
 import { FiSearch, FiUpload } from "react-icons/fi";
+
 const Order = () => {
   const { data: OrdersData } = useGetOrders();
   const { data: saleschannelsData } = useGetSalesChannels();
@@ -73,7 +73,7 @@ const Order = () => {
 
   let { searchQuery, setSearchQuery, filteredData } = useSearch({
     data: storesWithMatchingSalesChannels || [],
-    searchKeys: ["customer", "paymentStatus"],
+    searchKeys: ["customer.first_name", "paymentStatus"],
   });
 
   const currentOrders = useMemo(() => {
