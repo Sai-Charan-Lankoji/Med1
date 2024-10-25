@@ -22,7 +22,7 @@ export const GET = async (
       return;
     }
     const selector = { title: ILike('%') };
-    const publishableApiKeys = await publishableApiKeyService.list(selector);
+    const publishableApiKeys = await publishableApiKeyService.listAndCount(selector);
     res.status(200).json(publishableApiKeys);
   } catch (error) {
     console.error("Error in GET /publishableapikeys:", error);

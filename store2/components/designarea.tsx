@@ -294,6 +294,7 @@ export default function DesignArea(): React.ReactElement {
     }
   };  
   
+
   const addDesignToCart = async () => {  
     if (!customerToken) {
       saveStateToLocalStorage();  

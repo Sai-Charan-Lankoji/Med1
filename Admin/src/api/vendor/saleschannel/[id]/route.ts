@@ -3,13 +3,15 @@ import type { MedusaRequest, MedusaResponse,
 } from "@medusajs/medusa";
 import SalesChannelService from "../../../../services/salesChannel";
 
-const getSalesChannelService = (req: MedusaRequest): SalesChannelService | null => {
- try {
-   return req.scope.resolve("saleschannelservice") as SalesChannelService;
- } catch (error) {
-   console.error("Failed to resolve saleschannelservice:", error);
-   return null;
- }
+const getSalesChannelService = (
+  req: MedusaRequest
+): SalesChannelService | null => {
+  try {
+    return req.scope.resolve("salesChannelService") as SalesChannelService;
+  } catch (error) {
+    console.error("Failed to resolve salesChannelService:", error);
+    null;
+  }
 };
 
 //Retrive a specific product
@@ -46,28 +48,27 @@ export const GET = async (
 
 // Update a specific product
 export const PUT = async (
- req: MedusaRequest,
- res: MedusaResponse
-): Promise<void> => {
- try {
-   const saleschannelService = getSalesChannelService(req as any);
-   if (!saleschannelService) {
-     res.status(500).json({ error: "Sales Channel service could not be resolved." });
-     return;
-   }
-
-   const saleschannelId = req.params.id;
-   const updateData = req.body;
-
-   const updateSalesChannel = await saleschannelService.update(saleschannelId, updateData);
-   
-
-   res.status(200).json({ message: "sales channel updated successfully.", saleschannel: updateSalesChannel });
- } catch (error) {
-   console.error("Error in PUT /saleschannel/:id:", error);
-   res.status(500).json({ error: error.message || "An unknown error occurred." });
- }
-};
+  req: MedusaRequest,
+  res: MedusaResponse
+ ): Promise<void> => {
+  try {
+    const saleschannelService = getSalesChannelService(req as any);
+    if (!saleschannelService) {
+      res.status(500).json({ error: "Sales Channel service could not be resolved." });
+      return;
+    }
+ 
+    const updateData = req.body;
+    const saleschannelId = req.params.id; 
+    const updateSalesChannel = await saleschannelService.update(saleschannelId as string, updateData);
+    
+ 
+    res.status(200).json({ message: "sales channel updated successfully.", saleschannel: updateSalesChannel });
+  } catch (error) {
+    console.error("Error in PUT /saleschannel/:id:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+ };
 
 
 
