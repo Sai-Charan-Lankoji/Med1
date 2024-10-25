@@ -32,7 +32,7 @@ import {
   IApparel,
 } from "../@types/models"; 
 
-import imageCompression from 'browser-image-compression';
+
 
 
 const shapesGal = /(rect|circle|triangle)/i;

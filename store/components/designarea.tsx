@@ -89,7 +89,7 @@ export default function DesignArea(): React.ReactElement {
         });
       }
     }
-  }, []);
+  }, [dispatchDesign, setCart]);
 
 
   useEffect(() => {

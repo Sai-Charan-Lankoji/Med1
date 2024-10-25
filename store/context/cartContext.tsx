@@ -2,18 +2,10 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react'
 
-interface Clipart {
-  type: string;
-  src: string;
-}
-
-interface UploadedImage {
-  src: string;
-}
 
 interface BackgroundTShirt {
-  url: string;
-  color: string;
+  url: string ;
+  color: string | undefined;
 }
 
 interface CartItem {
@@ -21,14 +13,12 @@ interface CartItem {
   thumbnail: any;
   upload: any;
   price: number;
-  color: string;
-  id: number;
+  color: string | undefined;
+  id: any;
   quantity: number;
   side: string;
   is_active: boolean;
   backgroundTShirt: BackgroundTShirt;
-  cliparts: Clipart[];
-  uploadedImages: UploadedImage[];
   svgUrl: string | null;
 }
 

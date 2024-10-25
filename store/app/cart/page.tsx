@@ -9,17 +9,16 @@ import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useCreateOrder } from "../hooks/useCreateOrder";
 import { XMarkMini } from "@medusajs/icons";
-import imageCompression from "browser-image-compression";
 
 interface OrderData {
   line_items: Array<{
-    product_id: number | string;
+    product_id: number | string | undefined;
     quantity: number;
     price: number;
     thumbnail_url: any;
     upload_url: any;
-    background_image_url: string;
-    background_image_color: string;
+    background_image_url: string ;
+    background_image_color: string | undefined;
   }>;
   total_amount: number;
   currency_code: string;

@@ -55,7 +55,7 @@ export function UploadDesign(): React.ReactElement {
       }
     }
 
-  }, [file]);
+  }, [dispatchDesign, file]);
   
 
   const onImageFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
