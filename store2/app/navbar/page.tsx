@@ -13,7 +13,11 @@ import { useRouter } from "next/navigation";
 
 const Navbar: React.FC = () => {
   const { cart, removeFromCart } = useCart();
+  // Original email context
+  // const { email, customerToken } = useUserContext();
+  // Modified to include username
   const { email, customerToken } = useUserContext();
+  const [username, setUsername] = useState<string>("");  // Added: State for username
   const { logout } = useCustomerLogout();
   const router = useRouter();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -21,6 +25,16 @@ const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
+
+  // Added: Effect to get username from sessionStorage
+  useEffect(() => {
+    if (email) {
+      const storedUsername = sessionStorage.getItem('username');
+      if (storedUsername) {
+        setUsername(storedUsername);
+      }
+    }
+  }, [email]);
 
   useEffect(() => {
     if (customerToken) {
@@ -180,8 +194,13 @@ const Navbar: React.FC = () => {
                   className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                 >
                   <FaUserCircle className="text-2xl text-gray-700" />
-                  <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
+                  {/* Original email display */}
+                  {/* <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
                     {email}
+                  </span> */}
+                  {/* Modified to show username */}
+                  <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
+                    {username || email} {/* Fallback to email if username is not available */}
                   </span>
                 </button>
 
@@ -189,7 +208,7 @@ const Navbar: React.FC = () => {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1">
                   <button
                     onClick={handleDesktopLogout}
-                    className=" w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
+                    className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
                   >
                     <FaSignOutAlt className="text-xl text-gray-700" />
                     <span>Logout</span>
@@ -312,7 +331,10 @@ const Navbar: React.FC = () => {
                   <>
                     <div className="flex items-center space-x-2 mx-3 px-4 py-2 text-sm text-gray-700">
                       <FaUserCircle className="text-xl text-gray-700" />
-                      <span className="truncate">{email}</span>
+                      {/* Original email display in mobile menu */}
+                      {/* <span className="truncate">{email}</span> */}
+                      {/* Modified to show username in mobile menu */}
+                      <span className="truncate">{username || email}</span>
                     </div>
                     
                     {customerToken && (
