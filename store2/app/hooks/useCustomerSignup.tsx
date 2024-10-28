@@ -68,7 +68,11 @@ export const useCustomerSignup = () => {
       const data: StoreSignupResponse = await response.json();
       
       if (data.token) {
-        console.log('Signup successful:', JSON.stringify(data, null, 2));
+        console.log('Signup successful:', JSON.stringify(data, null, 2)); 
+        console.log( "signup Data : ",data)
+        sessionStorage.setItem('customerId', data.customer.id) 
+        sessionStorage.setItem('customerEmail', data.customer.email);
+
         
         // Store authentication data in context
         setUser(first_name, email, data.token); // Pass the token here
