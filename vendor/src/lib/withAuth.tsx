@@ -22,10 +22,6 @@ const withAuth = <P extends object>(
       setLoading(false);
     }, [router]);
 
-    if (loading) {
-      return <div>Loading...</div>;
-    }
-
     if (authenticated) {
       return <WrappedComponent {...props} />;
     }

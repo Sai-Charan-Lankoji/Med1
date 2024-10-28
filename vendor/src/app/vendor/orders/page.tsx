@@ -23,11 +23,10 @@ import { getColors } from "@/app/utils/dummyData";
 import Filter from "@/app/utils/filter";
 import Pagination from "@/app/utils/pagination";
 import { FiSearch, FiUpload } from "react-icons/fi";
-import { parseISO,format } from 'date-fns'
-
+import { parseISO, format } from "date-fns";
 
 const Order = () => {
-  const { data: OrdersData } = useGetOrders();
+  const { data: OrdersData, isLoading } = useGetOrders();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { data: customersData } = useGetCustomers();
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,26 +47,31 @@ const Order = () => {
   });
 
   const getCustomerFirstName = (customerId: any) => {
-    const customer = customersData?.find((customer: { id: any; }) => customer.id === customerId);
-    return customer ? `${customer.first_name} ${customer.last_name}` : 'N/A';
+    const customer = customersData?.find(
+      (customer: { id: any }) => customer.id === customerId
+    );
+    return customer ? `${customer.first_name} ${customer.last_name}` : "N/A";
   };
 
-  const storesWithMatchingSalesChannels = OrdersData?.map((order: { vendor_id: any; }) => {
-     const matchingSalesChannel = saleschannelsData?.find(
-      (salesChannel: { vendor_id: any; }) => salesChannel.vendor_id === order.vendor_id
-    );
-     return {
-      ...order,
-      matchingSalesChannel,  
-    };
-  });
+  const storesWithMatchingSalesChannels = OrdersData?.map(
+    (order: { vendor_id: any }) => {
+      const matchingSalesChannel = saleschannelsData?.find(
+        (salesChannel: { vendor_id: any }) =>
+          salesChannel.vendor_id === order.vendor_id
+      );
+      return {
+        ...order,
+        matchingSalesChannel,
+      };
+    }
+  );
 
-  const handleInputChange = (e: { target: { name: any; checked: any; }; }) => {
+  const handleInputChange = (e: { target: { name: any; checked: any } }) => {
     const { name, checked } = e.target;
     setFilters((prevFilters) => ({ ...prevFilters, [name]: checked }));
   };
 
-  const handleNameChange = (e: { target: { value: any; }; }) => {
+  const handleNameChange = (e: { target: { value: any } }) => {
     setFilters((prevFilters) => ({
       ...prevFilters,
       filterName: e.target.value,
@@ -76,14 +80,14 @@ const Order = () => {
 
   const filteredOrders = useMemo(() => {
     if (!storesWithMatchingSalesChannels) return [];
-    
+
     const searchLower = searchQuery.toLowerCase();
 
     return storesWithMatchingSalesChannels.filter((order) => {
       return (
         order.email.includes(searchLower) ||
         order.matchingSalesChannel.name.includes(searchLower) ||
-        order.created_at.includes(searchLower) 
+        order.created_at.includes(searchLower)
       );
     });
   }, [storesWithMatchingSalesChannels, searchQuery]);
@@ -91,7 +95,10 @@ const Order = () => {
   const currentOrders = useMemo(() => {
     if (!Array.isArray(storesWithMatchingSalesChannels)) return [];
     const offset = currentPage * pageSize;
-    const limit = Math.min(offset + pageSize, storesWithMatchingSalesChannels.length);
+    const limit = Math.min(
+      offset + pageSize,
+      storesWithMatchingSalesChannels.length
+    );
     return storesWithMatchingSalesChannels.slice(offset, limit);
   }, [currentPage, pageSize, storesWithMatchingSalesChannels]);
 
@@ -105,12 +112,20 @@ const Order = () => {
     return format(date, "dd MMM yyyy");
   };
 
+  if (isLoading) {
+    return (
+      <div>
+        <OrderSkeleton />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg p-4">
-        <Heading level="h2" className="font-semibold text-2xl mb-4">
-          Orders
-        </Heading>
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6  ">
+      <Heading level="h2" className="font-semibold text-2xl mb-4">
+        Orders
+      </Heading>
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6  ">
         <div className="flex flex-col sm:flex-row items-center justify-between flex-wrap space-x-0 sm:space-x-4 space-y-2 sm:space-y-0 mt-4 sm:mt-0 w-full">
           <div className="flex flex-row items-center space-x-2">
             <div className="flex flex-row justify-center items-center">
@@ -271,7 +286,6 @@ const Order = () => {
               />
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
-             
           </div>
         </div>
       </div>
@@ -318,7 +332,7 @@ const Order = () => {
                     className="hover:bg-gray-50 text-[rgb(17, 24, 39)] hover:cursor-pointer"
                   >
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center hover:text-violet-500">
-                      {index+1}
+                      {index + 1}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center">
                       <Tooltip
@@ -335,13 +349,13 @@ const Order = () => {
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center flex flex-row space-x-2">
                       <div>
-                      <div
-                        className={`w-6 h-6 flex items-left justify-center rounded-full text-white ${getColors(
-                          index
-                        )}`}
-                      >
-                        {order.email.charAt(0)}
-                      </div>
+                        <div
+                          className={`w-6 h-6 flex items-left justify-center rounded-full text-white ${getColors(
+                            index
+                          )}`}
+                        >
+                          {order.email.charAt(0)}
+                        </div>
                       </div>
                       <span className="text-gray-700 text-center">
                         {getCustomerFirstName(order.customer_id)}
@@ -422,6 +436,63 @@ const Order = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+const OrderSkeleton = () => {
+  return (
+    <div className="bg-white rounded-lg p-4">
+      <div className="animate-pulse">
+        <div className="flex flex-row justify-between items-center mb-6">
+          <div className="bg-gray-200 h-8 w-24 rounded"></div>
+          <div className="bg-gray-200 h-8 w-32 rounded"></div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full p-2">
+            <thead>
+              <tr>
+                <th className="px-2 py-2 text-xs font-medium text-gray-700">
+                  <div className="bg-gray-200 h-4 w-16 rounded"></div>
+                </th>
+                {/* Repeat above div for each header column */}
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(6)].map((_, index) => (
+                <tr key={index} className="hover:bg-gray-50 text-gray-700">
+                  <td className="px-4 py-3 text-center">
+                    <div className="bg-gray-200 h-6 w-10 rounded"></div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="bg-gray-200 h-6 w-24 rounded"></div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="bg-gray-200 h-6 w-16 rounded"></div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="bg-gray-200 h-6 w-20 rounded"></div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="bg-gray-200 h-6 w-16 rounded"></div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="bg-gray-200 h-6 w-24 rounded"></div>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="bg-gray-200 h-6 w-16 rounded"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex justify-center mt-4">
+          <div className="bg-gray-200 h-8 w-32 rounded"></div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -77,18 +77,22 @@ const Store = () => {
 
   const filteredStores = useMemo(() => {
     if (!storesWithMatchingSalesChannels) return [];
-  
+
     const searchLower = searchQuery.toLowerCase();
-  
+
     return storesWithMatchingSalesChannels.filter((store) => {
       const storeNameMatch = store.name?.toLowerCase().includes(searchLower);
-      const createdDateMatch = store.created_at?.toLowerCase().includes(searchLower);
-      const salesChannelNameMatch = store.matchingSalesChannel?.name?.toLowerCase().includes(searchLower);
-  
+      const createdDateMatch = store.created_at
+        ?.toLowerCase()
+        .includes(searchLower);
+      const salesChannelNameMatch = store.matchingSalesChannel?.name
+        ?.toLowerCase()
+        .includes(searchLower);
+
       return storeNameMatch || createdDateMatch || salesChannelNameMatch;
     });
   }, [storesWithMatchingSalesChannels, searchQuery]);
-  
+
   const pageSize = 6;
   const currentStores = useMemo(() => {
     if (!Array.isArray(storesWithMatchingSalesChannels)) return [];
@@ -216,6 +220,11 @@ const Store = () => {
     return storeUrls[storeName] || "http://localhost:8004/";
   };
 
+  if (isLoading) {
+    <div>
+      <StoreSkeleton />
+    </div>;
+  }
   return (
     <>
       <div className="flex items-center justify-end gap-x-2"></div>
@@ -475,6 +484,67 @@ const Store = () => {
         </div>
       )}
     </>
+  );
+};
+
+const SkeletonLoader = ({ width, height, className }) => (
+  <div
+    className={`animate-pulse bg-gray-300 rounded ${className}`}
+    style={{ width, height }}
+  ></div>
+);
+
+const StoreSkeleton = () => {
+  return (
+    <div>
+      <div className="bg-white rounded-lg shadow-sm border border-ui-border-base">
+        <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-ui-border-base animate-pulse">
+          <div className="bg-gray-200 h-8 w-24 rounded mb-4 sm:mb-0"></div>
+          <div className="w-full sm:w-72">
+            <div className="bg-gray-200 h-10 rounded w-full"></div>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead>
+              <tr>
+                {[...Array()].map((_, index) => (
+                  <th
+                    key={index}
+                    className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle"
+                  >
+                    <div className="bg-gray-200 h-4 w-24 rounded"></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+
+            <tbody>
+              {[...Array(5)].map((_, rowIndex) => (
+                <tr key={rowIndex} className="border-t border-gray-100">
+                  <td className="w-1/4 px-6 py-4">
+                    <div className="bg-gray-200 h-6 w-24 rounded"></div>
+                  </td>
+                  <td className="w-1/4 px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-gray-300 w-8 h-8 rounded-full"></div>
+                      <div className="bg-gray-200 h-6 w-32 rounded"></div>
+                    </div>
+                  </td>
+                  <td className="w-1/4 px-6 py-4">
+                    <div className="bg-gray-200 h-6 w-40 rounded"></div>
+                  </td>
+                  <td className="w-1/4 px-6 py-4">
+                    <div className="bg-gray-200 h-6 w-12 rounded"></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 };
 
