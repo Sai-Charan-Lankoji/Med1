@@ -30,7 +30,7 @@ const Taxes = () => {
           <EllipsisHorizontal />
         </IconButton>
       </DropdownMenu.Trigger>
-      <DropdownMenu.Content>
+      <DropdownMenu.Content onClick={() => router.push("/vendor/settings/regions")}>
         <div className="flex flex-row justify-evenly p-2"> 
         <CogSixTooth />
         <Heading className="text-sm">Go to Region settings</Heading>

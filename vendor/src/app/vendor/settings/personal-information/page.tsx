@@ -18,25 +18,42 @@ import {
 } from "@medusajs/ui"
 import React, { useState } from "react"
 import withAuth from "@/lib/withAuth"
+import { useGetCustomerByEmail } from "@/app/hooks/customer/useGetCustomerByEmail"
 
 const PersonalInformation = () => {
-  const { email } = useAuth() ?? { email: "Default Email" }
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isModalOpen2, setIsModalOpen2] = useState(false)
-  const openModal2 = () => setIsModalOpen2(true)
-  const closeModal2 = () => setIsModalOpen2(false)
-  const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
-  const [isToggledSwitch1, setIsToggledSwitch1] = useState(false)
-  const [isToggledSwitch2, setIsToggledSwitch2] = useState(false)
+  const { email } = useAuth() ?? { email: "Default Email" };
+  const { data: customer } = useGetCustomerByEmail(email);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+  });
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen2, setIsModalOpen2] = useState(false);
+  const openModal2 = () => setIsModalOpen2(true);
+  const closeModal2 = () => setIsModalOpen2(false);
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+  const [isToggledSwitch1, setIsToggledSwitch1] = useState(false);
+  const [isToggledSwitch2, setIsToggledSwitch2] = useState(false);
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
   if (!email) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <div className="w-12 h-12 border-4 border-violet-500 border-t-transparent border-solid rounded-full animate-spin"></div>
       </div>
-    )
+    );
   }
+
 
   return (
     <div className="bg-grey-5 min-h-screen">
@@ -97,20 +114,50 @@ const PersonalInformation = () => {
               </IconButton>
             </div>
             <form>
-              <div className="grid gap-y-4">
-                <div>
-                  <Label htmlFor="firstName" className="text-grey-50 mb-1">First name</Label>
-                  <Input id="firstName" type="text" placeholder="First name" required />
-                </div>
-                <div>
-                  <Label htmlFor="lastName" className="text-grey-50 mb-1">Last name</Label>
-                  <Input id="lastName" type="text" placeholder="Last name" required />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2 mt-8">
-                <Button variant="secondary" onClick={closeModal}>Cancel</Button>
-                <Button variant="primary">Submit and close</Button>
-              </div>
+            {customer?.map((cus) => (
+                <>
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
+                    key={cus.id}
+                  >
+                    <div>
+                      <Label className="block text-sm font-medium text-gray-700 mb-1">
+                        First name <span className="text-red-600">*</span>
+                      </Label>
+                      <Input
+                        type="text"
+                        name="firstName"  
+                        value={formData.firstName || cus.first_name}  
+                        onChange={handleChange}
+                        placeholder="First name..."
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <Label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last name <span className="text-red-600">*</span>
+                      </Label>
+                      <Input
+                        type="text"
+                        name="lastName" 
+                        value={formData.lastName || cus.last_name} 
+                        onChange={handleChange}
+                        placeholder="Last name..."
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  <hr className="mb-6" />
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="secondary" onClick={closeModal}>
+                      Cancel
+                    </Button>
+                    <Button className="bg-violet-600 hover:bg-violet-500 text-white">
+                      Submit and close
+                    </Button>
+                  </div>
+                </>
+              ))}
             </form>
           </div>
         </div>
@@ -153,7 +200,7 @@ const PersonalInformation = () => {
               </div>
               <div className="flex justify-end space-x-2 mt-8">
                 <Button variant="secondary" onClick={closeModal2}>Cancel</Button>
-                <Button variant="primary">Submit and close</Button>
+                <Button variant="secondary" className="bg-violet-600 hover:bg-violet-500 text-white">Submit and close</Button>
               </div>
             </form>
           </div>

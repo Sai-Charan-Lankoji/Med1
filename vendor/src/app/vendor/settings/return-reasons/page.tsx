@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { BackButton } from "@/app/utils/backButton"; 
 import withAuth from "@/lib/withAuth";
 const ReturnReasons = () => {
-  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
