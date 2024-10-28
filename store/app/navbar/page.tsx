@@ -156,7 +156,7 @@ const Navbar: React.FC = () => {
           {/* Logo/Title */}
           <Link href="/" className="flex-shrink-0">
           <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-          Customized Baseball Jersey Design
+          Customized Football Jersey Design
             </h1>
           </Link>
 

@@ -29,6 +29,7 @@ import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannel
 import { useRouter } from "next/navigation";
 import { useCreateStore } from "@/app/hooks/store/useCreateStore";
 import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel";
+import Link from "next/link";
 
 const Store = () => {
   const router = useRouter();
@@ -83,7 +84,10 @@ const Store = () => {
   const currentStores = useMemo(() => {
     if (!Array.isArray(storesWithMatchingSalesChannels)) return [];
     const offset = currentPage * pageSize;
-    const limit = Math.min(offset + pageSize, storesWithMatchingSalesChannels.length);
+    const limit = Math.min(
+      offset + pageSize,
+      storesWithMatchingSalesChannels.length
+    );
     return storesWithMatchingSalesChannels.slice(offset, limit);
   }, [currentPage, storesWithMatchingSalesChannels]);
 
@@ -192,6 +196,17 @@ const Store = () => {
     }
   };
 
+  const getStoreUrl = (storeName: string) => {
+    const storeUrls: { [key: string]: string } = {
+      'Baseball Franchise': 'http://localhost:8004/',
+      'Football Franchise': 'http://localhost:8003/',
+      // Add more store mappings here
+    };
+    
+    // Return the matching URL or a default URL
+    return storeUrls[storeName] || 'http://localhost:8004/';
+  };
+
   return (
     <>
       <div className="flex items-center justify-end gap-x-2"></div>
@@ -243,19 +258,25 @@ const Store = () => {
                   },
                   index: number
                 ) => (
-                  <Table.Row key={index} className="hover:bg-gray-100">
-                    <Table.Cell className="py-2 px-4 border-b">
-                      {index + 1}
-                    </Table.Cell>
-                    <Table.Cell className="py-2 px-4 border-b">
-                      {formatDate(store?.created_at) || "N/A"}
-                    </Table.Cell>
-                    <Table.Cell className="py-2 px-4 border-b">
-                      {store?.name || "N/A"}
-                    </Table.Cell>
-                    <Table.Cell className="py-2 px-4 border-b">
-                      {store?.matchingSalesChannel?.name || "N/A"}
-                    </Table.Cell>
+                  <Table.Row key={store.id} className="hover:bg-gray-100">
+                    <Link
+                      href={getStoreUrl(store?.name)}
+                      target="_blank"
+                      className="contents"
+                    >
+                      <Table.Cell className="py-2 px-4 border-b">
+                        {index + 1}
+                      </Table.Cell>
+                      <Table.Cell className="py-2 px-4 border-b">
+                        {formatDate(store?.created_at) || "N/A"}
+                      </Table.Cell>
+                      <Table.Cell className="py-2 px-4 border-b">
+                        {store?.name || "N/A"}
+                      </Table.Cell>
+                      <Table.Cell className="py-2 px-4 border-b">
+                        {store?.matchingSalesChannel?.name || "N/A"}
+                      </Table.Cell>
+                    </Link>
                     <Table.Cell className="py-2 px-4 border-b">
                       <DropdownMenu>
                         <DropdownMenu.Trigger asChild>
