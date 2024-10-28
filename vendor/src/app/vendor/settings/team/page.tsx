@@ -101,7 +101,7 @@ const Team = () => {
                       Email
                     </Table.HeaderCell>
                     <Table.HeaderCell className="px-4 py-2 text-left text-xs font-medium text-gray-500 tracking-wider">
-                      Role
+                    Team permissions	
                     </Table.HeaderCell>
                     <Table.HeaderCell className="px-4 py-2 text-left text-xs font-medium text-gray-500 tracking-wider">
                       Actions
@@ -121,8 +121,8 @@ const Team = () => {
                         <span className="text-gray-700">{user?.email}</span>
                       </div>
                     </Table.Cell>
-                    <Table.Cell className="px-4 py-3 text-[13px] text-gray-500 border-b border-gray-300">
-                      {user?.role}
+                    <Table.Cell className="px-4 py-3 text-[14px] text-violet-500 font-medium border-b border-gray-300">
+                      {user?.role[0].toUpperCase() + user?.role.slice(1)}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[13px] text-gray-500 border-b text-end border-gray-300">
                       <DropdownMenu>
