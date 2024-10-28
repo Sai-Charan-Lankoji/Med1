@@ -254,13 +254,33 @@ const Navbar: React.FC = () => {
                                 key={item.id}
                                 className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition duration-200"
                               >
+                                 <div className="relative w-20 h-24 flex-shrink-0">
+                            {/* Background T-shirt image */}
+                            <div className="absolute inset-0">
+                              <Image
+                                src={item.backgroundTShirt.url}
+                                alt="T-shirt background"
+                                layout="fill"
+                                objectFit="contain"
+                                className="rounded-md"
+                                style={{
+                                  backgroundColor: item.backgroundTShirt.color,
+                                }}
+                              />
+                            </div>
+                            {/* Overlay thumbnail image */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
                                 <Image
                                   src={item.thumbnail}
                                   alt={item.title}
-                                  height={50}
-                                  width={50}
-                                  className="rounded-md object-cover h-16 w-16"
+                                  layout="fill"
+                                  objectFit="contain"
+                                  className="rounded-md"
                                 />
+                              </div>
+                            </div>
+                          </div>
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-gray-900 truncate">
                                     {item.title}
