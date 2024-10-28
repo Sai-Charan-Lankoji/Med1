@@ -30,6 +30,7 @@ const Order = () => {
   const { data: OrdersData } = useGetOrders();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { data: customersData } = useGetCustomers();
+  const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
@@ -73,17 +74,26 @@ const Order = () => {
     }));
   };
 
-  let { searchQuery, setSearchQuery, filteredData } = useSearch({
-    data: storesWithMatchingSalesChannels || [],
-    searchKeys: ["customer.first_name", "paymentStatus"],
-  });
+  const filteredOrders = useMemo(() => {
+    if (!storesWithMatchingSalesChannels) return [];
+    
+    const searchLower = searchQuery.toLowerCase();
+
+    return storesWithMatchingSalesChannels.filter((order) => {
+      return (
+        order.email.includes(searchLower) ||
+        order.matchingSalesChannel.name.includes(searchLower) ||
+        order.created_at.includes(searchLower) 
+      );
+    });
+  }, [storesWithMatchingSalesChannels, searchQuery]);
 
   const currentOrders = useMemo(() => {
-    if (!Array.isArray(filteredData)) return [];
+    if (!Array.isArray(storesWithMatchingSalesChannels)) return [];
     const offset = currentPage * pageSize;
-    const limit = Math.min(offset + pageSize, filteredData.length);
-    return filteredData.slice(offset, limit);
-  }, [currentPage, pageSize, filteredData]);
+    const limit = Math.min(offset + pageSize, storesWithMatchingSalesChannels.length);
+    return storesWithMatchingSalesChannels.slice(offset, limit);
+  }, [currentPage, pageSize, storesWithMatchingSalesChannels]);
 
   const formatTimestamp = (timestamp: string) => {
     const date = parseISO(timestamp);
@@ -266,7 +276,7 @@ const Order = () => {
         </div>
       </div>
       <div className="flex flex-col gap-4">
-        {currentOrders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <p>No Orders placed yet.</p>
           </div>
@@ -299,7 +309,7 @@ const Order = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {currentOrders.map((order: any, index: any) => (
+                {filteredOrders.map((order: any, index: any) => (
                   <Table.Row
                     key={order.id}
                     onClick={() => {
@@ -380,8 +390,8 @@ const Order = () => {
         <Pagination
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
-          totalItems={filteredData.length}
-          data={currentOrders}
+          totalItems={filteredOrders.length}
+          data={filteredOrders}
         />
       </div>
       {isModalOpen && (

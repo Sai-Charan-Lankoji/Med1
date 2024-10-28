@@ -30,9 +30,13 @@ const Customer = () => {
     const searchLower = searchQuery.toLowerCase();
 
     return customers.filter((customer) => {
-      const fullName = `${customer.first_name} ${customer.last_name}`.toLowerCase();
+      // const fullName = `${customer.first_name} ${customer.last_name}`.toLowerCase();
+      console.log(searchLower)
       return (
-        fullName.includes(searchLower) ||
+        customer.first_name.includes(searchLower) ||
+        customer.last_name.includes(searchLower) ||
+        customer.email.includes(searchLower) ||
+        customer.created_at.includes(searchLower) ||
         customer.email.toLowerCase().includes(searchLower)
       );
     });
@@ -77,7 +81,7 @@ const Customer = () => {
               <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
                 Email
               </Table.HeaderCell>
-              <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle text-right">
+              <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
                 Orders
               </Table.HeaderCell>
             </Table.Row>
@@ -95,7 +99,7 @@ const Customer = () => {
                     {formatDate(customer.created_at)}
                   </Table.Cell>
                   
-                  <Table.Cell className="w-1/4 px-6 py-4">
+                  <Table.Cell className="w-1/4 px-0 py-4">
                     <div className="flex items-center space-x-3">
                       <div
                         className={`w-8 h-8 flex items-center justify-center rounded-full text-white text-sm font-medium ${getColors(index)}`}
@@ -108,13 +112,13 @@ const Customer = () => {
                     </div>
                   </Table.Cell>
                   
-                  <Table.Cell className="w-1/4 px-6 py-4">
+                  <Table.Cell className="w-1/4 px-0 py-4">
                     <span className="text-sm text-ui-fg-subtle">
                       {customer.email}
                     </span>
                   </Table.Cell>
-                  
-                  <Table.Cell className="w-1/4 px-6 py-4 text-right">
+                   
+                  <Table.Cell className="w-1/4 px-10 py-4">
                     <span className="text-sm font-medium text-ui-fg-base">
                       {getOrderCountForCustomer(customer.id)}
                     </span>
@@ -122,9 +126,9 @@ const Customer = () => {
                 </Table.Row>
               ))
             ) : (
-              <Table.Row>
+              <Table.Row className="text-center">
                 <Table.Cell className="py-10 text-center">
-                  <span className="text-[28px] text-black">No customers found</span>
+                  <span className="text-[28px] text-black text-center">No customers found</span>
                 </Table.Cell>
               </Table.Row>
             )}

@@ -13,8 +13,6 @@ import {
   toast,
 } from "@medusajs/ui";
 import {
-  CloudArrowDown,
-  CloudArrowUp,
   EllipsisHorizontal,
   PencilSquare,
   Plus,
@@ -24,7 +22,6 @@ import {
 import withAuth from "@/lib/withAuth";
 import { SalesChannelResponse, StoreResponse } from "@/app/@types/store";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
-import useSearch from "@/app/hooks/useSearch";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useRouter } from "next/navigation";
 import { useCreateStore } from "@/app/hooks/store/useCreateStore";
@@ -34,6 +31,7 @@ import Link from "next/link";
 const Store = () => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isSalesChannelCreated, setIsSalesChannelCreated] = useState(false); // Track if sales channel is created
   const [loading, setLoading] = useState(false); // To handle loading state
   const [currentPage, setCurrentPage] = useState(0);
@@ -76,10 +74,21 @@ const Store = () => {
     inviteLinkTemplate: "",
     vendor_id: vendorId ?? "",
   });
-  let { searchQuery, setSearchQuery, filteredData } = useSearch({
-    data: storesData || [],
-    searchKeys: ["name"],
-  });
+
+  const filteredStores = useMemo(() => {
+    if (!storesWithMatchingSalesChannels) return [];
+  
+    const searchLower = searchQuery.toLowerCase();
+  
+    return storesWithMatchingSalesChannels.filter((store) => {
+      const storeNameMatch = store.name?.toLowerCase().includes(searchLower);
+      const createdDateMatch = store.created_at?.toLowerCase().includes(searchLower);
+      const salesChannelNameMatch = store.matchingSalesChannel?.name?.toLowerCase().includes(searchLower);
+  
+      return storeNameMatch || createdDateMatch || salesChannelNameMatch;
+    });
+  }, [storesWithMatchingSalesChannels, searchQuery]);
+  
   const pageSize = 6;
   const currentStores = useMemo(() => {
     if (!Array.isArray(storesWithMatchingSalesChannels)) return [];
@@ -198,13 +207,13 @@ const Store = () => {
 
   const getStoreUrl = (storeName: string) => {
     const storeUrls: { [key: string]: string } = {
-      'Baseball Franchise': 'http://localhost:8004/',
-      'Football Franchise': 'http://localhost:8003/',
+      "Baseball Franchise": "http://localhost:8004/",
+      "Football Franchise": "http://localhost:8003/",
       // Add more store mappings here
     };
-    
+
     // Return the matching URL or a default URL
-    return storeUrls[storeName] || 'http://localhost:8004/';
+    return storeUrls[storeName] || "http://localhost:8004/";
   };
 
   return (
@@ -248,7 +257,7 @@ const Store = () => {
               </Table.Row>
             </Table.Header>
             <Table.Body>
-              {currentStores?.map(
+              {filteredStores?.map(
                 (
                   store: {
                     created_at: any;
