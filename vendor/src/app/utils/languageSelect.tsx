@@ -4,7 +4,7 @@ export function LanguageSelect() {
   return (
     <div className="w-[256px]">
       <select
-        className="w-full border-2 border-gray-300 py-2 px-4 rounded-lg text-[14px] focus:outline-none focus:border-indigo-500 transition-colors bg-white"
+        className="w-full border-2 border-gray-300 py-2 px-4 rounded-lg text-[14px] focus:outline-none focus:border-gray-600 transition-colors bg-white "
         defaultValue=""
       >
         <option value="" disabled>

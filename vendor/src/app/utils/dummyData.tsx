@@ -48,6 +48,7 @@ export const ordersdata = [
   
   export const getColors = (index: number) => {
     const colors = [
+      "bg-gray-700",
       "bg-red-700",
       "bg-blue-700",
       "bg-green-700",
