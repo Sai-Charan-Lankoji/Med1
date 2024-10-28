@@ -25,8 +25,8 @@ const menuItems: MenuItem[] = [
   { name: "Orders", href: "/vendor/orders", icon: <ShoppingCart /> },
   { name: "Products", href: "/vendor/products", icon: <Tag /> },
   { name: "Customers", href: "/vendor/customers", icon: <UsersSolid /> },
+  { name: "Store", href: "/vendor/store", icon: <BuildingStorefront />},
   { name: "Settings", href: "/vendor/settings", icon: <CogSixTooth /> },
-  { name: "Store", href: "/vendor/store", icon: <BuildingStorefront />}
 ];
 
 const MenuItems: React.FC = () => {
