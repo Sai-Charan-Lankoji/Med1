@@ -9,6 +9,7 @@ interface VendorLoginResponse {
     contact_email: string;
     contact_name: string;
     business_type: string;
+    company_name: string;
   };
 }
 
