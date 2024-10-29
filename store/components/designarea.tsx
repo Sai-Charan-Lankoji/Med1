@@ -32,9 +32,6 @@ import {
   IApparel,
 } from "../@types/models"; 
 
-import imageCompression from 'browser-image-compression';
-
-
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
 const imageGal = /(image)/i;
@@ -629,11 +626,11 @@ export default function DesignArea(): React.ReactElement {
         </div>
         <div className="col-span-12 sm:col-span-12  md:col-span-6 lg:col-span-4">
           <p className="text-purple-800">Color:</p>
-          <div className="columns-7 gap-4">
+          <div className="columns-5 sm:gap-3 md:gap-5">
             {colors.map((color) => (
               <div
                 key={color.value}
-                className={`p-4 rounded-full cursor-pointer border hover:bg-zinc-800 hover:border-zinc-400 ${
+                className={`sm:p-4 sm:w-4 sm:h-4 md:p-3 lg:p-[12px] sm:rounded-full cursor-pointer border hover:bg-zinc-800 hover:border-zinc-400 ${
                   color.selected ? "border border-zinc-500" : ""
                 }`}
                 style={{ backgroundColor: color.value }}
