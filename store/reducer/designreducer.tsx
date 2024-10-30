@@ -43,6 +43,19 @@ export const designReducer = (
           : { ...a, isactive: false }
       );
       return designs;
+
+      case "CLEAR_ALL": {
+        return designs.map(design => ({
+          apparel: design.apparel,
+          id: design.id,
+          items: [],
+          jsonDesign: null,
+          isactive: design.isactive,
+          pngImage: null,
+          svgImage: null,
+          uploadedImages: [],
+        }));
+      }
     case "UPDATE_SELECTED_SVG_COLORS":
       designs = designs.map((a) =>
         a.isactive ? { ...a, selectedSvgColors: action.payload } : { ...a }

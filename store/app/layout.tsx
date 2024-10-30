@@ -26,12 +26,19 @@ export default function RootLayout({
   // Add storage cleanup effect
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      const clearCartItems = (storage: Storage) => {
+        for (let i = 0; i < storage.length; i++) {
+          const key = storage.key(i);
+          if (key && key.startsWith('cart')) {
+            storage.removeItem(key);
+          }
+        }
+      };
+  
       window.addEventListener('beforeunload', function() {
-        sessionStorage.clear();
-        localStorage.clear();
+        clearCartItems(sessionStorage);
+        clearCartItems(localStorage);
       });
-
-      
     }
   }, []);
 

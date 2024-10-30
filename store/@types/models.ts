@@ -101,7 +101,8 @@ export type DesignAction =
   | { type: 'UPLOADED_IMAGE', payload: string }
   | { type: 'CLEAR_ITEM', svgId:string, designItemType: string}
   | { type: 'UPLOADED_DESIGNS'; payload: IDesign[] }
-  | { type: 'TEXT_PROPS'; payload: IProps };
+  | { type: 'TEXT_PROPS'; payload: IProps }
+  | { type: "CLEAR_ALL" };
 
 export type ColorPickerAction = 
   | { type: 'SVG_COLORS'; payload: IsvgColor[] }

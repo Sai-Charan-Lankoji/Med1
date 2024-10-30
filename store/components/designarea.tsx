@@ -261,6 +261,7 @@ export default function DesignArea(): React.ReactElement {
             createApparelUpload(ApparelUploadData, {
               onSuccess: (response) => {
                 console.log("Uploaded apparel design image data:", response);
+                
               },
               onError: (err) => {
                 console.error("Error uploading apparel design image:", err);
@@ -273,7 +274,7 @@ export default function DesignArea(): React.ReactElement {
         },
       });
     }
-
+    dispatchDesign({ type: "CLEAR_ALL"}); //added to state after adding to cart
     console.log("All items added to cart:", cart);
   };
 
