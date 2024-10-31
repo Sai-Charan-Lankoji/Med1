@@ -1,188 +1,163 @@
-"use client"
-
-import React, { createContext, useContext, useState, useEffect } from 'react'
-
-
-interface BackgroundTShirt {
-  url: string ;
-  color: string | undefined;
-  height: number | undefined;
-  width: number | undefined;
-}
+import { IDesign } from '@/@types/models';
+import { nanoid } from 'nanoid';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface CartItem {
-  title: string;
-  thumbnail: any;
-  upload: any;
-  price: number;
-  color: string | undefined;
-  id: any;
+  id: string;
+  designs: IDesign[];
   quantity: number;
-  side: string;
-  is_active: boolean;
-  backgroundTShirt: BackgroundTShirt;
-  // svgUrl: string | null;
+  title: string;
+  price: number;
+  color: string;
 }
 
-interface CartContextProps {
-  cart: CartItem[]
-  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>
-  addToCart: (item: CartItem) => void
-  removeFromCart: (id: string | number) => void
-  updateQuantity: (id: number, quantity: number) => void
-  clearCart: () => void
-  mergeLocalCart: () => void
+interface CartContextType {
+  cart: CartItem[];
+  setCart: React.Dispatch<React.SetStateAction<CartItem[]>>;
+  addToCart: (designs: IDesign[]) => void;
+  removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  clearCart: () => void;
+  mergeLocalCart: () => void;
 }
 
-const CartContext = createContext<CartContextProps | undefined>(undefined)
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   useEffect(() => {
-    loadCart()
-  }, [])
+    loadCart();
+  }, []);
 
   const loadCart = () => {
     if (typeof window !== 'undefined') {
-      const customerId = sessionStorage.getItem('customerId')
+      const customerId = sessionStorage.getItem('customerId');
       if (customerId) {
-        const userCart = localStorage.getItem(`cart_${customerId}`)
+        const userCart = localStorage.getItem(`cart_${customerId}`);
         if (userCart) {
           try {
-            const parsedCart = JSON.parse(userCart)
-            setCart(parsedCart.map((item: CartItem) => ({
-              ...item,
-              backgroundTShirt: item.backgroundTShirt || { url: '', color: '' }
-            })))
+            setCart(JSON.parse(userCart));
           } catch (error) {
-            console.error('Error parsing user cart:', error)
-            setCart([])
+            console.error('Error parsing user cart:', error);
+            setCart([]);
           }
         }
       } else {
-        const guestCart = localStorage.getItem('guest_cart')
+        const guestCart = localStorage.getItem('guest_cart');
         if (guestCart) {
           try {
-            const parsedCart = JSON.parse(guestCart)
-            setCart(parsedCart.map((item: CartItem) => ({
-              ...item,
-              backgroundTShirt: item.backgroundTShirt || { url: '', color: '' }
-            })))
+            setCart(JSON.parse(guestCart));
           } catch (error) {
-            console.error('Error parsing guest cart:', error)
-            setCart([])
+            console.error('Error parsing guest cart:', error);
+            setCart([]);
           }
         }
       }
     }
-  }
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const customerId = sessionStorage.getItem('customerId')
-      const cartToSave = cart.map(item => ({
-        ...item,
-        backgroundTShirt: item.backgroundTShirt || { url: '', color: '' }
-      }))
+      const customerId = sessionStorage.getItem('customerId');
       if (customerId) {
-        localStorage.setItem(`cart_${customerId}`, JSON.stringify(cartToSave))
+        localStorage.setItem(`cart_${customerId}`, JSON.stringify(cart));
       } else {
-        localStorage.setItem('guest_cart', JSON.stringify(cartToSave))
+        localStorage.setItem('guest_cart', JSON.stringify(cart));
       }
     }
-  }, [cart])
+  }, [cart]);
 
-  const mergeLocalCart = () => {
-    if (typeof window !== 'undefined') {
-      const customerId = sessionStorage.getItem('customerId')
-      if (!customerId) return
+  const addToCart = (designs: IDesign[]) => {
+    const newCartItem: CartItem = {
+      id: designs[0]?.id || nanoid(),
+      designs: designs,
+      quantity: 1,
+      title: "Custom T-Shirt Design",
+      price: 100, // You can modify this based on your pricing logic
+      color: designs[0]?.apparel.color || ''
+    };
 
-      const guestCart = localStorage.getItem('guest_cart')
-      const userCart = localStorage.getItem(`cart_${customerId}`)
+    setCart(prevCart => [...prevCart, newCartItem]);
+  };
 
-      if (guestCart) {
-        const guestCartItems: CartItem[] = JSON.parse(guestCart)
-        const userCartItems: CartItem[] = userCart ? JSON.parse(userCart) : []
+  const removeFromCart = (id: string) => {
+    setCart(prevCart => prevCart.filter(item => item.id !== id));
+  };
 
-        const mergedCart = [...userCartItems]
-        guestCartItems.forEach((guestItem) => {
-          const existingItem = mergedCart.find((item) => item.id === guestItem.id)
-          if (existingItem) {
-            existingItem.quantity += guestItem.quantity
-            existingItem.backgroundTShirt = guestItem.backgroundTShirt || existingItem.backgroundTShirt
-          } else {
-            mergedCart.push({
-              ...guestItem,
-              backgroundTShirt: guestItem.backgroundTShirt || { url: '', color: '' }
-            })
-          }
-        })
-
-        setCart(mergedCart)
-        localStorage.setItem(`cart_${customerId}`, JSON.stringify(mergedCart))
-        localStorage.removeItem('guest_cart')
-      }
-    }
-  }
-
-  const addToCart = (item: CartItem) => {
-    setCart((prev) => {
-      const existingItem = prev.find((cartItem) => cartItem.id === item.id)
-      if (existingItem) {
-        return prev.map((cartItem) =>
-          cartItem.id === item.id
-            ? { ...cartItem, quantity: cartItem.quantity + item.quantity }
-            : cartItem
-        )
-      }
-      return [...prev, item]
-    })
-  }
-
-  const removeFromCart = (id: string | number) => {
-    setCart((prev) => prev.filter((item) => item.id !== id))
-  }
-
-  const updateQuantity = (id: number, quantity: number) => {
-    setCart((prev) =>
-      prev.map((item) =>
+  const updateQuantity = (id: string, quantity: number) => {
+    setCart(prevCart =>
+      prevCart.map(item =>
         item.id === id ? { ...item, quantity } : item
       )
-    )
-  }
+    );
+  };
 
   const clearCart = () => {
-    setCart([])
+    setCart([]);
     if (typeof window !== 'undefined') {
-      const customerId = sessionStorage.getItem('customerId')
+      const customerId = sessionStorage.getItem('customerId');
       if (customerId) {
-        localStorage.removeItem(`cart_${customerId}`)
+        localStorage.removeItem(`cart_${customerId}`);
       } else {
-        localStorage.removeItem('guest_cart')
+        localStorage.removeItem('guest_cart');
       }
     }
+  };
+
+  
+  const mergeLocalCart = () => {
+    // if (typeof window !== 'undefined') {
+    //   const customerId = sessionStorage.getItem('customerId')
+    //   if (!customerId) return
+
+    //   const guestCart = localStorage.getItem('guest_cart')
+    //   const userCart = localStorage.getItem(`cart_${customerId}`)
+
+    //   if (guestCart) {
+    //     const guestCartItems: CartItem[] = JSON.parse(guestCart)
+    //     const userCartItems: CartItem[] = userCart ? JSON.parse(userCart) : []
+
+    //     const mergedCart = [...userCartItems]
+    //     guestCartItems.forEach((guestItem) => {
+    //       const existingItem = mergedCart.find((item) => item.id === guestItem.id)
+    //       if (existingItem) {
+    //         existingItem.quantity += guestItem.quantity
+    //         existingItem.backgroundTShirt = guestItem.backgroundTShirt || existingItem.backgroundTShirt
+    //       } else {
+    //         mergedCart.push({
+    //           ...guestItem,
+    //           backgroundTShirt: guestItem.backgroundTShirt || { url: '', color: '' }
+    //         })
+    //       }
+    //     })
+
+    //     setCart(mergedCart)
+    //     localStorage.setItem(`cart_${customerId}`, JSON.stringify(mergedCart))
+    //     localStorage.removeItem('guest_cart')
+    //   }
+    // }
   }
 
   return (
-    <CartContext.Provider value={{ 
-      cart, 
+    <CartContext.Provider value={{
+      cart,
       setCart,
-      addToCart, 
-      removeFromCart, 
-      updateQuantity, 
+      addToCart,
+      removeFromCart,
+      updateQuantity,
       clearCart,
-      mergeLocalCart 
+      mergeLocalCart
     }}>
       {children}
     </CartContext.Provider>
-  )
-}
+  );
+};
 
 export const useCart = () => {
-  const context = useContext(CartContext)
+  const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider')
+    throw new Error('useCart must be used within a CartProvider');
   }
-  return context
-}
+  return context;
+};

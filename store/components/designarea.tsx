@@ -187,81 +187,80 @@ export default function DesignArea(): React.ReactElement {
       router.push("/auth");
       return;
     }
-
-    const sides = ["front", "back", "rightshoulder", "leftshoulder"];
-    const designsToAdd = sides.filter((side) => {
-      const design = designs.find((d) => d.apparel.side === side);
-      return design && design.pngImage;
-    });
-
-    for (const side of designsToAdd) {
-      const design = designs.find((d) => d.apparel.side === side);
-      if (!design || !design.pngImage) continue;
-
-      let compressedThumbnail;
-      try {
-        compressedThumbnail = await compressBase64Image(
-          design.pngImage,
-          100,
-          500,
-          500
-        );
-      } catch (error) {
-        console.error("Error compressing image:", error);
-        continue;
-      }
-
-      const newItem = {
-        title: `Custom T-Shirt Design - ${design.apparel.side}`,
-        thumbnail: compressedThumbnail,
-        upload: design.uploadedImages?.[0] ?? "",
-        price: 100,
-        color: design.apparel.color,
-        id: nanoid(),
-        quantity: 1,
-        side: design.apparel.side,
-        is_active: design.isactive,
-        backgroundTShirt: {
-          url: design.apparel.url,
-          color: design.apparel.color,
-          height: design.apparel.height,
-          width: design.apparel.width,
-        },
-      };
-
-      console.log("Adding item to cart:", newItem);
-      addToCart(newItem);
-
+  
+    // Filter designs that have PNG images
+    const validDesigns = designs.filter(design => design.pngImage);
+  
+    if (validDesigns.length === 0) {
+      console.error("No valid designs to add to cart");
+      return;
+    }
+  
+    // Compress thumbnails for all designs
+    const processedDesigns = await Promise.all(
+      validDesigns.map(async (design) => {
+        let compressedThumbnail;
+        try {
+          compressedThumbnail = await compressBase64Image(
+            design.pngImage,
+            100,
+            500,
+            500
+          );
+        } catch (error) {
+          console.error("Error compressing image:", error);
+          return null;
+        }
+  
+        return {
+          ...design,
+          thumbnail: compressedThumbnail
+        };
+      })
+    );
+  
+    // Filter out any null results from failed compression
+    const finalDesigns = processedDesigns.filter(design => design !== null);
+  
+    // Add all designs as a single cart item
+    addToCart(finalDesigns);
+  
+    // Create apparel designs in the backend
+    finalDesigns.forEach(design => {
       const ApparelDesigns = {
         design: {
-          title: newItem.title,
-          price: newItem.price,
-          color: newItem.color,
-          side: newItem.side,
-          quantity: newItem.quantity,
-          backgroundTShirt: newItem.backgroundTShirt,
+          title: "Custom T-Shirt Design",
+          price: 100,
+          color: design.apparel.color,
+          side: design.apparel.side,
+          quantity: 1,
+          backgroundTShirt: {
+            url: design.apparel.url,
+            color: design.apparel.color,
+            height: design.apparel.height,
+            width: design.apparel.width,
+          },
         },
         thumbnail_images: design.uploadedImages?.[0] || design.svgImage,
-        is_active: newItem.is_active,
+        is_active: design.isactive,
         archive: "false",
         customer_id: sessionStorage.getItem("customerId"),
       };
-
+  
       CreateApparelDesign(ApparelDesigns, {
         onSuccess: (response) => {
           console.log("Created apparel design data ", response);
           const apparelDesignId = response.newDesign.id;
-
-          const ApparelUploadData = {
-            url: design.uploadedImages?.[0],
-            apparelDesign_id: apparelDesignId,
-          };
-
-          if (ApparelUploadData.url) {
+  
+          if (design.uploadedImages?.[0]) {
+            const ApparelUploadData = {
+              url: design.uploadedImages[0],
+              apparelDesign_id: apparelDesignId,
+            };
+  
             createApparelUpload(ApparelUploadData, {
               onSuccess: (response) => {
                 console.log("Uploaded apparel design image data:", response);
-                
               },
               onError: (err) => {
                 console.error("Error uploading apparel design image:", err);
@@ -273,9 +272,10 @@ export default function DesignArea(): React.ReactElement {
           console.error("Error creating apparel design:", err);
         },
       });
-    }
-    dispatchDesign({ type: "CLEAR_ALL"}); //added to state after adding to cart
-    console.log("All items added to cart:", cart);
+    });
+  
+    dispatchDesign({ type: "CLEAR_ALL" });
+    console.log("All designs added to cart as single item:", cart);
   };
 
   const getCanvasClass = () => {
