@@ -17,7 +17,7 @@ const Navbar: React.FC = () => {
   // const { email, customerToken } = useUserContext();
   // Modified to include username
   const { email, customerToken } = useUserContext();
-  const [username, setUsername] = useState<string>("");  // Added: State for username
+  const [username, setUsername] = useState<string>(""); // Added: State for username
   const { logout } = useCustomerLogout();
   const router = useRouter();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -29,7 +29,7 @@ const Navbar: React.FC = () => {
   // Added: Effect to get username from sessionStorage
   useEffect(() => {
     if (email) {
-      const storedUsername = sessionStorage.getItem('username');
+      const storedUsername = sessionStorage.getItem("username");
       if (storedUsername) {
         setUsername(storedUsername);
       }
@@ -155,8 +155,8 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Title */}
           <Link href="/" className="flex-shrink-0">
-          <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-          Customized Football Jersey Design
+            <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
+              Customized Football Jersey Design
             </h1>
           </Link>
 
@@ -200,20 +200,21 @@ const Navbar: React.FC = () => {
                   </span> */}
                   {/* Modified to show username */}
                   <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
-                    {username || email} {/* Fallback to email if username is not available */}
+                    {username || email}{" "}
+                    {/* Fallback to email if username is not available */}
                   </span>
                 </button>
 
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1">
-                  <button
-                    onClick={handleDesktopLogout}
-                    className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
-                  >
-                    <FaSignOutAlt className="text-xl text-gray-700" />
-                    <span>Logout</span>
-                  </button>
-                </div>
+                    <button
+                      onClick={handleDesktopLogout}
+                      className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
+                    >
+                      <FaSignOutAlt className="text-xl text-gray-700" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -254,40 +255,47 @@ const Navbar: React.FC = () => {
                                 key={item.id}
                                 className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition duration-200"
                               >
-                                 <div className="relative w-20 h-24 flex-shrink-0">
-                            {/* Background T-shirt image */}
-                            <div className="absolute inset-0">
-                              <Image
-                                src={item.backgroundTShirt.url}
-                                alt="T-shirt background"
-                                layout="fill"
-                                objectFit="contain"
-                                className="rounded-md"
-                                style={{
-                                  backgroundColor: item.backgroundTShirt.color,
-                                }}
-                              />
-                            </div>
-                            {/* Overlay thumbnail image */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
-                                <Image
-                                  src={item.thumbnail}
-                                  alt={item.title}
-                                  layout="fill"
-                                  objectFit="contain"
-                                  className="rounded-md"
-                                />
-                              </div>
-                            </div>
-                          </div>
+                                {/* Background T-shirt image */}
+
+                                {item?.designs?.map((design, index) => (
+                                  <div key={index}>
+                                    <div className="relative w-20 h-24 flex-shrink-0">
+                                      <div className="absolute inset-0">
+                                        <Image
+                                          src={design?.apparel?.url}
+                                          alt="T-shirt background"
+                                          layout="fill"
+                                          objectFit="contain"
+                                          className="rounded-md"
+                                          style={{
+                                            backgroundColor:
+                                              design.apparel.color,
+                                          }}
+                                        />
+                                      </div>
+                                      {/* Overlay thumbnail image */}
+                                      <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
+                                          <Image
+                                            src={design?.pngImage || design.uploadedImages}
+                                            alt={design.apparel.side}
+                                            layout="fill"
+                                            objectFit="contain"
+                                            className="rounded-md"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-gray-900 truncate">
                                     {item.title}
                                   </p>
-                                  <p className="text-sm text-gray-500">
+                                  {/* <p className="text-sm text-gray-500">
                                     Side: {item.side}
-                                  </p>
+                                  </p> */}
                                   <p className="text-sm text-gray-600">
                                     Qty: {item.quantity}
                                   </p>
@@ -340,13 +348,13 @@ const Navbar: React.FC = () => {
               <div className="flex flex-col space-y-2">
                 {!email ? (
                   <Link
-                  href="./auth"
-                  className="mx-3 px-4 py-2 text-sm font-medium text-gray-700 rounded-md text-left hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
-                  onClick={closeAllMenus}
-                >
-                  <FaUserCircle className="text-xl text-gray-700" />
-                  <span>LogIn / SignUp</span>
-                </Link>
+                    href="./auth"
+                    className="mx-3 px-4 py-2 text-sm font-medium text-gray-700 rounded-md text-left hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
+                    onClick={closeAllMenus}
+                  >
+                    <FaUserCircle className="text-xl text-gray-700" />
+                    <span>LogIn / SignUp</span>
+                  </Link>
                 ) : (
                   <>
                     <div className="flex items-center space-x-2 mx-3 px-4 py-2 text-sm text-gray-700">
@@ -356,7 +364,7 @@ const Navbar: React.FC = () => {
                       {/* Modified to show username in mobile menu */}
                       <span className="truncate">{username || email}</span>
                     </div>
-                    
+
                     {customerToken && (
                       <>
                         <button

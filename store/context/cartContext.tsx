@@ -70,14 +70,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (designs: IDesign[]) => {
     const newCartItem: CartItem = {
-      id: designs[0]?.id || nanoid(),
+      id: "cartid_" + nanoid(),
       designs: designs,
       quantity: 1,
       title: "Custom T-Shirt Design",
       price: 100, // You can modify this based on your pricing logic
       color: designs[0]?.apparel.color || ''
     };
-
+    console.log("Praveen Added: ", newCartItem)
     setCart(prevCart => [...prevCart, newCartItem]);
   };
 
