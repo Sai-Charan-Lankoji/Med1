@@ -40,7 +40,9 @@ const CartPage = () => {
   const [itemToRemove, setItemToRemove] = useState<any | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
-  const openModal = (itemId: number) => {
+  const [selectedDesigns, setSelectedDesigns] = useState<Record<string, number>>({});
+
+  const openModal = (itemId: String) => {    
     setItemToRemove(itemId);
     setIsModalOpen(true);
   };
@@ -53,8 +55,10 @@ const CartPage = () => {
   const shippingCost: number = 0;
   const taxRate: number = 0.1;
 
+  // Updated subtotal calculation to account for $100 per side
   const subtotal: number = cart.reduce((total, item) => {
-    return total + item.price * item.quantity;
+    const numberOfSides = item.designs ? item.designs.length : 1;
+    return total + (100 * numberOfSides * item.quantity); // $100 per side
   }, 0);
 
   const taxAmount: number = subtotal * taxRate;
@@ -101,7 +105,7 @@ const CartPage = () => {
       line_items: cart.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
-        price: item.price,
+        price: item.designs ? item.designs.length * 100 : 100, // Updated price calculation
         designs: item.designs
       })),
       total_amount: total,
@@ -135,13 +139,25 @@ const CartPage = () => {
     });
   }; 
 
-
-
-  const capitalizeFirstLetter = (string : String) => {
+  const capitalizeFirstLetter = (string: String) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
-  
- 
+
+  const getDesignedSidesText = (designs: { apparel: { side: string } }[]) => {
+    if (!designs || designs.length === 0) return "";
+    const sides = designs.map(design => capitalizeFirstLetter(design.apparel.side));
+    if (sides.length === 1) return sides[0];
+    if (sides.length === 2) return `${sides[0]} & ${sides[1]}`;
+    const lastSide = sides.pop();
+    return `${sides.join(', ')} & ${lastSide}`;
+  };
+
+  const handleThumbnailClick = (itemId: string, designIndex: number) => {
+    setSelectedDesigns(prev => ({
+      ...prev,
+      [itemId]: designIndex
+    }));
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 text-black">
@@ -171,7 +187,7 @@ const CartPage = () => {
             <div className="text-center py-12">
               <h2 className="text-xl font-medium mb-4">Your cart is empty</h2>
               <p className="text-gray-600 mb-6">
-                Looks like you haven &apos t added any items to your cart yet.
+                Looks like you haven&apos;t added any items to your cart yet.
               </p>
               <Link
                 href="/"
@@ -193,15 +209,57 @@ const CartPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {cart.map((item) => (
+                  {cart.map((item) => {
+                    const pricePerItem = (item.designs ? item.designs.length * 100 : 100);
+                    const itemTotal = pricePerItem * item.quantity;
+                    const mainDesignIndex = selectedDesigns[item.id] || 0;
+                    
+                    return (
                     <tr key={item.id} className="border-b">
                       <td className="py-4">
                         <div className="flex items-center space-x-4">
-                        <div className="mt-2">
-                            <div className="grid grid-cols-3 gap-4">
-                              {item.designs.map((design, index) => (
-                                <div key={index} className="flex flex-col items-center">
-                                  <div className="relative w-24 h-28 mb-2">
+                          <div className="mt-2">
+                            <p className="text-sm text-gray-600 mb-2">
+                              Designed Sides: {getDesignedSidesText(item.designs)}
+                            </p>
+                            <div className="flex gap-4">
+                              {/* Main large design */}
+                              <div className="relative w-48 h-56">
+                                <div className="absolute inset-0">
+                                  <Image
+                                    src={item.designs[mainDesignIndex].apparel?.url}
+                                    alt={`Side: ${item.designs[mainDesignIndex].apparel.side}`}
+                                    layout="fill"
+                                    objectFit="contain"
+                                    className="rounded-md"
+                                    style={{
+                                      backgroundColor: item.designs[mainDesignIndex].apparel?.color,
+                                    }}
+                                  />
+                                </div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
+                                    <Image
+                                      src={item.designs[mainDesignIndex].svgImage || item.designs[mainDesignIndex].uploadedImages}
+                                      alt={`Main design`}
+                                      layout="fill"
+                                      objectFit="contain"
+                                      className="rounded-md"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Thumbnails */}
+                              <div className="flex flex-col gap-2">
+                                {item.designs.map((design, index) => (
+                                  <div 
+                                    key={index}
+                                    className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                      index === mainDesignIndex ? 'ring-2 ring-gray-700' : 'hover:ring-2 hover:ring-gray-300'
+                                    }`}
+                                    onClick={() => handleThumbnailClick(item.id, index)}
+                                  >
                                     <div className="absolute inset-0">
                                       <Image
                                         src={design.apparel?.url}
@@ -218,7 +276,7 @@ const CartPage = () => {
                                       <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
                                         <Image
                                           src={design.svgImage || design.uploadedImages}
-                                          alt={`Side ${index + 1} design`}
+                                          alt={`Thumbnail ${index + 1}`}
                                           layout="fill"
                                           objectFit="contain"
                                           className="rounded-md"
@@ -226,50 +284,35 @@ const CartPage = () => {
                                       </div>
                                     </div>
                                   </div>
-                                  <span className="text-xs text-gray-600">
-                                    {capitalizeFirstLetter(design.apparel.side)}
-                                  </span>
-                                </div>
-                              ))}
+                                ))}
+                              </div>
                             </div>
                           </div>
-
-                        
                         </div>
                       </td>
                       <td className="py-4">
                         <div className="flex items-center space-x-2">
                           <button
                             className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200"
-                            onClick={() =>
-                              handleQuantityChange(item.id, item.quantity - 1)
-                            }
+                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                             disabled={updating || item.quantity <= 1}
                           >
                             -
                           </button>
-                          <span className="w-8 text-center">
-                            {item.quantity}
-                          </span>
+                          <span className="w-8 text-center">{item.quantity}</span>
                           <button
                             className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200"
-                            onClick={() =>
-                              handleQuantityChange(item.id, item.quantity + 1)
-                            }
+                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                             disabled={updating || item.quantity >= 10}
                           >
                             +
                           </button>
                         </div>
-                        {error && (
-                          <p className="text-red-500 text-sm mt-1">{error}</p>
-                        )}
+                        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                       </td>
-                      <td className="py-4">${item.price.toFixed(2)}</td>
-                      <td className="py-4">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </td>
-                      <td className="py-4">
+                      <td className="py-4 px-auto">${pricePerItem.toFixed(2)}</td>
+                      <td className="py-4 px-auto">${itemTotal.toFixed(2)}</td>
+                      <td className="py-4 px-auto">
                         <button
                           onClick={() => openModal(item.id)}
                           className="text-red-500 hover:text-red-700 transition duration-200"
@@ -279,7 +322,7 @@ const CartPage = () => {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                  )})}
                 </tbody>
               </table>
             </div>
@@ -298,11 +341,7 @@ const CartPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
-                  <span>
-                    {shippingCost === 0
-                      ? "Free"
-                      : `$${shippingCost.toFixed(2)}`}
-                  </span>
+                  <span>{shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Tax (10%)</span>
@@ -332,10 +371,7 @@ const CartPage = () => {
               )}
 
               <div className="mt-6 text-center">
-                <Link
-                  href="/"
-                  className="text-blue-600 hover:text-blue-800 transition duration-200"
-                >
+                <Link href="/" className="text-blue-600 hover:text-blue-800 transition duration-200">
                   Continue Shopping
                 </Link>
               </div>
