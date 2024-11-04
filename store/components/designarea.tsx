@@ -80,7 +80,7 @@ export default function DesignArea(): React.ReactElement {
           selectedApparal: parsedState.design.apparel,
           jsonDesign: parsedState.canvasJSON,
           pngImage: parsedState.design.pngImage,
-          svgImage: parsedState.design.svgImage,
+          svgImage: svgUrl,
         });
       }
     }
@@ -214,7 +214,7 @@ export default function DesignArea(): React.ReactElement {
   
         return {
           ...design,
-          thumbnail: compressedThumbnail
+          pngImage: null,
         };
       })
     );
@@ -307,7 +307,7 @@ export default function DesignArea(): React.ReactElement {
       selectedApparal: apparel,
       jsonDesign: canvas?.toJSON(),
       pngImage: canvas?.toDataURL({ multiplier: 4 }),
-      svgImage: canvas?.toSVG(),
+      svgImage: svgUrl,
     });
   };
 

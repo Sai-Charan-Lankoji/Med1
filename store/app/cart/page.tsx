@@ -15,12 +15,7 @@ interface OrderData {
     product_id: number | string | undefined;
     quantity: number;
     price: number;
-    thumbnail_url: any;
-    upload_url: any;
-    background_image_url: string;
-    background_image_color: string | undefined;
-    height: number | undefined;
-    width: number | undefined;
+    designs: any[];
   }>;
   total_amount: number;
   currency_code: string;
@@ -107,12 +102,7 @@ const CartPage = () => {
         product_id: item.id,
         quantity: item.quantity,
         price: item.price,
-        thumbnail_url: item.upload ? item.upload : item.thumbnail, // Use upload if available, otherwise fallback to thumbnail
-        upload_url: item.upload,
-        background_image_url: item.backgroundTShirt.url,
-        background_image_color: item.backgroundTShirt.color,
-        height: item.backgroundTShirt.height,
-        width: item.backgroundTShirt.width,
+        designs: item.designs
       })),
       total_amount: total,
       currency_code: "usd",
