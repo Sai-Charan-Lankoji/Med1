@@ -33,7 +33,8 @@ import { request } from "http";
 import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
 import { useUserContext } from "../context/userContext"; 
 import { useRouter } from "next/navigation";
-import { compressBase64Image } from "@/app/utils/imageCompression";
+import { compressBase64Image } from "@/app/utils/imageCompression"; 
+import {useSvgContext} from "../context/svgcontext"
 
 
 
@@ -45,7 +46,8 @@ const itextGal = /(i-text)/i;
 
 export default function DesignArea(): React.ReactElement {      
   const { customerToken } = useUserContext(); 
-  const router = useRouter();
+  const router = useRouter(); 
+  const {svgUrl} = useSvgContext()
  
   // const { mutate: createOrder, isLoading, isError } = useCreateOrder(); // Custom hook
 // const {mutate:uploadImage , isError , isLoading} = useUploadImage()
@@ -313,6 +315,8 @@ export default function DesignArea(): React.ReactElement {
         return {
           ...design,
           pngImage: null,
+          svgImage: svgUrl,
+          
         };
       })
     );

@@ -336,7 +336,7 @@ const Navbar: React.FC = () => {
                                     <div className="absolute inset-0 flex items-center justify-center">
                                       <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
                                         <Image
-                                          src={design.svgImage || design.uploadedImages}
+                                          src={design?.svgImage || design.uploadedImages}
                                           alt={`Side ${index + 1} design`}
                                           layout="fill"
                                           objectFit="contain"
