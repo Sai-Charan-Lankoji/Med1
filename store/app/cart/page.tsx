@@ -37,7 +37,7 @@ const CartPage = () => {
   const { mutate: createOrder, isLoading, isError } = useCreateOrder();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [itemToRemove, setItemToRemove] = useState<number | null>(null);
+  const [itemToRemove, setItemToRemove] = useState<any | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
   const openModal = (itemId: number) => {
@@ -60,7 +60,7 @@ const CartPage = () => {
   const taxAmount: number = subtotal * taxRate;
   const total: number = subtotal + shippingCost + taxAmount;
 
-  const handleQuantityChange = async (itemId: number, newQuantity: number) => {
+  const handleQuantityChange = async (itemId: any, newQuantity: any) => {
     setError(null);
 
     if (newQuantity <= 0) {
@@ -133,7 +133,15 @@ const CartPage = () => {
         setIsProcessingOrder(false);
       },
     });
+  }; 
+
+
+
+  const capitalizeFirstLetter = (string : String) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
   };
+  
+ 
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 text-black">
@@ -189,51 +197,44 @@ const CartPage = () => {
                     <tr key={item.id} className="border-b">
                       <td className="py-4">
                         <div className="flex items-center space-x-4">
-                          <div className="relative w-20 h-24 flex-shrink-0">
-                            {/* Background T-shirt image */}
-                            <div className="absolute inset-0">
-                              <Image
-                                src={item.backgroundTShirt.url}
-                                alt="T-shirt background"
-                                layout="fill"
-                                objectFit="contain"
-                                className="rounded-md"
-                                style={{
-                                  backgroundColor: item.backgroundTShirt.color,
-                                }}
-                              />
-                            </div>
-                            {/* Overlay thumbnail image */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
-                                <Image
-                                  src={item.thumbnail}
-                                  alt={item.title}
-                                  layout="fill"
-                                  objectFit="contain"
-                                  className="rounded-md"
-                                />
-                              </div>
+                        <div className="mt-2">
+                            <div className="grid grid-cols-3 gap-4">
+                              {item.designs.map((design, index) => (
+                                <div key={index} className="flex flex-col items-center">
+                                  <div className="relative w-24 h-28 mb-2">
+                                    <div className="absolute inset-0">
+                                      <Image
+                                        src={design.apparel?.url}
+                                        alt={`Side: ${design.apparel.side}`}
+                                        layout="fill"
+                                        objectFit="contain"
+                                        className="rounded-md"
+                                        style={{
+                                          backgroundColor: design.apparel?.color,
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
+                                        <Image
+                                          src={design.svgImage || design.uploadedImages}
+                                          alt={`Side ${index + 1} design`}
+                                          layout="fill"
+                                          objectFit="contain"
+                                          className="rounded-md"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className="text-xs text-gray-600">
+                                    {capitalizeFirstLetter(design.apparel.side)}
+                                  </span>
+                                </div>
+                              ))}
                             </div>
                           </div>
 
-                          <div>
-                            <h3 className="font-medium">{item.title}</h3>
-                            <div className="flex items-center">
-                              <p className="text-sm text-gray-500 mr-2">
-                                Color:
-                              </p>
-                              <div
-                                className={`w-6 h-6 flex items-center justify-center rounded-full border border-gray-500`}
-                                style={{
-                                  backgroundColor: item.backgroundTShirt.color,
-                                }}
-                              ></div>
-                            </div>
-                            <p className="text-sm text-gray-500">
-                              Side: {item.side}
-                            </p>
-                          </div>
+                        
                         </div>
                       </td>
                       <td className="py-4">
