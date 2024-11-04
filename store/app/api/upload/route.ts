@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     const buffer = Buffer.from(bytes);
     const filepath = path.join(process.cwd(), 'public', 'uploads', filename); 
-    await writeFile(filepath, buffer);
+    await writeFile(filepath, buffer.toString());
 
     // Generate the URL for the saved file
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
