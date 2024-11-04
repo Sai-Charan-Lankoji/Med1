@@ -1,7 +1,21 @@
-import type { LineItem, MedusaRequest, MedusaResponse } from "@medusajs/medusa";
+import type { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import CartService from "../../../services/cart"; // Adjust the import path as necessary
 import { CartCreateProps } from "@medusajs/medusa/dist/types/cart"; 
+export interface ICartItem {
+  designs: Array<{
+    price: number;
+    color: string;
+    side: string;
+    quantity: number;
+    url: string;
+    svgImage?: string;
+    isactive: boolean;
+    uploadedImages?: string[];
 
+  }>;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const getCartService = (req: MedusaRequest): CartService | null => {
   try {
@@ -56,7 +70,7 @@ export const POST = async (
       return;
     }
 
-    const { customer_id, lineItems } = req.body as { customer_id: string; lineItems: LineItem[] };
+    const { customer_id } = req.body as ICartItem;
 
     if (!customer_id) {
       console.error("Customer ID is missing in request body.");
@@ -73,8 +87,7 @@ export const POST = async (
     }
 
     // Add line items to the cart
-    await cartService.addOrUpdateLineItems(cart.id, lineItems);
-    res.status(201).json({ cart });
+     res.status(201).json({ cart });
   } catch (error) {
     console.error("Error in POST /cart:", error);
     res.status(500).json({ error: error.message || "An unknown error occurred." });

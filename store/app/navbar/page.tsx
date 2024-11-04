@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { FaUserCircle, FaShoppingCart, FaSignOutAlt } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
@@ -11,6 +10,7 @@ import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { useRouter } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
+import { DesignContext } from "@/context/designcontext"
 
 const Navbar: React.FC = () => {
   const { cart, removeFromCart } = useCart();
@@ -29,7 +29,9 @@ const Navbar: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<{
     [key: string]: boolean;
   }>({});
- 
+   const onDesignSelected = (e: any, design: IDesign) => {
+    dispatchDesign({ type: "UPDATE_DESIGN_FROM_CART_ITEM", currentDesign: design });
+  }; 
 
   // Added: Effect to get username from sessionStorage
   useEffect(() => {
@@ -341,6 +343,7 @@ const Navbar: React.FC = () => {
                                           layout="fill"
                                           objectFit="contain"
                                           className="rounded-md"
+                                          onClick={(e) => onDesignSelected(e, design)}
                                         />
                                       </div>
                                     </div>

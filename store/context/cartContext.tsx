@@ -1,9 +1,8 @@
 import { IDesign } from '@/@types/models';
 import { nanoid } from 'nanoid';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
+import { createCart } from '../app/hooks/useCart'
 interface CartItem {
-  id: string;
   designs: IDesign[];
   quantity: number;
   title: string;
@@ -70,13 +69,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (designs: IDesign[]) => {
     const newCartItem: CartItem = {
-      id: "cartid_" + nanoid(),
       designs: designs,
       quantity: 1,
-      title: "Custom T-Shirt Design",
-      price: 100, // You can modify this based on your pricing logic
-      color: designs[0]?.apparel.color || ''
+      price: 100,  
+      email: sessionStorage.getItem('customerId'),
+      customer_id: sessionStorage.getItem('email')
     };
+    // createCart(newCartItem, {
+    //   onSuccess: (response) => {
+    //     console.log("Created cart data ", response);
+    //   },
+    //   onError: (err) => {
+    //     console.error("Error creating apparel design:", err);
+    //   },
+    // });
     console.log("Praveen Added: ", newCartItem)
     setCart(prevCart => [...prevCart, newCartItem]);
   };

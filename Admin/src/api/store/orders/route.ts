@@ -14,10 +14,7 @@ interface OrderData {
     product_id: string;
     quantity: number;
     price: number;
-    thumbnail_url: string[]; // Array of URLs
-    upload_url: any;
-    background_image_url: string;
-    background_image_color: string;
+    designs: any
   }[];
   total_amount: string;
 }

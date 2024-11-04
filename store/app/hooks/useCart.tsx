@@ -1,47 +1,31 @@
-// hooks/useCart.ts
-import { useState, useEffect } from 'react';
-import { LineItem } from '@medusajs/medusa';
-import axios from 'axios';
-
-const useCart = (customerId: string) => {
-  const [cart, setCart] = useState<any>(null); // Replace 'any' with your cart type
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const getCart = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`/api/cart?customerId=${customerId}`);
-      setCart(response.data.cart);
-    } catch (error:any) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const addToCart = async (lineItems: LineItem[]) => {
-    setLoading(true);
-    try {
-      const response = await axios.post('/api/cart', {
-        customer_id: customerId,
-        lineItems,
-      });
-      setCart(response.data.cart);
-    } catch (error : any) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (customerId) {
-      getCart();
-    }
-  }, [customerId]);
-
-  return { cart, loading, error, addToCart };
+import { useMutation, useQueryClient } from "@tanstack/react-query";  
+const baseUrl = process.env.NEXT_PUBLIC_API_URL 
+const createCart = async (cartData : any) => {
+  const response = await fetch(`${baseUrl}/store/cart`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify(cartData),
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create cart: ${response.status} - ${errorText}`);
+  }
+  return response.json();
 };
 
-export default useCart;
+export const useCreateCart = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createCart,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['cart']);
+    },
+    onError: (error) => {
+      console.error('Error creating cart:', error);
+    },
+  });
+};
