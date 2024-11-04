@@ -9,6 +9,7 @@ import {
   PropsAction,
 } from "../@types/models";
 import { designReducer, propsReducer } from "../reducer/designreducer";
+import { useSvgContext } from "@/context/svgcontext";
 
 export const DesignContext = React.createContext<{
   designs: IDesign[];
@@ -18,6 +19,7 @@ export const DesignContext = React.createContext<{
 export const DesignProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
+  const { svgUrl } = useSvgContext();
   const [designs, dispatchDesign] = React.useReducer(designReducer, [
     {
       apparel: {
