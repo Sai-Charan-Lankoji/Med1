@@ -1,6 +1,7 @@
 "use client";
 
 import { useCart } from "@/context/cartContext";
+import {useNewCart} from "../hooks/useNewCart";
 import { useUserContext } from "@/context/userContext";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -31,6 +32,7 @@ interface OrderData {
 
 const CartPage = () => {
   const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
+  const {cartItems} = useNewCart();
   const { customerToken } = useUserContext();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ const CartPage = () => {
   const taxRate: number = 0.1;
 
   // Updated subtotal calculation to account for $100 per side
-  const subtotal: number = cart.reduce((total, item) => {
+  const subtotal: number = cartItems.reduce((total, item) => {
     const numberOfSides = item.designs ? item.designs.length : 1;
     return total + (100 * numberOfSides * item.quantity); // $100 per side
   }, 0);
@@ -102,7 +104,7 @@ const CartPage = () => {
     setIsProcessingOrder(true);
 
     const orderData: OrderData = {
-      line_items: cart.map((item) => ({
+      line_items: cartItems.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
         price: item.designs ? item.designs.length * 100 : 100, // Updated price calculation
@@ -158,7 +160,7 @@ const CartPage = () => {
       [itemId]: designIndex
     }));
   };
-
+console.log("cart..",cartItems);
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 text-black">
       {!customerToken && (
@@ -183,7 +185,7 @@ const CartPage = () => {
         <div className="lg:w-2/3 bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
 
-          {cart.length === 0 ? (
+          {cartItems.length === 0 ? (
             <div className="text-center py-12">
               <h2 className="text-xl font-medium mb-4">Your cart is empty</h2>
               <p className="text-gray-600 mb-6">
@@ -209,7 +211,7 @@ const CartPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {cart.map((item) => {
+                  {cartItems.map((item) => {
                     const pricePerItem = (item.designs ? item.designs.length * 100 : 100);
                     const itemTotal = pricePerItem * item.quantity;
                     const mainDesignIndex = selectedDesigns[item.id] || 0;
@@ -230,8 +232,8 @@ const CartPage = () => {
                                     src={item.designs[mainDesignIndex].apparel?.url}
                                     alt={`Side: ${item.designs[mainDesignIndex].apparel.side}`}
                                     layout="fill"
-                                    objectFit="contain"
-                                    className="rounded-md"
+                                    objectFit="cover"
+                                    className="rounded-none"
                                     style={{
                                       backgroundColor: item.designs[mainDesignIndex].apparel?.color,
                                     }}
@@ -265,8 +267,8 @@ const CartPage = () => {
                                         src={design.apparel?.url}
                                         alt={`Side: ${design.apparel.side}`}
                                         layout="fill"
-                                        objectFit="contain"
-                                        className="rounded-md"
+                                        objectFit="cover"
+                                        className="rounded-none"
                                         style={{
                                           backgroundColor: design.apparel?.color,
                                         }}
@@ -329,7 +331,7 @@ const CartPage = () => {
           )}
         </div>
 
-        {cart.length > 0 && (
+        {cartItems.length > 0 && (
           <div className="lg:w-1/3">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-xl font-bold mb-6">Order Summary</h2>
