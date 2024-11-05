@@ -10,10 +10,13 @@ import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { useRouter } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
-import { DesignContext } from "@/context/designcontext"
+import { DesignContext } from "@/context/designcontext" 
+import { useNewCart } from "../hooks/useNewCart";
 
 const Navbar: React.FC = () => {
-  const { cart, removeFromCart } = useCart();
+  const { cart, removeFromCart } = useCart(); 
+  const {cartItems} = useNewCart() 
+ 
   // Original email context
   // const { email, customerToken } = useUserContext();
   // Modified to include username
@@ -82,6 +85,8 @@ const Navbar: React.FC = () => {
       closeAllMenus();
     } else {
       setIsCartOpen((prev) => !prev);
+      console.log("cartItems" , cartItems)
+
       setIsProfileOpen(false);
     }
   };
@@ -274,16 +279,16 @@ const Navbar: React.FC = () => {
             </div>
 
             <div className="mt-4 max-h-[400px] overflow-y-auto">
-              {cart.length > 0 ? (
+              {cartItems.length > 0 ? (
                 <ul className="space-y-4">
-                  {cart.map((item) => (
-                    <li key={item.id} className="rounded-lg transition duration-200">
+                  {cartItems?.map((item,index) => (
+                    <li key={index} className="rounded-lg transition duration-200">
                       <div className="p-3 hover:bg-gray-50">
                         <div className="flex justify-between items-start mb-2">
                           <div>
-                            <p className="text-sm font-medium text-gray-900 truncate">
+                            {/* <p className="text-sm font-medium text-gray-900 truncate">
                               {item.title}
-                            </p>
+                            </p> */}
                             <p className="text-sm text-gray-600">
                               Qty: {item.quantity}
                             </p>

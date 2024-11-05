@@ -8,7 +8,9 @@ import { CartProvider } from "@/context/cartContext"
 import { UserProvider } from "@/context/userContext"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MedusaProvider } from "medusa-react"
-import { SvgProvider } from "@/context/svgcontext"
+import { SvgProvider } from "@/context/svgcontext" 
+import { store } from "../reducer/store";
+import { Provider } from "react-redux";
 
 const queryClient = new QueryClient()
 const inter = Inter({ subsets: ["latin"] })
@@ -45,6 +47,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+      <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <MedusaProvider
             queryClientProviderProps={{ client: queryClient }}
@@ -65,6 +68,7 @@ export default function RootLayout({
             </CartProvider>
           </MedusaProvider>
         </QueryClientProvider>
+        </Provider>
       </body>
     </html>
   )

@@ -90,7 +90,7 @@ export type DesignAction =
   | { type: "UPDATE_APPAREL_COLOR"; payload: string }
   | {
       type: "STORE_DESIGN";
-      currentDesign: IDesign | undefined;
+      currentDesign: IDesign ;
       selectedApparal: IApparel;
       jsonDesign: any;
       pngImage: any;
@@ -150,7 +150,7 @@ export interface ICartItem {
   designs: IDesign[];
   quantity: number;
   price: number;
-  email: string;
+  email: string | null;
   customer_id: any;
 }
 

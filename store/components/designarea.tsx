@@ -34,7 +34,9 @@ import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
 import { useUserContext } from "../context/userContext"; 
 import { useRouter } from "next/navigation";
 import { compressBase64Image } from "@/app/utils/imageCompression"; 
-import {useSvgContext} from "../context/svgcontext"
+import {useSvgContext} from "../context/svgcontext" 
+
+import { useNewCart } from "@/app/hooks/useNewCart";
 
 
 
@@ -44,7 +46,10 @@ const clipartGal = /(group|path)/i;
 const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
-export default function DesignArea(): React.ReactElement {      
+export default function DesignArea(): React.ReactElement {       
+
+  const { addDesignToCart, loading: cartLoading } = useNewCart() 
+
   const { customerToken } = useUserContext(); 
   const router = useRouter(); 
   const {svgUrl} = useSvgContext()
@@ -274,110 +279,16 @@ export default function DesignArea(): React.ReactElement {
 
   const clearDesignObject = () => {}; 
 
-  // const vendorId = request.cookies.get("vendor_id"); 
-
-  // const thumbnail = useUploadImage(design?.pngImage) 
-  // const vendorIdFromCookie = Cookies.get('vendor_id') 
-  // console.log("vendorIdFromCookie  " + vendorIdFromCookie)
-
-
-  const addDesignToCart = async () => {
+  const handleAddToCart = async () => {
     if (!customerToken) {
       saveStateToLocalStorage();
       router.push("/auth");
       return;
     }
-  
-    // Filter designs that have PNG images
-    const validDesigns = designs.filter(design => design.pngImage);
-  
-    if (validDesigns.length === 0) {
-      console.error("No valid designs to add to cart");
-      return;
+    const success = await addDesignToCart(designs, customerToken, svgUrl);
+    if (success) {
+      dispatchDesign({ type: "CLEAR_ALL" });
     }
-  
-    // Compress thumbnails for all designs
-    const processedDesigns = await Promise.all(
-      validDesigns.map(async (design) => {
-        let compressedThumbnail;
-        try {
-          compressedThumbnail = await compressBase64Image(
-            design.pngImage,
-            100,
-            500,
-            500
-          );
-        } catch (error) {
-          console.error("Error compressing image:", error);
-          return null;
-        }
-  
-        return {
-          ...design,
-          pngImage: null,
-          svgImage: svgUrl,
-          
-        };
-      })
-    );
-  
-    // Filter out any null results from failed compression
-    const finalDesigns = processedDesigns.filter(design => design !== null);
-  
-    // Add all designs as a single cart item
-    addToCart(finalDesigns);
-  
-    // Create apparel designs in the backend
-    finalDesigns.forEach(design => {
-      const ApparelDesigns = {
-        design: {
-          title: "Custom T-Shirt Design",
-          price: 100,
-          color: design.apparel.color,
-          side: design.apparel.side,
-          quantity: 1,
-          backgroundTShirt: {
-            url: design.apparel.url,
-            color: design.apparel.color,
-            height: design.apparel.height,
-            width: design.apparel.width,
-          },
-        },
-        thumbnail_images: design.uploadedImages?.[0] || design.svgImage,
-        is_active: design.isactive,
-        archive: "false",
-        customer_id: sessionStorage.getItem("customerId"),
-      };
-  
-      CreateApparelDesign(ApparelDesigns, {
-        onSuccess: (response) => {
-          console.log("Created apparel design data ", response);
-          const apparelDesignId = response.newDesign.id;
-  
-          if (design.uploadedImages?.[0]) {
-            const ApparelUploadData = {
-              url: design.uploadedImages[0],
-              apparelDesign_id: apparelDesignId,
-            };
-  
-            createApparelUpload(ApparelUploadData, {
-              onSuccess: (response) => {
-                console.log("Uploaded apparel design image data:", response);
-              },
-              onError: (err) => {
-                console.error("Error uploading apparel design image:", err);
-              },
-            });
-          }
-        },
-        onError: (err) => {
-          console.error("Error creating apparel design:", err);
-        },
-      });
-    });
-  
-    dispatchDesign({ type: "CLEAR_ALL" });
-    console.log("All designs added to cart as single item:", cart);
   };
 
   return (
@@ -539,7 +450,7 @@ export default function DesignArea(): React.ReactElement {
         <div className="col-span-12 sm:col-span-12  md:col-span-12 lg:col-span-4 text-right">
           <button
             type="button"
-            onClick={addDesignToCart}
+            onClick={handleAddToCart}
             className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
           >
             <IconContext.Provider

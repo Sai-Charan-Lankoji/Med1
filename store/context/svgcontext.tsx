@@ -7,7 +7,8 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 //   designItem: string; // Modify this based on your actual design item type
 //   id: string;
 //   isNew: boolean;
-// } 
+// }  
+
 
 interface SvgContextType {
 //   svgItems: SvgItem[]; // Array of SVG items

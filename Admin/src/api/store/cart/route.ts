@@ -1,21 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import CartService from "../../../services/cart"; // Adjust the import path as necessary
-import { CartCreateProps } from "@medusajs/medusa/dist/types/cart"; 
-export interface ICartItem {
-  designs: Array<{
-    price: number;
-    color: string;
-    side: string;
-    quantity: number;
-    url: string;
-    svgImage?: string;
-    isactive: boolean;
-    uploadedImages?: string[];
-
-  }>;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import { CartCreateProps } from "@medusajs/medusa/dist/types/cart";
+import { ICartItem } from "../../../types/cart";
 
 const getCartService = (req: MedusaRequest): CartService | null => {
   try {
@@ -33,15 +19,14 @@ export const GET = async (
 ): Promise<void> => {
   try {
     const cartService = getCartService(req);
-
-    const customerId = req.query.customerId as string;
+    const customerId = req.query.id as string;
 
     if (!customerId) {
       res.status(400).json({ error: "Customer ID is required" });
       return;
     }
 
-    const cart = await cartService.retrieveByCustomerId(customerId);
+    const cart = await cartService?.retrieveByCustomerId(customerId);
 
     if (!cart) {
       res.status(404).json({ error: "Cart not found" });
@@ -55,7 +40,7 @@ export const GET = async (
   }
 };
 
-// POST method to add products to the cart
+// POST method to create a new cart and add items
 export const POST = async (
   req: MedusaRequest,
   res: MedusaResponse
@@ -70,26 +55,44 @@ export const POST = async (
       return;
     }
 
-    const { customer_id } = req.body as ICartItem;
+    const { designs, quantity, price, email, customer_id } = req.body as {
+      designs: any[];
+      quantity: number;
+      price: number;
+      email: string;
+      customer_id: string;
+    };
 
-    if (!customer_id) {
-      console.error("Customer ID is missing in request body.");
-      res.status(400).json({ error: "Customer ID is required." });
+    if (!designs || !Array.isArray(designs) || designs.length === 0) {
+      res.status(400).json({ error: "Designs array is required and cannot be empty." });
+      return;
+    }
+    if (!quantity || typeof quantity !== "number") {
+      res.status(400).json({ error: "Quantity is required and should be a number." });
+      return;
+    }
+    if (!price || typeof price !== "number") {
+      res.status(400).json({ error: "Price is required and should be a number." });
+      return;
+    }
+    if (!email || typeof email !== "string") {
+      res.status(400).json({ error: "Email is required and should be a string." });
+      return;
+    }
+    if (!customer_id || typeof customer_id !== "string") {
+      res.status(400).json({ error: "Customer ID is required and should be a string." });
       return;
     }
 
-    // Try to retrieve the cart for the customer
-    let cart = await cartService.retrieveByCustomerId(customer_id);
-    // If cart does not exist, create it
-    if (!cart) {
-      const cartCreateProps: CartCreateProps = { customer_id }; // Add any other necessary properties
-      cart = await cartService.create(cartCreateProps);
-    }
+    console.log("Validated data:", { designs, quantity, price, email, customer_id });
 
-    // Add line items to the cart
-     res.status(201).json({ cart });
+    const cartData = { designs, quantity, price, email, customer_id };
+    const cart = await cartService.create(cartData);
+    const carts = await cartService?.retrieveByCustomerId(cart.customer_id);
+
+    res.status(201).json({ carts });
   } catch (error) {
-    console.error("Error in POST /cart:", error);
+    console.error("Error in POST /store/cart:", error);
     res.status(500).json({ error: error.message || "An unknown error occurred." });
   }
 };
