@@ -62,7 +62,7 @@ export const designReducer = (
       );
       return designs;
     case "UPDATE_APPAREL_COLOR":
-      const d = designs.find((fn) => fn.isactive == true);
+      designs.forEach((design) => design.apparel.color = action.payload);
       //d?.apparel?.color = action.payload;
 
       return designs;

@@ -53,7 +53,7 @@ export default function DesignArea(): React.ReactElement {
   const { customerToken } = useUserContext(); 
   const router = useRouter(); 
   const {svgUrl} = useSvgContext()
- 
+ console.log("SVG URL: ",svgUrl)
   // const { mutate: createOrder, isLoading, isError } = useCreateOrder(); // Custom hook
 // const {mutate:uploadImage , isError , isLoading} = useUploadImage()
   const {mutate:CreateApparelDesign , isLoading, isError} = UseCreateApparelDesign() 
@@ -70,7 +70,7 @@ export default function DesignArea(): React.ReactElement {
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
 
   const [canvas, setCanvas] = React.useState<fabric.Canvas>();
-  const [currentBgColor, setBgColor] = React.useState(design?.apparel.color);
+  const [currentBgColor, setBgColor] = React.useState('');
   const [apparels, setApparels] = React.useState<IApparel[]>(designApparels);
   const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
   let selectionCreated: fabric.Object[] | undefined;
@@ -176,8 +176,10 @@ export default function DesignArea(): React.ReactElement {
       selectedApparal: apparel,
       jsonDesign: canvas?.toJSON(),
       pngImage: canvas?.toDataURL({ multiplier: 4 }),
-      svgImage: canvas?.toSVG(),
+      svgImage: svgUrl,
     });
+    dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: currentBgColor });
+
   };
 
   const handleColorClick = (value: string) => {
@@ -222,7 +224,7 @@ export default function DesignArea(): React.ReactElement {
     document.body.removeChild(link);
   };
 
-  const downloadPNG = (e: any) => {
+  const downloadPNG = () => {
     const pngImage =
       canvas?.toDataURL({
         multiplier: 4,
@@ -237,15 +239,15 @@ export default function DesignArea(): React.ReactElement {
     document.body.removeChild(link);
   };
 
-  const downloadZip = (e: any) => {
+  const downloadZip = () => {
     handleZip(designs);
   };
 
-  const undo = (e: any) => {
+  const undo = () => {
     dispatchForCanvas({ type: "UNDO" });
   };
 
-  const redo = (e: any) => {
+  const redo = () => {
     dispatchForCanvas({ type: "REDO" });
   };
 

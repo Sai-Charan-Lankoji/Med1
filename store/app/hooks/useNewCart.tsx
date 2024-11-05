@@ -73,8 +73,8 @@ export const useNewCart = () => {
           id: design.id,
           apparel: design.apparel,
           items: design.items,
-          pngImage: null, // Assuming pngImage is removed as required
-          svgImage: svgUrl || design.svgImage, // Use svgUrl or fallback to design's svgImage
+          pngImage: null, 
+          svgImage: design.svgImage,
           isactive: design.isactive,
           jsonDesign: null,
           uploadedImages: design.uploadedImages || [],
