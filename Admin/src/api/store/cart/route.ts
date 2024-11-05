@@ -26,14 +26,14 @@ export const GET = async (
       return;
     }
 
-    const cart = await cartService?.retrieveByCustomerId(customerId);
+    const carts = await cartService?.retrieveByCustomerId(customerId);
 
-    if (!cart) {
+    if (!carts) {
       res.status(404).json({ error: "Cart not found" });
       return;
     }
 
-    res.status(200).json({ cart });
+    res.status(200).json(carts);
   } catch (error) {
     console.error("Error in GET /cart:", error);
     res.status(500).json({ error: error.message || "An unknown error occurred." });
@@ -90,7 +90,7 @@ export const POST = async (
     const cart = await cartService.create(cartData);
     const carts = await cartService?.retrieveByCustomerId(cart.customer_id);
 
-    res.status(201).json({ carts });
+    res.status(201).json(carts);
   } catch (error) {
     console.error("Error in POST /store/cart:", error);
     res.status(500).json({ error: error.message || "An unknown error occurred." });
