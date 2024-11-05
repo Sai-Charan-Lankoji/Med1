@@ -104,14 +104,14 @@ export const useNewCart = () => {
       console.log("Cart Data:", data);
       dispatch(fetchCartSuccess(data)); 
 
-      // Dispatch the addToCart action if the API call was successful
-      dispatch(addToCart({
-        designs: processedDesigns,
-        quantity: 1,
-        price: 100,
-        email: email,
-        customer_id: customerId,
-      })); 
+      // // Dispatch the addToCart action if the API call was successful
+      // dispatch(addToCart({
+      //   designs: processedDesigns,
+      //   quantity: 1,
+      //   price: 100,
+      //   email: email,
+      //   customer_id: customerId,
+      // })); 
 
       return true;
     } catch (error: any) {

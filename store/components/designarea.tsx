@@ -286,6 +286,7 @@ export default function DesignArea(): React.ReactElement {
       return;
     }
     const success = await addDesignToCart(designs, customerToken, svgUrl);
+    console.log("Success", success);
     if (success) {
       dispatchDesign({ type: "CLEAR_ALL" });
     }
