@@ -13,5 +13,6 @@ export class Cart extends MedusaCart {
   @Column({ nullable: true })
   quantity: number;
 
+  @Column({ nullable: true })
+  total_price: number;
 }
-

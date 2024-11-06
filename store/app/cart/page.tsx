@@ -1,6 +1,6 @@
 "use client";
 
-import { useCart } from "@/context/cartContext";
+//import { useCart } from "@/context/cartContext";
 import {useNewCart} from "../hooks/useNewCart";
 import { useUserContext } from "@/context/userContext";
 import { useState } from "react";
@@ -31,8 +31,8 @@ interface OrderData {
 }
 
 const CartPage = () => {
-  const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
-  const {cartItems} = useNewCart();
+  //const { cart, removeFromCart, updateQuantity, clearCart } = useCart();
+  const {cartItems,deleteCart,updateCartQuantity,clearCart} = useNewCart();
   const { customerToken } = useUserContext();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,27 @@ const CartPage = () => {
 
   const [selectedDesigns, setSelectedDesigns] = useState<Record<string, number>>({});
 
-  const openModal = (itemId: String) => {    
+  
+  const handleDeleteCart = async (cartId: string) => {
+    const success = await deleteCart(cartId);
+    if (success) {
+      // Only clear local cart state after successful API call
+      
+      closeModal();
+    } else {
+      setError("Failed to delete cart item");
+    }
+  };
+
+  const handleClearCart = async () => {
+    const success = await clearCart();
+    if (success) {
+     console.log("Cart cleared successfully");
+    } else {
+      setError("Failed to clear cart");
+    }};
+  
+  const openModal = (itemId: string) => {
     setItemToRemove(itemId);
     setIsModalOpen(true);
   };
@@ -52,6 +72,13 @@ const CartPage = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setItemToRemove(null);
+    setError(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (itemToRemove) {
+      await handleDeleteCart(itemToRemove);
+    }
   };
 
   const shippingCost: number = 0;
@@ -68,20 +95,28 @@ const CartPage = () => {
 
   const handleQuantityChange = async (itemId: any, newQuantity: any) => {
     setError(null);
-
+  
     if (newQuantity <= 0) {
       setError("Quantity must be greater than 0");
       return;
     }
-
+  
     if (newQuantity > 10) {
       setError("Maximum quantity allowed is 10");
       return;
     }
-
+  
     setUpdating(true);
     try {
-      updateQuantity(itemId, newQuantity);
+      // Call the updateCartQuantity function from useNewCart hook
+      const success = await updateCartQuantity(itemId, newQuantity);
+      
+      if (success) {
+        // The cart state will be automatically updated through Redux
+        // since updateCartQuantity dispatches fetchCartSuccess
+      } else {
+        setError("Failed to update quantity");
+      }
     } catch (error) {
       setError("Failed to update quantity");
     } finally {
@@ -89,12 +124,7 @@ const CartPage = () => {
     }
   };
 
-  const handleRemoveItem = () => {
-    if (itemToRemove !== null) {
-      removeFromCart(itemToRemove);
-      closeModal();
-    }
-  };
+  
 
   const public_api_key = process.env.NEXT_PUBLIC_API_KEY || null;
   const vendorId = process.env.NEXT_PUBLIC_VENDOR_ID || null;
@@ -102,6 +132,17 @@ const CartPage = () => {
   const handleProceedToOrder = () => {
     if (isProcessingOrder) return;
     setIsProcessingOrder(true);
+
+
+    const handleDeleteCart = async (cartId: string) => {
+      const success = await deleteCart(cartId);
+      if (success) {
+          alert(`Cart deleted successfully ${cartId}`);
+      }
+      else {
+          alert(`Failed to delete cart ${cartId}`);
+      }
+  };
 
     const orderData: OrderData = {
       line_items: cartItems.map((item) => ({
@@ -126,6 +167,7 @@ const CartPage = () => {
       onSuccess: async () => {
         try {
           await new Promise((resolve) => setTimeout(resolve, 100));
+          await handleClearCart();
           router.push("./order-confirmation");
         } catch (err) {
           console.error("Navigation error:", err);
@@ -409,7 +451,7 @@ console.log("cart..",cartItems);
               </button>
               <button
                 className="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-600 transition-colors font-medium text-sm"
-                onClick={handleRemoveItem}
+                onClick={handleConfirmDelete}
               >
                 Delete
               </button>

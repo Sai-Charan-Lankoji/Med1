@@ -96,3 +96,77 @@ export const POST = async (
     res.status(500).json({ error: error.message || "An unknown error occurred." });
   }
 };
+
+export const DELETE = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+      const cartService = getCartService(req);
+      const { cartId } = req.query;
+
+      if (!cartId) {
+          res.status(400).json({ error: "Cart ID is required" });
+          return;
+      }
+
+      await cartService?.deleteCart(cartId as string);
+      res.status(200).json({ message: "Cart successfully deleted" });
+  } catch (error) {
+      console.error("Error in DELETE /cart:", error);
+      res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+};
+
+// PATCH method to update quantity
+export const PATCH = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+      const cartService = getCartService(req);
+      const { cartId } = req.query;
+      const { quantity } = req.body as { quantity: number };
+
+      if (!cartId) {
+          res.status(400).json({ error: "Cart ID is required" });
+          return;
+      }
+
+      if (typeof quantity !== "number" || quantity < 1) {
+          res.status(400).json({ error: "Valid quantity is required" });
+          return;
+      }
+
+      const updatedCart = await cartService?.updateQuantity(cartId as string, quantity);
+      
+      // After updating the cart, fetch the customer's updated carts
+      const customerCarts = await cartService?.retrieveByCustomerId(updatedCart.customer_id);
+      res.status(200).json(customerCarts);
+  } catch (error) {
+      console.error("Error in PATCH /cart:", error);
+      res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+};
+
+
+export const PUT = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+      const cartService = getCartService(req);
+      const { customer_id } = req.query;
+
+      if (!customer_id) {
+          res.status(400).json({ error: "Customer ID is required" });
+          return;
+      }
+
+      await cartService?.clearCustomerCart(customer_id as string);
+      res.status(200).json({ message: "All carts successfully cleared" });
+  } catch (error) {
+      console.error("Error in PUT /cart:", error);
+      res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+};

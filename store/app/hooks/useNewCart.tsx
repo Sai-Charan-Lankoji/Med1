@@ -19,14 +19,13 @@ export const useNewCart = () => {
   const loading = useSelector((state: RootState) => state.cart.loading);
   const error = useSelector((state: RootState) => state.cart.error);
 
-  const customerId = sessionStorage.getItem('customerId');
+  const customerId = typeof window !== 'undefined' ? sessionStorage.getItem('customerId') : null;
 
-  // Effect to fetch cart data
   useEffect(() => {
     const fetchCartData = async () => {
-      if (!customerId) return; // Exit if no customer ID
+      if (!customerId) return;
 
-      dispatch(setLoading(true)); // Set loading to true
+      dispatch(setLoading(true));
 
       try {
         const response = await fetch(`http://localhost:9000/store/cart?id=${customerId}`, {
@@ -41,24 +40,82 @@ export const useNewCart = () => {
         }
 
         const data = await response.json();
-        console.log("Fetched Cart Data:", data);
-
-        // Dispatch the action to store fetched data in Redux
-        dispatch(fetchCartSuccess(data)); 
+        dispatch(fetchCartSuccess(data));
       } catch (error: any) {
         dispatch(setError(error.message));
       } finally {
-        dispatch(setLoading(false)); // Set loading to false
+        dispatch(setLoading(false));
       }
     };
 
-    fetchCartData(); // Call the fetch function
-  }, [dispatch, customerId]); // Dependency array
+    fetchCartData();
+  }, [dispatch, customerId]);
 
-  const addDesignToCart = async (designs: IDesign[], customerToken: string, svgUrl: string | null) => {
-    if (!customerToken) {
+  const deleteCart = async (cartId: string) => {
+    try {
+      // Optimistically remove item from Redux state
+      dispatch(removeFromCart(cartId));
+
+      const response = await fetch(`http://localhost:9000/store/cart?cartId=${cartId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        // If delete fails, fetch the cart again to restore correct state
+        const cartResponse = await fetch(`http://localhost:9000/store/cart?id=${customerId}`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        
+        if (cartResponse.ok) {
+          const data = await cartResponse.json();
+          dispatch(fetchCartSuccess(data));
+        }
+        throw new Error("Failed to delete cart");
+      }
+
+      return true;
+    } catch (error: any) {
+      dispatch(setError(error.message));
       return false;
     }
+  };
+
+  const updateCartQuantity = async (cartId: string, quantity: number) => {
+    try {
+      dispatch(setLoading(true));
+
+      const response = await fetch(`http://localhost:9000/store/cart?cartId=${cartId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ quantity }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update cart quantity");
+      }
+
+      const data = await response.json();
+      dispatch(fetchCartSuccess(data));
+
+      return true;
+    } catch (error: any) {
+      dispatch(setError(error.message));
+      return false;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  const addDesignToCart = async (designs: IDesign[], customerToken: string, svgUrl: string | null) => {
+    if (!customerToken) return false;
 
     try {
       dispatch(setLoading(true));
@@ -73,7 +130,7 @@ export const useNewCart = () => {
           id: design.id,
           apparel: design.apparel,
           items: design.items,
-          pngImage: null, 
+          pngImage: null,
           svgImage: design.svgImage,
           isactive: design.isactive,
           jsonDesign: null,
@@ -81,6 +138,8 @@ export const useNewCart = () => {
           textProps: design.textProps,
         }))
       );
+
+      const basePrice = processedDesigns.length * 100;
 
       const response = await fetch("http://localhost:9000/store/cart", {
         method: "POST",
@@ -90,7 +149,7 @@ export const useNewCart = () => {
         body: JSON.stringify({
           designs: processedDesigns,
           quantity: 1,
-          price: 100,
+          price: basePrice,
           email: email,
           customer_id: customerId,
         }),
@@ -98,20 +157,10 @@ export const useNewCart = () => {
 
       if (!response.ok) {
         throw new Error("Failed to add designs to the cart");
-      } 
+      }
 
       const data = await response.json();
-      console.log("Cart Data:", data);
-      dispatch(fetchCartSuccess(data)); 
-
-      // // Dispatch the addToCart action if the API call was successful
-      // dispatch(addToCart({
-      //   designs: processedDesigns,
-      //   quantity: 1,
-      //   price: 100,
-      //   email: email,
-      //   customer_id: customerId,
-      // })); 
+      dispatch(fetchCartSuccess(data));
 
       return true;
     } catch (error: any) {
@@ -120,14 +169,43 @@ export const useNewCart = () => {
     } finally {
       dispatch(setLoading(false));
     }
+
+    
+  };
+  const clearAllCart = async () => {
+    if (!customerId) return false;
+
+    try {
+        dispatch(setLoading(true));
+
+        const response = await fetch(`http://localhost:9000/store/cart?customer_id=${customerId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to clear cart");
+        }
+
+        dispatch(clearCart());
+        return true;
+    } catch (error: any) {
+        dispatch(setError(error.message));
+        return false;
+    } finally {
+        dispatch(setLoading(false));
+    }
   };
 
   return {
     cartItems,
     loading,
     error,
+    deleteCart,
     addDesignToCart,
-    removeFromCart: (id: string) => dispatch(removeFromCart(id)),
-    clearCart: () => dispatch(clearCart())
+    updateCartQuantity,
+    clearCart : clearAllCart
   };
 };
