@@ -20,7 +20,7 @@ import {
   designApparels,
   IApparel,
 } from "../@types/models";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { ColorPickerContext } from "../context/colorpickercontext";
 import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
@@ -47,7 +47,19 @@ const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
 export default function DesignArea(): React.ReactElement {       
+  interface RootState {
+    setReducer: {
+      canvas: fabric.Canvas | undefined;
+      color: string;
+      undoStack: any[];
+      redoStack: any[];
+      pauseSaving: boolean;
+      initialState: any;
+    };
+  }
 
+  // Get canvas state with proper type checking
+  const canvasState = useSelector((state: RootState) => state.setReducer);
   const { addDesignToCart, loading: cartLoading } = useNewCart() 
 
   const { customerToken } = useUserContext(); 
@@ -90,6 +102,16 @@ export default function DesignArea(): React.ReactElement {
       }
     }
   });
+
+
+  // canvas?.on("object:modified", () => {
+  //   dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
+  // });
+
+  // canvas?.on("object:added", () => {
+  //   dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
+  // });
+
   canvas?.on("selection:updated", function (options) {
     //console.log(options);
     if (options.e) {
@@ -141,7 +163,12 @@ export default function DesignArea(): React.ReactElement {
     });
     setCanvas(canvas);
     dispatchForCanvas({ type: "INIT", canvas: canvas });
-    dispatchForCanvas({ type: "RESTORE_DESIGN", payload: design?.jsonDesign });
+    if (design?.jsonDesign) {
+      dispatchForCanvas({ 
+        type: "RESTORE_DESIGN", 
+        payload: design.jsonDesign 
+      });
+    }
     return () => {
       canvas.dispose();
     };
@@ -243,11 +270,20 @@ export default function DesignArea(): React.ReactElement {
     handleZip(designs);
   };
 
-  const undo = () => {
+
+  const reset = () => {
+    if (canvas) {
+      dispatchForCanvas({ 
+        type: "RESET"
+      });
+    }
+  };
+
+  const undo = (e: any) => {
     dispatchForCanvas({ type: "UNDO" });
   };
 
-  const redo = () => {
+  const redo = (e: any) => {
     dispatchForCanvas({ type: "REDO" });
   };
 
@@ -293,6 +329,8 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({ type: "CLEAR_ALL" });
     }
   };
+
+  
 
   return (
     <div>
