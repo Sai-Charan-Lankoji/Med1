@@ -1,6 +1,5 @@
 "use client";
-
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useGetOrder } from "@/app/hooks/orders/useGetOrder";
@@ -19,10 +18,12 @@ const OrderDetailsView = () => {
   const { data: order, isLoading } = useGetOrder(id as string);
   const { data: customers } = useGetCustomers();
   const [expandedItem, setExpandedItem] = React.useState<number | null>(null);
-   const matchingCustomers = customers?.filter(
+  const [selectedDesigns, setSelectedDesigns] = useState<
+    Record<string, number>
+  >({});
+  const matchingCustomers = customers?.filter(
     (customer) => customer?.id === order?.customer_id
   );
-
   if (isLoading) {
     return <OrderDetailsSkeleton />;
   }
@@ -42,8 +43,28 @@ const OrderDetailsView = () => {
   const toggleItemExpansion = (index: number) => {
     setExpandedItem(expandedItem === index ? null : index);
   };
-  console.log("order", order);
 
+  const handleThumbnailClick = (itemId: string, designIndex: number) => {
+    setSelectedDesigns((prev) => ({
+      ...prev,
+      [itemId]: designIndex,
+    }));
+  };
+
+  const capitalizeFirstLetter = (string: String) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  const getDesignedSidesText = (designs: { apparel: { side: string } }[]) => {
+    if (!designs || designs.length === 0) return "";
+    const sides = designs.map((design) =>
+      capitalizeFirstLetter(design.apparel.side)
+    );
+    if (sides.length === 1) return sides[0];
+    if (sides.length === 2) return `${sides[0]} & ${sides[1]}`;
+    const lastSide = sides.pop();
+    return `${sides.join(", ")} & ${lastSide}`;
+  };
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       completed: {
@@ -80,137 +101,90 @@ const OrderDetailsView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        <BackButton name="orders" className="mb-6" />
-
-        {/* Order Header */}
-        <div className="flex flex-col lg:flex-row lg:justify-between sm:items-start  mb-8 space-y-4 sm:space-y-0">
-          <div className="flex flex-col space-y-2 sm:mb-5">
-            <h1 className="text-2xl font-semibold text-gray-900">
-              Order Details
-            </h1>
-            <p className="text-sm text-gray-500">Order-ID: {id}</p>
-          </div>
-          <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
-            <button className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2">
-              <FiCreditCard className="mr-2 h-4 w-4" />
-              Update Payment
-            </button>
-            <button className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2">
-              <FiPackage className="mr-2 h-4 w-4" />
-              Update Fulfillment
-            </button>
-          </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <BackButton name="orders" className="mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
+          <p className="text-sm text-gray-500">Order ID: {order.id}</p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            {/* Status Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <h3 className="text-sm font-medium text-gray-500">
-                  Order Status
-                </h3>
-                <div className="mt-2">{getStatusBadge(order.status)}</div>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <h3 className="text-sm font-medium text-gray-500">
-                  Payment Status
-                </h3>
-                <div className="mt-2">
-                  {getStatusBadge(order.payment_status)}
-                </div>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
-                <h3 className="text-sm font-medium text-gray-500">
-                  Fulfillment Status
-                </h3>
-                <div className="mt-2">
-                  {getStatusBadge(order.fulfillment_status)}
-                </div>
-              </div>
-            </div>
 
-            {/* Order Items */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
-                  Items
-                </h2>
-                <div className="space-y-4">
-                  {order.line_items.map((item, index) => (
-                    <div key={index} className="border rounded-lg">
-                      <div className="p-4">
-                        <div className="flex items-center">
-                        <div className="relative w-10 h-20">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {order.line_items.map((item, itemIndex) => {
+              const selectedDesignIndex = selectedDesigns[item.product_id] || 0;
+              const selectedDesign = item.designs[selectedDesignIndex];
+              
+              return (
+                <div key={item.product_id} className="bg-white rounded-lg shadow p-6">
+                  <h3 className="text-lg font-medium mb-4">Item {itemIndex + 1}</h3>
+                  
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Main Design Display */}
+                    <div className="relative w-full md:w-96 h-96 bg-gray-50 rounded-lg">
+                      <Image
+                        src={selectedDesign.apparel.url}
+                        alt={`${selectedDesign.apparel.side} view`}
+                        layout="fill"
+                        objectFit="contain"
+                        className="rounded-lg"
+                      />
+                      {selectedDesign.svgImage && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="relative w-1/2 h-1/2">
                             <Image
-                              src={item.background_image_url}
-                              alt={item.title}
-                              layout="fill"
-                              objectFit="cover"
-                              className="rounded-md"
-                              style={{ backgroundColor: item.background_image_color }}
-                            />
-                            <Image
-                              src={item.thumbnail_url}
-                              alt={item.title}
+                              src={selectedDesign.svgImage}
+                              alt="Design overlay"
                               layout="fill"
                               objectFit="contain"
-                              className="rounded-md" 
-                              
-                              
-                              
                             />
                           </div>
-                          <div className="ml-6 flex-1">
-                            <div className="ml-auto flex flex-col items-end">
-                              <div className="mt-1 mr-2 flex items-center text-sm text-gray-900">
-                                Quantity: {item.quantity}
-                              </div>
-                              <div className="mt-1 flex items-center text-sm text-gray-900">
-                                {order.currency_code.toUpperCase()}{" "}
-                                {item.price.toFixed(2)}
-                              </div>
-                            </div>
-                          </div>
-                          {/*  <button
-                            onClick={() => toggleItemExpansion(index)}
-                            className="ml-4 text-gray-400 hover:text-gray-600"
-                          >
-                            {expandedItem === index ? (
-                              <FiChevronUp size={20} />
-                            ) : (
-                              <FiChevronDown size={20} />
-                            )}
-                          </button> */}
                         </div>
-                        {/* {expandedItem === index && item.uploadImage_url && (
-                          <div className="mt-4 border-t pt-4">
-                            <p className="text-sm font-medium text-gray-900 mb-2">
-                              Custom Design
-                            </p>
-                            <div className="w-full h-48 relative bg-gray-50 rounded-lg">
-                              <Image
-                                src={item.uploadImage_url}
-                                alt="Custom Design"
-                                layout="fill"
-                                objectFit="contain"
-                                className="rounded-lg"
-                              />
-                            </div>
-                          </div>
-                        )}  */}
-                      </div>
+                      )}
                     </div>
-                  ))}
+
+                    {/* Thumbnails */}
+                    <div className="flex flex-row md:flex-col gap-2">
+                      {item.designs.map((design, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleThumbnailClick(item.product_id, index)}
+                          className={`relative w-20 h-20 rounded-lg transition-all ${
+                            selectedDesignIndex === index
+                              ? "ring-2 ring-blue-500"
+                              : "hover:ring-2 hover:ring-gray-300"
+                          }`}
+                        >
+                          <Image
+                            src={design.apparel.url}
+                            alt={`${design.apparel.side} thumbnail`}
+                            layout="fill"
+                            objectFit="contain"
+                            className="rounded-lg"
+                          />
+                          <span className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 text-center rounded-b-lg">
+                            {design.apparel.side}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">
+                      Quantity: {item.quantity}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Price: ${item.price.toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Order Summary Sidebar */}
+          <div className="space-y-6">
             {/* Customer Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
               <div className="p-6">
@@ -247,39 +221,40 @@ const OrderDetailsView = () => {
               </div>
             </div>
 
-            {/* Order Summary */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
-                  Summary
-                </h2>
-                <div className="space-y-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Subtotal</span>
-                    <span className="text-gray-900 font-medium">
-                      {order.currency_code.toUpperCase()}{" "}
-                      {(subtotalAmount).toFixed(2)}
+            {/* Order Status */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-medium mb-4">Order Status</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Order Status</p>
+                  {getStatusBadge(order.status)}
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Payment Status</p>
+                  {getStatusBadge(order.payment_status)}
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Fulfillment Status</p>
+                  {getStatusBadge(order.fulfillment_status)}
+                </div>
+              </div>
+            </div>
 
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Tax</span>
-                    <span className="text-gray-900 font-medium">
-                      {order.currency_code.toUpperCase()}{" "}
-                      {(taxAmount).toFixed(2)}
-                    </span>
-                  </div>
-                  <div className="pt-4 border-t">
-                    <div className="flex justify-between">
-                      <span className="text-base font-medium text-gray-900">
-                        Total
-                      </span>
-                      <span className="text-base font-medium text-gray-900">
-                        {order.currency_code.toUpperCase()}{" "}
-                        {totalAmount.toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
+            {/* Order Summary */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-medium mb-4">Summary</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Subtotal</span>
+                  <span>${subtotalAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Tax</span>
+                  <span>${taxAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t font-medium">
+                  <span>Total</span>
+                  <span>${totalAmount.toFixed(2)}</span>
                 </div>
               </div>
             </div>
