@@ -4,7 +4,7 @@ import { FaUserCircle, FaShoppingCart, FaSignOutAlt } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart } from "@/context/cartContext";
+//import { useCart } from "@/context/cartContext";
 import { MdDeleteForever } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
@@ -14,8 +14,8 @@ import { DesignContext } from "@/context/designcontext"
 import { useNewCart } from "../hooks/useNewCart";
 
 const Navbar: React.FC = () => {
-  const { cart, removeFromCart } = useCart(); 
-  const {cartItems} = useNewCart() 
+  //const { cart, removeFromCart } = useCart(); 
+  const {cartItems,deleteCart} = useNewCart() 
  
   // Original email context
   // const { email, customerToken } = useUserContext();
@@ -32,9 +32,9 @@ const Navbar: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<{
     [key: string]: boolean;
   }>({});
-   const onDesignSelected = (e: any, design: IDesign) => {
-    dispatchDesign({ type: "UPDATE_DESIGN_FROM_CART_ITEM", currentDesign: design });
-  }; 
+  //  const onDesignSelected = (e: any, design: IDesign) => {
+  //   dispatchDesign({ type: "UPDATE_DESIGN_FROM_CART_ITEM", currentDesign: design });
+  // }; 
 
   // Added: Effect to get username from sessionStorage
   useEffect(() => {
@@ -48,9 +48,10 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     if (customerToken) {
-      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+      //const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+      const totalItems = cartItems.length;
       setCartItemsCount(totalItems);
-      const total = cart.reduce((sum, item) => {
+      const total = cartItems.reduce((sum, item) => {
         // Calculate price based on number of sides
         const numberOfSides = item.designs ? item.designs.length : 1;
         return sum + 100 * numberOfSides * item.quantity; // $100 per side
@@ -60,7 +61,7 @@ const Navbar: React.FC = () => {
       setCartItemsCount(0);
       setCartTotal(0);
     }
-  }, [cart, customerToken]);
+  }, [cartItems, customerToken]);
 
   // Toggle item expansion
   const toggleItemExpansion = (itemId: string) => {
@@ -74,6 +75,17 @@ const Navbar: React.FC = () => {
     setIsCartOpen(false);
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
+  };
+
+  const handleDeleteCart = async (cartId: string) => {
+    const success = await deleteCart(cartId);
+    if (success) {
+      // Only clear local cart state after successful API call
+      console.log("Cart item deleted successfully");
+    
+    } else {
+      console.log("Failed to delete cart item");
+    }
   };
 
   // Desktop handlers
@@ -271,7 +283,7 @@ const Navbar: React.FC = () => {
           <div className="p-4">
             <div className="flex justify-between items-center border-b border-gray-200 pb-3">
               <h3 className="text-lg font-semibold text-gray-900">Cart Items</h3>
-              {cart.length > 0 && (
+              {cartItems.length > 0 && (
                 <span className="text-lg font-bold text-green-600">
                   ${cartTotal.toFixed(2)}
                 </span>
@@ -301,7 +313,7 @@ const Navbar: React.FC = () => {
                               ${((item.designs ? item.designs.length * 100 : 100) * item.quantity).toFixed(2)}
                             </span>
                             <button
-                              onClick={() => removeFromCart(item.id)}
+                              onClick={() => handleDeleteCart(item.id)}
                               className="text-red-500 hover:text-red-700 transition duration-200"
                               title="Remove item"
                             >
@@ -333,8 +345,8 @@ const Navbar: React.FC = () => {
                                         src={design.apparel?.url}
                                         alt={`Side: ${design.apparel.side}`}
                                         layout="fill"
-                                        objectFit="contain"
-                                        className="rounded-md"
+                                        objectFit="cover"
+                                        className="rounded-none "
                                         style={{
                                           backgroundColor: design.apparel?.color,
                                         }}
@@ -348,13 +360,13 @@ const Navbar: React.FC = () => {
                                           layout="fill"
                                           objectFit="contain"
                                           className="rounded-md"
-                                          onClick={(e) => onDesignSelected(e, design)}
+                                          // onClick={(e) => onDesignSelected(e, design)}
                                         />
                                       </div>
                                     </div>
                                   </div>
                                   <span className="text-xs text-gray-600">
-                                    {capitalizeFirstLetter(design.apparel.side)}
+                                    Side: {capitalizeFirstLetter(design.apparel.side)}
                                   </span>
                                 </div>
                               ))}
