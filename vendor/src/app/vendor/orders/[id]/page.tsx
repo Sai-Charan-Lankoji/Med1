@@ -114,11 +114,16 @@ const OrderDetailsView = () => {
             {order.line_items.map((item, itemIndex) => {
               const selectedDesignIndex = selectedDesigns[item.product_id] || 0;
               const selectedDesign = item.designs[selectedDesignIndex];
-              
+
               return (
-                <div key={item.product_id} className="bg-white rounded-lg shadow p-6">
-                  <h3 className="text-lg font-medium mb-4">Item {itemIndex + 1}</h3>
-                  
+                <div
+                  key={item.product_id}
+                  className="bg-white rounded-lg shadow p-6"
+                >
+                  <h3 className="text-lg font-medium mb-4">
+                    Item {itemIndex + 1}
+                  </h3>
+
                   <div className="flex flex-col md:flex-row gap-6">
                     {/* Main Design Display */}
                     <div className="relative w-full md:w-96 h-96 bg-gray-50 rounded-lg">
@@ -126,8 +131,11 @@ const OrderDetailsView = () => {
                         src={selectedDesign.apparel.url}
                         alt={`${selectedDesign.apparel.side} view`}
                         layout="fill"
-                        objectFit="contain"
+                        objectFit="cover"
                         className="rounded-lg"
+                        style={{
+                          backgroundColor: selectedDesign.apparel?.color,
+                        }}
                       />
                       {selectedDesign.svgImage && (
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -148,7 +156,9 @@ const OrderDetailsView = () => {
                       {item.designs.map((design, index) => (
                         <button
                           key={index}
-                          onClick={() => handleThumbnailClick(item.product_id, index)}
+                          onClick={() =>
+                            handleThumbnailClick(item.product_id, index)
+                          }
                           className={`relative w-20 h-20 rounded-lg transition-all ${
                             selectedDesignIndex === index
                               ? "ring-2 ring-blue-500"
@@ -159,8 +169,11 @@ const OrderDetailsView = () => {
                             src={design.apparel.url}
                             alt={`${design.apparel.side} thumbnail`}
                             layout="fill"
-                            objectFit="contain"
+                            objectFit="cover"
                             className="rounded-lg"
+                            style={{
+                              backgroundColor: design.apparel?.color,
+                            }}
                           />
                           <span className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 text-center rounded-b-lg">
                             {design.apparel.side}
@@ -187,33 +200,33 @@ const OrderDetailsView = () => {
           <div className="space-y-6">
             {/* Customer Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
-              <div className="p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">
+              <div className="p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">
                   Customer
                 </h2>
                 <div>
                   {matchingCustomers?.length > 0 ? (
                     matchingCustomers.map((customer, index) => (
-                      <div key={index} className="space-y-3">
-                        <div className="flex items-center text-sm">
-                          <FiUser className="text-gray-400 mr-2" />
-                          <span>{`${customer.first_name} ${customer.last_name}`}</span>
+                      <div key={index} className="space-y-2 sm:space-y-3">
+                        <div className="flex items-center text-xs sm:text-sm">
+                          <FiUser className="text-gray-400 mr-2 flex-shrink-0" />
+                          <span className="truncate">{`${customer.first_name} ${customer.last_name}`}</span>
                         </div>
-                        <div className="flex items-center text-sm">
-                          <FiMail className="text-gray-400 mr-2" />
-                          <span>{customer.email}</span>
+                        <div className="flex flex-row items-center text-xs sm:text-sm">
+                          <FiMail className="text-gray-400 mr-2 flex-shrink-0" />
+                          <span className="truncate">{customer.email}</span>
                         </div>
-                        <div className="flex items-center text-sm">
-                          <FiPhone className="text-gray-400 mr-2" />
-                          <span>{customer.phone}</span>
+                        <div className="flex items-center text-xs sm:text-sm">
+                          <FiPhone className="text-gray-400 mr-2 flex-shrink-0" />
+                          <span className="truncate">{customer.phone}</span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-500">
+                    <div className="text-xs sm:text-sm text-gray-500">
                       <div className="flex items-center">
-                        <FiMail className="text-gray-400 mr-2" />
-                        <span>{order.email}</span>
+                        <FiMail className="text-gray-400 mr-2 flex-shrink-0" />
+                        <span className="truncate">{order.email}</span>
                       </div>
                     </div>
                   )}
@@ -234,7 +247,9 @@ const OrderDetailsView = () => {
                   {getStatusBadge(order.payment_status)}
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Fulfillment Status</p>
+                  <p className="text-sm text-gray-500 mb-1">
+                    Fulfillment Status
+                  </p>
                   {getStatusBadge(order.fulfillment_status)}
                 </div>
               </div>

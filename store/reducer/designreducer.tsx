@@ -147,7 +147,12 @@ export const designReducer = (
       return designs.map((d) => d.isactive ? {...d, textProps: action.payload} : d);
     }
     case "UPDATE_DESIGN_FROM_CART_ITEM": {
-      designs = action.cartItems.map((a) => a.apparel.side === 'front' ? {...a, isactive: true} : {...a, isactive: false})
+      designs = designs.map((a) =>
+        a.id === action.currentDesign?.id
+          ? { ...a, isactive: true }
+          : { ...a, isactive: false }
+      );
+      return designs;
     }
     default:
       return designs;

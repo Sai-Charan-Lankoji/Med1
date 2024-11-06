@@ -120,7 +120,7 @@ export const useNewCart = () => {
     try {
       dispatch(setLoading(true));
       
-      const validDesigns = designs.filter(design => design.pngImage);
+      const validDesigns = designs.filter(design => design.svgImage);
       if (validDesigns.length === 0) {
         throw new Error("No valid designs to add to cart");
       }

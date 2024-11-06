@@ -10,17 +10,13 @@ import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { useRouter } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
-import { DesignContext } from "@/context/designcontext" 
+import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
+import { IDesign } from "@/@types/models";
 
 const Navbar: React.FC = () => {
-  //const { cart, removeFromCart } = useCart(); 
-  const {cartItems,deleteCart} = useNewCart() 
- 
-  // Original email context
-  // const { email, customerToken } = useUserContext();
-  // Modified to include username
-  const { email, customerToken } = useUserContext();
+  const { cartItems, deleteCart } = useNewCart();
+   const { email, customerToken } = useUserContext();
   const [username, setUsername] = useState<string>(""); // Added: State for username
   const { logout } = useCustomerLogout();
   const router = useRouter();
@@ -32,9 +28,6 @@ const Navbar: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<{
     [key: string]: boolean;
   }>({});
-  //  const onDesignSelected = (e: any, design: IDesign) => {
-  //   dispatchDesign({ type: "UPDATE_DESIGN_FROM_CART_ITEM", currentDesign: design });
-  // }; 
 
   // Added: Effect to get username from sessionStorage
   useEffect(() => {
@@ -63,6 +56,21 @@ const Navbar: React.FC = () => {
     }
   }, [cartItems, customerToken]);
 
+  const designContext = React.useContext(DesignContext)
+  const { designs, dispatchDesign } = designContext || { designs: [], dispatchDesign: () => {} }
+  
+  // ... other state and hooks
+
+  const handleDesignClick = (design: IDesign) => {
+    if (dispatchDesign) {
+      dispatchDesign({
+        type: "SWITCH_DESIGN",
+        currentDesign: design
+      })
+    }
+    setIsCartOpen(false)
+  }
+  
   // Toggle item expansion
   const toggleItemExpansion = (itemId: string) => {
     setExpandedItems((prev) => ({
@@ -82,7 +90,6 @@ const Navbar: React.FC = () => {
     if (success) {
       // Only clear local cart state after successful API call
       console.log("Cart item deleted successfully");
-    
     } else {
       console.log("Failed to delete cart item");
     }
@@ -97,7 +104,7 @@ const Navbar: React.FC = () => {
       closeAllMenus();
     } else {
       setIsCartOpen((prev) => !prev);
-      console.log("cartItems" , cartItems)
+      console.log("cartItems", cartItems);
 
       setIsProfileOpen(false);
     }
@@ -182,17 +189,19 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const capitalizeFirstLetter = (string : String) => {
+  const capitalizeFirstLetter = (string: String) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
-  
+
   const getDesignedSidesText = (designs: { apparel: { side: string } }[]) => {
     if (!designs || designs.length === 0) return "";
-    const sides = designs.map(design => capitalizeFirstLetter(design.apparel.side));
+    const sides = designs.map((design) =>
+      capitalizeFirstLetter(design.apparel.side)
+    );
     if (sides.length === 1) return sides[0];
     if (sides.length === 2) return `${sides[0]} & ${sides[1]}`;
     const lastSide = sides.pop();
-    return `${sides.join(', ')} & ${lastSide}`;
+    return `${sides.join(", ")} & ${lastSide}`;
   };
   return (
     <nav className="bg-white fixed w-full top-0 z-50 border-b border-gray-200 shadow-sm">
@@ -278,126 +287,159 @@ const Navbar: React.FC = () => {
                   )}
                 </button>
 
-        {isCartOpen && (
-        <div className="absolute right-0 mt-3 w-[32rem] bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5">
-          <div className="p-4">
-            <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-              <h3 className="text-lg font-semibold text-gray-900">Cart Items</h3>
-              {cartItems.length > 0 && (
-                <span className="text-lg font-bold text-green-600">
-                  ${cartTotal.toFixed(2)}
-                </span>
-              )}
-            </div>
-
-            <div className="mt-4 max-h-[400px] overflow-y-auto">
-              {cartItems.length > 0 ? (
-                <ul className="space-y-4">
-                  {cartItems?.map((item,index) => (
-                    <li key={index} className="rounded-lg transition duration-200">
-                      <div className="p-3 hover:bg-gray-50">
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            {/* <p className="text-sm font-medium text-gray-900 truncate">
-                              {item.title}
-                            </p> */}
-                            <p className="text-sm text-gray-600">
-                              Qty: {item.quantity}
-                            </p>
-                            <p className="text-sm text-gray-600 mt-1">
-                              Designed Sides: <span className="text-xs">{getDesignedSidesText(item.designs)}</span>
-                            </p>
-                          </div>
-                          <div className="flex flex-col items-end gap-2">
-                            <span className="text-sm font-semibold text-gray-900">
-                              ${((item.designs ? item.designs.length * 100 : 100) * item.quantity).toFixed(2)}
-                            </span>
-                            <button
-                              onClick={() => handleDeleteCart(item.id)}
-                              className="text-red-500 hover:text-red-700 transition duration-200"
-                              title="Remove item"
-                            >
-                              <MdDeleteForever className="text-xl" />
-                            </button>
-                          </div>
-                        </div>
-
-                        <div 
-                          className="cursor-pointer" 
-                          onClick={() => toggleItemExpansion(item.id)}
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm text-gray-500">View all sides</span>
-                            <FaChevronDown className={`transform transition-transform ${
-                              expandedItems[item.id] ? 'rotate-180' : ''
-                            }`} />
-                          </div>
-                        </div>
-
-                        {expandedItems[item.id] && (
-                          <div className="mt-2">
-                            <div className="grid grid-cols-3 gap-4">
-                              {item.designs.map((design, index) => (
-                                <div key={index} className="flex flex-col items-center">
-                                  <div className="relative w-24 h-28 mb-2">
-                                    <div className="absolute inset-0">
-                                      <Image
-                                        src={design.apparel?.url}
-                                        alt={`Side: ${design.apparel.side}`}
-                                        layout="fill"
-                                        objectFit="cover"
-                                        className="rounded-none "
-                                        style={{
-                                          backgroundColor: design.apparel?.color,
-                                        }}
-                                      />
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                      <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
-                                        <Image
-                                          src={design?.svgImage || design.uploadedImages}
-                                          alt={`Side ${index + 1} design`}
-                                          layout="fill"
-                                          objectFit="contain"
-                                          className="rounded-md"
-                                          // onClick={(e) => onDesignSelected(e, design)}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <span className="text-xs text-gray-600">
-                                    Side: {capitalizeFirstLetter(design.apparel.side)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
+                {isCartOpen && (
+                  <div className="absolute right-0 mt-3 w-[32rem] bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5">
+                    <div className="p-4">
+                      <div className="flex justify-between items-center border-b border-gray-200 pb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">
+                          Cart Items
+                        </h3>
+                        {cartItems.length > 0 && (
+                          <span className="text-lg font-bold text-green-600">
+                            ${cartTotal.toFixed(2)}
+                          </span>
                         )}
                       </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="py-8 text-center text-gray-500">
-                  Your cart is empty
-                </p>
-              )}
-            </div>
 
-            <button
-              onClick={handleViewCart}
-              className="mt-4 w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-600 transition duration-200 flex items-center justify-center space-x-2 shadow-md"
-            >
-              <span>View Cart</span>
-              {cartTotal > 0 && (
-                <span className="font-semibold">
-                  (${cartTotal.toFixed(2)})
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      )}  
+                      <div className="mt-4 max-h-[400px] overflow-y-auto">
+                        {cartItems.length > 0 ? (
+                          <ul className="space-y-4">
+                            {cartItems?.map((item, index) => (
+                              <li
+                                key={index}
+                                className="rounded-lg transition duration-200"
+                              >
+                                <div className="p-3 hover:bg-gray-50">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      {/* <p className="text-sm font-medium text-gray-900 truncate">
+                              {item.title}
+                            </p> */}
+                                      <p className="text-sm text-gray-600">
+                                        Qty: {item.quantity}
+                                      </p>
+                                      <p className="text-sm text-gray-600 mt-1">
+                                        Designed Sides:{" "}
+                                        <span className="text-xs">
+                                          {getDesignedSidesText(item.designs)}
+                                        </span>
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                      <span className="text-sm font-semibold text-gray-900">
+                                        $
+                                        {(
+                                          (item.designs
+                                            ? item.designs.length * 100
+                                            : 100) * item.quantity
+                                        ).toFixed(2)}
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteCart(item.id)
+                                        }
+                                        className="text-red-500 hover:text-red-700 transition duration-200"
+                                        title="Remove item"
+                                      >
+                                        <MdDeleteForever className="text-xl" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    className="cursor-pointer"
+                                    onClick={() => toggleItemExpansion(item.id)}
+                                  >
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-sm text-gray-500">
+                                        View all sides
+                                      </span>
+                                      <FaChevronDown
+                                        className={`transform transition-transform ${
+                                          expandedItems[item.id]
+                                            ? "rotate-180"
+                                            : ""
+                                        }`}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {expandedItems[item.id] && (
+                                    <div className="mt-2">
+                                      <div className="grid grid-cols-3 gap-4">
+                                        {item.designs.map((design, index) => (
+                                          <div
+                                            key={index}
+                                            className="flex flex-col items-center"
+                                          >
+                                            <div className="relative w-24 h-28 mb-2">
+                                              <div className="absolute inset-0 border rounded-md">
+                                                <Image
+                                                  src={design.apparel?.url}
+                                                  alt={`Side: ${design.apparel.side}`}
+                                                  layout="fill"
+                                                  objectFit="cover"
+                                                  className="hover:cursor-pointer"
+                                                  style={{
+                                                    backgroundColor:
+                                                      design.apparel?.color,
+                                                  }}
+                                                  onClick={() => handleDesignClick(design)}
+                                                />
+                                              </div>
+                                              <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
+                                                  <Image
+                                                    src={
+                                                      design?.svgImage ||
+                                                      design.uploadedImages
+                                                    }
+                                                    alt={`Side ${
+                                                      index + 1
+                                                    } design`}
+                                                    layout="fill"
+                                                    objectFit="contain"
+                                                    className="rounded-md"
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <span className="text-xs text-gray-600">
+                                              Side:{" "}
+                                              {capitalizeFirstLetter(
+                                                design.apparel.side
+                                              )}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="py-8 text-center text-gray-500">
+                            Your cart is empty
+                          </p>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={handleViewCart}
+                        className="mt-4 w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-600 transition duration-200 flex items-center justify-center space-x-2 shadow-md"
+                      >
+                        <span>View Cart</span>
+                        {cartTotal > 0 && (
+                          <span className="font-semibold">
+                            (${cartTotal.toFixed(2)})
+                          </span>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

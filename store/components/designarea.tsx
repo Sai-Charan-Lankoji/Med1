@@ -205,7 +205,7 @@ export default function DesignArea(): React.ReactElement {
         selectedApparal: apparel,
         jsonDesign: canvas?.toJSON(),
         pngImage: canvas?.toDataURL({ multiplier: 4 }),
-        svgImage: svgUrl,
+        svgImage: canvas?.toJSON().objects.length ? svgUrl : null,
       });
     } else {
       console.error("Design is undefined");
@@ -278,6 +278,8 @@ export default function DesignArea(): React.ReactElement {
 
   const reset = () => {
     dispatchDesign({ type: "CLEAR_ALL" });
+    localStorage.removeItem('savedDesignState');
+    localStorage.removeItem('savedPropsState');
   };
 
   const undo = (e: any) => {
@@ -328,6 +330,8 @@ export default function DesignArea(): React.ReactElement {
     console.log("Success", success);
     if (success) {
       dispatchDesign({ type: "CLEAR_ALL" });
+      localStorage.removeItem('savedDesignState');
+      localStorage.removeItem('savedPropsState');
     }
   };
 
