@@ -26,9 +26,9 @@ import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
 import * as React from "react";
 import { GetTextStyles } from "../shared/draw";  
-import { useCart } from "@/context/cartContext"; 
+//import { useCart } from "@/context/cartContext"; 
 import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
-import { useUploadImage } from "@/app/hooks/useUploadImage";
+//import { useUploadImage } from "@/app/hooks/useUploadImage";
 import { request } from "http"; 
 import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
 import { useUserContext } from "../context/userContext"; 
@@ -70,7 +70,7 @@ export default function DesignArea(): React.ReactElement {
 // const {mutate:uploadImage , isError , isLoading} = useUploadImage()
   const {mutate:CreateApparelDesign , isLoading, isError} = UseCreateApparelDesign() 
   const { mutate: createApparelUpload} = useCreateApparelUpload();
-  const {addToCart} = useCart()
+  //const {addToCart} = useCart()
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
   const { svgcolors, dispatchColorPicker } =
@@ -197,16 +197,21 @@ export default function DesignArea(): React.ReactElement {
       )
     );
     dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
-    dispatchDesign({
-      type: "STORE_DESIGN",
-      currentDesign: design,
-      selectedApparal: apparel,
-      jsonDesign: canvas?.toJSON(),
-      pngImage: canvas?.toDataURL({ multiplier: 4 }),
-      svgImage: svgUrl,
-    });
+  
+    if (design) {
+      dispatchDesign({
+        type: "STORE_DESIGN",
+        currentDesign: design,
+        selectedApparal: apparel,
+        jsonDesign: canvas?.toJSON(),
+        pngImage: canvas?.toDataURL({ multiplier: 4 }),
+        svgImage: svgUrl,
+      });
+    } else {
+      console.error("Design is undefined");
+    }
+  
     dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: currentBgColor });
-
   };
 
   const handleColorClick = (value: string) => {
@@ -272,11 +277,7 @@ export default function DesignArea(): React.ReactElement {
 
 
   const reset = () => {
-    if (canvas) {
-      dispatchForCanvas({ 
-        type: "RESET"
-      });
-    }
+    dispatchDesign({ type: "CLEAR_ALL" });
   };
 
   const undo = (e: any) => {
@@ -396,7 +397,7 @@ export default function DesignArea(): React.ReactElement {
 
         <div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={() => redo()}>
+            <button onClick={(e) => redo(e)}>
               <IconContext.Provider
                 value={{
                   size: "10px",
@@ -409,7 +410,7 @@ export default function DesignArea(): React.ReactElement {
             </button>
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={() => undo()}>
+            <button onClick={(e) => undo(e)}>
               <IconContext.Provider
                 value={{
                   size: "10px",

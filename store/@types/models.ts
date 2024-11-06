@@ -147,6 +147,7 @@ export const bgColours: IBgcolor[] = [
 ];
 
 export interface ICartItem {
+  id: string;
   designs: IDesign[];
   quantity: number;
   price: number;
