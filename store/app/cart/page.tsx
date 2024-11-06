@@ -148,7 +148,7 @@ const CartPage = () => {
       line_items: cartItems.map((item) => ({
         product_id: item.id,
         quantity: item.quantity,
-        price: item.designs ? item.designs.length * 100 : 100, // Updated price calculation
+        price: item.price, // Updated price calculation
         designs: item.designs
       })),
       total_amount: total,
@@ -167,8 +167,9 @@ const CartPage = () => {
       onSuccess: async () => {
         try {
           await new Promise((resolve) => setTimeout(resolve, 100));
-          await handleClearCart();
+     
           router.push("./order-confirmation");
+          await handleClearCart();
         } catch (err) {
           console.error("Navigation error:", err);
           setError("Failed to navigate to order confirmation page.");
