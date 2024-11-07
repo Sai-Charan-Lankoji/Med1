@@ -7,8 +7,8 @@ const loaders = require("@medusajs/medusa/dist/loaders/index").default
   async function start() {
     const app = express()
     const directory = process.cwd()
-    app.use(bodyParser.json({ limit: '10mb' })); // Adjust the limit as needed
-    app.use(bodyParser.urlencoded({ limit: '10mb', extended: true })); 
+    app.use(bodyParser.json({ limit: '50mb' })); // Adjust the limit as needed
+    app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })); 
 
     try {
       const { container } = await loaders({
