@@ -77,6 +77,7 @@ export default function DesignArea(): React.ReactElement {
     React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
   const { designs, dispatchDesign } = React.useContext(DesignContext)!;
+  console.log("PRAVEEN KUMAR: ", designs)
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
@@ -101,7 +102,11 @@ export default function DesignArea(): React.ReactElement {
         dispatchColorPicker({ type: "SVG_COLORS", payload: colors });
       }
     }
-  });
+  }); 
+
+
+
+  
 
 
   // canvas?.on("object:modified", () => {
@@ -318,7 +323,7 @@ export default function DesignArea(): React.ReactElement {
     localStorage.setItem("designState", JSON.stringify(stateToSave));
   };
 
-  const clearDesignObject = () => {}; 
+  const clearDesignObject = () => {};   
 
   const handleAddToCart = async () => {
     // Get the current design state for saving

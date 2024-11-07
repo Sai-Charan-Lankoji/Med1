@@ -12,15 +12,16 @@ import { useRouter } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
-import { IDesign } from "@/@types/models";
+import { IDesign, IProps } from "@/@types/models";
+import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 
 const Navbar: React.FC = () => {
   const { cartItems, deleteCart } = useNewCart();
    const { email, customerToken } = useUserContext();
-  const [username, setUsername] = useState<string>(""); // Added: State for username
+  const [username, setUsername] = useState<string>(""); 
   const { logout } = useCustomerLogout();
   const router = useRouter();
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
@@ -61,15 +62,29 @@ const Navbar: React.FC = () => {
   
   // ... other state and hooks
 
-  const handleDesignClick = (design: IDesign) => {
-    if (dispatchDesign) {
-      dispatchDesign({
-        type: "SWITCH_DESIGN",
-        currentDesign: design
-      })
+  const { switchToDesign } = useDesignSwitcher();
+  
+  const handleDesignClick = async (designState: IDesign, propsState: IProps, cartId: string) => {
+    console.log("Design clicked", designState); 
+    localStorage.setItem("savedDesignState", JSON.stringify(designState));
+    localStorage.setItem("savedPropsState", JSON.stringify(propsState));
+    localStorage.setItem('cart_id', cartId);
+    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
+
+    const success = await switchToDesign(designState);
+    
+    if (success) {
+      setIsCartOpen(false);
+      // Force a small delay to ensure state updates are processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      // Optionally scroll to the canvas area
+      const canvasElement = document.querySelector('.canvas-container');
+      if (canvasElement) {
+        canvasElement.scrollIntoView({ behavior: 'smooth' });
+      }
     }
-    setIsCartOpen(false)
-  }
+  };
+
   
   // Toggle item expansion
   const toggleItemExpansion = (itemId: string) => {
@@ -384,7 +399,7 @@ const Navbar: React.FC = () => {
                                                     backgroundColor:
                                                       design.apparel?.color,
                                                   }}
-                                                  onClick={() => handleDesignClick(design)}
+                                                  
                                                 />
                                               </div>
                                               <div className="absolute inset-0 flex items-center justify-center">
@@ -399,6 +414,7 @@ const Navbar: React.FC = () => {
                                                     layout="fill"
                                                     objectFit="contain"
                                                     className="rounded-md"
+                                                    onClick={() => handleDesignClick(item.designState,item.propsState, item.id)}
                                                   />
                                                 </div>
                                               </div>

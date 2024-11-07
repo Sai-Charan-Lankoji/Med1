@@ -153,6 +153,8 @@ export interface ICartItem {
   price: number;
   email: string | null;
   customer_id: any;
+  designState: IDesign;
+  propsState: IProps;
 }
 
 export const designApparels: IApparel[] = [

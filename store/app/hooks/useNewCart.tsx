@@ -139,7 +139,7 @@ export const useNewCart = () => {
           pngImage: design.pngImage,
           svgImage: null,
           isactive: design.isactive,
-          jsonDesign: null,
+          jsonDesign: design.jsonDesign,
           uploadedImages: design.uploadedImages || [],
           textProps: design.textProps,
         }))
