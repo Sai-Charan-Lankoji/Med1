@@ -204,8 +204,8 @@ export default function DesignArea(): React.ReactElement {
         currentDesign: design,
         selectedApparal: apparel,
         jsonDesign: canvas?.toJSON(),
-        pngImage: canvas?.toDataURL({ multiplier: 4 }),
-        svgImage: canvas?.toJSON().objects.length ? svgUrl : null,
+        pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
+        svgImage: canvas?.toSVG(),
       });
     } else {
       console.error("Design is undefined");
@@ -321,12 +321,32 @@ export default function DesignArea(): React.ReactElement {
   const clearDesignObject = () => {}; 
 
   const handleAddToCart = async () => {
+    // Get the current design state for saving
+    const currentDesignState = designs.map(design => ({
+      ...design,
+      svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design
+    }));
+  
+    // Get the current text props state for saving
+    const currentPropsState = {
+      ...props,
+      designId: design?.id // Ensure we associate props with current design
+    };
+  
     if (!customerToken) {
       saveStateToLocalStorage();
       router.push("/auth");
       return;
     }
-    const success = await addDesignToCart(designs, customerToken, svgUrl);
+    
+    const success = await addDesignToCart(
+      designs, // Current designs being added to cart
+      customerToken, 
+      svgUrl,
+      currentDesignState, // Full design state for saving
+      currentPropsState  // Full props state for saving
+    );
+    
     console.log("Success", success);
     if (success) {
       dispatchDesign({ type: "CLEAR_ALL" });

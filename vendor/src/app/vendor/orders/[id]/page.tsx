@@ -137,11 +137,11 @@ const OrderDetailsView = () => {
                           backgroundColor: selectedDesign.apparel?.color,
                         }}
                       />
-                      {selectedDesign.svgImage && (
+                      {selectedDesign.pngImage && (
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="relative w-1/2 h-1/2">
                             <Image
-                              src={selectedDesign.svgImage}
+                              src={selectedDesign.pngImage}
                               alt="Design overlay"
                               layout="fill"
                               objectFit="contain"

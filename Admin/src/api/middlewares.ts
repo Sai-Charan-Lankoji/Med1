@@ -4,6 +4,7 @@ import cors from "cors";
 export const config: MiddlewaresConfig = {
   routes: [
     {
+      bodyParser: { sizeLimit: 1000000 }, 
       matcher: "/vendor*",
       middlewares: [
         cors({
@@ -12,7 +13,9 @@ export const config: MiddlewaresConfig = {
         }),
       ],
     },
-    {
+    { 
+      bodyParser: { sizeLimit: 1000000 }, 
+      
       matcher: "/store*",
       middlewares: [
         cors({
@@ -22,6 +25,7 @@ export const config: MiddlewaresConfig = {
       ],
     }, 
     {
+      bodyParser: { sizeLimit: 1000000 }, 
       matcher: "/uploads*",
       middlewares: [
         cors({

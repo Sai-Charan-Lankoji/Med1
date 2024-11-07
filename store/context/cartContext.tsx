@@ -1,7 +1,7 @@
-import { IDesign } from '@/@types/models';
+{/*import { IDesign } from '@/@types/models';
 import { nanoid } from 'nanoid';
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { createCart } from '../app/hooks/useCart'
+//import { createCart } from '../app/hooks/useCart'
 interface CartItem {
   designs: IDesign[];
   quantity: number;
@@ -67,13 +67,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [cart]);
 
-  const addToCart = (designs: IDesign[]) => {
-    const newCartItem: CartItem = {
+  //const addToCart = (designs: IDesign[]) => {
+    //const newCartItem: CartItem = {
       designs: designs,
       quantity: 1,
       price: 100,  
-      email: sessionStorage.getItem('customerId'),
-      customer_id: sessionStorage.getItem('email')
+      //email: sessionStorage.getItem('customerId'),
+      //customer_id: sessionStorage.getItem('email')
     };
     // createCart(newCartItem, {
     //   onSuccess: (response) => {
@@ -167,3 +167,4 @@ export const useCart = () => {
   }
   return context;
 };
+*/}

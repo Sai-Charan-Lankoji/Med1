@@ -10,7 +10,7 @@ import {
   setError, 
   fetchCartSuccess
 } from '../../reducer/cartReducer';
-import { IDesign } from '@/@types/models';
+import { IDesign, IProps } from '@/@types/models';
 
 export const useNewCart = () => {
   const { email } = useUserContext();
@@ -114,13 +114,19 @@ export const useNewCart = () => {
     }
   };
 
-  const addDesignToCart = async (designs: IDesign[], customerToken: string, svgUrl: string | null) => {
+  const addDesignToCart = async (
+    designs: IDesign[], 
+    customerToken: string, 
+    svgUrl: string | null,
+    designState: IDesign[],
+    propsState: IProps
+  ) => {
     if (!customerToken) return false;
 
     try {
       dispatch(setLoading(true));
       
-      const validDesigns = designs.filter(design => design.svgImage);
+      const validDesigns = designs.filter(design => design.pngImage);
       if (validDesigns.length === 0) {
         throw new Error("No valid designs to add to cart");
       }
@@ -130,8 +136,8 @@ export const useNewCart = () => {
           id: design.id,
           apparel: design.apparel,
           items: design.items,
-          pngImage: null,
-          svgImage: design.svgImage,
+          pngImage: design.pngImage,
+          svgImage: null,
           isactive: design.isactive,
           jsonDesign: null,
           uploadedImages: design.uploadedImages || [],
@@ -148,6 +154,8 @@ export const useNewCart = () => {
         },
         body: JSON.stringify({
           designs: processedDesigns,
+          designState: designState,
+          propsState: propsState,
           quantity: 1,
           price: basePrice,
           email: email,
@@ -169,8 +177,6 @@ export const useNewCart = () => {
     } finally {
       dispatch(setLoading(false));
     }
-
-    
   };
   const clearAllCart = async () => {
     if (!customerId) return false;

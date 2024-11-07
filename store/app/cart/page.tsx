@@ -285,7 +285,7 @@ console.log("cart..",cartItems);
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
                                     <Image
-                                      src={item.designs[mainDesignIndex].svgImage || item.designs[mainDesignIndex].uploadedImages}
+                                      src={item.designs[mainDesignIndex].pngImage}
                                       alt={`Main design`}
                                       layout="fill"
                                       objectFit="contain"
@@ -320,7 +320,7 @@ console.log("cart..",cartItems);
                                     <div className="absolute inset-0 flex items-center justify-center">
                                       <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
                                         <Image
-                                          src={design.svgImage || design.uploadedImages}
+                                          src={design.pngImage}
                                           alt={`Thumbnail ${index + 1}`}
                                           layout="fill"
                                           objectFit="contain"

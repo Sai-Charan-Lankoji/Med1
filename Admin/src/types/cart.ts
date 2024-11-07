@@ -80,6 +80,8 @@ export interface IApparel {
  
   export interface ICartItem {
     designs: any[];  // Ideally, define a more specific type here
+    designState: IDesign[];
+    propsState: IProps;
     price: number;
     quantity: number;
     email: string;

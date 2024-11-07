@@ -391,8 +391,7 @@ const Navbar: React.FC = () => {
                                                 <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
                                                   <Image
                                                     src={
-                                                      design?.svgImage ||
-                                                      design.uploadedImages
+                                                      design?.pngImage
                                                     }
                                                     alt={`Side ${
                                                       index + 1

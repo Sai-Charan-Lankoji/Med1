@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
-import { useCart } from '@/context/cartContext'; // Import the cart context
+//import { useCart } from '@/context/cartContext'; // Import the cart context
 
 interface StoreLoginResponse {
   customer: any;
@@ -26,36 +26,36 @@ interface CartItem {
 export const useCustomerLogin = () => {
   const router = useRouter();
   const { setUser, setIsLogin } = useUserContext();
-  const { mergeLocalCart, clearCart } = useCart();
+ // const { mergeLocalCart, clearCart } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleCartTransition = (customerId: string) => {
-    const guestCart = localStorage.getItem('guest_cart');
-    if (guestCart) {
-      try {
-        const guestCartItems: CartItem[] = JSON.parse(guestCart);
-        const existingUserCart = localStorage.getItem(`cart_${customerId}`);
-        const userCartItems: CartItem[] = existingUserCart ? JSON.parse(existingUserCart) : [];
-        const mergedCart = [...userCartItems];
+  // const handleCartTransition = (customerId: string) => {
+  //   const guestCart = localStorage.getItem('guest_cart');
+  //   if (guestCart) {
+  //     try {
+  //       const guestCartItems: CartItem[] = JSON.parse(guestCart);
+  //       const existingUserCart = localStorage.getItem(`cart_${customerId}`);
+  //       const userCartItems: CartItem[] = existingUserCart ? JSON.parse(existingUserCart) : [];
+  //       const mergedCart = [...userCartItems];
         
-        guestCartItems.forEach((guestItem) => {
-          const existingItem = mergedCart.find(item => item.id === guestItem.id);
-          if (existingItem) {
-            existingItem.quantity += guestItem.quantity;
-          } else {
-            mergedCart.push(guestItem);
-          }
-        });
+  //       guestCartItems.forEach((guestItem) => {
+  //         const existingItem = mergedCart.find(item => item.id === guestItem.id);
+  //         if (existingItem) {
+  //           existingItem.quantity += guestItem.quantity;
+  //         } else {
+  //           mergedCart.push(guestItem);
+  //         }
+  //       });
 
-        localStorage.setItem(`cart_${customerId}`, JSON.stringify(mergedCart));
-        localStorage.removeItem('guest_cart');
-        mergeLocalCart();
-      } catch (error) {
-        console.error('Error merging carts:', error);
-      }
-    }
-  };
+  //       localStorage.setItem(`cart_${customerId}`, JSON.stringify(mergedCart));
+  //       localStorage.removeItem('guest_cart');
+  //       mergeLocalCart();
+  //     } catch (error) {
+  //       console.error('Error merging carts:', error);
+  //     }
+  //   }
+  // };
 
   const login = async (email: string, password: string, vendorId: any) => {
     setLoading(true);
@@ -90,7 +90,7 @@ export const useCustomerLogin = () => {
         setUser(data.customer.first_name, data.customer.email, data.token); // Pass the token here
         sessionStorage.setItem('customerId', data.customer.id)
         sessionStorage.setItem('customerEmail', data.customer.email);
-        handleCartTransition(data.customer.id);
+        //handleCartTransition(data.customer.id);
         
         const redirectAfterLogin = localStorage.getItem('redirectAfterLogin');
         if (redirectAfterLogin) {

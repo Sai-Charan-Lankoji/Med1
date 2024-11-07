@@ -1,6 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
-import CartService from "../../../services/cart"; // Adjust the import path as necessary
-import { CartCreateProps } from "@medusajs/medusa/dist/types/cart";
+import CartService from "../../../services/cart";
 import { ICartItem } from "../../../types/cart";
 
 const getCartService = (req: MedusaRequest): CartService | null => {
@@ -55,16 +54,35 @@ export const POST = async (
       return;
     }
 
-    const { designs, quantity, price, email, customer_id } = req.body as {
+    const { 
+      designs, 
+      designState, 
+      propsState, 
+      quantity, 
+      price, 
+      email, 
+      customer_id 
+    } = req.body as {
       designs: any[];
+      designState: any[];
+      propsState: any;
       quantity: number;
       price: number;
       email: string;
       customer_id: string;
     };
 
+    // Validate required fields
     if (!designs || !Array.isArray(designs) || designs.length === 0) {
       res.status(400).json({ error: "Designs array is required and cannot be empty." });
+      return;
+    }
+    if (!designState || !Array.isArray(designState)) {
+      res.status(400).json({ error: "Design state is required and must be an array." });
+      return;
+    }
+    if (!propsState) {
+      res.status(400).json({ error: "Props state is required." });
       return;
     }
     if (!quantity || typeof quantity !== "number") {
@@ -84,9 +102,16 @@ export const POST = async (
       return;
     }
 
-    console.log("Validated data:", { designs, quantity, price, email, customer_id });
-
-    const cartData = { designs, quantity, price, email, customer_id };
+    const cartData = { 
+      designs, 
+      designState, 
+      propsState, 
+      quantity, 
+      price, 
+      email, 
+      customer_id 
+    };
+    
     const cart = await cartService.create(cartData);
     const carts = await cartService?.retrieveByCustomerId(cart.customer_id);
 
@@ -97,76 +122,73 @@ export const POST = async (
   }
 };
 
-export const DELETE = async (
-  req: MedusaRequest,
-  res: MedusaResponse
-): Promise<void> => {
-  try {
-      const cartService = getCartService(req);
-      const { cartId } = req.query;
-
-      if (!cartId) {
-          res.status(400).json({ error: "Cart ID is required" });
-          return;
-      }
-
-      await cartService?.deleteCart(cartId as string);
-      res.status(200).json({ message: "Cart successfully deleted" });
-  } catch (error) {
-      console.error("Error in DELETE /cart:", error);
-      res.status(500).json({ error: error.message || "An unknown error occurred." });
-  }
-};
-
 // PATCH method to update quantity
 export const PATCH = async (
   req: MedusaRequest,
   res: MedusaResponse
 ): Promise<void> => {
   try {
-      const cartService = getCartService(req);
-      const { cartId } = req.query;
-      const { quantity } = req.body as { quantity: number };
+    const cartService = getCartService(req);
+    const { cartId } = req.query;
+    const { quantity } = req.body as { quantity: number };
 
-      if (!cartId) {
-          res.status(400).json({ error: "Cart ID is required" });
-          return;
-      }
+    if (!cartId) {
+      res.status(400).json({ error: "Cart ID is required" });
+      return;
+    }
 
-      if (typeof quantity !== "number" || quantity < 1) {
-          res.status(400).json({ error: "Valid quantity is required" });
-          return;
-      }
+    if (typeof quantity !== "number" || quantity < 1) {
+      res.status(400).json({ error: "Valid quantity is required" });
+      return;
+    }
 
-      const updatedCart = await cartService?.updateQuantity(cartId as string, quantity);
-      
-      // After updating the cart, fetch the customer's updated carts
-      const customerCarts = await cartService?.retrieveByCustomerId(updatedCart.customer_id);
-      res.status(200).json(customerCarts);
+    const updatedCart = await cartService?.updateQuantity(cartId as string, quantity);
+    const customerCarts = await cartService?.retrieveByCustomerId(updatedCart.customer_id);
+    res.status(200).json(customerCarts);
   } catch (error) {
-      console.error("Error in PATCH /cart:", error);
-      res.status(500).json({ error: error.message || "An unknown error occurred." });
+    console.error("Error in PATCH /cart:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
   }
 };
 
+export const DELETE = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+    const cartService = getCartService(req);
+    const { cartId } = req.query;
+
+    if (!cartId) {
+      res.status(400).json({ error: "Cart ID is required" });
+      return;
+    }
+
+    await cartService?.deleteCart(cartId as string);
+    res.status(200).json({ message: "Cart successfully deleted" });
+  } catch (error) {
+    console.error("Error in DELETE /cart:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+};
 
 export const PUT = async (
   req: MedusaRequest,
   res: MedusaResponse
 ): Promise<void> => {
   try {
-      const cartService = getCartService(req);
-      const { customer_id } = req.query;
+    const cartService = getCartService(req);
+    const { customer_id } = req.query;
 
-      if (!customer_id) {
-          res.status(400).json({ error: "Customer ID is required" });
-          return;
-      }
+    if (!customer_id) {
+      res.status(400).json({ error: "Customer ID is required" });
+      return;
+    }
 
-      await cartService?.clearCustomerCart(customer_id as string);
-      res.status(200).json({ message: "All carts successfully cleared" });
+    await cartService?.clearCustomerCart(customer_id as string);
+    res.status(200).json({ message: "All carts successfully cleared" });
   } catch (error) {
-      console.error("Error in PUT /cart:", error);
-      res.status(500).json({ error: error.message || "An unknown error occurred." });
+    console.error("Error in PUT /cart:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
   }
 };

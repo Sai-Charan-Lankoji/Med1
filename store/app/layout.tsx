@@ -4,7 +4,7 @@ import { Inter } from "next/font/google"
 import "../public/globals.css"
 import Navbar from "./navbar/page"
 import React, { useEffect } from "react"  // Added useEffect import
-import { CartProvider } from "@/context/cartContext"
+//import { CartProvider } from "@/context/cartContext"
 import { UserProvider } from "@/context/userContext"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MedusaProvider } from "medusa-react"
@@ -54,7 +54,7 @@ export default function RootLayout({
             baseUrl={process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"}
             publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
           >
-            <CartProvider>
+            
               <UserProvider>
                 <SvgProvider>
                   <main className="min-h-screen">
@@ -65,7 +65,7 @@ export default function RootLayout({
                   </main>
                 </SvgProvider>
               </UserProvider>
-            </CartProvider>
+            
           </MedusaProvider>
         </QueryClientProvider>
         </Provider>

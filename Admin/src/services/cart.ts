@@ -1,6 +1,5 @@
 import { Lifetime } from "awilix";
 import { Cart, CartService as MedusaCartService } from "@medusajs/medusa";
-import { CartCreateProps, CartUpdateProps } from "@medusajs/medusa/dist/types/cart";
 import { ICartItem } from "../types/cart";
 
 class CartService extends MedusaCartService {
@@ -17,13 +16,18 @@ class CartService extends MedusaCartService {
     }
 
     calculatePrice(designs: any[]): number {
-      // Calculate price based on number of sides ($100 per side)
-      return designs.length * 100;
-  }
+        return designs.length * 100;
+    }
 
     async create(data: ICartItem): Promise<Cart> {
         if (!data.designs || !Array.isArray(data.designs)) {
             throw new Error("Designs must be provided as an array.");
+        }
+        if (!data.designState || !Array.isArray(data.designState)) {
+            throw new Error("Design state must be provided as an array.");
+        }
+        if (!data.propsState) {
+            throw new Error("Props state must be provided.");
         }
         if (typeof data.price !== "number") {
             throw new Error("Price must be a number.");
@@ -42,14 +46,15 @@ class CartService extends MedusaCartService {
         const totalPrice = basePrice * data.quantity;
 
         const cartData = {
-          designs: data.designs,
-          price: basePrice, // Store base price per item
-          quantity: data.quantity,
-          total_price: totalPrice, // Store total price
-          email: data.email,
-          customer_id: data.customer_id,
-          ...data,
-      };
+            designs: data.designs,
+            designState: data.designState,
+            propsState: data.propsState,
+            price: basePrice,
+            quantity: data.quantity,
+            total_price: totalPrice,
+            email: data.email,
+            customer_id: data.customer_id,
+        };
 
         try {
             const cart = this.cartRepository.create(cartData);

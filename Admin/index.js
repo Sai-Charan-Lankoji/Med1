@@ -1,4 +1,5 @@
 const express = require("express")
+const bodyParser = require("body-parser");
 const { GracefulShutdownServer } = require("medusa-core-utils")
 const loaders = require("@medusajs/medusa/dist/loaders/index").default
  
@@ -6,6 +7,8 @@ const loaders = require("@medusajs/medusa/dist/loaders/index").default
   async function start() {
     const app = express()
     const directory = process.cwd()
+    app.use(bodyParser.json({ limit: '10mb' })); // Adjust the limit as needed
+    app.use(bodyParser.urlencoded({ limit: '10mb', extended: true })); 
 
     try {
       const { container } = await loaders({
