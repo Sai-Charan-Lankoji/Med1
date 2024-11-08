@@ -133,17 +133,6 @@ const CartPage = () => {
     if (isProcessingOrder) return;
     setIsProcessingOrder(true);
 
-
-    const handleDeleteCart = async (cartId: string) => {
-      const success = await deleteCart(cartId);
-      if (success) {
-          alert(`Cart deleted successfully ${cartId}`);
-      }
-      else {
-          alert(`Failed to delete cart ${cartId}`);
-      }
-  };
-
     const orderData: OrderData = {
       line_items: cartItems.map((item) => ({
         product_id: item.id,

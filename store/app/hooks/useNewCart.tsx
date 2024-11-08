@@ -222,8 +222,8 @@ export const useNewCart = () => {
     try {
         dispatch(setLoading(true));
 
-        const response = await fetch(`http://localhost:9000/store/cart?customer_id=${customerId}`, {
-            method: "PUT",
+        const response = await fetch(`http://localhost:9000/store/cart/${customerId}`, {
+            method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
             }
