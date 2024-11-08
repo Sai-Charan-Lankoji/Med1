@@ -1,6 +1,7 @@
 import { Lifetime } from "awilix";
 import { Cart, CartService as MedusaCartService } from "@medusajs/medusa";
-import { ICartItem } from "../types/cart";
+import { ICartItem, IDesign, IProps } from "../types/cart";
+import e from "express";
 
 class CartService extends MedusaCartService {
     static LIFE_TIME = Lifetime.SCOPED;
@@ -41,7 +42,6 @@ class CartService extends MedusaCartService {
         if (!data.customer_id || typeof data.customer_id !== "string") {
             throw new Error("Customer ID is required.");
         }
-
         const basePrice = this.calculatePrice(data.designs);
         const totalPrice = basePrice * data.quantity;
 
@@ -57,13 +57,27 @@ class CartService extends MedusaCartService {
         };
 
         try {
-            const cart = this.cartRepository.create(cartData);
-            return await this.cartRepository.save(cart);
+                const cart = this.cartRepository.create(cartData);
+                return await this.cartRepository.save(cart);
+        
         } catch (error) {
             console.error("Error creating cart:", error);
             throw new Error("Failed to create the cart.");
         }
     }
+
+    async update(cartId: string, { designState, propsState, designs }: any): Promise<Cart> {
+        const existingCart = await this.cartRepository.findOne({ where: { id: cartId } });
+        if (!existingCart) {
+          throw new Error(`Cart with ID ${cartId} not found.`);
+        }
+      
+        existingCart.designState = designState;
+        existingCart.propsState = propsState;
+        existingCart.designs = designs;
+      
+        return await this.cartRepository.save(existingCart);
+      }
 
     async retrieveByCustomerId(customerId: string): Promise<Cart | null> {
       return await this.cartRepository.find({

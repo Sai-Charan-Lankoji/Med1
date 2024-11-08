@@ -178,15 +178,16 @@ export const PUT = async (
 ): Promise<void> => {
   try {
     const cartService = getCartService(req);
-    const { customer_id } = req.query;
+    const { cartId } = req.query as any;
+    const { designState, propsState, designs } = req.body as any;
 
-    if (!customer_id) {
-      res.status(400).json({ error: "Customer ID is required" });
+    if (!cartId) {
+      res.status(400).json({ error: "Cart ID is required" });
       return;
     }
 
-    await cartService?.clearCustomerCart(customer_id as string);
-    res.status(200).json({ message: "All carts successfully cleared" });
+    const updatedCartData = await cartService?.update(cartId, { designState, propsState, designs });
+    res.status(200).json({ updatedCartData, message: "Cart Updated Successfully" });
   } catch (error) {
     console.error("Error in PUT /cart:", error);
     res.status(500).json({ error: error.message || "An unknown error occurred." });

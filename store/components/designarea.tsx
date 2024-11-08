@@ -37,6 +37,7 @@ import { compressBase64Image } from "@/app/utils/imageCompression";
 import {useSvgContext} from "../context/svgcontext" 
 
 import { useNewCart } from "@/app/hooks/useNewCart";
+import { useEffect, useState } from "react";
 
 
 
@@ -60,7 +61,8 @@ export default function DesignArea(): React.ReactElement {
 
   // Get canvas state with proper type checking
   const canvasState = useSelector((state: RootState) => state.setReducer);
-  const { addDesignToCart, loading: cartLoading } = useNewCart() 
+  const { addDesignToCart, loading: cartLoading } = useNewCart()
+  const { updateCart } = useNewCart() 
 
   const { customerToken } = useUserContext(); 
   const router = useRouter(); 
@@ -88,7 +90,13 @@ export default function DesignArea(): React.ReactElement {
   const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
   let selectionCreated: fabric.Object[] | undefined;
   const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
+  const [cartId, setCartId] = useState<any>();
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setCartId(localStorage.getItem("cart_id"));
+    }
+  }, []);
   canvas?.on("selection:created", function (options) {
     //console.log(options);
     if (options.e) {
@@ -310,7 +318,6 @@ export default function DesignArea(): React.ReactElement {
     }
   }; 
 
-
   const saveStateToLocalStorage = () => {
     const stateToSave = {
       cart: cart,
@@ -325,6 +332,37 @@ export default function DesignArea(): React.ReactElement {
 
   const clearDesignObject = () => {};   
 
+  const handleUpdateCart = async () => {
+    const currentDesignState = designs.map(design => ({
+      ...design,
+      svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design
+    }));
+  
+    // Get the current text props state for saving
+    const currentPropsState = {
+      ...props,
+      designId: design?.id // Ensure we associate props with current design
+    };
+    if (!customerToken) {
+      saveStateToLocalStorage();
+      router.push("/auth");
+      return;
+    }
+
+    const success = await updateCart(
+      cartId,
+      currentDesignState,
+      currentPropsState,
+      designs
+    );
+    
+    console.log("Success", success);
+    if (success) {
+      dispatchDesign({ type: "CLEAR_ALL" });
+      localStorage.removeItem('savedDesignState');
+      localStorage.removeItem('savedPropsState');
+    }
+  }
   const handleAddToCart = async () => {
     // Get the current design state for saving
     const currentDesignState = designs.map(design => ({
@@ -349,7 +387,7 @@ export default function DesignArea(): React.ReactElement {
       customerToken, 
       svgUrl,
       currentDesignState, // Full design state for saving
-      currentPropsState  // Full props state for saving
+      currentPropsState,
     );
     
     console.log("Success", success);
@@ -521,7 +559,7 @@ export default function DesignArea(): React.ReactElement {
         <div className="col-span-12 sm:col-span-12  md:col-span-12 lg:col-span-4 text-right">
           <button
             type="button"
-            onClick={handleAddToCart}
+            onClick={() => cartId? handleUpdateCart() : handleAddToCart() }
             className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
           >
             <IconContext.Provider
@@ -532,7 +570,7 @@ export default function DesignArea(): React.ReactElement {
             >
               <FiShoppingBag />
             </IconContext.Provider>
-            <span className="ml-3">Add to Cart</span>
+            <span className="ml-3">{cartId ? `Update Cart` : `Add to Cart`}</span>
           </button>
         </div>
       </div>
