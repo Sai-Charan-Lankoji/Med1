@@ -377,36 +377,32 @@ function setReducer(state: CanvasState = initialState, action: any) {
       };
     }
     case "UNDO":
-      {
-        state.pauseSaving = true;
-        if (state.undoStack.length == 0) return state;
-        state.redoStack.push(state.undoStack.pop());
-        let previousState = state.undoStack[state.undoStack.length - 1];
-        if (previousState == null) {
-          previousState = "{}";
-        }
-        state.canvas?.loadFromJSON(previousState, () => {
-          state.canvas?.renderAll();
-        });
-        state.pauseSaving = false;
-      }
-      return state;
-    case "REDO":
-      {
-        state.pauseSaving = true;
-        if (state.redoStack.length == 0) return state;
-        let state1 = state.redoStack.pop();
-        if (state1 != null) {
-          state.undoStack.push(state1);
-          state.canvas?.loadFromJSON(state1, () => {
-            state.canvas?.renderAll();
-          });
-        }
-        state.pauseSaving = false;
-      }
-      return state;
+  {
+    state.pauseSaving = true;
+    if (state.undoStack.length <= 1) return state; 
+    const currentState = state.canvas?.toJSON(); 
+    state.redoStack.push(currentState); 
+    const previousState = state.undoStack.pop(); 
+    state.canvas?.loadFromJSON(previousState, () => {
+      state.canvas?.renderAll();
+    });
+    state.pauseSaving = false;
+  }
+  return { ...state };
 
-
+case "REDO":
+  {
+    state.pauseSaving = true;
+    if (state.redoStack.length === 0) return state; 
+    const currentState = state.canvas?.toJSON();
+    state.undoStack.push(currentState); 
+    const nextState = state.redoStack.pop();
+    state.canvas?.loadFromJSON(nextState, () => {
+      state.canvas?.renderAll();
+    });
+    state.pauseSaving = false;
+  }
+  return { ...state };
     default:
       return state;
   }

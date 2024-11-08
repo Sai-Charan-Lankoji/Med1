@@ -85,22 +85,19 @@ const Order = () => {
 
     return storesWithMatchingSalesChannels.filter((order) => {
       return (
-        order.email.includes(searchLower) ||
-        order.matchingSalesChannel.name.includes(searchLower) ||
-        order.created_at.includes(searchLower)
+        order.email.toLowerCase().includes(searchLower) ||
+        order.matchingSalesChannel?.name.toLowerCase().includes(searchLower) ||
+        order.created_at.toLowerCase().includes(searchLower)
       );
     });
   }, [storesWithMatchingSalesChannels, searchQuery]);
 
-  const currentOrders = useMemo(() => {
-    if (!Array.isArray(storesWithMatchingSalesChannels)) return [];
-    const offset = currentPage * pageSize;
-    const limit = Math.min(
-      offset + pageSize,
-      storesWithMatchingSalesChannels.length
-    );
-    return storesWithMatchingSalesChannels.slice(offset, limit);
-  }, [currentPage, pageSize, storesWithMatchingSalesChannels]);
+  // Get paginated data
+  const paginatedOrders = useMemo(() => {
+    const startIndex = currentPage * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredOrders.slice(startIndex, endIndex);
+  }, [filteredOrders, currentPage, pageSize]);
 
   const formatTimestamp = (timestamp: string) => {
     const date = parseISO(timestamp);
@@ -110,6 +107,10 @@ const Order = () => {
   const formatDate = (timestamp: string) => {
     const date = parseISO(timestamp);
     return format(date, "dd MMM yyyy");
+  };
+
+  const getRowIndex = (index: number) => {
+    return (currentPage * pageSize) + index + 1;
   };
 
   if (isLoading) {
@@ -323,7 +324,7 @@ const Order = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {filteredOrders.map((order: any, index: any) => (
+                {paginatedOrders.map((order: any, index: any) => (
                   <Table.Row
                     key={order.id}
                     onClick={() => {
@@ -332,7 +333,7 @@ const Order = () => {
                     className="hover:bg-gray-50 text-[rgb(17, 24, 39)] hover:cursor-pointer"
                   >
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center hover:text-violet-500">
-                      {index + 1}
+                    {getRowIndex(index)}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center">
                       <Tooltip

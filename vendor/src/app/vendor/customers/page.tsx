@@ -1,18 +1,21 @@
 "use client";
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
-import { DropdownMenu, Heading, Input, Table } from "@medusajs/ui";
+import { Heading, Input, Table } from "@medusajs/ui";
 import withAuth from "@/lib/withAuth";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
 import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 import { getColors } from "@/app/utils/dummyData";
 import { useRouter } from "next/navigation";
+import Pagination from "@/app/utils/pagination";
 
 const Customer = () => {
   const { data: customers, error, isLoading } = useGetCustomers();
   const { data: orders } = useGetOrders();
   const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(0);
   const router = useRouter();
+  const pageSize = 6;
 
   const getOrderCountForCustomer = (customerId) => {
     if (!orders) return 0;
@@ -24,24 +27,32 @@ const Customer = () => {
     return format(date, "dd MMM yyyy");
   };
 
+  // Memoize the filtered customers
   const filteredCustomers = useMemo(() => {
     if (!customers) return [];
 
     const searchLower = searchQuery.toLowerCase();
 
     return customers.filter((customer) => {
-      // const fullName = `${customer.first_name} ${customer.last_name}`.toLowerCase();
-      console.log(searchLower);
       return (
-        customer.first_name.includes(searchLower) ||
-        customer.last_name.includes(searchLower) ||
-        customer.email.includes(searchLower) ||
-        customer.created_at.includes(searchLower) ||
-        customer.email.toLowerCase().includes(searchLower)
+        customer.first_name.toLowerCase().includes(searchLower) ||
+        customer.last_name.toLowerCase().includes(searchLower) ||
+        customer.email.toLowerCase().includes(searchLower) ||
+        customer.created_at.toLowerCase().includes(searchLower)
       );
     });
   }, [customers, searchQuery]);
 
+  // Calculate the paginated customers
+  const paginatedCustomers = useMemo(() => {
+    const startIndex = currentPage * pageSize;
+    const endIndex = startIndex + pageSize;
+    return filteredCustomers.slice(startIndex, endIndex);
+  }, [filteredCustomers, currentPage, pageSize]);
+
+  const getRowIndex = (index: number) => {
+    return (currentPage * pageSize) + index + 1;
+  };
   if (isLoading) {
     return (
       <div>
@@ -51,7 +62,7 @@ const Customer = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-ui-border-base">
+    <div className="bg-white rounded-lg shadow-sm border border-ui-border-base p-2">
       <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-ui-border-base">
         <Heading className="text-ui-fg-base text-xl leading-6 font-medium mb-4 sm:mb-0">
           Customers
@@ -72,6 +83,9 @@ const Customer = () => {
         <Table>
           <Table.Header>
             <Table.Row className="border-t-0">
+              <Table.HeaderCell className="w-1/4 px-4 py-4 text-xs font-semibold text-ui-fg-subtle">
+                Customer
+              </Table.HeaderCell>
               <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
                 Date added
               </Table.HeaderCell>
@@ -88,8 +102,8 @@ const Customer = () => {
           </Table.Header>
 
           <Table.Body>
-            {filteredCustomers.length > 0 ? (
-              filteredCustomers.map((customer, index) => (
+            {paginatedCustomers.length > 0 ? (
+              paginatedCustomers.map((customer, index) => (
                 <Table.Row
                   key={customer.id}
                   onClick={() =>
@@ -97,6 +111,9 @@ const Customer = () => {
                   }
                   className="cursor-pointer transition-colors hover:bg-ui-bg-base-hover"
                 >
+                  <Table.Cell className="w-1/4 px-4 py-4 text-sm text-ui-fg-subtle">
+                    {getRowIndex(index)}
+                  </Table.Cell>
                   <Table.Cell className="w-1/4 px-6 py-4 text-sm text-ui-fg-subtle">
                     {formatDate(customer.created_at)}
                   </Table.Cell>
@@ -130,17 +147,20 @@ const Customer = () => {
                 </Table.Row>
               ))
             ) : (
-              <Table.Row className="text-center">
-                <Table.Cell className="py-10 text-center">
-                  <span className="text-[28px] text-black text-center">
-                    No customers found
-                  </span>
-                </Table.Cell>
+              <Table.Row className="flex flex-row justify-center text-center">
+                <Table.Cell className="py-10 text-center"></Table.Cell>
               </Table.Row>
             )}
           </Table.Body>
         </Table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalItems={filteredCustomers.length}
+        data={filteredCustomers}
+      />
     </div>
   );
 };
@@ -159,7 +179,7 @@ const CustomerSkeleton = () => {
         <table className="min-w-full">
           <thead>
             <tr>
-              {[...Array( )].map((_, index) => (
+              {[...Array()].map((_, index) => (
                 <th
                   key={index}
                   className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle"
