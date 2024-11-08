@@ -64,11 +64,11 @@ const Navbar: React.FC = () => {
 
   const { switchToDesign } = useDesignSwitcher();
   
-  const handleDesignClick = async (designState: IDesign, propsState: IProps, cartId: string) => {
+  const handleDesignClick = async (designState: IDesign, propsState: IProps, id: any) => {
     console.log("Design clicked", designState); 
     localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
-    localStorage.setItem('cart_id', cartId);
+    localStorage.setItem('cart_id', id);
     dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
 
     const success = await switchToDesign(designState);
