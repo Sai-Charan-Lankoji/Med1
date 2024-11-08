@@ -193,264 +193,280 @@ const CartPage = () => {
     }));
   };
 console.log("cart..",cartItems);
-  return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4 text-black">
-      {!customerToken && (
-        <div className="max-w-7xl mx-auto mb-8">
-          <div className="bg-white p-6 rounded-lg shadow-sm flex justify-between items-center">
-            <div>
-              <h2 className="text-lg font-semibold">
-                Already have an account?
-              </h2>
-              <p className="text-gray-600">Sign in for a better experience.</p>
-            </div>
-            <Link href="/auth">
-              <button className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition duration-200">
-                Sign In
-              </button>
+return (
+  <div className="min-h-screen bg-gray-50 py-10 px-4 text-black">
+    {!customerToken && (
+      <div className="max-w-7xl mx-auto mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-sm flex justify-between items-center">
+          <div>
+            <h2 className="text-lg font-semibold">
+              Already have an account?
+            </h2>
+            <p className="text-gray-600">Sign in for a better experience.</p>
+          </div>
+          <Link href="/auth">
+            <button className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition duration-200">
+              Sign In
+            </button>
+          </Link>
+        </div>
+      </div>
+    )}
+
+    <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+      <div className="lg:w-2/3 bg-white rounded-lg shadow-sm p-6">
+        <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
+
+        {cartItems.length === 0 ? (
+          <div className="text-center py-12">
+            <h2 className="text-xl font-medium mb-4">Your cart is empty</h2>
+            <p className="text-gray-600 mb-6">
+              Looks like you haven&apos;t added any items to your cart yet.
+            </p>
+            <Link
+              href="/"
+              className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition duration-200"
+            >
+              Continue Shopping
             </Link>
           </div>
-        </div>
-      )}
-
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
-        <div className="lg:w-2/3 bg-white rounded-lg shadow-sm p-6">
-          <h1 className="text-2xl font-bold mb-6">Shopping Cart</h1>
-
-          {cartItems.length === 0 ? (
-            <div className="text-center py-12">
-              <h2 className="text-xl font-medium mb-4">Your cart is empty</h2>
-              <p className="text-gray-600 mb-6">
-                Looks like you haven&apos;t added any items to your cart yet.
-              </p>
-              <Link
-                href="/"
-                className="bg-black text-white px-6 py-2 rounded-md hover:bg-gray-800 transition duration-200"
-              >
-                Continue Shopping
-              </Link>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-4">Product</th>
-                    <th className="text-left py-4">Quantity</th>
-                    <th className="text-left py-4">Price</th>
-                    <th className="text-left py-4">Total</th>
-                    <th className="text-left py-4">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cartItems.map((item) => {
-                    const pricePerItem = (item.designs ? item.designs.length * 100 : 100);
-                    const itemTotal = pricePerItem * item.quantity;
-                    const mainDesignIndex = selectedDesigns[item.id] || 0;
-                    
-                    return (
-                    <tr key={item.id} className="border-b">
-                      <td className="py-4">
-                        <div className="flex items-center space-x-4">
-                          <div className="mt-2">
-                            <p className="text-sm text-gray-600 mb-2">
-                              Designed Sides: {getDesignedSidesText(item.designs)}
-                            </p>
-                            <div className="flex gap-4">
-                              {/* Main large design */}
-                              <div className="relative w-48 h-56">
-                                <div className="absolute inset-0">
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-4">Product</th>
+                  <th className="text-left py-4">Quantity</th>
+                  <th className="text-left py-4">Price</th>
+                  <th className="text-left py-4">Total</th>
+                  <th className="text-left py-4">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cartItems.map((item) => {
+                  const pricePerItem = (item.designs ? item.designs.length * 100 : 100);
+                  const itemTotal = pricePerItem * item.quantity;
+                  const mainDesignIndex = selectedDesigns[item.id] || 0;
+                  
+                  return (
+                  <tr key={item.id} className="border-b">
+                    <td className="py-4">
+                      <div className="flex items-center space-x-4">
+                        <div className="mt-2">
+                          <p className="text-sm text-gray-600 mb-2">
+                            Designed Sides: {getDesignedSidesText(item.designs)}
+                          </p>
+                          <div className="flex gap-4">
+                            {/* Main large design */}
+                            <div className="relative w-48 h-56">
+                              <div className="absolute inset-0">
+                                <Image
+                                  src={item.designs[mainDesignIndex].apparel?.url}
+                                  alt={`Side: ${item.designs[mainDesignIndex].apparel.side}`}
+                                  fill
+                                  sizes="100%"
+                                  priority
+                                  className="rounded-none"
+                                  style={{
+                                    backgroundColor: item.designs[mainDesignIndex].apparel?.color,
+                                    objectFit:"cover",
+                                  }}
+                                />
+                              </div>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="relative  translate-y-[-10%] "
+                                 style={{
+                                  top:  item.designs[mainDesignIndex].apparel.side === "leftshoulder" ? '35px' : item.designs[mainDesignIndex].apparel.side === "rightshoulder" ? '30px' : 'initial',
+                                  left: item.designs[mainDesignIndex].apparel.side === "leftshoulder" ? '-10px' : item.designs[mainDesignIndex].apparel.side === "rightshoulder" ? '8px' : 'initial',
+                                  width: item.designs[mainDesignIndex].apparel.side === "leftshoulder" ? '30%' : item.designs[mainDesignIndex].apparel.side === "rightshoulder" ? '30%' : '50%',
+                                  height: item.designs[mainDesignIndex].apparel.side === "leftshoulder" ? '30%' : item.designs[mainDesignIndex].apparel.side === "rightshoulder" ? '30%' : '50%',
+                                }}
+                                >
                                   <Image
-                                    src={item.designs[mainDesignIndex].apparel?.url}
-                                    alt={`Side: ${item.designs[mainDesignIndex].apparel.side}`}
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="rounded-none"
-                                    style={{
-                                      backgroundColor: item.designs[mainDesignIndex].apparel?.color,
-                                    }}
+                                    src={item.designs[mainDesignIndex].pngImage}
+                                    alt={`Main design`}
+                                    sizes="100%"
+                                    fill
+                                   
+                                    className="rounded-md"
+                                    style={{ objectFit: 'contain' }}
                                   />
                                 </div>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
+                              </div>
+                            </div>
+
+                            {/* Thumbnails */}
+                            <div className="flex flex-col gap-2">
+                              {item.designs.map((design, index) => (
+                                <div 
+                                  key={index}
+                                  className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                    index === mainDesignIndex ? 'ring-2 ring-gray-700' : 'hover:ring-2 hover:ring-gray-300'
+                                  }`}
+                                  onClick={() => handleThumbnailClick(item.id, index)}
+                                >
+                                  <div className="absolute inset-0">
                                     <Image
-                                      src={item.designs[mainDesignIndex].pngImage}
-                                      alt={`Main design`}
-                                      layout="fill"
-                                      objectFit="contain"
-                                      className="rounded-md"
+                                      src={design.apparel?.url}
+                                      alt={`Side: ${design.apparel.side}`}
+                                      priority
+                                      fill
+                                      sizes="100%"
+                                      
+                                      className="rounded-none"
+                                      style={{
+                                        backgroundColor: design.apparel?.color,
+                                        objectFit: 'cover'
+                                      }}
                                     />
                                   </div>
-                                </div>
-                              </div>
-
-                              {/* Thumbnails */}
-                              <div className="flex flex-col gap-2">
-                                {item.designs.map((design, index) => (
-                                  <div 
-                                    key={index}
-                                    className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
-                                      index === mainDesignIndex ? 'ring-2 ring-gray-700' : 'hover:ring-2 hover:ring-gray-300'
-                                    }`}
-                                    onClick={() => handleThumbnailClick(item.id, index)}
-                                  >
-                                    <div className="absolute inset-0">
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
                                       <Image
-                                        src={design.apparel?.url}
-                                        alt={`Side: ${design.apparel.side}`}
-                                        layout="fill"
-                                        objectFit="cover"
-                                        className="rounded-none"
-                                        style={{
-                                          backgroundColor: design.apparel?.color,
-                                        }}
+                                        src={design.pngImage}
+                                        alt={`Thumbnail ${index + 1}`}
+                                        fill
+                                        sizes="100%"
+                                       
+                                        className="rounded-md"
+                                        style={{ objectFit: 'contain' }}
                                       />
                                     </div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                      <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
-                                        <Image
-                                          src={design.pngImage}
-                                          alt={`Thumbnail ${index + 1}`}
-                                          layout="fill"
-                                          objectFit="contain"
-                                          className="rounded-md"
-                                        />
-                                      </div>
-                                    </div>
                                   </div>
-                                ))}
-                              </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         </div>
-                      </td>
-                      <td className="py-4">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200"
-                            onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                            disabled={updating || item.quantity <= 1}
-                          >
-                            -
-                          </button>
-                          <span className="w-8 text-center">{item.quantity}</span>
-                          <button
-                            className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200"
-                            onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                            disabled={updating || item.quantity >= 10}
-                          >
-                            +
-                          </button>
-                        </div>
-                        {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-                      </td>
-                      <td className="py-4 px-auto">${pricePerItem.toFixed(2)}</td>
-                      <td className="py-4 px-auto">${itemTotal.toFixed(2)}</td>
-                      <td className="py-4 px-auto">
+                      </div>
+                    </td>
+                    <td className="py-4">
+                      <div className="flex items-center space-x-2">
                         <button
-                          onClick={() => openModal(item.id)}
-                          className="text-red-500 hover:text-red-700 transition duration-200"
-                          title="Remove item"
+                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200"
+                          onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                          disabled={updating || item.quantity <= 1}
                         >
-                          <FaTrash />
+                          -
                         </button>
-                      </td>
-                    </tr>
-                  )})}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {cartItems.length > 0 && (
-          <div className="lg:w-1/3">
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-bold mb-6">Order Summary</h2>
-
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span>${subtotal.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Shipping</span>
-                  <span>{shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Tax (10%)</span>
-                  <span>${taxAmount.toFixed(2)}</span>
-                </div>
-                <div className="border-t pt-4">
-                  <div className="flex justify-between font-bold">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                className="w-full mt-6 bg-black text-white py-3 rounded-md font-medium hover:bg-gray-800 transition duration-200 disabled:bg-gray-400"
-                onClick={handleProceedToOrder}
-                disabled={isLoading}
-              >
-                {isLoading && customerToken
-                  ? "Processing..."
-                  : customerToken
-                  ? "Confirm Order"
-                  : "Login to proceed order"}
-              </button>
-              {isError && (
-                <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
-              )}
-
-              <div className="mt-6 text-center">
-                <Link href="/" className="text-blue-600 hover:text-blue-800 transition duration-200">
-                  Continue Shopping
-                </Link>
-              </div>
-            </div>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <button
+                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-200"
+                          onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                          disabled={updating || item.quantity >= 10}
+                        >
+                          +
+                        </button>
+                      </div>
+                      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+                    </td>
+                    <td className="py-4 px-auto">${pricePerItem.toFixed(2)}</td>
+                    <td className="py-4 px-auto">${itemTotal.toFixed(2)}</td>
+                    <td className="py-4 px-auto">
+                      <button
+                        onClick={() => openModal(item.id)}
+                        className="text-red-500 hover:text-red-700 transition duration-200"
+                        title="Remove item"
+                      >
+                        <FaTrash />
+                      </button>
+                    </td>
+                  </tr>
+                )})}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-6 h-auto max-w-md w-full mx-4">
-            <div className="flex flex-row justify-between items-center">
-              <h2 className="text-xl font-semibold">Please confirm</h2>
-              <button
-                onClick={closeModal}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              >
-                <XMarkMini className="w-5 h-5 text-gray-500" />
-              </button>
+
+      {cartItems.length > 0 && (
+        <div className="lg:w-1/3">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+
+            <div className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-gray-600">Subtotal</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Shipping</span>
+                <span>{shippingCost === 0 ? "Free" : `$${shippingCost.toFixed(2)}`}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">Tax (10%)</span>
+                <span>${taxAmount.toFixed(2)}</span>
+              </div>
+              <div className="border-t pt-4">
+                <div className="flex justify-between font-bold">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
 
-            <div className="h-px bg-gray-200 my-4" />
+            <button
+              className="w-full mt-6 bg-black text-white py-3 rounded-md font-medium hover:bg-gray-800 transition duration-200 disabled:bg-gray-400"
+              onClick={handleProceedToOrder}
+              disabled={isLoading}
+            >
+              {isLoading && customerToken
+                ? "Processing..."
+                : customerToken
+                ? "Confirm Order"
+                : "Login to proceed order"}
+            </button>
+            {isError && (
+              <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
+            )}
 
-            <p className="text-gray-700 mb-6">
-              Are you sure you want to remove this item from your cart?
-            </p>
-
-            <div className="flex flex-row gap-3 justify-end">
-              <button
-                className="px-4 py-2 border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
-                onClick={closeModal}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-600 transition-colors font-medium text-sm"
-                onClick={handleConfirmDelete}
-              >
-                Delete
-              </button>
+            <div className="mt-6 text-center">
+              <Link href="/" className="text-blue-600 hover:text-blue-800 transition duration-200">
+                Continue Shopping
+              </Link>
             </div>
           </div>
         </div>
       )}
     </div>
-  );
+    {isModalOpen && (
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+        <div className="bg-white rounded-lg p-6 h-auto max-w-md w-full mx-4">
+          <div className="flex flex-row justify-between items-center">
+            <h2 className="text-xl font-semibold">Please confirm</h2>
+            <button
+              onClick={closeModal}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+            >
+              <XMarkMini className="w-5 h-5 text-gray-500" />
+            </button>
+          </div>
+
+          <div className="h-px bg-gray-200 my-4" />
+
+          <p className="text-gray-700 mb-6">
+            Are you sure you want to remove this item from your cart?
+          </p>
+
+          <div className="flex flex-row gap-3 justify-end">
+            <button
+              className="px-4 py-2 border border-gray-200 text-gray-700 rounded-md hover:bg-gray-50 transition-colors font-medium text-sm"
+              onClick={closeModal}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-600 transition-colors font-medium text-sm"
+              onClick={handleConfirmDelete}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
+);
 };
 
 export default CartPage;

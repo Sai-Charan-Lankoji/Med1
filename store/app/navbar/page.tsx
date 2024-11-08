@@ -403,12 +403,14 @@ const Navbar: React.FC = () => {
                                                 <Image
                                                   src={design.apparel?.url}
                                                   alt={`Side: ${design.apparel.side}`}
-                                                  layout="fill"
-                                                  objectFit="cover"
+                                                  fill
+                                                  priority
+                                                  sizes="100%"
                                                   className="hover:cursor-pointer"
                                                   style={{
                                                     backgroundColor:
                                                       design.apparel?.color,
+                                                      objectFit: "cover",
                                                   }}
                                                   
                                                 />
@@ -422,10 +424,11 @@ const Navbar: React.FC = () => {
                                                     alt={`Side ${
                                                       index + 1
                                                     } design`}
-                                                    layout="fill"
-                                                    objectFit="contain"
+                                                    fill
+                                                    
                                                     className="rounded-md"
                                                     onClick={() => handleDesignClick(item.designState,item.propsState, item.id)}
+                                                    style={{objectFit: 'contain'}}
                                                   />
                                                 </div>
                                               </div>
