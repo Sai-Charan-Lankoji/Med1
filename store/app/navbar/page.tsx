@@ -41,17 +41,28 @@ const Navbar: React.FC = () => {
   }, [email]);
 
   useEffect(() => {
-    if (customerToken) {
-      //const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-      const totalItems = cartItems.length;
-      setCartItemsCount(totalItems);
-      const total = cartItems.reduce((sum, item) => {
-        // Calculate price based on number of sides
-        const numberOfSides = item.designs ? item.designs.length : 1;
-        return sum + 100 * numberOfSides * item.quantity; // $100 per side
-      }, 0);
-      setCartTotal(total);
+    if (customerToken && Array.isArray(cartItems)) { // Check if cartItems is an array
+      try {
+        const totalItems = cartItems.length;
+        setCartItemsCount(totalItems);
+  
+        const total = cartItems.reduce((sum, item) => {
+          if (!item) return sum; // Skip if item is undefined
+          
+          // Calculate price based on number of sides
+          const numberOfSides = item.designs?.length || 1;
+          return sum + 100 * numberOfSides * (item.quantity || 1);
+        }, 0);
+  
+        setCartTotal(total);
+      } catch (error) {
+        console.error('Error calculating cart totals:', error);
+        // Set safe defaults if calculation fails
+        setCartItemsCount(0);
+        setCartTotal(0);
+      }
     } else {
+      // Reset values if no customer token or invalid cartItems
       setCartItemsCount(0);
       setCartTotal(0);
     }
