@@ -25,12 +25,7 @@ import { useForm } from "react-hook-form";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import withAuth from "@/lib/withAuth";
 
-export declare enum UserRoles {
-    ADMIN = "admin",
-    MEMBER = "member",
-    DEVELOPER = "developer"
-  }
-
+type UserRoles = "admin" | "member" | "developer";
 interface UserFormData {
   firstName: string;
   lastName: string;
@@ -122,7 +117,7 @@ const Users = () => {
         <Button
           variant="transparent"
           className="flex items-center gap-2 border border-ui-border-strong bg-ui-bg-base-hover"
-          onClick={() => setIsModalOpen(true)}
+          onClick={openModal}
         >
           <Plus className="h-4 w-4" />
           Invite Users

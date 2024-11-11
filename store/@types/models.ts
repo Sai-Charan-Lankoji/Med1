@@ -102,7 +102,7 @@ export type DesignAction =
   | { type: "CLEAR_ITEM"; svgId: string; designItemType: string }
   | { type: "UPLOADED_DESIGNS"; payload: IDesign[] }
   | { type: "TEXT_PROPS"; payload: IProps }
-  | { type: "UPDATE_DESIGN_FROM_CART_ITEM"; cartItems: IDesign[] }
+  | { type: "UPDATE_DESIGN_FROM_CART_ITEM"; currentDesign: IDesign }
   | { type: "CLEAR_ALL" };
 
 export type ColorPickerAction =

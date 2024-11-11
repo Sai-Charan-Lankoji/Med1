@@ -1,11 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-export declare enum UserRoles {
-    ADMIN = "admin",
-    MEMBER = "member",
-    DEVELOPER = "developer"
-  }
+type UserRoles = "admin" | "member" | "developer";
 interface UserFormData {
   firstName: string
   lastName: string

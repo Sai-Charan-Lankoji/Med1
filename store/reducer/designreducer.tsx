@@ -126,7 +126,7 @@ export const designReducer = (
     }
     case "SWITCH_DESIGN": {
       designs = designs.map((a) =>
-        a.id === action.currentDesign?.id
+        a.apparel.side === "front"
           ? { ...a, isactive: true }
           : { ...a, isactive: false }
       );

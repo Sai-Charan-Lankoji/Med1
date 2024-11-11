@@ -39,7 +39,7 @@ const mockUser = {
 const Team = () => {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: user } = useGetUsers();
+  const { data: Users } = useGetUsers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
@@ -85,7 +85,7 @@ const Team = () => {
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          {user?.length === 0 ? (
+          {Users?.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               <p>No users created yet</p>
             </div>
@@ -108,7 +108,8 @@ const Team = () => {
                     </Table.HeaderCell>
                   </Table.Row>
                 </Table.Header>
-                <Table.Body>
+                <Table.Body>\
+                  {Users?.map((user) => (
                   <Table.Row key={user?.id} className="hover:bg-gray-100">
                     <Table.Cell className="px-4 py-3 text-[13px] text-gray-500 border-b border-gray-300">
                       {user?.first_name} {user?.last_name}
@@ -122,7 +123,7 @@ const Team = () => {
                       </div>
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[14px] text-violet-500 font-medium border-b border-gray-300">
-                      {user?.role[0].toUpperCase() + user?.role.slice(1)}
+                      { user?.role[0].toUpperCase() + user?.role.slice(1)}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[13px] text-gray-500 border-b text-end border-gray-300">
                       <DropdownMenu>
@@ -146,6 +147,7 @@ const Team = () => {
                       </DropdownMenu>
                     </Table.Cell>
                   </Table.Row>
+                  ))}
                 </Table.Body>
               </Table>
             </div>
