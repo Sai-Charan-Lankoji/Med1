@@ -11,6 +11,7 @@ import {
   User,
   CogSixTooth,
   BuildingStorefront,
+  Users,
 } from "@medusajs/icons";
 import { usePathname } from "next/navigation";
 import { MdBusinessCenter } from "react-icons/md";
@@ -27,6 +28,7 @@ const menuItems: MenuItem[] = [
   { name: "Customers", href: "/vendor/customers", icon: <UsersSolid /> },
   { name: "Store", href: "/vendor/store", icon: <BuildingStorefront />},
   { name: "Settings", href: "/vendor/settings", icon: <CogSixTooth /> },
+  { name: "Users", href: "/vendor/users", icon: <Users />}
 ];
 
 const MenuItems: React.FC = () => {

@@ -14,9 +14,10 @@ const withAuth = <P extends object>(
 
     useEffect(() => {
       const vendorId = sessionStorage.getItem("vendor_id");
-      if (!vendorId) {
+       if (!vendorId) {
         router.replace("/");
-      } else {
+      } 
+      else {
         setAuthenticated(true);
       }
       setLoading(false);
