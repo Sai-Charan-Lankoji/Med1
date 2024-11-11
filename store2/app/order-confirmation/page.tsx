@@ -2,23 +2,23 @@
 import React, { useEffect } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { useRouter } from "next/navigation"; 
-import { useCart } from "@/context/cartContext"; 
+//import { useCart } from "@/context/cartContext"; 
 import { useSvgContext } from "@/context/svgcontext";
 
 const OrderConform = () => {
   const router = useRouter(); 
-  const {clearCart} = useCart(); 
+  //const {clearCart} = useCart(); 
   const {clearSvgItems} = useSvgContext();
 
-  useEffect(() => {
-    const timer = setTimeout(() => { 
-      clearCart();
-      clearSvgItems();
+  // useEffect(() => {
+  //   const timer = setTimeout(() => { 
+  //     //clearCart();
+  //     clearSvgItems();
       
-    }, 2000);
+  //   }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [router]);
+  //   return () => clearTimeout(timer);
+  // }, [router]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">

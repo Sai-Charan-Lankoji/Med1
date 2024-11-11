@@ -9,32 +9,36 @@ import {
   randomId,
 } from "../shared/draw";
 
-function setReducer(
-  state: {
-    canvas: fabric.Canvas | undefined;
-    color: string;
-    undoStack: any[];
-    redoStack: any[];
-    pauseSaving: boolean;
-    initialState: any;
-  } = {
-    canvas: undefined,
-    color: "#ff0000",
-    undoStack: [],
-    redoStack: [],
-    pauseSaving: false,
-    initialState: null,
-  },
-  action: any
-) {
+
+interface CanvasState {
+  canvas: fabric.Canvas | undefined;
+  color: string;
+  undoStack: any[];
+  redoStack: any[];
+  pauseSaving: boolean;
+  initialState: any;
+}
+
+const initialState: CanvasState = {
+  canvas: undefined,
+  color: "#ff0000",
+  undoStack: [],
+  redoStack: [],
+  pauseSaving: false,
+  initialState: null
+};
+
+function setReducer(state: CanvasState = initialState, action: any) {
+    
+
   //console.log(action);
 
   switch (action.type) {
     case "INIT": {
-      if (!state.pauseSaving) state.undoStack.push(action.canvas?.toJSON());
+      //if (!state.pauseSaving) state.undoStack.push(action.canvas?.toJSON());
       //return { ...state, canvas: action.canvas };
       const initialState = action.canvas?.toJSON();
-      return { ...state, canvas: action.canvas,initialState };
+      return { ...state, canvas: action.canvas,initialState, undoStack: [initialState],redoStack: [] };
     }
     case "REINIT": {
       return { ...state, canvas: action.canvas };
@@ -368,48 +372,37 @@ function setReducer(
       
       return {
         ...state,
-        undoStack: [],
+        undoStack: [state.initialState],
         redoStack: [],
       };
     }
     case "UNDO":
-      {
-        state.pauseSaving = true;
-        if (state.undoStack.length === 0) return state; // Ensure undoStack has items
+  {
+    state.pauseSaving = true;
+    if (state.undoStack.length <= 1) return state; 
+    const currentState = state.canvas?.toJSON(); 
+    state.redoStack.push(currentState); 
+    const previousState = state.undoStack.pop(); 
+    state.canvas?.loadFromJSON(previousState, () => {
+      state.canvas?.renderAll();
+    });
+    state.pauseSaving = false;
+  }
+  return { ...state };
 
-        const previousState = state.undoStack.pop();
-        state.redoStack.push(previousState);
-
-        const lastState = state.undoStack[state.undoStack.length - 1] || "{}";
-
-        // Check if lastState exists before loading
-        if (lastState !== "{}") {
-          state.canvas?.loadFromJSON(lastState, () => {
-            state.canvas?.renderAll();
-          });
-        }
-
-        state.pauseSaving = false;
-      }
-      return { ...state }; // Return updated state copy
-
-    case "REDO":
-      {
-        state.pauseSaving = true;
-        if (state.redoStack.length === 0) return state; // Ensure redoStack has items
-
-        const nextState = state.redoStack.pop();
-        if (nextState) {
-          state.undoStack.push(nextState);
-          state.canvas?.loadFromJSON(nextState, () => {
-            state.canvas?.renderAll();
-          });
-        }
-
-        state.pauseSaving = false;
-      }
-      return { ...state }; // Return updated state copy
-
+case "REDO":
+  {
+    state.pauseSaving = true;
+    if (state.redoStack.length === 0) return state; 
+    const currentState = state.canvas?.toJSON();
+    state.undoStack.push(currentState); 
+    const nextState = state.redoStack.pop();
+    state.canvas?.loadFromJSON(nextState, () => {
+      state.canvas?.renderAll();
+    });
+    state.pauseSaving = false;
+  }
+  return { ...state };
     default:
       return state;
   }

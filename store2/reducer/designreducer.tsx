@@ -7,32 +7,35 @@ export const designReducer = (
   //console.log(action);
 
   switch (action.type) {
-    case "ADD_DESIGN": {
-      designs = designs.map((a) =>
-        a.apparel.url === action.payload.url
-          ? { ...a, isactive: true }
-          : { ...a, isactive: false }
-      );
-      const design = designs.find((d) => d.apparel.url === action.payload.url);
-      if (!design) {
-        designs = [
-          ...designs,
-          {
-            apparel: {
-              ...action.payload,
-            },
-            id: designs.length + 1,
-            items: [],
-            jsonDesign: null,
-            isactive: true,
-            pngImage: null,
-            svgImage: null,
-          },
-        ];
-      } else design.isactive = true;
+   case "ADD_DESIGN": {
+  designs = designs.map((a) =>
+    a.apparel.url === action.payload.url
+      ? { ...a, isactive: true }
+      : { ...a, isactive: false }
+  );
+  const design = designs.find((d) => d.apparel.url === action.payload.url);
+  if (!design) {
+    designs = [
+      ...designs,
 
-      return designs;
-    }
+      {
+        apparel: {
+          ...action.payload,
+          side: action.payload.side || ' ', // Ensure side is present
+        },
+        id: designs.length + 1,
+        items: [],
+        jsonDesign: null,
+        isactive: true,
+        pngImage: null,
+        svgImage: null,
+      },
+    ];
+  } else design.isactive = true;
+
+  return designs;
+}
+
     case "UPDATE_DESIGN":
       designs = designs.map((a) =>
         a.apparel.url === action.payload.url
@@ -40,13 +43,26 @@ export const designReducer = (
           : { ...a, isactive: false }
       );
       return designs;
+
+      case "CLEAR_ALL": {
+        return designs.map(design => ({
+          apparel: design.apparel,
+          id: design.id,
+          items: [],
+          jsonDesign: null,
+          isactive: design.isactive,
+          pngImage: null,
+          svgImage: null,
+          uploadedImages: [],
+        }));
+      }
     case "UPDATE_SELECTED_SVG_COLORS":
       designs = designs.map((a) =>
         a.isactive ? { ...a, selectedSvgColors: action.payload } : { ...a }
       );
       return designs;
     case "UPDATE_APPAREL_COLOR":
-      const d = designs.find((fn) => fn.isactive == true);
+      designs.forEach((design) => design.apparel.color = action.payload);
       //d?.apparel?.color = action.payload;
 
       return designs;
@@ -97,6 +113,7 @@ export const designReducer = (
             pngImage: null,
             svgImage: null,
             uploadedImages: [],
+           
           },
         ];
       }
@@ -109,7 +126,7 @@ export const designReducer = (
     }
     case "SWITCH_DESIGN": {
       designs = designs.map((a) =>
-        a.id === action.currentDesign?.id
+        a.apparel.side === "front"
           ? { ...a, isactive: true }
           : { ...a, isactive: false }
       );
@@ -128,6 +145,14 @@ export const designReducer = (
 
     case "TEXT_PROPS":{
       return designs.map((d) => d.isactive ? {...d, textProps: action.payload} : d);
+    }
+    case "UPDATE_DESIGN_FROM_CART_ITEM": {
+      designs = designs.map((a) =>
+        a.id === action.currentDesign?.id
+          ? { ...a, isactive: true }
+          : { ...a, isactive: false }
+      );
+      return designs;
     }
     default:
       return designs;

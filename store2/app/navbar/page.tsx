@@ -1,35 +1,39 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { FaUserCircle, FaShoppingCart, FaSignOutAlt } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
 import Link from "next/link";
 import Image from "next/image";
-import { useCart } from "@/context/cartContext";
+//import { useCart } from "@/context/cartContext";
 import { MdDeleteForever } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { useRouter } from "next/navigation";
+import { FaChevronDown } from "react-icons/fa";
+import { DesignContext } from "@/context/designcontext";
+import { useNewCart } from "../hooks/useNewCart";
+import { IDesign, IProps } from "@/@types/models";
+import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 
 const Navbar: React.FC = () => {
-  const { cart, removeFromCart } = useCart();
-  // Original email context
-  // const { email, customerToken } = useUserContext();
-  // Modified to include username
-  const { email, customerToken } = useUserContext();
-  const [username, setUsername] = useState<string>("");  // Added: State for username
+  const { cartItems, deleteCart } = useNewCart();
+   const { email, customerToken } = useUserContext();
+  const [username, setUsername] = useState<string>(""); 
   const { logout } = useCustomerLogout();
   const router = useRouter();
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(true);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
+  const [expandedItems, setExpandedItems] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   // Added: Effect to get username from sessionStorage
   useEffect(() => {
     if (email) {
-      const storedUsername = sessionStorage.getItem('username');
+      const storedUsername = sessionStorage.getItem("username");
       if (storedUsername) {
         setUsername(storedUsername);
       }
@@ -37,24 +41,96 @@ const Navbar: React.FC = () => {
   }, [email]);
 
   useEffect(() => {
-    if (customerToken) {
-      const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
-      setCartItemsCount(totalItems);
-      const total = cart.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
-      setCartTotal(total);
+    if (customerToken && Array.isArray(cartItems)) { // Check if cartItems is an array
+      try {
+        const totalItems = cartItems.length;
+        setCartItemsCount(totalItems);
+  
+        const total = cartItems.reduce((sum, item) => {
+          if (!item) return sum; // Skip if item is undefined
+          
+          // Calculate price based on number of sides
+          const numberOfSides = item.designs?.length || 1;
+          return sum + 100 * numberOfSides * (item.quantity || 1);
+        }, 0);
+  
+        setCartTotal(total);
+      } catch (error) {
+        console.error('Error calculating cart totals:', error);
+        // Set safe defaults if calculation fails
+        setCartItemsCount(0);
+        setCartTotal(0);
+      }
     } else {
+      // Reset values if no customer token or invalid cartItems
       setCartItemsCount(0);
       setCartTotal(0);
     }
-  }, [cart, customerToken]);
+  }, [cartItems, customerToken]);
+
+  const designContext = React.useContext(DesignContext)
+  const { designs, dispatchDesign } = designContext || { designs: [], dispatchDesign: () => {} }
+  
+  // ... other state and hooks
+
+  const { switchToDesign } = useDesignSwitcher();
+  
+  const handleDesignClick = async (designState: IDesign, propsState: IProps, id: any) => {
+    console.log("Design clicked", designState); 
+    localStorage.setItem("savedDesignState", JSON.stringify(designState));
+    localStorage.setItem("savedPropsState", JSON.stringify(propsState));
+    localStorage.setItem('cart_id', id);
+    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState }); 
+
+    window.location.reload()
+   
+    const success = await switchToDesign(designState);
+    
+    if (success) { 
+     
+      setIsCartOpen(false);
+      // Force a small delay to ensure state updates are processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      // Optionally scroll to the canvas area
+      const canvasElement = document.querySelector('.canvas-container');
+      if (canvasElement) {
+        canvasElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    } 
+
+   
+  };  
+ 
+    
+    
+
+
+
+
+
+  
+  // Toggle item expansion
+  const toggleItemExpansion = (itemId: string) => {
+    setExpandedItems((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
+  };
 
   const closeAllMenus = () => {
     setIsCartOpen(false);
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
+  };
+
+  const handleDeleteCart = async (cartId: string) => {
+    const success = await deleteCart(cartId);
+    if (success) {
+      // Only clear local cart state after successful API call
+      console.log("Cart item deleted successfully");
+    } else {
+      console.log("Failed to delete cart item");
+    }
   };
 
   // Desktop handlers
@@ -66,6 +142,8 @@ const Navbar: React.FC = () => {
       closeAllMenus();
     } else {
       setIsCartOpen((prev) => !prev);
+      console.log("cartItems", cartItems);
+
       setIsProfileOpen(false);
     }
   };
@@ -124,9 +202,7 @@ const Navbar: React.FC = () => {
   const handleViewCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!customerToken) {
-      router.push("/auth");
-    } else {
+    if (customerToken) {  
       router.push("/cart");
     }
     closeAllMenus();
@@ -149,14 +225,28 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const capitalizeFirstLetter = (string: String) => {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  const getDesignedSidesText = (designs: { apparel: { side: string } }[]) => {
+    if (!designs || designs.length === 0) return "";
+    const sides = designs.map((design) =>
+      capitalizeFirstLetter(design.apparel.side)
+    );
+    if (sides.length === 1) return sides[0];
+    if (sides.length === 2) return `${sides[0]} & ${sides[1]}`;
+    const lastSide = sides.pop();
+    return `${sides.join(", ")} & ${lastSide}`;
+  };
   return (
     <nav className="bg-white fixed w-full top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo/Title */}
           <Link href="/" className="flex-shrink-0">
-          <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-          Customized Baseball Jersey Design
+            <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
+              Customized Baseball Jersey Design
             </h1>
           </Link>
 
@@ -200,20 +290,21 @@ const Navbar: React.FC = () => {
                   </span> */}
                   {/* Modified to show username */}
                   <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
-                    {username || email} {/* Fallback to email if username is not available */}
+                    {username || email}{" "}
+                    {/* Fallback to email if username is not available */}
                   </span>
                 </button>
 
                 {isProfileOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1">
-                  <button
-                    onClick={handleDesktopLogout}
-                    className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
-                  >
-                    <FaSignOutAlt className="text-xl text-gray-700" />
-                    <span>Logout</span>
-                  </button>
-                </div>
+                    <button
+                      onClick={handleDesktopLogout}
+                      className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
+                    >
+                      <FaSignOutAlt className="text-xl text-gray-700" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -233,13 +324,13 @@ const Navbar: React.FC = () => {
                 </button>
 
                 {isCartOpen && (
-                  <div className="absolute right-0 mt-3 w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5">
+                  <div className="absolute right-0 mt-3 w-[32rem] bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5">
                     <div className="p-4">
                       <div className="flex justify-between items-center border-b border-gray-200 pb-3">
                         <h3 className="text-lg font-semibold text-gray-900">
                           Cart Items
                         </h3>
-                        {cart.length > 0 && (
+                        {cartItems.length > 0 && (
                           <span className="text-lg font-bold text-green-600">
                             ${cartTotal.toFixed(2)}
                           </span>
@@ -247,62 +338,122 @@ const Navbar: React.FC = () => {
                       </div>
 
                       <div className="mt-4 max-h-[400px] overflow-y-auto">
-                        {cart.length > 0 ? (
+                        {cartItems.length > 0 ? (
                           <ul className="space-y-4">
-                            {cart.map((item) => (
+                            {cartItems?.map((item, index) => (
                               <li
-                                key={item.id}
-                                className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg transition duration-200"
+                                key={index}
+                                className="rounded-lg transition duration-200"
                               >
-                              <div className="relative w-20 h-24 flex-shrink-0">
-                            {/* Background T-shirt image */}
-                            <div className="absolute inset-0">
-                              <Image
-                                src={item.backgroundTShirt.url}
-                                alt="T-shirt background"
-                                layout="fill"
-                                objectFit="contain"
-                                className="rounded-md"
-                                style={{
-                                  backgroundColor: item.backgroundTShirt.color,
-                                }}
-                              />
-                            </div>
-                            {/* Overlay thumbnail image */}
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
-                                <Image
-                                  src={item.thumbnail}
-                                  alt={item.title}
-                                  layout="fill"
-                                  objectFit="contain"
-                                  className="rounded-md"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium text-gray-900 truncate">
-                                    {item.title}
-                                  </p>
-                                  <p className="text-sm text-gray-500">
-                                    Side: {item.side}
-                                  </p>
-                                  <p className="text-sm text-gray-600">
-                                    Qty: {item.quantity}
-                                  </p>
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                  <span className="text-sm font-semibold text-gray-900">
-                                    ${(item.price * item.quantity).toFixed(2)}
-                                  </span>
-                                  <button
-                                    onClick={() => removeFromCart(item.id)}
-                                    className="text-red-500 hover:text-red-700 transition duration-200"
-                                    title="Remove item"
+                                <div className="p-3 hover:bg-gray-50">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                      {/* <p className="text-sm font-medium text-gray-900 truncate">
+                              {item.title}
+                            </p> */}
+                                      <p className="text-sm text-gray-600">
+                                        Qty: {item.quantity}
+                                      </p>
+                                      <p className="text-sm text-gray-600 mt-1">
+                                        Designed Sides:{" "}
+                                        <span className="text-xs">
+                                          {getDesignedSidesText(item.designs)}
+                                        </span>
+                                      </p>
+                                    </div>
+                                    <div className="flex flex-col items-end gap-2">
+                                      <span className="text-sm font-semibold text-gray-900">
+                                        $
+                                        {(
+                                          (item.designs
+                                            ? item.designs.length * 100
+                                            : 100) * item.quantity
+                                        ).toFixed(2)}
+                                      </span>
+                                      <button
+                                        onClick={() =>
+                                          handleDeleteCart(item.id)
+                                        }
+                                        className="text-red-500 hover:text-red-700 transition duration-200"
+                                        title="Remove item"
+                                      >
+                                        <MdDeleteForever className="text-xl" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <div
+                                    className="cursor-pointer"
+                                    onClick={() => toggleItemExpansion(item.id)}
                                   >
-                                    <MdDeleteForever className="text-xl" />
-                                  </button>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className="text-sm text-gray-500">
+                                        View all sides
+                                      </span>
+                                      <FaChevronDown
+                                        className={`transform transition-transform ${
+                                          expandedItems[item.id]
+                                            ? "rotate-180"
+                                            : ""
+                                        }`}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {expandedItems[item.id] && (
+                                    <div className="mt-2">
+                                      <div className="grid grid-cols-3 gap-4">
+                                        {item.designs.map((design, index) => (
+                                          <div
+                                            key={index}
+                                            className="flex flex-col items-center"
+                                          >
+                                            <div className="relative w-24 h-28 mb-2">
+                                              <div className="absolute inset-0 border rounded-md">
+                                                <Image
+                                                  src={design.apparel?.url}
+                                                  alt={`Side: ${design.apparel.side}`}
+                                                  fill
+                                                  priority
+                                                  sizes="100%"
+                                                  className="hover:cursor-pointer"
+                                                  style={{
+                                                    backgroundColor:
+                                                      design.apparel?.color,
+                                                      objectFit: "cover",
+                                                  }}
+                                                  
+                                                />
+                                              </div>
+                                              <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
+                                                  <Image
+                                                    src={
+                                                      design?.pngImage
+                                                    }
+                                                    alt={`Side ${
+                                                      index + 1
+                                                    } design`}
+                                                    fill
+                                                    
+                                                    className="rounded-md"
+                                                    onClick={() => handleDesignClick(item.designState,item.propsState, item.id)}
+                                                    style={{objectFit: 'contain'}}
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                            <span className="text-xs text-gray-600">
+                                              Side:{" "}
+                                              {capitalizeFirstLetter(
+                                                design.apparel.side
+                                              )}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </li>
                             ))}
@@ -340,13 +491,13 @@ const Navbar: React.FC = () => {
               <div className="flex flex-col space-y-2">
                 {!email ? (
                   <Link
-                  href="./auth"
-                  className="mx-3 px-4 py-2 text-sm font-medium text-gray-700 rounded-md text-left hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
-                  onClick={closeAllMenus}
-                >
-                  <FaUserCircle className="text-xl text-gray-700" />
-                  <span>LogIn / SignUp</span>
-                </Link>
+                    href="./auth"
+                    className="mx-3 px-4 py-2 text-sm font-medium text-gray-700 rounded-md text-left hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
+                    onClick={closeAllMenus}
+                  >
+                    <FaUserCircle className="text-xl text-gray-700" />
+                    <span>LogIn / SignUp</span>
+                  </Link>
                 ) : (
                   <>
                     <div className="flex items-center space-x-2 mx-3 px-4 py-2 text-sm text-gray-700">
@@ -356,7 +507,7 @@ const Navbar: React.FC = () => {
                       {/* Modified to show username in mobile menu */}
                       <span className="truncate">{username || email}</span>
                     </div>
-                    
+
                     {customerToken && (
                       <>
                         <button

@@ -450,7 +450,7 @@ const CartPage = () => {
                               <div className="flex justify-between items-center mb-4">
                                 <div className="flex items-center space-x-2">
                                   <button
-                                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                    className="w-8 h-8 rounded-full text-black bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
                                     onClick={() =>
                                       handleQuantityChange(
                                         item.id,
@@ -461,11 +461,11 @@ const CartPage = () => {
                                   >
                                     -
                                   </button>
-                                  <span className="w-8 text-center font-medium">
+                                  <span className="w-8 text-center text-black font-medium">
                                     {item.quantity}
                                   </span>
                                   <button
-                                    className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
+                                    className="w-8 h-8 rounded-full text-black bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
                                     onClick={() =>
                                       handleQuantityChange(
                                         item.id,
@@ -481,7 +481,7 @@ const CartPage = () => {
                                   <div className="text-sm text-gray-500">
                                     Price per item
                                   </div>
-                                  <div className="font-medium">
+                                  <div className="font-medium text-black">
                                     ${pricePerItem.toFixed(2)}
                                   </div>
                                 </div>
@@ -489,8 +489,8 @@ const CartPage = () => {
 
                               <div className="pt-4 border-t border-gray-100">
                                 <div className="flex justify-between items-center">
-                                  <span className="font-medium">Subtotal</span>
-                                  <span className="font-medium">
+                                  <span className="font-medium text-black">Subtotal</span>
+                                  <span className="font-medium text-black">
                                     ${itemTotal.toFixed(2)}
                                   </span>
                                 </div>
@@ -510,7 +510,7 @@ const CartPage = () => {
           {cartItems.length > 0 && (
             <div className="lg:w-1/3">
               <div className="bg-white rounded-xl shadow-sm p-6 sticky top-8">
-                <h2 className="text-xl font-bold mb-6">Order Summary</h2>
+                <h2 className="text-xl text-black font-bold mb-6">Order Summary</h2>
 
                 <div className="space-y-4">
                   <div className="flex justify-between text-gray-600">
@@ -536,8 +536,8 @@ const CartPage = () => {
 
                   <div className="pt-4 border-t border-gray-100">
                     <div className="flex justify-between">
-                      <span className="text-lg font-bold">Total</span>
-                      <span className="text-lg font-bold">
+                      <span className="text-black text-lg font-bold">Total</span>
+                      <span className="text-black text-lg font-bold">
                         ${total.toFixed(2)}
                       </span>
                     </div>

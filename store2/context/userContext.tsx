@@ -7,6 +7,7 @@ interface UserContextType {
   email: string | null;
   customerToken: string | null; // New state for customer token
   setUser: (username: string | null, email: string | null, token?: string | null) => void; // Update setUser signature
+  logout: () => void;  
   isLogin: boolean; 
   setIsLogin: (status: boolean) => void;
 }
@@ -18,6 +19,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [email, setEmail] = useState<string | null>(null); 
   const [customerToken, setCustomerToken] = useState<string | null>(null); // State for token
   const [isLogin, setIsLogin] = useState<boolean>(false);
+  const [responseData, setResponseData] = useState<string | null>(null);
 
   useEffect(() => {
     const storedUsername = sessionStorage.getItem('username');
@@ -67,10 +69,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  
+  const logout = () => {
+    setUser(null, null); 
+  };
 
   return (
-    <UserContext.Provider value={{ username, email, customerToken, setUser, isLogin, setIsLogin }}>
+    <UserContext.Provider value={{ username, email, customerToken, setUser, logout, isLogin, setIsLogin}}>
       {children}
     </UserContext.Provider>
   );

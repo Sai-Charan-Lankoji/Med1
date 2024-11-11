@@ -13,7 +13,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [menus, dispatchMenu] = React.useReducer(menuReducer, {
-    addDesign:false,
+    addDesign:false,  
     addClippart: false,
     addShape: false,
     uploadImage: false,

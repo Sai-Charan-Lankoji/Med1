@@ -310,10 +310,85 @@ const OrderDetailsView = () => {
       </div>
       
       {/* Rest of the component remains the same */}
+      {/* Order Summary Sidebar */}
       <div className="space-y-6">
-        {/* ... Order Summary Sidebar ... */}
-      </div>
-    </div>
+            {/* Customer Information */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-100">
+              <div className="p-4 sm:p-6">
+                <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">
+                  Customer
+                </h2>
+                <div>
+                  {matchingCustomers?.length > 0 ? (
+                    matchingCustomers.map((customer, index) => (
+                      <div key={index} className="space-y-2 sm:space-y-3">
+                        <div className="flex items-center text-xs sm:text-sm">
+                          <FiUser className="text-gray-400 mr-2 flex-shrink-0" />
+                          <span className="truncate">{`${customer.first_name} ${customer.last_name}`}</span>
+                        </div>
+                        <div className="flex flex-row items-center text-xs sm:text-sm">
+                          <FiMail className="text-gray-400 mr-2 flex-shrink-0" />
+                          <span className="truncate">{customer.email}</span>
+                        </div>
+                        <div className="flex items-center text-xs sm:text-sm">
+                          <FiPhone className="text-gray-400 mr-2 flex-shrink-0" />
+                          <span className="truncate">{customer.phone}</span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-xs sm:text-sm text-gray-500">
+                      <div className="flex items-center">
+                        <FiMail className="text-gray-400 mr-2 flex-shrink-0" />
+                        <span className="truncate">{order.email}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Order Status */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-medium mb-4">Order Status</h3>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Order Status</p>
+                  {getStatusBadge(order.status)}
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Payment Status</p>
+                  {getStatusBadge(order.payment_status)}
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">
+                    Fulfillment Status
+                  </p>
+                  {getStatusBadge(order.fulfillment_status)}
+                </div>
+              </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-medium mb-4">Summary</h3>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Subtotal</span>
+                  <span>${subtotalAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Tax</span>
+                  <span>${taxAmount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t font-medium">
+                  <span>Total</span>
+                  <span>${totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -3,12 +3,14 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "../public/globals.css"
 import Navbar from "./navbar/page"
-import React, { useEffect } from "react"  
-import { CartProvider } from "@/context/cartContext"
+import React, { useEffect } from "react"  // Added useEffect import
+//import { CartProvider } from "@/context/cartContext"
 import { UserProvider } from "@/context/userContext"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { MedusaProvider } from "medusa-react"
-import { SvgProvider } from "@/context/svgcontext"
+import { SvgProvider } from "@/context/svgcontext" 
+import { store } from "../reducer/store";
+import { Provider } from "react-redux";
 
 const queryClient = new QueryClient()
 const inter = Inter({ subsets: ["latin"] })
@@ -23,28 +25,18 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  //  storage cleanup effect
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('beforeunload', function() {
-        sessionStorage.clear();
-        localStorage.clear();
-      });
-
-     
-    }
-  }, []);
 
   return (
     <html lang="en">
       <body className={inter.className}>
+      <Provider store={store}>
         <QueryClientProvider client={queryClient}>
           <MedusaProvider
             queryClientProviderProps={{ client: queryClient }}
             baseUrl={process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"}
             publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
           >
-            <CartProvider>
+            
               <UserProvider>
                 <SvgProvider>
                   <main className="min-h-screen">
@@ -55,9 +47,10 @@ export default function RootLayout({
                   </main>
                 </SvgProvider>
               </UserProvider>
-            </CartProvider>
+            
           </MedusaProvider>
         </QueryClientProvider>
+        </Provider>
       </body>
     </html>
   )
