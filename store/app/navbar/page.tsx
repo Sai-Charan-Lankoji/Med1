@@ -202,7 +202,7 @@ const Navbar: React.FC = () => {
   const handleViewCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!customerToken) {  
+    if (customerToken) {  
       router.push("/cart");
     }
     closeAllMenus();
