@@ -37,7 +37,9 @@ import { compressBase64Image } from "@/app/utils/imageCompression";
 import {useSvgContext} from "../context/svgcontext" 
 
 import { useNewCart } from "@/app/hooks/useNewCart";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"; 
+import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
+
 
 
 
@@ -95,7 +97,8 @@ export default function DesignArea(): React.ReactElement {
   useEffect(() => {
     if (typeof window !== "undefined") {
       setCartId(localStorage.getItem("cart_id"));
-    }
+    } 
+
   }, []);
   canvas?.on("selection:created", function (options) {
     //console.log(options);
@@ -188,7 +191,9 @@ export default function DesignArea(): React.ReactElement {
   }, [design]);
 
   const getCanvasClass = () => {
+
     if (design?.apparel.url === designApparels[0].url) {
+      
       return "canvas-style1";
     } else if (design?.apparel.url === designApparels[1].url) {
       return "canvas-style2";
@@ -196,7 +201,9 @@ export default function DesignArea(): React.ReactElement {
       return "canvas-style3";
     } else if (design?.apparel.url === designApparels[3].url) {
       return "canvas-style4";
-    }
+    } 
+
+   
     return "";
   };
 
@@ -333,10 +340,16 @@ export default function DesignArea(): React.ReactElement {
   const clearDesignObject = () => {};   
 
   const handleUpdateCart = async () => {
+    router.refresh();
     const currentDesignState = designs.map(design => ({
       ...design,
-      svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design
-    }));
+      svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design 
+     
+    }), 
+    
+  );
+
+  
   
     // Get the current text props state for saving
     const currentPropsState = {
@@ -361,8 +374,20 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
+      window.location.reload()
+
+
     }
   }
+
+
+
+
+
+
+
+
+
   const handleAddToCart = async () => {
     // Get the current design state for saving
     const currentDesignState = designs.map(design => ({
@@ -395,7 +420,10 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
+      
     }
+ 
+   
   };
 
   

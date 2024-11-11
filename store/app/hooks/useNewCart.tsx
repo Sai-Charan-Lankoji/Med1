@@ -10,9 +10,11 @@ import {
   setError, 
   fetchCartSuccess
 } from '../../reducer/cartReducer';
-import { IDesign, IProps } from '@/@types/models';
+import { IDesign, IProps } from '@/@types/models'; 
+import { useRouter } from 'next/navigation';
 
-export const useNewCart = () => {
+export const useNewCart = () => { 
+  const router = useRouter();  // For navigation
   const { email } = useUserContext();
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items);
@@ -136,7 +138,8 @@ export const useNewCart = () => {
       if(response.ok){
         localStorage.removeItem("cart_id");
         localStorage.removeItem('savedPropsState')
-        localStorage.removeItem('savedDesignState')
+        localStorage.removeItem('savedDesignState') 
+        
       }
       const data = await response.json();
       dispatch(fetchCartSuccess(data.updatedCartData));

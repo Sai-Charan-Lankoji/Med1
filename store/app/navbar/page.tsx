@@ -80,11 +80,14 @@ const Navbar: React.FC = () => {
     localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
     localStorage.setItem('cart_id', id);
-    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
+    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState }); 
 
+    window.location.reload()
+   
     const success = await switchToDesign(designState);
     
-    if (success) {
+    if (success) { 
+     
       setIsCartOpen(false);
       // Force a small delay to ensure state updates are processed
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -93,8 +96,17 @@ const Navbar: React.FC = () => {
       if (canvasElement) {
         canvasElement.scrollIntoView({ behavior: 'smooth' });
       }
-    }
-  };
+    } 
+
+   
+  };  
+ 
+    
+    
+
+
+
+
 
   
   // Toggle item expansion
@@ -190,9 +202,7 @@ const Navbar: React.FC = () => {
   const handleViewCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!customerToken) {
-      router.push("/auth");
-    } else {
+    if (!customerToken) {  
       router.push("/cart");
     }
     closeAllMenus();
