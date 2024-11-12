@@ -17,8 +17,8 @@ import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 
 const Navbar: React.FC = () => {
   const { cartItems, deleteCart } = useNewCart();
-   const { email, customerToken } = useUserContext();
-  const [username, setUsername] = useState<string>(""); 
+  const { email, customerToken } = useUserContext();
+  const [username, setUsername] = useState<string>("");
   const { logout } = useCustomerLogout();
   const router = useRouter();
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -41,22 +41,23 @@ const Navbar: React.FC = () => {
   }, [email]);
 
   useEffect(() => {
-    if (customerToken && Array.isArray(cartItems)) { // Check if cartItems is an array
+    if (customerToken && Array.isArray(cartItems)) {
+      // Check if cartItems is an array
       try {
         const totalItems = cartItems.length;
         setCartItemsCount(totalItems);
-  
+
         const total = cartItems.reduce((sum, item) => {
           if (!item) return sum; // Skip if item is undefined
-          
+
           // Calculate price based on number of sides
           const numberOfSides = item.designs?.length || 1;
           return sum + 100 * numberOfSides * (item.quantity || 1);
         }, 0);
-  
+
         setCartTotal(total);
       } catch (error) {
-        console.error('Error calculating cart totals:', error);
+        console.error("Error calculating cart totals:", error);
         // Set safe defaults if calculation fails
         setCartItemsCount(0);
         setCartTotal(0);
@@ -68,46 +69,41 @@ const Navbar: React.FC = () => {
     }
   }, [cartItems, customerToken]);
 
-  const designContext = React.useContext(DesignContext)
-  const { designs, dispatchDesign } = designContext || { designs: [], dispatchDesign: () => {} }
-  
-  // ... other state and hooks
+  const designContext = React.useContext(DesignContext);
+  const { designs, dispatchDesign } = designContext || {
+    designs: [],
+    dispatchDesign: () => {},
+  };
 
   const { switchToDesign } = useDesignSwitcher();
-  
-  const handleDesignClick = async (designState: IDesign, propsState: IProps, id: any) => {
-    console.log("Design clicked", designState); 
+
+  const handleDesignClick = async (
+    designState: IDesign,
+    propsState: IProps,
+    id: any
+  ) => {
+    console.log("Design clicked", designState);
     localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
-    localStorage.setItem('cart_id', id);
-    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState }); 
+    localStorage.setItem("cart_id", id);
+    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
 
-    window.location.reload()
-   
+    window.location.reload();
+
     const success = await switchToDesign(designState);
-    
-    if (success) { 
-     
+
+    if (success) {
       setIsCartOpen(false);
       // Force a small delay to ensure state updates are processed
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       // Optionally scroll to the canvas area
-      const canvasElement = document.querySelector('.canvas-container');
+      const canvasElement = document.querySelector(".canvas-container");
       if (canvasElement) {
-        canvasElement.scrollIntoView({ behavior: 'smooth' });
+        canvasElement.scrollIntoView({ behavior: "smooth" });
       }
-    } 
+    }
+  };
 
-   
-  };  
- 
-    
-    
-
-
-
-
-  
   // Toggle item expansion
   const toggleItemExpansion = (itemId: string) => {
     setExpandedItems((prev) => ({
@@ -126,13 +122,10 @@ const Navbar: React.FC = () => {
     const success = await deleteCart(cartId);
     if (success) {
       // Clear local cart state after successful API call
-      localStorage.removeItem('savedDesignState') 
-      localStorage.removeItem('cart_id')
+      localStorage.removeItem("savedDesignState");
+      localStorage.removeItem("cart_id");
       router.refresh();
-      // window.location.reload()
-      // Only clear local cart state after successful API call
       console.log("Cart item deleted successfully");
-
     } else {
       console.log("Failed to delete cart item");
     }
@@ -207,7 +200,7 @@ const Navbar: React.FC = () => {
   const handleViewCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (customerToken) {  
+    if (customerToken) {
       router.push("/cart");
     }
     closeAllMenus();
@@ -425,26 +418,69 @@ const Navbar: React.FC = () => {
                                                   style={{
                                                     backgroundColor:
                                                       design.apparel?.color,
-                                                      objectFit: "cover",
+                                                    objectFit: "cover",
                                                   }}
-                                                  
                                                 />
                                               </div>
                                               <div className="absolute inset-0 flex items-center justify-center">
-                                                <div className="relative w-1/2 h-1/2 translate-y-[-10%]">
-                                                  <Image
-                                                    src={
-                                                      design?.pngImage
-                                                    }
-                                                    alt={`Side ${
-                                                      index + 1
-                                                    } design`}
-                                                    fill
-                                                    
-                                                    className="rounded-md"
-                                                    onClick={() => handleDesignClick(item.designState,item.propsState, item.id)}
-                                                    style={{objectFit: 'contain'}}
-                                                  />
+                                                <div className="absolute inset-0 flex items-center justify-center">
+                                                  <div
+                                                    className="relative translate-y-[-10%]"
+                                                    style={{
+                                                      top:
+                                                        design.apparel.side ===
+                                                        "leftshoulder"
+                                                          ? "12px"
+                                                          : design.apparel
+                                                              .side ===
+                                                            "rightshoulder"
+                                                          ? "12px"
+                                                          : "initial",
+                                                      left:
+                                                        design.apparel.side ===
+                                                        "leftshoulder"
+                                                          ? "-3px"
+                                                          : design.apparel
+                                                              .side ===
+                                                            "rightshoulder"
+                                                          ? "2px"
+                                                          : "initial",
+                                                      width:
+                                                        design.apparel.side ===
+                                                          "leftshoulder" ||
+                                                        design.apparel.side ===
+                                                          "rightshoulder"
+                                                          ? "30%"
+                                                          : "50%",
+                                                      height:
+                                                        design.apparel.side ===
+                                                          "leftshoulder" ||
+                                                        design.apparel.side ===
+                                                          "rightshoulder"
+                                                          ? "30%"
+                                                          : "50%",
+                                                    }}
+                                                  >
+                                                    <Image
+                                                      src={design.pngImage}
+                                                      alt={`Thumbnail ${
+                                                        index + 1
+                                                      }`}
+                                                      fill
+                                                      sizes="100%"
+                                                      className="rounded-md"
+                                                      style={{
+                                                        objectFit: "contain",
+                                                      }}
+                                                      onClick={() =>
+                                                        handleDesignClick(
+                                                          item.designState,
+                                                          item.propsState,
+                                                          item.id
+                                                        )
+                                                      }
+                                                    />
+                                                  </div>
                                                 </div>
                                               </div>
                                             </div>

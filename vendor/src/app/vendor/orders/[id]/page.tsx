@@ -4,15 +4,9 @@ import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useGetOrder } from "@/app/hooks/orders/useGetOrder";
 import { BackButton } from "@/app/utils/backButton";
-import {
-  FiPackage,
-  FiCreditCard,
-  FiUser,
-  FiMail,
-  FiPhone,
-} from "react-icons/fi";
+import { FiMail } from "react-icons/fi";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
-import { ChevronLeft, ChevronRight } from "@medusajs/icons";
+import { ChevronDownMini, ChevronUpMini, User, Phone } from "@medusajs/icons";
 
 const OrderDetailsView = () => {
   const { id } = useParams();
@@ -26,7 +20,7 @@ const OrderDetailsView = () => {
     Record<string, "apparel" | "uploaded">
   >({});
   const [currentImageIndex, setCurrentImageIndex] = useState({});
-
+  const [showRawOrderData, setShowRawOrderData] = useState(false);
 
   const matchingCustomers = customers?.filter(
     (customer) => customer?.id === order?.customer_id
@@ -51,8 +45,6 @@ const OrderDetailsView = () => {
     setExpandedItem(expandedItem === index ? null : index);
   };
 
-   
-
   const handleThumbnailClick = (itemId: string, designIndex: number) => {
     setSelectedDesigns((prev) => ({
       ...prev,
@@ -61,23 +53,9 @@ const OrderDetailsView = () => {
   };
 
   const toggleImageType = (productId) => {
-    setSelectedImageType(prev => ({
+    setSelectedImageType((prev) => ({
       ...prev,
-      [productId]: prev[productId] === "apparel" ? "uploaded" : "apparel"
-    }));
-  };
-
-  const nextImage = (productId, maxLength) => {
-    setCurrentImageIndex(prev => ({
-      ...prev,
-      [productId]: (prev[productId] + 1) % maxLength
-    }));
-  };
-
-  const prevImage = (productId, maxLength) => {
-    setCurrentImageIndex(prev => ({
-      ...prev,
-      [productId]: prev[productId] === 0 ? maxLength - 1 : prev[productId] - 1
+      [productId]: prev[productId] === "apparel" ? "uploaded" : "apparel",
     }));
   };
 
@@ -140,178 +118,252 @@ const OrderDetailsView = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
-        {order.line_items.map((item, itemIndex) => {
-          const selectedDesignIndex = selectedDesigns[item.product_id] || 0;
-          const selectedDesign = item.designs[selectedDesignIndex];
-          const imageType = selectedImageType[item.product_id] || "apparel";
-          const hasUploadedImages = selectedDesign.uploadedImages?.length > 0;
-          const currentUploadedImageIndex = currentImageIndex[item.product_id] || 0;
+          <div className="lg:col-span-2 space-y-6">
+            {order.line_items.map((item, itemIndex) => {
+              const selectedDesignIndex = selectedDesigns[item.product_id] || 0;
+              const selectedDesign = item.designs[selectedDesignIndex];
+              const imageType = selectedImageType[item.product_id] || "apparel";
+              const hasUploadedImages =
+                selectedDesign.uploadedImages?.length > 0;
+              const currentUploadedImageIndex =
+                currentImageIndex[item.product_id] || 0;
 
-          return (
-            <div key={item.product_id} className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-medium mb-4">
-                Item {itemIndex + 1}
-              </h3>
+              return (
+                <div
+                  key={item.product_id}
+                  className="bg-white rounded-lg shadow p-6"
+                >
+                  <h3 className="text-lg font-medium mb-4">
+                    Item {itemIndex + 1}
+                  </h3>
 
-              <div className="flex flex-col md:flex-row gap-6">
-                {/* Main Design Display */}
-                <div className="relative w-full md:w-96 h-96 bg-gray-50 rounded-lg">
-                  {imageType === "apparel" ? (
-                    <>
-                      <Image
-                        src={selectedDesign.apparel.url}
-                        alt={`${selectedDesign.apparel.side} view`}
-                        layout="fill"
-                        objectFit="cover"
-                        className="rounded-lg"
-                        style={{
-                          backgroundColor: selectedDesign.apparel?.color,
-                        }}
-                       />
-                      {selectedDesign.pngImage && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="relative w-1/2 h-1/2">
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {/* Main Design Display */}
+                    <div className="relative w-full md:w-96 h-96 bg-gray-50 rounded-lg">
+                      {imageType === "apparel" ? (
+                        <>
+                          <Image
+                            src={selectedDesign.apparel.url}
+                            alt={`${selectedDesign.apparel.side} view`}
+                            fill
+                            sizes="100%"
+                            priority
+                            className="rounded-none border"
+                            style={{
+                              backgroundColor: selectedDesign.apparel?.color,
+                              objectFit: "cover",
+                            }}
+                          />
+                          {selectedDesign.pngImage && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div
+                                className="relative w-1/2 h-1/2"
+                                style={{
+                                  top:
+                                    selectedDesign.apparel.side ===
+                                    "leftshoulder"
+                                      ? "35px"
+                                      : selectedDesign.apparel.side ===
+                                        "rightshoulder"
+                                      ? "30px"
+                                      : "initial",
+                                  left:
+                                    selectedDesign.apparel.side ===
+                                    "leftshoulder"
+                                      ? "-10px"
+                                      : selectedDesign.apparel.side ===
+                                        "rightshoulder"
+                                      ? "8px"
+                                      : "initial",
+                                  width:
+                                    selectedDesign.apparel.side ===
+                                      "leftshoulder" ||
+                                    selectedDesign.apparel.side ===
+                                      "rightshoulder"
+                                      ? "30%"
+                                      : "50%",
+                                  height:
+                                    selectedDesign.apparel.side ===
+                                      "leftshoulder" ||
+                                    selectedDesign.apparel.side ===
+                                      "rightshoulder"
+                                      ? "30%"
+                                      : "50%",
+                                }}
+                              >
+                                <Image
+                                  src={selectedDesign.pngImage}
+                                  alt="Design"
+                                  fill
+                                  sizes="100%"
+                                  className="rounded-md"
+                                  style={{ objectFit: "contain" }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        hasUploadedImages && (
+                          <div className="relative w-full h-full">
                             <Image
-                              src={selectedDesign.pngImage}
-                              alt="Design overlay"
+                              src={
+                                selectedDesign.uploadedImages[
+                                  currentUploadedImageIndex
+                                ]
+                              }
+                              alt={`Uploaded design ${
+                                currentUploadedImageIndex + 1
+                              }`}
                               layout="fill"
                               objectFit="contain"
-                             />
+                              className="rounded-lg"
+                            />
                           </div>
-                        </div>
+                        )
                       )}
-                    </>
-                  ) : (
-                    hasUploadedImages && (
-                      <div className="relative w-full h-full">
-                        <Image
-                          src={selectedDesign.uploadedImages[currentUploadedImageIndex]}
-                          alt={`Uploaded design ${currentUploadedImageIndex + 1}`}
-                          layout="fill"
-                          objectFit="contain"
-                          className="rounded-lg"
-                         />
-                        
-                        {/* Navigation arrows */}
-                        {selectedDesign.uploadedImages.length > 1 && (
-                          <>
-                            {/* <button
-                              onClick={() => prevImage(item.product_id, selectedDesign.uploadedImages.length)}
-                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 hover:bg-white transition-colors"
-                            >
-                              <ChevronLeft className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => nextImage(item.product_id, selectedDesign.uploadedImages.length)}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 hover:bg-white transition-colors"
-                            >
-                              <ChevronRight className="w-4 h-4" />
-                            </button> */}
-                            
-                            {/* Image counter
-                            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/50 text-white px-2 py-1 rounded-full text-sm">
-                              {currentUploadedImageIndex + 1} / {selectedDesign.uploadedImages.length}
-                            </div> */}
-                          </>
-                        )}
-                      </div>
-                    )
-                  )}
-                </div>
+                    </div>
 
-                {/* Thumbnails and Image Type Toggle */}
-                <div className="space-y-4">
-                  <div className="flex flex-row md:flex-col gap-2">
-                    {item.designs.map((design, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleThumbnailClick(item.product_id, index)}
-                        className={`relative w-20 h-20 rounded-lg transition-all ${
-                          selectedDesignIndex === index
-                            ? "ring-2 ring-blue-500"
-                            : "hover:ring-2 hover:ring-gray-300"
-                        }`}
-                      >
-                        <Image
-                          src={design.apparel.url}
-                          alt={`${design.apparel.side} thumbnail`}
-                          layout="fill"
-                          objectFit="cover"
-                          className="rounded-lg"
-                          style={{
-                            backgroundColor: design.apparel?.color,
-                          }}
-                         />
-                        <span className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 text-center rounded-b-lg">
-                          {design.apparel.side}
-                        </span>
-                        {design.uploadedImages?.length > 0 && (
-                          <div className="absolute top-1 right-1 w-3 h-3 bg-blue-500 rounded-full" />
-                        )}
-                      </button>
-                    ))}
+                    {/* Thumbnails and Image Type Toggle */}
+                    <div className="space-y-4">
+                      <div className="flex flex-row md:flex-col gap-2">
+                        {item.designs.map((design, index) => (
+                          <button
+                            key={index}
+                            onClick={() =>
+                              handleThumbnailClick(item.product_id, index)
+                            }
+                            className={`relative w-20 h-20 rounded-lg transition-all ${
+                              selectedDesignIndex === index
+                                ? "ring-2 ring-blue-500"
+                                : "hover:ring-2 hover:ring-gray-300"
+                            }`}
+                          >
+                            <Image
+                              src={design.apparel?.url}
+                              alt={`Side: ${design.apparel.side}`}
+                              fill
+                              sizes="100%"
+                              priority
+                              className="rounded-none"
+                              style={{
+                                backgroundColor: design.apparel?.color,
+                                objectFit: "cover",
+                              }}
+                            />
+                            <span className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs py-1 text-center rounded-b-lg">
+                              {design.apparel.side}
+                            </span>
+                            {design.uploadedImages?.length > 0 && (
+                              <div className="absolute top-1 right-1 w-3 h-3  rounded-md" />
+                            )}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div
+                                className="relative translate-y-[-10%]"
+                                style={{
+                                  top:
+                                    design.apparel.side === "leftshoulder"
+                                      ? "12px"
+                                      : design.apparel.side === "rightshoulder"
+                                      ? "12px"
+                                      : "initial",
+                                  left:
+                                    design.apparel.side === "leftshoulder"
+                                      ? "-3px"
+                                      : design.apparel.side === "rightshoulder"
+                                      ? "2px"
+                                      : "initial",
+                                  width:
+                                    design.apparel.side === "leftshoulder" ||
+                                    design.apparel.side === "rightshoulder"
+                                      ? "30%"
+                                      : "50%",
+                                  height:
+                                    design.apparel.side === "leftshoulder" ||
+                                    design.apparel.side === "rightshoulder"
+                                      ? "30%"
+                                      : "50%",
+                                }}
+                              >
+                                <Image
+                                  src={design.pngImage}
+                                  alt={`Thumbnail ${index + 1}`}
+                                  fill
+                                  sizes="100%"
+                                  className="rounded-md"
+                                  style={{ objectFit: "contain" }}
+                                />
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      {hasUploadedImages && (
+                        <>
+                          <button
+                            onClick={() => toggleImageType(item.product_id)}
+                            className="w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                          >
+                            {imageType === "apparel"
+                              ? "Show Uploaded Design"
+                              : "Show Apparel Preview"}
+                          </button>
+
+                          {/* Uploaded Images Thumbnails */}
+                          {imageType === "uploaded" && (
+                            <div className="flex flex-wrap gap-2 mt-4">
+                              {selectedDesign.uploadedImages.map(
+                                (image, index) => (
+                                  <button
+                                    key={index}
+                                    onClick={() =>
+                                      setCurrentImageIndex((prev) => ({
+                                        ...prev,
+                                        [item.product_id]: index,
+                                      }))
+                                    }
+                                    className={`relative w-16 h-16 rounded-lg transition-all ${
+                                      currentUploadedImageIndex === index
+                                        ? "ring-2 ring-blue-500"
+                                        : "hover:ring-2 hover:ring-gray-300"
+                                    }`}
+                                  >
+                                    <Image
+                                      src={image}
+                                      alt={`Uploaded design thumbnail ${
+                                        index + 1
+                                      }`}
+                                      layout="fill"
+                                      objectFit="cover"
+                                      className="rounded-lg"
+                                    />
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </div>
 
-                  {hasUploadedImages && (
-                    <>
-                      <button
-                        onClick={() => toggleImageType(item.product_id)}
-                        className="w-full px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                      >
-                        {imageType === "apparel"
-                          ? "Show Uploaded Design"
-                          : "Show Apparel Preview"}
-                      </button>
-                      
-                      {/* Uploaded Images Thumbnails */}
-                      {imageType === "uploaded" && (
-                        <div className="flex flex-wrap gap-2 mt-4">
-                          {selectedDesign.uploadedImages.map((image, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setCurrentImageIndex(prev => ({
-                                ...prev,
-                                [item.product_id]: index
-                              }))}
-                              className={`relative w-16 h-16 rounded-lg transition-all ${
-                                currentUploadedImageIndex === index
-                                  ? "ring-2 ring-blue-500"
-                                  : "hover:ring-2 hover:ring-gray-300"
-                              }`}
-                            >
-                              <Image
-                                src={image}
-                                alt={`Uploaded design thumbnail ${index + 1}`}
-                                layout="fill"
-                                objectFit="cover"
-                                className="rounded-lg"
-                               />
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
+                  <div className="mt-4">
+                    <p className="text-sm text-gray-600">
+                      Quantity: {item.quantity}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Price: ${item.price.toFixed(2)}
+                    </p>
+                  </div>
                 </div>
-              </div>
+              );
+            })}
+          </div>
 
-              <div className="mt-4">
-                <p className="text-sm text-gray-600">
-                  Quantity: {item.quantity}
-                </p>
-                <p className="text-sm text-gray-600">
-                  Price: ${item.price.toFixed(2)}
-                </p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      
-      {/* Rest of the component remains the same */}
-      {/* Order Summary Sidebar */}
-      <div className="space-y-6">
+          {/* Rest of the component remains the same */}
+          {/* Order Summary Sidebar */}
+          <div className="space-y-6">
             {/* Customer Information */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
               <div className="p-4 sm:p-6">
@@ -323,7 +375,7 @@ const OrderDetailsView = () => {
                     matchingCustomers.map((customer, index) => (
                       <div key={index} className="space-y-2 sm:space-y-3">
                         <div className="flex items-center text-xs sm:text-sm">
-                          <FiUser className="text-gray-400 mr-2 flex-shrink-0" />
+                          <User className="text-gray-400 mr-2 flex-shrink-0" />
                           <span className="truncate">{`${customer.first_name} ${customer.last_name}`}</span>
                         </div>
                         <div className="flex flex-row items-center text-xs sm:text-sm">
@@ -331,7 +383,7 @@ const OrderDetailsView = () => {
                           <span className="truncate">{customer.email}</span>
                         </div>
                         <div className="flex items-center text-xs sm:text-sm">
-                          <FiPhone className="text-gray-400 mr-2 flex-shrink-0" />
+                          <Phone className="text-gray-400 mr-2 flex-shrink-0" />
                           <span className="truncate">{customer.phone}</span>
                         </div>
                       </div>
@@ -388,6 +440,30 @@ const OrderDetailsView = () => {
               </div>
             </div>
           </div>
+        </div>
+        {/* Raw Order Data Section */}
+        <div className="mb-6 mt-2 bg-white rounded-lg shadow-sm border border-gray-100 p-6">
+          <h2 className="text-2xl mb-2">Raw Order Details</h2>
+          <div className="flex flex-row justify-between">
+            <button
+              onClick={() => setShowRawOrderData(!showRawOrderData)}
+              className="flex items-center space-x-2 mt-4 px-4 py-2 text-slate-900 rounded-md hover:bg-gray-50"
+            >
+              <span className="text-sm text-gray-400">
+                .... ({Object.keys(order).length} items)
+              </span>
+              {showRawOrderData ? (
+                <ChevronUpMini className="h-4 w-4" />
+              ) : (
+                <ChevronDownMini className="h-4 w-4" />
+              )}
+            </button>
+          </div>
+          {showRawOrderData && (
+            <pre className="mt-4 p-4 bg-gray-100 rounded-md text-sm text-blue-800 overflow-auto">
+              {JSON.stringify(order, null, 2)}
+            </pre>
+          )}
         </div>
       </div>
     </div>
