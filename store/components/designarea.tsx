@@ -423,7 +423,9 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
-      router.refresh();
+      updateColor("#fff");
+      //router.refresh();
+      dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: "#fff" });
 
     }
  

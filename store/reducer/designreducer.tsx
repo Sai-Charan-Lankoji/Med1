@@ -46,7 +46,10 @@ export const designReducer = (
 
       case "CLEAR_ALL": {
         return designs.map(design => ({
-          apparel: design.apparel,
+          apparel: {
+            ...design.apparel,
+            color: "#fff", 
+          },
           id: design.id,
           items: [],
           jsonDesign: null,

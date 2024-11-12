@@ -92,6 +92,7 @@ export const DesignProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const clearSavedState = React.useCallback(() => {
     if (isClient) {
       localStorage.removeItem('savedDesignState');
+      setCurrentBgColor(defaultDesignState[0].apparel.color);
     }
   }, [isClient]);
 
