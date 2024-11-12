@@ -21,7 +21,7 @@ const Navbar: React.FC = () => {
   const [username, setUsername] = useState<string>(""); 
   const { logout } = useCustomerLogout();
   const router = useRouter();
-  const [isCartOpen, setIsCartOpen] = useState(true);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
@@ -107,7 +107,6 @@ const Navbar: React.FC = () => {
 
 
 
-
   
   // Toggle item expansion
   const toggleItemExpansion = (itemId: string) => {
@@ -126,8 +125,14 @@ const Navbar: React.FC = () => {
   const handleDeleteCart = async (cartId: string) => {
     const success = await deleteCart(cartId);
     if (success) {
+      // Clear local cart state after successful API call
+      localStorage.removeItem('savedDesignState') 
+      localStorage.removeItem('cart_id')
+      router.refresh();
+      // window.location.reload()
       // Only clear local cart state after successful API call
       console.log("Cart item deleted successfully");
+
     } else {
       console.log("Failed to delete cart item");
     }

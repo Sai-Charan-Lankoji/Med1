@@ -300,6 +300,8 @@ export default function DesignArea(): React.ReactElement {
     dispatchDesign({ type: "CLEAR_ALL" });
     localStorage.removeItem('savedDesignState');
     localStorage.removeItem('savedPropsState');
+    localStorage.removeItem('cart_id')
+  router.refresh();
   };
 
   const undo = (e: any) => {
@@ -425,6 +427,11 @@ export default function DesignArea(): React.ReactElement {
  
    
   };
+
+
+
+ 
+
 
   
 
