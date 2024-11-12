@@ -80,18 +80,24 @@ export default function DesignArea(): React.ReactElement {
   const { svgcolors, dispatchColorPicker } =
     React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
-  const { designs, dispatchDesign } = React.useContext(DesignContext)!;
+  const { designs, dispatchDesign, currentBgColor, updateColor } = React.useContext(DesignContext)!;
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
 
   const [canvas, setCanvas] = React.useState<fabric.Canvas>();
-  const [currentBgColor, setBgColor] = React.useState('');
+  //const [currentBgColor, setBgColor] = React.useState('');
   const [apparels, setApparels] = React.useState<IApparel[]>(designApparels);
-  const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
+  //const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
   let selectionCreated: fabric.Object[] | undefined;
   const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
   const [cartId, setCartId] = useState<any>();
+  const [colors, setColors] = React.useState<IBgcolor[]>(
+    bgColours.map(color => ({
+      ...color,
+      selected: color.value === currentBgColor
+    }))
+  );
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -221,7 +227,7 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({
         type: "STORE_DESIGN",
         currentDesign: design,
-        selectedApparal: apparel,
+        selectedApparal:  { ...apparel, color: currentBgColor },
         jsonDesign: canvas?.toJSON(),
         pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
         svgImage: canvas?.toSVG(),
@@ -241,8 +247,8 @@ export default function DesignArea(): React.ReactElement {
           : { ...color, selected: false }
       )
     );
-    setBgColor(value);
-    dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
+    updateColor(value);
+    //dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
   };
   // console.log("Json Design:", designs)
   const downloadDesignJson = (e: any) => {
