@@ -137,7 +137,7 @@ const OrderDetailsView = () => {
                     Item {itemIndex + 1}
                   </h3>
 
-                  <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex flex-col md:flex-row gap-6 justify-between">
                     {/* Main Design Display */}
                     <div className="relative w-full md:w-96 h-96 bg-gray-50 rounded-lg">
                       {imageType === "apparel" ? (
@@ -205,7 +205,7 @@ const OrderDetailsView = () => {
                         </>
                       ) : (
                         hasUploadedImages && (
-                          <div className="relative w-full h-full">
+                          <div className="relative w-full h-full ">
                             <Image
                               src={
                                 selectedDesign.uploadedImages[
@@ -378,8 +378,8 @@ const OrderDetailsView = () => {
                           <User className="text-gray-400 mr-2 flex-shrink-0" />
                           <span className="truncate">{`${customer.first_name} ${customer.last_name}`}</span>
                         </div>
-                        <div className="flex flex-row items-center text-xs sm:text-sm">
-                          <FiMail className="text-gray-400 mr-2 flex-shrink-0" />
+                        <div className="flex  items-center text-xs sm:text-sm">
+                          <FiMail className="text-gray-400 ml-1 mr-2 flex-shrink-0" />
                           <span className="truncate">{customer.email}</span>
                         </div>
                         <div className="flex items-center text-xs sm:text-sm">
