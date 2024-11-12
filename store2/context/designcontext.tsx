@@ -54,12 +54,15 @@ export const DesignContext = React.createContext<{
   dispatchDesign: React.Dispatch<DesignAction>;
   saveState: () => void;
   clearSavedState: () => void;
+  currentBgColor: string;
+  updateColor: (color: string) => void;
 } | null>(null);
 
 export const DesignProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { svgUrl } = useSvgContext();
   const [isClient, setIsClient] = React.useState(false);
   const [designs, dispatchDesign] = React.useReducer(designReducer, defaultDesignState);
+  const [currentBgColor, setCurrentBgColor] = React.useState<string>(defaultDesignState[0].apparel.color);
   
   // Handle hydration by waiting for client-side render
   React.useEffect(() => {
@@ -71,6 +74,9 @@ export const DesignProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       try {
         const parsedState = JSON.parse(savedState);
         dispatchDesign({ type: "UPLOADED_DESIGNS", payload: parsedState });
+        const activeDesign = parsedState.find((d: IDesign) => d.isactive);
+        if (activeDesign?.apparel?.color) {
+          setCurrentBgColor(activeDesign.apparel.color);}
       } catch (error) {
         console.error('Error loading design state:', error);
       }
@@ -89,6 +95,12 @@ export const DesignProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
   }, [isClient]);
 
+  const updateColor = React.useCallback((color: string) => {
+    setCurrentBgColor(color);
+    dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: color });
+  }, []);
+
+
   React.useEffect(() => {
     if (isClient && designs.some(design => design.jsonDesign !== null)) {
       saveState();
@@ -100,7 +112,9 @@ export const DesignProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       designs, 
       dispatchDesign, 
       saveState, 
-      clearSavedState 
+      clearSavedState ,
+      currentBgColor,
+      updateColor,
     }}>
       {children}
     </DesignContext.Provider>

@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react";
 //import { useCart } from "@/context/cartContext";
 import { useNewCart } from "../hooks/useNewCart";
 import { useUserContext } from "@/context/userContext";
@@ -11,6 +11,8 @@ import { FaTrash } from "react-icons/fa";
 import { useCreateOrder } from "../hooks/useCreateOrder";
 import { ChevronLeft, ChevronRight, XMarkMini } from "@medusajs/icons";
 import { ICartItem } from "@/@types/models";
+import { IDesign, IProps } from "@/@types/models";
+import { DesignContext } from "@/context/designcontext";
 
 interface OrderData {
   line_items: Array<{
@@ -42,6 +44,8 @@ const CartPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [itemToRemove, setItemToRemove] = useState<any | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
+  const designContext = React.useContext(DesignContext)
+  const { designs, dispatchDesign } = designContext || { designs: [], dispatchDesign: () => {} }
   const [selectedDesigns, setSelectedDesigns] = useState<
     Record<string, number>
   >({});
@@ -215,6 +219,31 @@ const CartPage = () => {
     return `${sides.join(", ")} & ${lastSide}`;
   };
 
+
+  const handleDesignClick = async (designState: IDesign, propsState: IProps, id: any) => {
+    console.log("Design clicked", designState); 
+    localStorage.setItem("savedDesignState", JSON.stringify(designState));
+    localStorage.setItem("savedPropsState", JSON.stringify(propsState));
+    localStorage.setItem('cart_id', id);
+    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState }); 
+
+    
+   
+    
+    
+    // Force a small delay to ensure state updates are processed
+    await new Promise(resolve => setTimeout(resolve, 100));
+    router.push("/");
+    // Optionally scroll to the canvas area
+    const canvasElement = document.querySelector('.canvas-container');
+    if (canvasElement) {
+      canvasElement.scrollIntoView({ behavior: 'smooth' });
+    }
+
+   
+  };  
+ 
+
   const handleThumbnailClick = (itemId: string, designIndex: number) => {
     setSelectedDesigns((prev) => ({
       ...prev,
@@ -296,127 +325,140 @@ const CartPage = () => {
                         <div className="flex flex-col md:flex-row gap-6">
                           {/* Product image and thumbnails */}
                           <div className="md:w-1/2">
-                            <div className="aspect-square relative rounded-lg overflow-hidden bg-gray-100">
-                              {viewMode === "apparel" ? (
-                                <>
-                                  {currentDesign?.apparel?.url && (
+                          {/* Main Image Section */}
+                          <div className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100" onClick={() => handleDesignClick(item.designState, item.propsState, item.id)}>
+                            {viewMode === "apparel" ? (
+                              <>
+                                <div className="absolute inset-0">
+                                  <Image
+                                    src={currentDesign.apparel.url}
+                                    alt={`Side: ${currentDesign.apparel.side}`}
+                                    fill
+                                    sizes="100%"
+                                    priority
+                                    className="rounded-none"
+                                    style={{
+                                      backgroundColor: currentDesign.apparel?.color,
+                                      objectFit: "cover"
+                                    }}
+                                  />
+                                </div>
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                  <div
+                                    className="relative translate-y-[-10%]"
+                                    style={{
+                                      top: currentDesign.apparel.side === "leftshoulder" ? '35px' : 
+                                          currentDesign.apparel.side === "rightshoulder" ? '30px' : 'initial',
+                                      left: currentDesign.apparel.side === "leftshoulder" ? '-10px' : 
+                                            currentDesign.apparel.side === "rightshoulder" ? '8px' : 'initial',
+                                      width: currentDesign.apparel.side === "leftshoulder" || 
+                                            currentDesign.apparel.side === "rightshoulder" ? '30%' : '50%',
+                                      height: currentDesign.apparel.side === "leftshoulder" || 
+                                              currentDesign.apparel.side === "rightshoulder" ? '30%' : '50%'
+                                    }}
+                                  >
+                                    <Image
+                                      src={currentDesign.pngImage}
+                                      alt="Design"
+                                      fill
+                                      sizes="100%"
+                                      className="rounded-md"
+                                      style={{ objectFit: 'contain' }}
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              hasUploadedImages &&
+                              currentDesign?.uploadedImages?.[currentUploadedImageIndex] && (
+                                <Image
+                                  src={currentDesign.uploadedImages[currentUploadedImageIndex]}
+                                  alt={`Uploaded image`}
+                                  fill
+                                  sizes="100%"
+                                  className="object-contain"
+                                />
+                              )
+                            )}
+                          </div>
+
+                          {/* Thumbnails */}
+                          <div className="mt-4 grid grid-cols-4 gap-2">
+                            {viewMode === "apparel"
+                              ? item.designs.map((design, index) => (
+                                  <div
+                                    key={index}
+                                    className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                      index === mainDesignIndex ? 'ring-2 ring-gray-700' : 'hover:ring-2 hover:ring-gray-300'
+                                    }`}
+                                    onClick={() => handleThumbnailClick(item.id, index)}
+                                  >
                                     <div className="absolute inset-0">
                                       <Image
-                                        src={currentDesign.apparel.url}
-                                        alt={`Side: ${currentDesign.apparel.side}`}
+                                        src={design.apparel?.url}
+                                        alt={`Side: ${design.apparel.side}`}
                                         fill
                                         sizes="100%"
                                         priority
-                                        className="object-cover"
+                                        className="rounded-none"
+                                        style={{
+                                          backgroundColor: design.apparel?.color,
+                                          objectFit: 'cover'
+                                        }}
                                       />
                                     </div>
-                                  )}
-                                  {currentDesign?.pngImage && (
                                     <div className="absolute inset-0 flex items-center justify-center">
-                                      <div
-                                        className="relative"
+                                      <div 
+                                        className="relative translate-y-[-10%]"
                                         style={{
-                                          width:
-                                            currentDesign?.apparel?.side ===
-                                              "leftshoulder" ||
-                                            currentDesign?.apparel?.side ===
-                                              "rightshoulder"
-                                              ? "30%"
-                                              : "50%",
-                                          height:
-                                            currentDesign?.apparel?.side ===
-                                              "leftshoulder" ||
-                                            currentDesign?.apparel?.side ===
-                                              "rightshoulder"
-                                              ? "30%"
-                                              : "50%",
+                                          top: design.apparel.side === "leftshoulder" ? '12px' : 
+                                              design.apparel.side === "rightshoulder" ? '12px' : 'initial',
+                                          left: design.apparel.side === "leftshoulder" ? '-3px' : 
+                                                design.apparel.side === "rightshoulder" ? '2px' : 'initial',
+                                          width: design.apparel.side === "leftshoulder" || 
+                                                design.apparel.side === "rightshoulder" ? '30%' : '50%',
+                                          height: design.apparel.side === "leftshoulder" || 
+                                                  design.apparel.side === "rightshoulder" ? '30%' : '50%'
                                         }}
                                       >
                                         <Image
-                                          src={currentDesign.pngImage}
-                                          alt="Design"
+                                          src={design.pngImage}
+                                          alt={`Thumbnail ${index + 1}`}
                                           fill
                                           sizes="100%"
-                                          className="object-contain"
+                                          className="rounded-md"
+                                          style={{ objectFit: 'contain' }}
                                         />
                                       </div>
                                     </div>
-                                  )}
-                                </>
-                              ) : (
-                                hasUploadedImages &&
-                                currentDesign?.uploadedImages?.[
-                                  currentUploadedImageIndex
-                                ] && (
-                                  <Image
-                                    src={
-                                      currentDesign.uploadedImages[
-                                        currentUploadedImageIndex
-                                      ]
+                                  </div>
+                                ))
+                              : currentDesign?.uploadedImages?.map((image, index) => (
+                                  <button
+                                    key={index}
+                                    className={`aspect-square relative rounded-md overflow-hidden ${
+                                      index === currentUploadedImageIndex
+                                        ? "ring-2 ring-black"
+                                        : "ring-1 ring-gray-200 hover:ring-gray-300"
+                                    }`}
+                                    onClick={() =>
+                                      setCurrentImageIndex((prev) => ({
+                                        ...prev,
+                                        [item.id]: index,
+                                      }))
                                     }
-                                    alt={`Uploaded image`}
-                                    fill
-                                    sizes="100%"
-                                    className="object-contain"
-                                  />
-                                )
-                              )}
-                            </div>
-
-                            {/* Thumbnails */}
-                            <div className="mt-4 grid grid-cols-4 gap-2">
-                              {viewMode === "apparel"
-                                ? item.designs.map((design, index) => (
-                                    <button
-                                      key={index}
-                                      className={`aspect-square relative rounded-md overflow-hidden ${
-                                        index === mainDesignIndex
-                                          ? "ring-2 ring-black"
-                                          : "ring-1 ring-gray-200 hover:ring-gray-300"
-                                      }`}
-                                      onClick={() =>
-                                        handleThumbnailClick(item.id, index)
-                                      }
-                                    >
-                                      {design.apparel?.url && (
-                                        <Image
-                                          src={design.apparel.url}
-                                          alt={`Side ${index + 1}`}
-                                          fill
-                                          sizes="100%"
-                                          className="object-cover"
-                                        />
-                                      )}
-                                    </button>
-                                  ))
-                                : currentDesign?.uploadedImages?.map(
-                                    (image, index) => (
-                                      <button
-                                        key={index}
-                                        className={`aspect-square relative rounded-md overflow-hidden ${
-                                          index === currentUploadedImageIndex
-                                            ? "ring-2 ring-black"
-                                            : "ring-1 ring-gray-200 hover:ring-gray-300"
-                                        }`}
-                                        onClick={() =>
-                                          setCurrentImageIndex((prev) => ({
-                                            ...prev,
-                                            [item.id]: index,
-                                          }))
-                                        }
-                                      >
-                                        <Image
-                                          src={image}
-                                          alt={`Upload ${index + 1}`}
-                                          fill
-                                          sizes="100%"
-                                          className="object-cover"
-                                        />
-                                      </button>
-                                    )
-                                  )}
-                            </div>
+                                  >
+                                    <Image
+                                      src={image}
+                                      alt={`Upload ${index + 1}`}
+                                      fill
+                                      sizes="100%"
+                                      className="object-cover"
+                                    />
+                                  </button>
+                                ))}
                           </div>
+                        </div>
 
                           {/* Product details */}
                           <div className="md:w-1/2 flex flex-col">

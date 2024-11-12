@@ -80,19 +80,24 @@ export default function DesignArea(): React.ReactElement {
   const { svgcolors, dispatchColorPicker } =
     React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
-  const { designs, dispatchDesign } = React.useContext(DesignContext)!;
-  console.log("PRAVEEN KUMAR: ", designs)
+  const { designs, dispatchDesign, currentBgColor, updateColor } = React.useContext(DesignContext)!;
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
 
   const [canvas, setCanvas] = React.useState<fabric.Canvas>();
-  const [currentBgColor, setBgColor] = React.useState('');
+  //const [currentBgColor, setBgColor] = React.useState('');
   const [apparels, setApparels] = React.useState<IApparel[]>(designApparels);
-  const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
+  //const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
   let selectionCreated: fabric.Object[] | undefined;
   const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
   const [cartId, setCartId] = useState<any>();
+  const [colors, setColors] = React.useState<IBgcolor[]>(
+    bgColours.map(color => ({
+      ...color,
+      selected: color.value === currentBgColor
+    }))
+  );
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -222,7 +227,7 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({
         type: "STORE_DESIGN",
         currentDesign: design,
-        selectedApparal: apparel,
+        selectedApparal:  { ...apparel, color: currentBgColor },
         jsonDesign: canvas?.toJSON(),
         pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
         svgImage: canvas?.toSVG(),
@@ -242,10 +247,10 @@ export default function DesignArea(): React.ReactElement {
           : { ...color, selected: false }
       )
     );
-    setBgColor(value);
-    dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
+    updateColor(value);
+    //dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
   };
-  console.log("Json Design:", designs)
+  // console.log("Json Design:", designs)
   const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
@@ -300,6 +305,8 @@ export default function DesignArea(): React.ReactElement {
     dispatchDesign({ type: "CLEAR_ALL" });
     localStorage.removeItem('savedDesignState');
     localStorage.removeItem('savedPropsState');
+    localStorage.removeItem('cart_id')
+  router.refresh();
   };
 
   const undo = (e: any) => {
@@ -340,7 +347,7 @@ export default function DesignArea(): React.ReactElement {
   const clearDesignObject = () => {};   
 
   const handleUpdateCart = async () => {
-    router.refresh();
+  
     const currentDesignState = designs.map(design => ({
       ...design,
       svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design 
@@ -348,9 +355,6 @@ export default function DesignArea(): React.ReactElement {
     }), 
     
   );
-
-  
-  
     // Get the current text props state for saving
     const currentPropsState = {
       ...props,
@@ -374,9 +378,8 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
-      window.location.reload()
-
-
+      router.refresh();
+    
     }
   }
 
@@ -420,11 +423,17 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
-      
+      router.refresh();
+
     }
  
    
   };
+
+
+
+ 
+
 
   
 

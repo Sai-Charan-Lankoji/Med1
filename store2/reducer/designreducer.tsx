@@ -124,9 +124,9 @@ export const designReducer = (
       );
       return designs;
     }
-    case "SWITCH_DESIGN": {
+  case "SWITCH_DESIGN": {
       designs = designs.map((a) =>
-        a.apparel.side === "front"
+        a.id === action.currentDesign?.id
           ? { ...a, isactive: true }
           : { ...a, isactive: false }
       );
