@@ -81,7 +81,6 @@ export default function DesignArea(): React.ReactElement {
     React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
   const { designs, dispatchDesign } = React.useContext(DesignContext)!;
-  console.log("PRAVEEN KUMAR: ", designs)
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
@@ -245,7 +244,7 @@ export default function DesignArea(): React.ReactElement {
     setBgColor(value);
     dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
   };
-  console.log("Json Design:", designs)
+  // console.log("Json Design:", designs)
   const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
@@ -342,7 +341,7 @@ export default function DesignArea(): React.ReactElement {
   const clearDesignObject = () => {};   
 
   const handleUpdateCart = async () => {
-    router.refresh();
+  
     const currentDesignState = designs.map(design => ({
       ...design,
       svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design 
@@ -350,9 +349,6 @@ export default function DesignArea(): React.ReactElement {
     }), 
     
   );
-
-  
-  
     // Get the current text props state for saving
     const currentPropsState = {
       ...props,
@@ -376,9 +372,8 @@ export default function DesignArea(): React.ReactElement {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
-      window.location.reload()
-
-
+      router.refresh();
+    
     }
   }
 
