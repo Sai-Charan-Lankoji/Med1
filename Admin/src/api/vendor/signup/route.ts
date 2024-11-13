@@ -2,6 +2,8 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import VendorService from "../../../services/vendor";
 import { Vendor } from "../../../models/vendor";
 import { Address } from "../../../models/address";
+import { User } from "../../../models/user";
+
 
 const getVendorService = (req: MedusaRequest): VendorService | null => {
   try {
@@ -78,6 +80,7 @@ export const POST = async (
     > & {
       vendorAddressData?: Partial<Address>;
       registrationAddressData?: Partial<Address>;
+      // userData?: Partial<User>;
     };
 
     // Validate required fields

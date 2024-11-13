@@ -8,9 +8,9 @@ class TestableVendorService extends VendorService {
     return this.vendorRepository_;
   }
 
-  public get userRepository() {
-    return this.userRepository_;
-  }
+  // public get userRepository() {
+  //   return this.userRepository_;
+  // }
 
   public get addressRepository() {
     return this.addressRepository_;
@@ -34,8 +34,6 @@ vendorService.runAtomicPhase = jest.fn((callback) => {
     withRepository: jest.fn((repo) => {
       if (repo === vendorService.vendorRepository) {
         return mockVendorRepository;
-      } else if (repo === vendorService.userRepository) {
-        return mockUserRepository;
       } else if (repo === vendorService.addressRepository) {
         return mockAddressRepository;
       }

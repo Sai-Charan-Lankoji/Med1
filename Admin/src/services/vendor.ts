@@ -8,18 +8,19 @@ import { EntityManager } from "typeorm";
 import VendorRepository from "../repositories/vendor";
 import { BusinessModel, Vendor } from "../models/vendor";
 import { MedusaError } from "@medusajs/utils";
-import UserRepository from "../repositories/user";
+import VendorUserRepository from "../repositories/vendor-user";
 import AddressRepository from "../repositories/address";
 import { Address } from "../models/address";
 import { User } from "../models/user";
 import bcrypt from "bcryptjs";
 import { compact, first, last } from "lodash";
+import { VendorUser } from "../models/vendor-user";
 
 
 class VendorService extends TransactionBaseService {
   protected manager_: EntityManager;
   protected vendorRepository_: typeof VendorRepository;
-  protected userRepository_: typeof UserRepository;
+  // protected vendoruserRepository_: typeof VendorUserRepository;
   protected addressRepository_: typeof AddressRepository;
 
   public runAtomicPhase<T>(
@@ -32,7 +33,7 @@ class VendorService extends TransactionBaseService {
     super(container);
     this.manager_ = container.manager;
     this.vendorRepository_ = container.vendorRepository;
-    this.userRepository_ = container.userRepository;
+    // this.vendoruserRepository_ = container.vendoruserRepository;
     this.addressRepository_ = container.addressRepository;
   }
 
@@ -129,24 +130,24 @@ class VendorService extends TransactionBaseService {
     > & {
       vendorAddressData?: Partial<Address>;
       registrationAddressData?: Partial<Address>;
-      userData?: Partial<User>;
+      // userData?: Partial<VendorUser>;
     }
   ): Promise<Vendor> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
-      const userRepo = manager.withRepository(this.userRepository_);
+      // const vendoruserRepo = manager.withRepository(this.vendoruserRepository_);
       const addressRepo = manager.withRepository(this.addressRepository_);
 
-      // Create User
-      let user;
-      if (data.userData) {
-        user = userRepo.create({
-          email: data.contact_email,
-          ...data.userData,
-        });
-        await userRepo.save(user);
-        data.user_id = user.id;
-      }
+      // // Create User
+      // let user;
+      // if (data.userData) {
+      //   user = vendoruserRepo.create({
+      //     email: data.contact_email,
+      //     ...data.userData,
+      //   });
+      //   await vendoruserRepo.save(user);
+      //   data.user_id = user.id;
+      // }
 
       // Hash the password and create Vendor
       const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -154,10 +155,10 @@ class VendorService extends TransactionBaseService {
       const vendor = await vendorRepo.createVendor(data);
 
       // Associate the User with the Vendor
-      if (user) {
-        user.vendor_id = vendor.id;
-        await userRepo.save(user);
-      }
+      // if (user) {
+      //   user.vendor_id = vendor.id;
+      //   await userRepo.save(user);
+      // }
 
       const vendorAddress1 = data.vendorAddressData.address_1 || "";
       const registrationAddress1 = data.registrationAddressData.address_1 || "";
@@ -224,7 +225,7 @@ class VendorService extends TransactionBaseService {
   ): Promise<Vendor> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
-      const userRepo = manager.withRepository(this.userRepository_);
+      // const userRepo = manager.withRepository(this.userRepository_);
       const addressRepo = manager.withRepository(this.addressRepository_);
 
       let vendor = await vendorRepo.getVendor(id);
@@ -239,19 +240,19 @@ class VendorService extends TransactionBaseService {
       vendor = await vendorRepo.updateVendor(id, data);
 
       // Update user data if provided
-      if (vendor.user_id) {
-        const user = await userRepo.findOne({ where: { id: vendor.user_id } });
+      // if (vendor.user_id) {
+      //   const user = await userRepo.findOne({ where: { id: vendor.user_id } });
 
-        if (!user) {
-          throw new MedusaError(
-            MedusaError.Types.NOT_FOUND,
-            `User with id ${vendor.user_id} not found.`
-          );
-        }
+      //   if (!user) {
+      //     throw new MedusaError(
+      //       MedusaError.Types.NOT_FOUND,
+      //       `User with id ${vendor.user_id} not found.`
+      //     );
+      //   }
 
-        Object.assign(user, { ...data.userData, email: vendor.contact_email });
-        await userRepo.save(user);
-      }
+      //   Object.assign(user, { ...data.userData, email: vendor.contact_email });
+      //   await userRepo.save(user);
+      // }
 
       // Update address data if provided
       if (vendor.id) {
@@ -318,7 +319,7 @@ class VendorService extends TransactionBaseService {
   async delete(id: string): Promise<void> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
-      const userRepo = manager.withRepository(this.userRepository_);
+      // const userRepo = manager.withRepository(this.userRepository_);
       const addressRepo = manager.withRepository(this.addressRepository_);
 
       const vendor = await vendorRepo.findOne({ where: { id } });
@@ -328,9 +329,9 @@ class VendorService extends TransactionBaseService {
       }
 
       // Delete associated user
-      if (vendor.user_id) {
-        await userRepo.delete({ id: vendor.user_id });
-      }
+      // if (vendor.user_id) {
+      //   await userRepo.delete({ id: vendor.user_id });
+      // }
 
       // Delete associated address
       if (vendor.id) {

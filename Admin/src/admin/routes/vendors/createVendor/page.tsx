@@ -44,7 +44,6 @@ const VendorNew: React.FC<VendorNewProps> = ({
       last_name: "",
       phone: "",
       province: "",
-      // country_code: "",
     },
     registrationAddressData: {
       address_1: "",
@@ -52,14 +51,7 @@ const VendorNew: React.FC<VendorNewProps> = ({
       city: "",
       postal_code: "",
       province: "",
-      // country_code: "",
       phone: "",
-    },
-    userData: {
-      first_name: "",
-      last_name: "",
-      password: "",
-      role: "",
     },
   });
 
@@ -71,16 +63,6 @@ const VendorNew: React.FC<VendorNewProps> = ({
     }));
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      userData: {
-        ...prevState.userData,
-        [name]: value,
-      },
-    }));
-  };
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target;
@@ -104,16 +86,6 @@ const VendorNew: React.FC<VendorNewProps> = ({
     }));
   };
 
-  const handleUserChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      userData: {
-        ...prevData.userData,
-        [name]: value,
-      },
-    }));
-  };
 
   const navigate = useNavigate();
 
@@ -131,6 +103,8 @@ const VendorNew: React.FC<VendorNewProps> = ({
       if (!response.ok) {
         throw new Error(`Failed to create vendor: ${response.status}`);
       }
+
+      window.open("http://localhost:8009","_blank")
       toast.success("Success", {
         description: "Vendor Created Successfully",
         duration: 1000,
@@ -494,72 +468,6 @@ const VendorNew: React.FC<VendorNewProps> = ({
                       </div>
                     </div>
                   </div>
-                </div>
-
-                <div className="border-b pb-4">
-                  <h3 className="text-lg font-semibold mb-2">User Details</h3>
-                  <Container className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="user_first_name">
-                        First Name<span className="text-red-700">*</span>{" "}
-                      </Label>
-                      <InputField
-                        type="text"
-                        id="user_first_name"
-                        placeholder="First Name"
-                        name="first_name"
-                        value={formData.userData.first_name}
-                        onChange={handleUserChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="user_last_name">Last Name</Label>
-                      <InputField
-                        type="text"
-                        id="user_last_name"
-                        placeholder="Last Name"
-                        name="last_name"
-                        value={formData.userData.last_name}
-                        onChange={handleUserChange}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="user_password">
-                        Password<span className="text-red-700">*</span>
-                      </Label>
-                      <InputField
-                        type="password"
-                        id="user_password"
-                        placeholder="Password"
-                        name="password"
-                        value={formData.userData.password}
-                        onChange={handleUserChange}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="role"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        Role<span className="text-red-700">*</span>
-                      </label>
-                      <select
-                        id="role"
-                        name="role"
-                        value={formData.userData.role}
-                        onChange={handleInputChange}
-                        required
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                      >
-                        <option value="">Select Role</option>
-                        <option value="admin">Admin</option>
-                        <option value="member">Member</option>
-                        <option value="developer">Developer</option>
-                      </select>
-                    </div>
-                  </Container>
                 </div>
 
                 <div className="flex justify-end space-x-4 pt-4">
