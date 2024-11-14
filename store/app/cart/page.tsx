@@ -305,7 +305,7 @@ const CartPage = () => {
           <div className="flex-1">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="p-6 border-b border-gray-100">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">
                   Shopping Cart
                 </h1>
                 {cartItems.length > 0 && (
