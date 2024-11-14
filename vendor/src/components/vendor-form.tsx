@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
   Container,
@@ -11,88 +14,67 @@ import {
 } from "@medusajs/ui";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
- import { Card, CardHeader, CardContent } from '@/components/ui/card';
- import { Building2, MapPin, BadgeCheck } from 'lucide-react';
-const BusinessTypes = [
-    {
-        value: "Apparel Design",
-        label: "Apparel Design",
-      },
-      {
-        value: "Grocery Store",
-        label: "Grocery Store",
-      },
-      {
-        value: "Paper Design Printing",
-        label: "Paper Design Printing",
-      },
-] 
+import { Card, CardHeader, CardContent } from "@/components/ui/card";
+import { Building2, MapPin, BadgeCheck } from "lucide-react";
 
+const BusinessTypes = [
+  {
+    value: "Apparel Design",
+    label: "Apparel Design",
+  },
+  {
+    value: "Grocery Store",
+    label: "Grocery Store",
+  },
+  {
+    value: "Paper Design Printing",
+    label: "Paper Design Printing",
+  },
+];
+
+const VendorFormSchema = z.object({
+  company_name: z.string().nonempty("Company name is "),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+  contact_name: z.string().nonempty("Contact name is "),
+  contact_email: z.string().email("Invalid email address"),
+  contact_phone_number: z.string().nonempty("Contact number is "),
+  registered_number: z.string().optional(),
+  tax_number: z.string().optional(),
+  business_type: z.string().nonempty("Business type is "),
+  vendorAddressData: z.object({
+    address_1: z.string().nonempty("Address 1 is "),
+    address_2: z.string().optional(),
+    city: z.string().nonempty("City is "),
+    postal_code: z.string().nonempty("Postal code is "),
+    first_name: z.string().nonempty("First name is "),
+    last_name: z.string().optional(),
+    phone: z.string().nonempty("Phone is "),
+    province: z.string().nonempty("Province is "),
+  }),
+  registrationAddressData: z.object({
+    address_1: z.string().nonempty("Address 1 is "),
+    address_2: z.string().optional(),
+    city: z.string().nonempty("City is "),
+    postal_code: z.string().nonempty("Postal code is "),
+    province: z.string().nonempty("Province is "),
+    phone: z.string().nonempty("Phone is "),
+  }),
+});
+
+type VendorFormData = z.infer<typeof VendorFormSchema>;
 
 const VendorForm = ({ plan }: { plan: string }) => {
-  const [formData, setFormData] = useState({
-    company_name: "",
-    password: "",
-    contact_name: "",
-    contact_email: "",
-    contact_phone_number: "",
-    registered_number: "",
-    tax_number: "",
-    business_type: "",
-    vendorAddressData: {
-      address_1: "",
-      address_2: "",
-      city: "",
-      postal_code: "",
-      first_name: "",
-      last_name: "",
-      phone: "",
-      province: "",
-    },
-    registrationAddressData: {
-      address_1: "",
-      address_2: "",
-      city: "",
-      postal_code: "",
-      province: "",
-      phone: "",
-    },
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<VendorFormData>({
+    resolver: zodResolver(VendorFormSchema),
   });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      vendorAddressData: {
-        ...prevData.vendorAddressData,
-        [name]: value,
-      },
-    }));
-  };
-
-  const handleRegistrationAddressChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({
-      ...prevData,
-      registrationAddressData: {
-        ...prevData.registrationAddressData,
-        [name]: value,
-      },
-    }));
-  };
 
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const onSubmit: SubmitHandler<VendorFormData> = async (data) => {
     try {
       const response = await fetch("http://localhost:9000/vendor/signup", {
         method: "POST",
@@ -100,7 +82,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
       if (!response.ok) {
         throw new Error(`Failed to create vendor: ${response.status}`);
@@ -109,7 +91,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
         description: "Vendor Created Successfully",
         duration: 1000,
       });
-      router.push('/login')
+      router.push("/login");
     } catch (error: any) {
       console.error("Error:", error);
       toast.error("Error", {
@@ -117,8 +99,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
         duration: 1000,
       });
     }
-  }; 
-
+  };
 
   return (
     <div className="min-h-screen bg-gray-50/50 py-8 px-4 sm:px-6 lg:px-8">
@@ -126,13 +107,17 @@ const VendorForm = ({ plan }: { plan: string }) => {
         <div className="space-y-8">
           {/* Header Section */}
           <div className="text-center space-y-3">
-            <Heading className="text-3xl font-bold tracking-tight">Create Vendor</Heading>
+            <Heading className="text-3xl font-bold tracking-tight">
+              Create Vendor
+            </Heading>
             <Text className="text-muted-foreground max-w-2xl mx-auto">
-              You selected the <span className="font-medium text-primary">{plan}</span> plan. Please fill in your business details below.
+              You selected the{" "}
+              <span className="font-medium text-primary">{plan}</span> plan.
+              Please fill in your business details below.
             </Text>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             {/* Vendor Details Card */}
             <Card className="shadow-sm">
               <CardHeader className="border-b">
@@ -151,12 +136,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
                       type="text"
                       id="company_name"
                       placeholder="Enter company name"
-                      name="company_name"
-                      value={formData.company_name}
-                      onChange={handleChange}
-                      required
+                      {...register("company_name")}
                       className="transition-all"
-                    />
+                     />
+                    <Text className="text-red-500">{errors.company_name?.message}</Text>
                   </div>
 
                   <div className="space-y-2">
@@ -167,12 +150,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
                       type="password"
                       id="vendor_password"
                       placeholder="Enter password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      className="transition-all"
+                      {...register("password")}
+                       className="transition-all"
                     />
+                    <Text className="text-red-500">{errors.password?.message}</Text>
                   </div>
 
                   <div className="space-y-2">
@@ -183,12 +164,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
                       type="text"
                       placeholder="Enter contact name"
                       id="contact_name"
-                      name="contact_name"
-                      value={formData.contact_name}
-                      onChange={handleChange}
-                      required
+                      {...register("contact_name")}
                       className="transition-all"
                     />
+                    <Text className="text-red-500">{errors.contact_name?.message}</Text>
                   </div>
 
                   <div className="space-y-2">
@@ -199,12 +178,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
                       type="email"
                       id="contact_email"
                       placeholder="Enter email address"
-                      name="contact_email"
-                      value={formData.contact_email}
-                      onChange={handleChange}
-                      required
+                      {...register("contact_email")}
                       className="transition-all"
                     />
+                    <Text className="text-red-500">{errors.contact_email?.message}</Text>
                   </div>
 
                   <div className="space-y-2">
@@ -215,12 +192,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
                       type="tel"
                       id="contact_phone_number"
                       placeholder="Enter contact number"
-                      name="contact_phone_number"
-                      value={formData.contact_phone_number}
-                      onChange={handleChange}
-                      required
+                      {...register("contact_phone_number")}
                       className="transition-all"
                     />
+                    <Text className="text-red-500">{errors.contact_phone_number?.message}</Text>
                   </div>
 
                   <div className="space-y-2">
@@ -230,18 +205,18 @@ const VendorForm = ({ plan }: { plan: string }) => {
                     <select
                       className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       id="business_type"
-                      name="business_type"
-                      onChange={handleChange}
-                      value={formData.business_type}
-                      required
+                      {...register("business_type")}
                     >
-                      <option value="" disabled>Select Business Type</option>
+                      <option value="" disabled>
+                        Select Business Type
+                      </option>
                       {BusinessTypes?.map((item, index) => (
                         <option key={index} value={item.value}>
                           {item.label}
                         </option>
                       ))}
                     </select>
+                    <Text className="text-red-500">{errors.business_type?.message}</Text>
                   </div>
 
                   <div className="space-y-2">
@@ -250,11 +225,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
                       type="text"
                       id="registered_number"
                       placeholder="Enter registered number"
-                      name="registered_number"
-                      value={formData.registered_number}
-                      onChange={handleChange}
+                      {...register("registered_number")}
                       className="transition-all"
                     />
+                    <Text className="text-red-500">{errors.registered_number?.message}</Text>
                   </div>
 
                   <div className="space-y-2">
@@ -263,11 +237,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
                       type="text"
                       id="tax_number"
                       placeholder="Enter tax number"
-                      name="tax_number"
-                      value={formData.tax_number}
-                      onChange={handleChange}
+                      {...register("tax_number")}
                       className="transition-all"
                     />
+                    <Text className="text-red-500">{errors.tax_number?.message}</Text>
                   </div>
                 </div>
               </CardContent>
@@ -296,27 +269,22 @@ const VendorForm = ({ plan }: { plan: string }) => {
                         </Label>
                         <Textarea
                           id="vendor_address_1"
-                          name="address_1"
-                          placeholder="Enter address line 1"
-                          value={formData.vendorAddressData.address_1}
-                          onChange={handleAddressChange}
+                          {...register("vendorAddressData.address_1")}
+                           placeholder="Enter address line 1"
                           className="min-h-[100px] transition-all"
                         />
+                        <Text className="text-red-500">{errors.vendorAddressData?.address_1?.message}</Text>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="vendor_address_2">
-                          Address 2 
-                        </Label>
+                        <Label htmlFor="vendor_address_2">Address 2</Label>
                         <Textarea
                           id="vendor_address_2"
-                          name="address_2"
+                          {...register("vendorAddressData.address_2")}
                           placeholder="Enter address line 2"
-                          value={formData.vendorAddressData.address_2}
-                          onChange={handleAddressChange}
                           className="min-h-[100px] transition-all"
                         />
                       </div>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="vendor_city">
@@ -325,12 +293,11 @@ const VendorForm = ({ plan }: { plan: string }) => {
                           <Input
                             type="text"
                             id="vendor_city"
-                            name="city"
+                            {...register("vendorAddressData.city")}
                             placeholder="Enter city"
-                            value={formData.vendorAddressData.city}
-                            onChange={handleAddressChange}
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.vendorAddressData?.city?.message}</Text>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="vendor_province">
@@ -339,13 +306,11 @@ const VendorForm = ({ plan }: { plan: string }) => {
                           <Input
                             type="text"
                             id="vendor_province"
-                            name="province"
+                            {...register("vendorAddressData.province")}
                             placeholder="Enter province"
-                            value={formData.vendorAddressData.province}
-                            onChange={handleAddressChange}
-                            required
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.vendorAddressData?.province?.message}</Text>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="vendor_first_name">
@@ -354,25 +319,19 @@ const VendorForm = ({ plan }: { plan: string }) => {
                           <Input
                             type="text"
                             id="vendor_first_name"
-                            name="first_name"
+                            {...register("vendorAddressData.first_name")}
                             placeholder="Enter firstName"
-                            value={formData.vendorAddressData.first_name}
-                            onChange={handleAddressChange}
-                            required
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.vendorAddressData?.first_name?.message}</Text>
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="vendor_last_name">
-                            LastName 
-                          </Label>
+                          <Label htmlFor="vendor_last_name">LastName</Label>
                           <Input
                             type="text"
                             id="vendor_last_name"
-                            name="last_name"
+                            {...register("vendorAddressData.last_name")}
                             placeholder="Enter lastName"
-                            value={formData.vendorAddressData.last_name}
-                            onChange={handleAddressChange}
                             className="transition-all"
                           />
                         </div>
@@ -386,13 +345,11 @@ const VendorForm = ({ plan }: { plan: string }) => {
                           <Input
                             type="text"
                             id="vendor_postal_code"
-                            name="postal_code"
+                            {...register("vendorAddressData.postal_code")}
                             placeholder="Enter postal code"
-                            value={formData.vendorAddressData.postal_code}
-                            onChange={handleAddressChange}
-                            required
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.vendorAddressData?.postal_code?.message}</Text>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="vendor_phone">
@@ -401,13 +358,11 @@ const VendorForm = ({ plan }: { plan: string }) => {
                           <Input
                             type="tel"
                             id="vendor_phone"
-                            name="phone"
+                            {...register("vendorAddressData.phone")}
                             placeholder="Enter phone number"
-                            value={formData.vendorAddressData.phone}
-                            onChange={handleAddressChange}
-                            required
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.vendorAddressData?.phone?.message}</Text>
                         </div>
                       </div>
                     </div>
@@ -422,16 +377,17 @@ const VendorForm = ({ plan }: { plan: string }) => {
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="registration_address_1">
-                          Address 1<span className="text-red-500 ml-0.5">*</span>
+                          Address 1
+                          <span className="text-red-500 ml-0.5">*</span>
                         </Label>
                         <Textarea
                           id="registration_address_1"
                           name="address_1"
                           placeholder="Enter address line 1"
-                          value={formData.registrationAddressData.address_1}
-                          onChange={handleRegistrationAddressChange}
+                          {...register('registrationAddressData.address_1')}
                           className="min-h-[100px] transition-all"
                         />
+                        <Text className="text-red-500">{errors.registrationAddressData?.address_1?.message}</Text>
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="registration_address_2">
@@ -441,8 +397,6 @@ const VendorForm = ({ plan }: { plan: string }) => {
                           id="registration_address_2"
                           name="address_2"
                           placeholder="Enter address line 2"
-                          value={formData.registrationAddressData.address_2}
-                          onChange={handleAddressChange}
                           className="min-h-[100px] transition-all"
                         />
                       </div>
@@ -456,43 +410,45 @@ const VendorForm = ({ plan }: { plan: string }) => {
                             id="registration_city"
                             name="city"
                             placeholder="Enter city"
-                            value={formData.registrationAddressData.city}
-                            onChange={handleRegistrationAddressChange}
+                            {...register('registrationAddressData.city')}
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.registrationAddressData?.city?.message}</Text>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="registration_province">
-                            Province<span className="text-red-500 ml-0.5">*</span>
+                            Province
+                            <span className="text-red-500 ml-0.5">*</span>
                           </Label>
                           <Input
                             type="text"
                             id="registration_province"
                             name="province"
                             placeholder="Enter province"
-                            value={formData.registrationAddressData.province}
-                            onChange={handleRegistrationAddressChange}
-                            required
+                            {...register('registrationAddressData.province')}
+                            
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.registrationAddressData?.province?.message}</Text>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <Label htmlFor="registration_postal_code">
-                            Postal Code<span className="text-red-500 ml-0.5">*</span>
+                            Postal Code
+                            <span className="text-red-500 ml-0.5">*</span>
                           </Label>
                           <Input
                             type="text"
                             id="registration_postal_code"
                             name="postal_code"
                             placeholder="Enter postal code"
-                            value={formData.registrationAddressData.postal_code}
-                            onChange={handleRegistrationAddressChange}
-                            required
+                            {...register('registrationAddressData.postal_code')}
+                            
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.registrationAddressData?.postal_code?.message}</Text>
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="registration_phone">
@@ -503,11 +459,11 @@ const VendorForm = ({ plan }: { plan: string }) => {
                             id="registration_phone"
                             name="phone"
                             placeholder="Enter phone number"
-                            value={formData.registrationAddressData.phone}
-                            onChange={handleRegistrationAddressChange}
-                            required
+                            {...register('registrationAddressData.phone')}
+                            
                             className="transition-all"
                           />
+                          <Text className="text-red-500">{errors.registrationAddressData?.phone?.message}</Text>
                         </div>
                       </div>
                     </div>
@@ -518,10 +474,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
 
             {/* Submit Button */}
             <div className="flex justify-end space-x-4 pt-4">
-              <Button 
-                type="submit" 
-                className="px-8 py-2.5"
-              >
+              <Button type="submit" className="px-8 py-2.5">
                 Create Vendor
               </Button>
             </div>
