@@ -33,7 +33,8 @@ interface OrderData {
 }
 
 const CartPage = () => {
-  const { cartItems, deleteCart, updateCartQuantity, clearCart } = useNewCart();
+  const { cartItems, deleteCart, updateCartQuantity, clearCart, loading } =
+    useNewCart();
   const { customerToken } = useUserContext();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,10 +44,19 @@ const CartPage = () => {
   const [itemToRemove, setItemToRemove] = useState<any | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
   const designContext = React.useContext(DesignContext);
-  const { designs, dispatchDesign } = designContext || { designs: [], dispatchDesign: () => {} };
-  const [selectedDesigns, setSelectedDesigns] = useState<Record<string, number>>({});
-  const [currentImageIndex, setCurrentImageIndex] = useState<Record<string, number>>({});
-  const [imageViewMode, setImageViewMode] = useState<Record<string, "apparel" | "uploaded">>({});
+  const { designs, dispatchDesign } = designContext || {
+    designs: [],
+    dispatchDesign: () => {},
+  };
+  const [selectedDesigns, setSelectedDesigns] = useState<
+    Record<string, number>
+  >({});
+  const [currentImageIndex, setCurrentImageIndex] = useState<
+    Record<string, number>
+  >({});
+  const [imageViewMode, setImageViewMode] = useState<
+    Record<string, "apparel" | "uploaded">
+  >({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const toggleViewMode = (itemId: string) => {
@@ -57,7 +67,7 @@ const CartPage = () => {
   };
 
   const handleItemSelect = (itemId: string) => {
-    setSelectedItems(prev => {
+    setSelectedItems((prev) => {
       const newSelected = new Set(prev);
       if (newSelected.has(itemId)) {
         newSelected.delete(itemId);
@@ -68,10 +78,21 @@ const CartPage = () => {
     });
   };
 
+  const handleSelectAll = () => {
+    setSelectedItems((prev) => {
+      // If all items are selected, unselect all
+      if (prev.size === cartItems.length) {
+        return new Set();
+      }
+      // Otherwise, select all items
+      return new Set(cartItems.map((item) => item.id));
+    });
+  };
+
   const handleDeleteCart = async (cartId: string) => {
     const success = await deleteCart(cartId);
     if (success) {
-      setSelectedItems(prev => {
+      setSelectedItems((prev) => {
         const newSelected = new Set(prev);
         newSelected.delete(cartId);
         return newSelected;
@@ -136,12 +157,14 @@ const CartPage = () => {
   };
 
   const calculateSelectedTotals = () => {
-    const selectedCartItems = cartItems.filter(item => selectedItems.has(item.id));
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedItems.has(item.id)
+    );
     const subtotal = selectedCartItems.reduce((total, item) => {
       const numberOfSides = item.designs ? item.designs.length : 1;
       return total + 100 * numberOfSides * item.quantity;
     }, 0);
-    
+
     const shippingCost = 0;
     const taxRate = 0.1;
     const taxAmount = subtotal * taxRate;
@@ -160,7 +183,9 @@ const CartPage = () => {
     setIsProcessingOrder(true);
     setError(null);
 
-    const selectedCartItems = cartItems.filter(item => selectedItems.has(item.id));
+    const selectedCartItems = cartItems.filter((item) =>
+      selectedItems.has(item.id)
+    );
     const { total } = calculateSelectedTotals();
 
     const orderData: OrderData = {
@@ -189,7 +214,7 @@ const CartPage = () => {
           for (const itemId of selectedItems) {
             await deleteCart(itemId);
           }
-          setSelectedItems(new Set()); // Clear selections
+          setSelectedItems(new Set()); 
           router.push("./order-confirmation");
         } catch (err) {
           console.error("Error processing order:", err);
@@ -220,18 +245,22 @@ const CartPage = () => {
     return `${sides.join(", ")} & ${lastSide}`;
   };
 
-  const handleDesignClick = async (designState: IDesign, propsState: IProps, id: any) => {
+  const handleDesignClick = async (
+    designState: IDesign,
+    propsState: IProps,
+    id: any
+  ) => {
     localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
-    localStorage.setItem('cart_id', id);
-    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState }); 
-    
-    await new Promise(resolve => setTimeout(resolve, 100));
+    localStorage.setItem("cart_id", id);
+    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
     router.push("/");
 
-    const canvasElement = document.querySelector('.canvas-container');
+    const canvasElement = document.querySelector(".canvas-container");
     if (canvasElement) {
-      canvasElement.scrollIntoView({ behavior: 'smooth' });
+      canvasElement.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -242,7 +271,8 @@ const CartPage = () => {
     }));
   };
 
-
+  const isAllSelected =
+    cartItems.length > 0 && selectedItems.size === cartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -252,8 +282,12 @@ const CartPage = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="text-center sm:text-left">
-                <h2 className="text-lg font-semibold">Already have an account?</h2>
-                <p className="text-blue-100">Sign in for a better experience.</p>
+                <h2 className="text-lg font-semibold">
+                  Already have an account?
+                </h2>
+                <p className="text-blue-100">
+                  Sign in for a better experience.
+                </p>
               </div>
               <Link href="/auth">
                 <button className="bg-white text-blue-600 px-6 py-2 rounded-md hover:bg-blue-50 transition duration-200 font-medium">
@@ -271,7 +305,29 @@ const CartPage = () => {
           <div className="flex-1">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="p-6 border-b border-gray-100">
-                <h1 className="text-2xl font-bold text-gray-900">Shopping Cart</h1>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Shopping Cart
+                </h1>
+                {cartItems.length > 0 && (
+               <div className="flex justify-between space-x-4">
+               <button
+                 onClick={handleSelectAll}
+                 className="px-4 py-2 text-sm font-medium text-gray-600 bg-blue-100 rounded hover:bg-blue-200 hover:text-gray-800 transition-colors"
+               >
+                 {isAllSelected ? "Unselect All" : "Select All"}
+               </button>
+               
+               <button
+                 onClick={handleClearCart}
+                 className={`px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 transition-colors ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                 disabled={loading}
+               >
+                 {loading ? "Clearing..." : "Clear Cart"}
+               </button>
+             </div>
+             
+              
+                )}
               </div>
 
               {cartItems.length === 0 ? (
@@ -297,13 +353,18 @@ const CartPage = () => {
                   {cartItems.map((item) => {
                     if (!item.designs?.length) return null;
 
-                    const pricePerItem = item.designs ? item.designs.length * 100 : 100;
+                    const pricePerItem = item.designs
+                      ? item.designs.length * 100
+                      : 100;
                     const itemTotal = pricePerItem * item.quantity;
                     const mainDesignIndex = selectedDesigns[item.id] || 0;
                     const currentDesign = item.designs[mainDesignIndex];
-                    const currentUploadedImageIndex = currentImageIndex[item.id] || 0;
+                    const currentUploadedImageIndex =
+                      currentImageIndex[item.id] || 0;
                     const viewMode = imageViewMode[item.id] || "apparel";
-                    const hasUploadedImages = currentDesign?.uploadedImages && currentDesign.uploadedImages?.[0]?.length > 0;
+                    const hasUploadedImages =
+                      currentDesign?.uploadedImages &&
+                      currentDesign.uploadedImages?.[0]?.length > 0;
 
                     return (
                       <div key={item.id} className="p-6 ">
@@ -321,7 +382,16 @@ const CartPage = () => {
                           <div className="flex flex-col md:flex-row gap-4  flex-1">
                             {/* Product image and thumbnails */}
                             <div className="md:w-1/2">
-                              <div className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100" onClick={() => handleDesignClick(item.designState, item.propsState, item.id)}>
+                              <div
+                                className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100"
+                                onClick={() =>
+                                  handleDesignClick(
+                                    item.designState,
+                                    item.propsState,
+                                    item.id
+                                  )
+                                }
+                              >
                                 {viewMode === "apparel" ? (
                                   <>
                                     <div className="absolute inset-0">
@@ -333,8 +403,9 @@ const CartPage = () => {
                                         priority
                                         className="rounded-none"
                                         style={{
-                                          backgroundColor: currentDesign.apparel?.color,
-                                          objectFit: "cover"
+                                          backgroundColor:
+                                            currentDesign.apparel?.color,
+                                          objectFit: "cover",
                                         }}
                                       />
                                     </div>
@@ -342,14 +413,36 @@ const CartPage = () => {
                                       <div
                                         className="relative translate-y-[-10%]"
                                         style={{
-                                          top: currentDesign.apparel.side === "leftshoulder" ? '35px' : 
-                                              currentDesign.apparel.side === "rightshoulder" ? '30px' : 'initial',
-                                          left: currentDesign.apparel.side === "leftshoulder" ? '-10px' : 
-                                                currentDesign.apparel.side === "rightshoulder" ? '8px' : 'initial',
-                                          width: currentDesign.apparel.side === "leftshoulder" || 
-                                                currentDesign.apparel.side === "rightshoulder" ? '30%' : '50%',
-                                          height: currentDesign.apparel.side === "leftshoulder" || 
-                                                  currentDesign.apparel.side === "rightshoulder" ? '30%' : '50%'
+                                          top:
+                                            currentDesign.apparel.side ===
+                                            "leftshoulder"
+                                              ? "35px"
+                                              : currentDesign.apparel.side ===
+                                                "rightshoulder"
+                                              ? "30px"
+                                              : "initial",
+                                          left:
+                                            currentDesign.apparel.side ===
+                                            "leftshoulder"
+                                              ? "-10px"
+                                              : currentDesign.apparel.side ===
+                                                "rightshoulder"
+                                              ? "8px"
+                                              : "initial",
+                                          width:
+                                            currentDesign.apparel.side ===
+                                              "leftshoulder" ||
+                                            currentDesign.apparel.side ===
+                                              "rightshoulder"
+                                              ? "30%"
+                                              : "50%",
+                                          height:
+                                            currentDesign.apparel.side ===
+                                              "leftshoulder" ||
+                                            currentDesign.apparel.side ===
+                                              "rightshoulder"
+                                              ? "30%"
+                                              : "50%",
                                         }}
                                       >
                                         <Image
@@ -358,16 +451,22 @@ const CartPage = () => {
                                           fill
                                           sizes="100%"
                                           className="rounded-md"
-                                          style={{ objectFit: 'contain' }}
+                                          style={{ objectFit: "contain" }}
                                         />
                                       </div>
                                     </div>
                                   </>
                                 ) : (
                                   hasUploadedImages &&
-                                  currentDesign?.uploadedImages?.[currentUploadedImageIndex] && (
+                                  currentDesign?.uploadedImages?.[
+                                    currentUploadedImageIndex
+                                  ] && (
                                     <Image
-                                      src={currentDesign.uploadedImages[currentUploadedImageIndex]}
+                                      src={
+                                        currentDesign.uploadedImages[
+                                          currentUploadedImageIndex
+                                        ]
+                                      }
                                       alt={`Uploaded image`}
                                       fill
                                       sizes="100%"
@@ -384,9 +483,13 @@ const CartPage = () => {
                                       <div
                                         key={index}
                                         className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
-                                          index === mainDesignIndex ? 'ring-2 ring-gray-700' : 'hover:ring-2 hover:ring-gray-300'
+                                          index === mainDesignIndex
+                                            ? "ring-2 ring-gray-700"
+                                            : "hover:ring-2 hover:ring-gray-300"
                                         }`}
-                                        onClick={() => handleThumbnailClick(item.id, index)}
+                                        onClick={() =>
+                                          handleThumbnailClick(item.id, index)
+                                        }
                                       >
                                         <div className="absolute inset-0">
                                           <Image
@@ -397,23 +500,46 @@ const CartPage = () => {
                                             priority
                                             className="rounded-none"
                                             style={{
-                                              backgroundColor: design.apparel?.color,
-                                              objectFit: 'cover'
+                                              backgroundColor:
+                                                design.apparel?.color,
+                                              objectFit: "cover",
                                             }}
                                           />
                                         </div>
                                         <div className="absolute inset-0 flex items-center  justify-center">
-                                          <div 
+                                          <div
                                             className="relative translate-y-[-10%]"
                                             style={{
-                                              top: design.apparel.side === "leftshoulder" ? '12px' : 
-                                                  design.apparel.side === "rightshoulder" ? '12px' : 'initial',
-                                              left: design.apparel.side === "leftshoulder" ? '-3px' : 
-                                                    design.apparel.side === "rightshoulder" ? '2px' : 'initial',
-                                              width: design.apparel.side === "leftshoulder" || 
-                                                    design.apparel.side === "rightshoulder" ? '30%' : '50%',
-                                              height: design.apparel.side === "leftshoulder" || 
-                                                      design.apparel.side === "rightshoulder" ? '30%' : '50%'
+                                              top:
+                                                design.apparel.side ===
+                                                "leftshoulder"
+                                                  ? "12px"
+                                                  : design.apparel.side ===
+                                                    "rightshoulder"
+                                                  ? "12px"
+                                                  : "initial",
+                                              left:
+                                                design.apparel.side ===
+                                                "leftshoulder"
+                                                  ? "-3px"
+                                                  : design.apparel.side ===
+                                                    "rightshoulder"
+                                                  ? "2px"
+                                                  : "initial",
+                                              width:
+                                                design.apparel.side ===
+                                                  "leftshoulder" ||
+                                                design.apparel.side ===
+                                                  "rightshoulder"
+                                                  ? "30%"
+                                                  : "50%",
+                                              height:
+                                                design.apparel.side ===
+                                                  "leftshoulder" ||
+                                                design.apparel.side ===
+                                                  "rightshoulder"
+                                                  ? "30%"
+                                                  : "50%",
                                             }}
                                           >
                                             <Image
@@ -422,32 +548,38 @@ const CartPage = () => {
                                               fill
                                               sizes="100%"
                                               className="rounded-md"
-                                              style={{ objectFit: 'contain' }}
+                                              style={{ objectFit: "contain" }}
                                             />
                                           </div>
                                         </div>
                                       </div>
                                     ))
-                                  : currentDesign?.uploadedImages?.map((image, index) => (
-                                      <button
-                                        key={index}
-                                        className={`aspect-square relative rounded-md overflow-hidden ${
-                                          index === currentUploadedImageIndex ? "ring-2 ring-black" : "ring-1 ring-gray-200 hover:ring-gray-300"
-                                        }`}
-                                        onClick={() => setCurrentImageIndex((prev) => ({
-                                          ...prev,
-                                          [item.id]: index,
-                                        }))}
-                                      >
-                                        <Image
-                                          src={image}
-                                          alt={`Upload ${index + 1}`}
-                                          fill
-                                          sizes="100%"
-                                          className="object-cover"
-                                        />
-                                      </button>
-                                    ))}
+                                  : currentDesign?.uploadedImages?.map(
+                                      (image, index) => (
+                                        <button
+                                          key={index}
+                                          className={`aspect-square relative rounded-md overflow-hidden ${
+                                            index === currentUploadedImageIndex
+                                              ? "ring-2 ring-black"
+                                              : "ring-1 ring-gray-200 hover:ring-gray-300"
+                                          }`}
+                                          onClick={() =>
+                                            setCurrentImageIndex((prev) => ({
+                                              ...prev,
+                                              [item.id]: index,
+                                            }))
+                                          }
+                                        >
+                                          <Image
+                                            src={image}
+                                            alt={`Upload ${index + 1}`}
+                                            fill
+                                            sizes="100%"
+                                            className="object-cover"
+                                          />
+                                        </button>
+                                      )
+                                    )}
                               </div>
                             </div>
 
@@ -456,14 +588,17 @@ const CartPage = () => {
                               <div className="flex justify-between items-start">
                                 <div>
                                   <p className="text-sm text-gray-600 mb-1">
-                                    Designed Sides: {getDesignedSidesText(item.designs)}
+                                    Designed Sides:{" "}
+                                    {getDesignedSidesText(item.designs)}
                                   </p>
                                   {hasUploadedImages && (
                                     <button
                                       onClick={() => toggleViewMode(item.id)}
                                       className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                                     >
-                                      {viewMode === "apparel" ? "View Uploaded Images" : "View Design Preview"}
+                                      {viewMode === "apparel"
+                                        ? "View Uploaded Images"
+                                        : "View Design Preview"}
                                     </button>
                                   )}
                                 </div>
@@ -481,7 +616,12 @@ const CartPage = () => {
                                   <div className="flex items-center space-x-2">
                                     <button
                                       className="w-8 h-8 rounded-full text-black bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
-                                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                      onClick={() =>
+                                        handleQuantityChange(
+                                          item.id,
+                                          item.quantity - 1
+                                        )
+                                      }
                                       disabled={updating || item.quantity <= 1}
                                     >
                                       -
@@ -491,21 +631,32 @@ const CartPage = () => {
                                     </span>
                                     <button
                                       className="w-8 h-8 rounded-full text-black bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
-                                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                      onClick={() =>
+                                        handleQuantityChange(
+                                          item.id,
+                                          item.quantity + 1
+                                        )
+                                      }
                                       disabled={updating || item.quantity >= 10}
                                     >
                                       +
                                     </button>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm text-gray-500">Price per item</div>
-                                    <div className="font-medium text-black">${pricePerItem.toFixed(2)}</div>
+                                    <div className="text-sm text-gray-500">
+                                      Price per item
+                                    </div>
+                                    <div className="font-medium text-black">
+                                      ${pricePerItem.toFixed(2)}
+                                    </div>
                                   </div>
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-100">
                                   <div className="flex justify-between items-center">
-                                    <span className="font-medium text-black">Subtotal</span>
+                                    <span className="font-medium text-black">
+                                      Subtotal
+                                    </span>
                                     <span className="font-medium text-black">
                                       ${itemTotal.toFixed(2)}
                                     </span>
@@ -527,13 +678,17 @@ const CartPage = () => {
           {cartItems.length > 0 && (
             <div className="lg:w-[380px] flex-shrink-0">
               <div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-8">
-                <h2 className="text-xl text-black font-bold mb-6">Order Summary</h2>
-                
+                <h2 className="text-xl text-black font-bold mb-6">
+                  Order Summary
+                </h2>
+
                 {selectedItems.size > 0 ? (
                   <div className="space-y-4">
                     <div className="flex justify-between text-gray-600">
                       <span>Selected Items</span>
-                      <span className="font-medium text-black">{selectedItems.size}</span>
+                      <span className="font-medium text-black">
+                        {selectedItems.size}
+                      </span>
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>Subtotal</span>
@@ -549,7 +704,9 @@ const CartPage = () => {
                     </div>
                     <div className="pt-4 border-t border-gray-100">
                       <div className="flex justify-between">
-                        <span className="text-black text-lg font-bold">Total</span>
+                        <span className="text-black text-lg font-bold">
+                          Total
+                        </span>
                         <span className="text-black text-lg font-bold">
                           ${calculateSelectedTotals().total.toFixed(2)}
                         </span>
@@ -565,11 +722,17 @@ const CartPage = () => {
                 <button
                   className="w-full mt-6 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   onClick={handleProceedToOrder}
-                  disabled={isLoading || selectedItems.size === 0 || !customerToken}
+                  disabled={
+                    isLoading || selectedItems.size === 0 || !customerToken
+                  }
                 >
-                  {isLoading ? "Processing..." : 
-                   !customerToken ? "Login to proceed order" :
-                   selectedItems.size === 0 ? "Select items to order" : "Confirm Order"}
+                  {isLoading
+                    ? "Processing..."
+                    : !customerToken
+                    ? "Login to proceed order"
+                    : selectedItems.size === 0
+                    ? "Select items to order"
+                    : "Confirm Order"}
                 </button>
 
                 {error && (
@@ -621,6 +784,5 @@ const CartPage = () => {
     </div>
   );
 };
-
 
 export default CartPage;
