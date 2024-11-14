@@ -293,7 +293,7 @@ const CartPage = () => {
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 ">
                   {cartItems.map((item) => {
                     if (!item.designs?.length) return null;
 
@@ -306,7 +306,7 @@ const CartPage = () => {
                     const hasUploadedImages = currentDesign?.uploadedImages && currentDesign.uploadedImages?.[0]?.length > 0;
 
                     return (
-                      <div key={item.id} className="p-6">
+                      <div key={item.id} className="p-6 ">
                         <div className="flex items-start space-x-4">
                           {/* Checkbox */}
                           <div className="pt-2">
@@ -314,11 +314,11 @@ const CartPage = () => {
                               type="checkbox"
                               checked={selectedItems.has(item.id)}
                               onChange={() => handleItemSelect(item.id)}
-                              className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                              className="w-4 h-4 text-blue-600 rounded border-gray-500 focus:ring-blue-500 "
                             />
                           </div>
 
-                          <div className="flex flex-col md:flex-row gap-6 flex-1">
+                          <div className="flex flex-col md:flex-row gap-4  flex-1">
                             {/* Product image and thumbnails */}
                             <div className="md:w-1/2">
                               <div className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100" onClick={() => handleDesignClick(item.designState, item.propsState, item.id)}>
@@ -378,7 +378,7 @@ const CartPage = () => {
                               </div>
 
                               {/* Thumbnails */}
-                              <div className="mt-4 grid grid-cols-4 gap-2">
+                              <div className="mt-4 grid grid-cols-4 gap-6">
                                 {viewMode === "apparel"
                                   ? item.designs.map((design, index) => (
                                       <div
@@ -402,7 +402,7 @@ const CartPage = () => {
                                             }}
                                           />
                                         </div>
-                                        <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="absolute inset-0 flex items-center  justify-center">
                                           <div 
                                             className="relative translate-y-[-10%]"
                                             style={{
