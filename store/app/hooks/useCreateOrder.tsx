@@ -1,6 +1,7 @@
 // import { OrderFormData } from "@/app/types/order";
 import { useMutation, useQueryClient } from "@tanstack/react-query";  
-const baseUrl = process.env.NEXT_PUBLIC_API_URL 
+import {NEXT_PUBLIC_API_URL} from "../../constants/constant"
+const baseUrl = NEXT_PUBLIC_API_URL ;
 const createOrder = async (orderData : any) => {
   const response = await fetch(`${baseUrl}/store/orders`, {
     method: "POST",

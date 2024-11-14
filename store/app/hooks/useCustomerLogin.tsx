@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
 //import { useCart } from '@/context/cartContext'; // Import the cart context
+import {NEXT_PUBLIC_API_URL} from "../../constants/constant"
 
 interface StoreLoginResponse {
   customer: any;
@@ -62,7 +63,7 @@ export const useCustomerLogin = () => {
     setError(null);
 
     try {
-      const url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:9000";
+      const url = NEXT_PUBLIC_API_URL || "http://localhost:9000";
       const response = await fetch(`${url}/store/login`, {
         method: 'POST',
         headers: {

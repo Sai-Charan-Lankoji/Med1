@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
+import {NEXT_PUBLIC_API_URL} from "../../constants/constant"
 
 export const useCustomerLogout = () => {
   const { setUser, setIsLogin } = useUserContext();
@@ -48,7 +49,7 @@ export const useCustomerLogout = () => {
     setError(null);
 
     try {
-      const url = process.env.NEXT_PUBLIC_API_URL;
+      const url = NEXT_PUBLIC_API_URL;
       const response = await fetch(`${url}/store/logout`, {
         method: 'POST',
         headers: {

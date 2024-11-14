@@ -1,7 +1,8 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";  
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {NEXT_PUBLIC_API_URL} from "../../constants/constant"  
 
 const CreateApparelDesign = async (data : any) =>{  
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL
+    const baseUrl = NEXT_PUBLIC_API_URL
     const response = await fetch(`${baseUrl}/store/apparelDesign`, {
         method: "POST",
         headers: {

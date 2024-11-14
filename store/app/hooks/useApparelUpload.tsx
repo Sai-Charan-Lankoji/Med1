@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { NEXT_PUBLIC_API_URL} from "../../constants/constant"
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = NEXT_PUBLIC_API_URL;
 
 type CreateApparelUploadInput = {
   url: string | undefined;

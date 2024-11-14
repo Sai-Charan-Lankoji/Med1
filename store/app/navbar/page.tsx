@@ -14,6 +14,7 @@ import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
 import { IDesign, IProps } from "@/@types/models";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
+import { NEXT_STORE_NAME } from "@/constants/constant";
 
 const Navbar: React.FC = () => {
   const { cartItems, deleteCart } = useNewCart();
@@ -244,7 +245,7 @@ const Navbar: React.FC = () => {
           {/* Logo/Title */}
           <Link href="/" className="flex-shrink-0">
             <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-              Customized Baseball Jersey Design
+             {NEXT_STORE_NAME}
             </h1>
           </Link>
 

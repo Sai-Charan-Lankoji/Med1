@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
 //import { useCart } from '@/context/cartContext';
+import {NEXT_PUBLIC_API_URL} from "../../constants/constant"
 
 interface StoreSignupResponse {
   token: string;
@@ -47,7 +48,7 @@ export const useCustomerSignup = () => {
     setError(null);
   
     try {
-      const url = process.env.NEXT_PUBLIC_API_URL;
+      const url = NEXT_PUBLIC_API_URL;
       const response = await fetch(`${url}/store/signup`, {
         method: 'POST',
         headers: {

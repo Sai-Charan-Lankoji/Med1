@@ -1,5 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";  
-const baseUrl = process.env.NEXT_PUBLIC_API_URL 
+import { useMutation, useQueryClient } from "@tanstack/react-query"; 
+import {NEXT_PUBLIC_API_URL} from "../../constants/constant"
+const baseUrl = NEXT_PUBLIC_API_URL 
 const createCart = async (cartData : any) => {
   const response = await fetch(`${baseUrl}/store/cart`, {
     method: "POST",
