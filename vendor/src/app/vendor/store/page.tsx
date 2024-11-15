@@ -37,35 +37,33 @@ const Store = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSalesChannelCreated, setIsSalesChannelCreated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [storeCreationStatus, setStoreCreationStatus] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
+  const [storeUrls, setStoreUrls] = useState({});
+
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
     setIsSalesChannelCreated(false);
+    setStoreCreationStatus("");
   };
+
   const PAGE_SIZE = 10;
   const TABLE_HEIGHT = (PAGE_SIZE + 1) * 48;
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   const vendorId = sessionStorage.getItem("vendor_id");
-  const { data: storesData, error, isLoading } = useGetStores();
+  
+  const { data: storesData, error, isLoading, mutate: refreshStores } = useGetStores();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { mutate: createStore } = useCreateStore();
   const { mutate: createSalesChannel } = useCreateSalesChannel();
   const { mutate: deleteStore } = useDeleteStore();
 
-  const storesWithMatchingSalesChannels = storesData?.map(
-    (store: { default_sales_channel_id: any }) => {
-      const matchingSalesChannel = saleschannelsData?.find(
-        (salesChannel: { id: any }) =>
-          salesChannel.id === store.default_sales_channel_id
-      );
-
-      return {
-        ...store,
-        matchingSalesChannel,
-      };
-    }
-  );
+  const storesWithMatchingSalesChannels = storesData?.map((store) => {
+    const matchingSalesChannel = saleschannelsData?.find(
+      (salesChannel) => salesChannel.id === store.default_sales_channel_id
+    );
+    return { ...store, matchingSalesChannel };
+  });
 
   const [formData, setFormData] = useState({
     title: "",
@@ -76,23 +74,49 @@ const Store = () => {
     paymentLinkTemplate: "",
     inviteLinkTemplate: "",
     vendor_id: vendorId ?? "",
-    store_type: "", // New field for store type
+    store_type: "",
   });
+
+  const createStoreInstance = async (storeDetails) => {
+    try {
+      setStoreCreationStatus("Creating store instance...");
+      const response = await fetch('http://localhost:3000/create-store', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(storeDetails),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create store instance');
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setStoreUrls(prev => ({
+          ...prev,
+          [storeDetails.name]: data.storeInfo.url
+        }));
+        setStoreCreationStatus("Store is running and ready!");
+        return data.storeInfo;
+      }
+      throw new Error(data.message || 'Failed to create store instance');
+    } catch (error) {
+      console.error('Error creating store instance:', error);
+      setStoreCreationStatus("Error creating store");
+      throw error;
+    }
+  };
 
   const filteredStores = useMemo(() => {
     if (!storesWithMatchingSalesChannels) return [];
 
     const searchLower = searchQuery.toLowerCase();
-
     return storesWithMatchingSalesChannels.filter((store) => {
       const storeNameMatch = store.name?.toLowerCase().includes(searchLower);
-      const createdDateMatch = store.created_at
-        ?.toLowerCase()
-        .includes(searchLower);
-      const salesChannelNameMatch = store.matchingSalesChannel?.name
-        ?.toLowerCase()
-        .includes(searchLower);
-
+      const createdDateMatch = store.created_at?.toLowerCase().includes(searchLower);
+      const salesChannelNameMatch = store.matchingSalesChannel?.name?.toLowerCase().includes(searchLower);
       return storeNameMatch || createdDateMatch || salesChannelNameMatch;
     });
   }, [storesWithMatchingSalesChannels, searchQuery]);
@@ -101,14 +125,11 @@ const Store = () => {
   const currentStores = useMemo(() => {
     if (!Array.isArray(storesWithMatchingSalesChannels)) return [];
     const offset = currentPage * pageSize;
-    const limit = Math.min(
-      offset + pageSize,
-      storesWithMatchingSalesChannels.length
-    );
+    const limit = Math.min(offset + pageSize, storesWithMatchingSalesChannels.length);
     return storesWithMatchingSalesChannels.slice(offset, limit);
   }, [currentPage, storesWithMatchingSalesChannels]);
 
-  const formatDate = (isoDate: string | number | Date) => {
+  const formatDate = (isoDate) => {
     const date = new Date(isoDate);
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -116,7 +137,7 @@ const Store = () => {
     return `${day}-${month}-${year}`;
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
@@ -124,14 +145,11 @@ const Store = () => {
     }));
   };
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let salesChannelResponseData: SalesChannelResponse;
-      let storeResponseData: StoreResponse | null = null;
-
       if (!isSalesChannelCreated) {
         createSalesChannel(
           {
@@ -145,15 +163,10 @@ const Store = () => {
                 description: "Sales Channel Created Successfully",
                 duration: 1000,
               });
-              salesChannelResponseData = response;
-              if (salesChannelResponseData && salesChannelResponseData.id) {
-                setFormData((prevData) => ({
-                  ...prevData,
-                  salesChannelId: salesChannelResponseData.id,
-                }));
-              } else {
-                throw new Error("Failed to retrieve sales channel ID.");
-              }
+              setFormData(prev => ({
+                ...prev,
+                salesChannelId: response.id,
+              }));
               setIsSalesChannelCreated(true);
             },
             onError: (error) => {
@@ -164,55 +177,71 @@ const Store = () => {
               });
             },
           }
-        )
-        setLoading(false);
+        );
       } else {
-        createStore(
-          {
-            name: formData.storeName,
-            default_sales_channel_id: formData.salesChannelId,
-            swap_link_template: formData.swapLinkTemplate,
-            payment_link_template: formData.paymentLinkTemplate,
-            invite_link_template: formData.inviteLinkTemplate,
-            vendor_id: formData.vendor_id,
-            store_type: formData.store_type,  
-          },
-          {
-            onSuccess: () => {
+        const storeData = {
+          name: formData.storeName,
+          default_sales_channel_id: formData.salesChannelId,
+          swap_link_template: formData.swapLinkTemplate,
+          payment_link_template: formData.paymentLinkTemplate,
+          invite_link_template: formData.inviteLinkTemplate,
+          vendor_id: formData.vendor_id,
+          store_type: formData.store_type,
+        };
+
+        createStore(storeData, {
+          onSuccess: async (response) => {
+            try {
+              await createStoreInstance({
+                ...response,
+                name: formData.storeName,
+                vendor_id: formData.vendor_id,
+                default_sales_channel_id: formData.salesChannelId,
+              });
+              
               toast.success("Success", {
                 description: "Store Created Successfully",
                 duration: 1000,
               });
+              
+              refreshStores();
               setTimeout(() => {
                 closeModal();
                 router.refresh();
               }, 2000);
-            },
-            onError: (error) => {
-              console.error("Error while creating store:", error);
+            } catch (error) {
               toast.error("Error", {
-                description: "Error while creating store",
+                description: "Error creating store instance",
                 duration: 1000,
               });
-            },
-          }
-        );
+            }
+          },
+          onError: (error) => {
+            console.error("Error while creating store:", error);
+            toast.error("Error", {
+              description: "Error while creating store",
+              duration: 1000,
+            });
+          },
+        });
       }
     } catch (error) {
       console.error("Error during submission:", error);
     } finally {
-      setLoading(false);
+      if (!isSalesChannelCreated) {
+        setLoading(false);
+      }
     }
   };
 
-  const handleDelete = (id: string, event: React.MouseEvent) => {
+  const handleDelete = (id, event) => {
     event.stopPropagation();
     deleteStore(id, {
       onSuccess: () => {
         toast.success("Success", {
           description: "Store Deleted Successfully",
           duration: 1000,
-        })
+        });
         setTimeout(() => {
           router.refresh();
         }, 2000);
@@ -223,138 +252,113 @@ const Store = () => {
     });
   };
 
-  const getStoreUrl = (storeName: string) => {
-    const storeUrls: { [key: string]: string } = {
-      "Baseball Franchise": "http://localhost:8004/",
-      "Football Franchise": "http://localhost:8003/",
-    };
-    return storeUrls[storeName] || "http://localhost:8004/";
+  const getStoreUrl = (storeName) => {
+    return storeUrls[storeName] || "#";
   };
 
   if (isLoading) {
-    return (
-      <div>
-        <StoreSkeleton />
-      </div>
-    );
+    return <StoreSkeleton />;
   }
 
   return (
     <>
-      <div className="flex items-center justify-end gap-x-2"></div>
-      <div className="shadow-elevation-card-rest bg-ui-bg-base w-full rounded-lg overflow-hidden p-0">
-        <Container className="overflow-hidden p-0">
-          <div className="flex items-center justify-between px-8 pt-6 pb-4">
-            <Heading className="text-2xl">Store</Heading>
-            <div className="flex items-center gap-x-2">
-              <Input
-                size="small"
-                type="search"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Button variant="secondary" onClick={openModal}>
-                <Plus /> New Store
-              </Button>
-            </div>
+    <div className="flex items-center justify-end gap-x-2"></div>
+    <div className="shadow-elevation-card-rest bg-ui-bg-base w-full rounded-lg overflow-hidden p-0">
+      <Container className="overflow-hidden p-0">
+        <div className="flex items-center justify-between px-8 pt-6 pb-4">
+          <Heading className="text-2xl">Store</Heading>
+          <div className="flex items-center gap-x-2">
+            <Input
+              size="small"
+              type="search"
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Button variant="secondary" onClick={openModal}>
+              <Plus /> New Store
+            </Button>
           </div>
-          <Table className="min-w-full m-2">
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell className="py-2 px-4 border-b text-left">
-                  S/N
-                </Table.HeaderCell>
-                <Table.HeaderCell className="py-2 px-4 border-b text-left">
-                  Date Added
-                </Table.HeaderCell>
-                <Table.HeaderCell className="py-2 px-4 border-b text-left">
-                  Store Name
-                </Table.HeaderCell>
-                <Table.HeaderCell className="py-2 px-4 border-b text-left">
-                  Sales Channel Name
-                </Table.HeaderCell>
-                <Table.HeaderCell className="py-2 px-4 border-b text-left">
-                  Store Type
-                </Table.HeaderCell>
-                <Table.HeaderCell className="py-2 px-4 border-b text-left">
-                  Actions
-                </Table.HeaderCell>
+        </div>
+        <Table className="min-w-full m-2">
+          <Table.Header>
+            <Table.Row>
+              <Table.HeaderCell className="py-2 px-4 border-b text-left">S/N</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4 border-b text-left">Date Added</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4 border-b text-left">Store Name</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4 border-b text-left">Sales Channel Name</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4 border-b text-left">Store Type</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4 border-b text-left">Actions</Table.HeaderCell>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {filteredStores?.map((store, index) => (
+              <Table.Row key={store.id} className="hover:bg-gray-100">
+                <Link href={getStoreUrl(store?.name)} target="_blank" className="contents">
+                  <Table.Cell className="py-2 px-4 border-b">{index + 1}</Table.Cell>
+                  <Table.Cell className="py-2 px-4 border-b">
+                    {formatDate(store?.created_at) || "N/A"}
+                  </Table.Cell>
+                  <Table.Cell className="py-2 px-4 border-b">{store?.name || "N/A"}</Table.Cell>
+                  <Table.Cell className="py-2 px-4 border-b">
+                    {store?.matchingSalesChannel?.name || "N/A"}
+                  </Table.Cell>
+                  <Table.Cell className="py-2 px-4 border-b">{store?.store_type || "N/A"}</Table.Cell>
+                </Link>
+                <Table.Cell className="py-2 px-4 border-b">
+                  <DropdownMenu>
+                    <DropdownMenu.Trigger asChild>
+                      <IconButton variant="transparent">
+                        <EllipsisHorizontal className="text-ui-fg-subtle" />
+                      </IconButton>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content>
+                      <DropdownMenu.Item
+                        className="text-green-700"
+                        onClick={() => {
+                          router.push(`/vendor/store/${store.id}`);
+                        }}
+                      >
+                        <PencilSquare className="mr-2" />
+                        Edit
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item
+                        className="text-red-700"
+                        onClick={(event) => handleDelete(store.id, event)}
+                      >
+                        <Trash className="mr-2" />
+                        Delete
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu>
+                </Table.Cell>
               </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {filteredStores?.map(
-                (store: any, index: number) => (
-                  <Table.Row key={store.id} className="hover:bg-gray-100">
-                    <Link
-                      href={getStoreUrl(store?.name)}
-                      target="_blank"
-                      className="contents"
-                    >
-                      <Table.Cell className="py-2 px-4 border-b">
-                        {index + 1}
-                      </Table.Cell>
-                      <Table.Cell className="py-2 px-4 border-b">
-                        {formatDate(store?.created_at) || "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="py-2 px-4 border-b">
-                        {store?.name || "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="py-2 px-4 border-b">
-                        {store?.matchingSalesChannel?.name || "N/A"}
-                      </Table.Cell>
-                      <Table.Cell className="py-2 px-4 border-b">
-                        {store?.store_type || "N/A"}
-                      </Table.Cell>
-                    </Link>
-                    <Table.Cell className="py-2 px-4 border-b">
-                      <DropdownMenu>
-                        <DropdownMenu.Trigger asChild>
-                          <IconButton variant="transparent">
-                            <EllipsisHorizontal className="text-ui-fg-subtle" />
-                          </IconButton>
-                        </DropdownMenu.Trigger>
-                        <DropdownMenu.Content>
-                          <DropdownMenu.Item
-                            className="text-green-700"
-                            onClick={() => {
-                              router.push(`/vendor/store/${store.id}`);
-                            }}
-                          >
-                            <PencilSquare className="mr-2" />
-                            Edit
-                          </DropdownMenu.Item>
-                          <DropdownMenu.Item className="text-red-700" onClick={(event) => handleDelete(store.id, event)}>
-                            <Trash className="mr-2" />
-                            Delete
-                          </DropdownMenu.Item>
-                        </DropdownMenu.Content>
-                      </DropdownMenu>
-                    </Table.Cell>
-                  </Table.Row>
-                )
-              )}
-            </Table.Body>
-          </Table>
-        </Container>
-      </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center p-4">
-          <div className="bg-white rounded-lg p-6 sm:h-auto sm:w-[556px] md:h-auto md:w-[656px] lg:h-auto lg:w-[786px] overflow-auto">
-            <div className="flex flex-row justify-between">
-              <Heading
-                level="h2"
-                className="text-xl sm:text-2xl font-semibold mb-4"
-              >
-                {isSalesChannelCreated
-                  ? "Create Store & Sales Channel"
-                  : "Create Sales Channel"}
-              </Heading>
-              <IconButton variant="transparent">
-                <XMarkMini onClick={closeModal} />
-              </IconButton>
+            ))}
+          </Table.Body>
+        </Table>
+      </Container>
+    </div>
+
+    {isModalOpen && (
+      <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center p-4">
+        <div className="bg-white rounded-lg p-6 sm:h-auto sm:w-[556px] md:h-auto md:w-[656px] lg:h-auto lg:w-[786px] overflow-auto">
+          <div className="flex flex-row justify-between">
+            <Heading level="h2" className="text-xl sm:text-2xl font-semibold mb-4">
+              {isSalesChannelCreated ? "Create Store & Sales Channel" : "Create Sales Channel"}
+            </Heading>
+            <IconButton variant="transparent">
+              <XMarkMini onClick={closeModal} />
+            </IconButton>
+          </div>
+          <hr />
+          
+          {loading && storeCreationStatus && (
+            <div className="text-center py-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600 mx-auto mb-2"></div>
+              <Text>{storeCreationStatus}</Text>
             </div>
-            <hr />
+          )}
+
             {!isSalesChannelCreated ? (
               <>
                 <Heading

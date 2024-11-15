@@ -2,10 +2,13 @@ const express = require('express');
 const { exec } = require('child_process');
 const fs = require('fs').promises;
 const path = require('path');
+const cors = require('cors');
+
 const app = express();
 
+// Middleware
+app.use(cors());  // Enable CORS for Next.js frontend
 app.use(express.json());
-app.use(express.static('.'));
 
 // Store state management
 let currentStatus = 'Ready';
@@ -75,12 +78,6 @@ async function startStore(directoryName, port) {
     });
 }
 
-// Helper function to extract URL from command output
-function extractUrl(output) {
-    const urlMatch = output.match(/http:\/\/localhost:\d+/);
-    return urlMatch ? urlMatch[0] : null;
-}
-
 // Update package.json with new port
 async function updatePackageJson(storePath) {
     try {
@@ -130,14 +127,17 @@ async function createStoreDirectory(port) {
     }
 }
 
-// Update constants file
-async function updateConstantsFile(storePath, storeName, vendorId) {
+// Update constants file with store details
+async function updateConstantsFile(storePath, storeDetails) {
     try {
         const constantsPath = path.join(storePath, 'constants', 'constant.ts');
         const constantsContent = `export const NEXT_PUBLIC_API_URL = "http://localhost:9000"
 export const NEXT_PUBLIC_API_KEY = "pk_01J9JQNA1HVN8XRFV8PGNAJHP0"
-export const NEXT_PUBLIC_VENDOR_ID = "${vendorId}"
-export const NEXT_STORE_NAME = "${storeName}"`;
+export const NEXT_PUBLIC_VENDOR_ID = "${storeDetails.vendor_id}"
+export const NEXT_STORE_NAME = "${storeDetails.name}"
+export const NEXT_PUBLIC_STORE_ID = "${storeDetails.id}"
+export const NEXT_PUBLIC_SALES_CHANNEL_ID = "${storeDetails.default_sales_channel_id}"
+export const NEXT_PUBLIC_CURRENCY_CODE = "${storeDetails.default_currency_code}"`;
         
         await fs.writeFile(constantsPath, constantsContent, 'utf8');
         return {
@@ -152,59 +152,49 @@ export const NEXT_STORE_NAME = "${storeName}"`;
     }
 }
 
-// Routes
-app.get('/status', (req, res) => {
-    res.json({
-        status: currentStatus,
-        output: commandOutput,
-        stores: storeRegistry
-    });
-});
-
-app.get('/stores', (req, res) => {
-    res.json(storeRegistry);
-});
-
+// API Endpoints
 app.post('/create-store', async (req, res) => {
-    console.log('Received create-store request');
-    const { storeName, vendorId } = req.body;
+    console.log('Received create-store request:', req.body);
+    const storeDetails = req.body;
     
-    currentStatus = 'Starting store creation...';
-    commandOutput = [];
-
     // Update package.json in the template store
     const portUpdate = await updatePackageJson(path.join(__dirname, 'store'));
     if (!portUpdate.success) {
-        currentStatus = 'Failed to update package.json';
-        commandOutput.push(`Error: ${portUpdate.error}`);
-        return res.status(500).json({ message: 'Failed to update package.json' });
+        return res.status(500).json({ 
+            success: false,
+            message: 'Failed to update package.json',
+            error: portUpdate.error
+        });
     }
-
-    commandOutput.push(`Updated package.json with port: ${portUpdate.port}`);
 
     // Creating new store directory
     const storeDir = await createStoreDirectory(portUpdate.port);
     if (!storeDir.success) {
-        currentStatus = 'Failed to create store directory';
-        commandOutput.push(`Error: ${storeDir.error}`);
-        return res.status(500).json({ message: 'Failed to create store directory' });
+        return res.status(500).json({ 
+            success: false,
+            message: 'Failed to create store directory',
+            error: storeDir.error
+        });
     }
 
-    commandOutput.push(`Created new store directory: ${storeDir.storeName}`);
-
-    // Update constants file
-    const constantsUpdate = await updateConstantsFile(storeDir.storePath, storeName, vendorId);
+    // Update constants file with store details
+    const constantsUpdate = await updateConstantsFile(storeDir.storePath, storeDetails);
     if (!constantsUpdate.success) {
-        currentStatus = 'Failed to update constants file';
-        commandOutput.push(`Error: ${constantsUpdate.error}`);
-        return res.status(500).json({ message: 'Failed to update constants file' });
+        return res.status(500).json({ 
+            success: false,
+            message: 'Failed to update constants file',
+            error: constantsUpdate.error
+        });
     }
 
     // Add store to registry
     const storeInfo = {
         directoryName: storeDir.storeName,
-        storeName: storeName,
-        vendorId: vendorId,
+        storeName: storeDetails.name,
+        vendorId: storeDetails.vendor_id,
+        storeId: storeDetails.id,
+        salesChannelId: storeDetails.default_sales_channel_id,
+        currencyCode: storeDetails.default_currency_code,
         port: portUpdate.port,
         url: `http://localhost:${portUpdate.port}`,
         dashboardUrl: `http://localhost:${portUpdate.port}/dashboard`
@@ -214,30 +204,41 @@ app.post('/create-store', async (req, res) => {
     await saveStoreRegistry();
 
     // Start the new store
-    const terminal = exec(`cd ${storeDir.storeName} && npm install && npm run dev`, {
-        cwd: __dirname
-    });
+    try {
+        await new Promise((resolve, reject) => {
+            const terminal = exec(`cd ${storeDir.storeName} && npm install && npm run dev`, {
+                cwd: __dirname
+            });
 
-    terminal.stdout.on('data', (data) => {
-        console.log('Command output:', data);
-        commandOutput.push(data);
-        currentStatus = `Executing: ${data}`;
+            terminal.stdout.on('data', (data) => {
+                console.log('Command output:', data);
+                if (data.includes(`http://localhost:${portUpdate.port}`)) {
+                    resolve();
+                }
+            });
 
-        if (data.includes(`http://localhost:${portUpdate.port}`)) {
-            currentStatus = 'Store is ready!';
-        }
-    });
+            terminal.stderr.on('data', (data) => {
+                console.error('Command error:', data);
+            });
+        });
 
-    terminal.stderr.on('data', (data) => {
-        console.error('Command error:', data);
-        commandOutput.push(`Error: ${data}`);
-        currentStatus = `Error: ${data}`;
-    });
+        res.json({ 
+            success: true,
+            message: 'Store created successfully',
+            storeInfo: storeInfo
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false,
+            message: 'Error starting store',
+            error: error.message
+        });
+    }
+});
 
-    res.json({ 
-        message: 'Store creation process started. Check status for progress.',
-        storeInfo: storeInfo
-    });
+// Get all stores
+app.get('/stores', (req, res) => {
+    res.json(storeRegistry);
 });
 
 // Initialize and start server
@@ -245,8 +246,9 @@ async function startServer() {
     await initializeStoreRegistry();
     await startExistingStores();
     
-    app.listen(3000, () => {
-        console.log('Server running on http://localhost:3000');
+    const PORT = process.env.PORT || 3000;
+    app.listen(PORT, () => {
+        console.log(`Store creation server running on http://localhost:${PORT}`);
         console.log('Active stores:', storeRegistry.length);
     });
 }
