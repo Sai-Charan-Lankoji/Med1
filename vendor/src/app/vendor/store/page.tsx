@@ -29,6 +29,7 @@ import { useCreateStore } from "@/app/hooks/store/useCreateStore";
 import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel";
 import Link from "next/link";
 import Image from "next/image";
+import { useDeleteStore } from "@/app/hooks/store/useDeleteStore";
 
 const Store = () => {
   const router = useRouter();
@@ -50,6 +51,7 @@ const Store = () => {
   const { data: saleschannelsData } = useGetSalesChannels();
   const { mutate: createStore } = useCreateStore();
   const { mutate: createSalesChannel } = useCreateSalesChannel();
+  const { mutate: deleteStore } = useDeleteStore();
 
   const storesWithMatchingSalesChannels = storesData?.map(
     (store: { default_sales_channel_id: any }) => {
@@ -203,6 +205,24 @@ const Store = () => {
     }
   };
 
+  const handleDelete = (id: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    deleteStore(id, {
+      onSuccess: () => {
+        toast.success("Success", {
+          description: "Store Deleted Successfully",
+          duration: 1000,
+        })
+        setTimeout(() => {
+          router.refresh();
+        }, 2000);
+      },
+      onError: (err) => {
+        console.error("An error occurred:", err);
+      },
+    });
+  };
+
   const getStoreUrl = (storeName: string) => {
     const storeUrls: { [key: string]: string } = {
       "Baseball Franchise": "http://localhost:8004/",
@@ -304,7 +324,7 @@ const Store = () => {
                             <PencilSquare className="mr-2" />
                             Edit
                           </DropdownMenu.Item>
-                          <DropdownMenu.Item className="text-red-700">
+                          <DropdownMenu.Item className="text-red-700" onClick={(event) => handleDelete(store.id, event)}>
                             <Trash className="mr-2" />
                             Delete
                           </DropdownMenu.Item>

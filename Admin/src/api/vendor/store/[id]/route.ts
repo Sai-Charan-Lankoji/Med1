@@ -1,16 +1,17 @@
-// import type { MedusaRequest, MedusaResponse, 
+import type { MedusaRequest, MedusaResponse, 
   
-// } from "@medusajs/medusa";
-// import StoreService from "../../../../services/store";
+} from "@medusajs/medusa";
+import StoreService from "../../../../services/store";
  
-// const getStoreService = (req: MedusaRequest): StoreService | null => {
-//  try {
-//    return req.scope.resolve("storeservice") as StoreService;
-//  } catch (error) {
-//    console.error("Failed to resolve storeservice:", error);
-//    return null;
-//  }
-// };
+const getStoreService = (req: MedusaRequest): StoreService | null => {
+  try {
+    // Use the correct casing when resolving the service
+    return req.scope.resolve("storeService") as StoreService;
+  } catch (error) {
+    console.error("Failed to resolve storeService:", error);
+    return null;
+  }
+}
 
 // //Retrive a specific product
 // export const GET = async (
@@ -71,35 +72,40 @@
 
 
 
-// // export const DELETE = async (
-// //  req: MedusaRequest,
-// //  res: MedusaResponse
-// // ): Promise<void> => {
-// //  try {
-// //    const storeservice = getStoreService(req as any);
-// //    if (!storeservice) {
-// //      res.status(500).json({ error: "Store service could not be resolved." });
-// //      return;
-// //    }
+export const DELETE = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+    const storeService = getStoreService(req as any);
+    if (!storeService) {
+      res.status(500).json({ error: "Store service could not be resolved." });
+      return;
+    }
 
-// //    const storeId = req.params.id;
-// //    const store = await storeservice.listByStore(storeId);
+    const storeId = req.params.id;
+    
+    // First check if the store exists
+    try {
+      await storeService.retrieveByStoreId(storeId);
+    } catch (error) {
+      res.status(404).json({ error: "Store not found" });
+      return;
+    }
 
-// //    if (!store) {
-// //      res.status(404).json({ error: "Store not found" });
-// //      return;
-// //    }
+    // Delete the store
+    await storeService.delete(storeId);
 
-// //    // Delete the product from the database
-// //    await storeservice.delete(storeId);
-
-// //    // Return success response
-// //    res.status(200).json({ message: "Sales Channel deleted successfully." });
-// //  } catch (error) {
-// //    console.error("Error during Sales Channel deletion:", error);
-// //    res.status(500).json({ error: "Failed to Sales Channel" });
-// //  }
-// // };
+    // Return success response
+    res.status(200).json({ message: "Store deleted successfully." });
+  } catch (error) {
+    console.error("Error during store deletion:", error);
+    res.status(500).json({ 
+      error: error.message || "Failed to delete store",
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+    });
+  }
+};
 
 
 
