@@ -22,7 +22,7 @@ class StoreService extends MedusaStoreService {
 
   constructor(container) {
     super(container);
-    this.storeRepository_ = container.storeRepository;
+     this.storeRepository_ = container.storeRepository;
   }
 
   async createStore(storeData: StoreData): Promise<Store> {
