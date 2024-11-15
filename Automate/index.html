@@ -20,7 +20,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             width: 80%;
-            max-width: 600px;
+            max-width: 800px;
         }
         button {
             padding: 12px 24px;
@@ -35,6 +35,10 @@
         }
         button:hover {
             background-color: #0052a3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
         #status {
             margin-top: 20px;
@@ -59,14 +63,10 @@
         .success {
             color: #198754;
         }
-        #goToWebsite, #goToDashboard {
-            background-color: #198754;
-        }
-        #goToWebsite:hover, #goToDashboard:hover {
-            background-color: #146c43;
-        }
         .store-buttons {
             margin-top: 10px;
+            display: flex;
+            gap: 8px;
         }
         .modal {
             display: none;
@@ -136,26 +136,91 @@
         }
         .store-instance {
             background-color: #f8f9fa;
-            border-radius: 4px;
-            padding: 1rem;
+            border-radius: 8px;
+            padding: 1.5rem;
             margin: 1rem 0;
             text-align: left;
+            border: 1px solid #dee2e6;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .store-instance:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .store-instance h3 {
             margin: 0 0 0.5rem 0;
             color: #333;
+            font-size: 1.25rem;
         }
-        .store-buttons button {
-            margin-right: 0.5rem;
+        .store-info {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .store-status {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        .status-running {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-stopped {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .stores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .store-url {
+            font-size: 0.875rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+        #noStoresMessage {
+            text-align: center;
+            color: #666;
+            margin: 2rem 0;
+            font-style: italic;
+        }
+        .header-section {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 1rem;
+        }
+        .status-section {
+            margin-top: 2rem;
+            border-top: 1px solid #dee2e6;
+            padding-top: 1rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Store Creator</h1>
-        <button id="createStoreBtn" onclick="showModal()">Create Store</button>
-        <div id="storeButtons"></div>
-        <div id="status">Ready to create store...</div>
+        <div class="header-section">
+            <h1>Store Creator</h1>
+            <button id="createStoreBtn" onclick="showModal()">Create New Store</button>
+        </div>
+
+        <div id="storeButtonsContainer" class="stores-grid">
+            <!-- Store instances will be inserted here -->
+        </div>
+        <div id="noStoresMessage" style="display: none;">
+            No stores created yet. Click "Create New Store" to get started.
+        </div>
+
+        <div class="status-section">
+            <h2>Status Log</h2>
+            <div id="status">Ready to create store...</div>
+        </div>
     </div>
 
     <div id="storeModal" class="modal">
@@ -193,11 +258,35 @@
     <script>
         let isProcessing = false;
         let pollInterval = null;
+        let storeRegistry = [];
         const statusElement = document.getElementById('status');
         const createStoreBtn = document.getElementById('createStoreBtn');
-        const storeButtonsContainer = document.getElementById('storeButtons');
+        const storeButtonsContainer = document.getElementById('storeButtonsContainer');
+        const noStoresMessage = document.getElementById('noStoresMessage');
         const modal = document.getElementById('storeModal');
         const form = document.getElementById('storeForm');
+
+        async function loadExistingStores() {
+            try {
+                const response = await fetch('/stores');
+                const stores = await response.json();
+                storeRegistry = stores;
+                
+                // Clear existing store buttons
+                storeButtonsContainer.innerHTML = '';
+                
+                // Show/hide no stores message
+                noStoresMessage.style.display = stores.length === 0 ? 'block' : 'none';
+                
+                // Recreate store instances for each store
+                stores.forEach(store => {
+                    createStoreInstance(store.url, store.dashboardUrl, store.storeName, store.port);
+                });
+            } catch (error) {
+                console.error('Error loading existing stores:', error);
+                statusElement.textContent += `Error loading existing stores: ${error.message}\n`;
+            }
+        }
 
         function showModal() {
             modal.style.display = 'flex';
@@ -237,27 +326,28 @@
             return isValid;
         }
 
-        async function handleSubmit(event) {
-            event.preventDefault();
-            
-            if (!validateForm()) {
-                return;
-            }
-
-            const storeName = document.getElementById('storeName').value.trim();
-            const vendorId = document.getElementById('vendorId').value.trim();
-
-            hideModal();
-            await createStore(storeName, vendorId);
-        }
-
-        function createStoreInstance(storeUrl, dashboardUrl, storeName) {
+        function createStoreInstance(storeUrl, dashboardUrl, storeName, port) {
             const instance = document.createElement('div');
             instance.className = 'store-instance';
             
             const title = document.createElement('h3');
             title.textContent = storeName;
             instance.appendChild(title);
+
+            const info = document.createElement('div');
+            info.className = 'store-info';
+            info.textContent = `Port: ${port}`;
+            instance.appendChild(info);
+
+            const status = document.createElement('div');
+            status.className = 'store-status status-running';
+            status.textContent = 'Running';
+            instance.appendChild(status);
+
+            const urlDiv = document.createElement('div');
+            urlDiv.className = 'store-url';
+            urlDiv.textContent = storeUrl;
+            instance.appendChild(urlDiv);
 
             const buttons = document.createElement('div');
             buttons.className = 'store-buttons';
@@ -275,6 +365,21 @@
             instance.appendChild(buttons);
             
             storeButtonsContainer.appendChild(instance);
+            noStoresMessage.style.display = 'none';
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const storeName = document.getElementById('storeName').value.trim();
+            const vendorId = document.getElementById('vendorId').value.trim();
+
+            hideModal();
+            await createStore(storeName, vendorId);
         }
 
         async function createStore(storeName, vendorId) {
@@ -284,7 +389,7 @@
             }
 
             isProcessing = true;
-            createStoreBtn.textContent = 'Creating...';
+            createStoreBtn.disabled = true;
             statusElement.textContent = 'Initiating store creation...\n';
 
             try {
@@ -307,7 +412,7 @@
             } catch (error) {
                 statusElement.textContent += `Error: ${error.message}\n`;
                 isProcessing = false;
-                createStoreBtn.textContent = 'Create Store';
+                createStoreBtn.disabled = false;
             }
         }
 
@@ -326,13 +431,12 @@
                         statusElement.textContent += line + '\n';
                     });
 
-                    if (data.storeUrl && data.dashboardUrl) {
-                        createStoreInstance(data.storeUrl, data.dashboardUrl, storeName);
+                    if (data.stores.length > storeRegistry.length) {
+                        // New store has been added
+                        await loadExistingStores();
                         clearInterval(pollInterval);
                         isProcessing = false;
-                        createStoreBtn.textContent = 'Create Another Store';
-                        statusElement.textContent += `\nStore is ready at: ${data.storeUrl}\n`;
-                        statusElement.textContent += `Dashboard is ready at: ${data.dashboardUrl}\n`;
+                        createStoreBtn.disabled = false;
                     }
 
                     statusElement.scrollTop = statusElement.scrollHeight;
@@ -340,13 +444,13 @@
                     if (data.status.includes('Failed')) {
                         clearInterval(pollInterval);
                         isProcessing = false;
-                        createStoreBtn.textContent = 'Create Store';
+                        createStoreBtn.disabled = false;
                     }
                 } catch (error) {
                     statusElement.textContent += `Error polling status: ${error.message}\n`;
                     clearInterval(pollInterval);
                     isProcessing = false;
-                    createStoreBtn.textContent = 'Create Store';
+                    createStoreBtn.disabled = false;
                 }
             }, 1000);
         }
@@ -357,6 +461,11 @@
                 hideModal();
             }
         }
+
+        // Load existing stores when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadExistingStores();
+        });
     </script>
 </body>
 </html>
