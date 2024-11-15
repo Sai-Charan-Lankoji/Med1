@@ -15,6 +15,8 @@ import { Vendor } from "./vendor";
 
 @Entity()
 export class Store extends MedusaStore {
+  @Column({ type: "varchar", length: 120, nullable: true })
+  store_type: string | null;
 
 @OneToMany(() => User, (user) => user?.store)
 members?: User[];

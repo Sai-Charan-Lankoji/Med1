@@ -18,5 +18,6 @@ export interface StoreFormData {
   swap_link_template: string,
   payment_link_template: string,
   invite_link_template: string,
-  vendor_id: string
+  vendor_id: string,
+  store_type: string
 }

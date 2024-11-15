@@ -20,19 +20,18 @@ import {
   XMarkMini,
 } from "@medusajs/icons";
 import { useGetUsers } from "@/app/hooks/users/useGetUsers";
-import { useCreateUser } from "@/app/hooks/users/useCreateUser";
+import { useSaveUser } from "@/app/hooks/users/useCreateUser";
 import { useForm } from "react-hook-form";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import withAuth from "@/lib/withAuth";
 
 type UserRoles = "admin" | "member" | "developer";
 interface UserFormData {
-  firstName: string;
-  lastName: string;
+  first_name: string;
+  last_name: string;
   email: string;
   password: string;
   role: UserRoles;
-  store_id: string;
   vendor_id: string;
 }
 
@@ -78,7 +77,6 @@ const Users = () => {
   const { data: stores } = useGetStores();
   const { data: Users } = useGetUsers();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   const {
     register,
@@ -86,25 +84,38 @@ const Users = () => {
     formState: { errors },
     reset,
   } = useForm<UserFormData>();
-  const createUser = useCreateUser();
+  const saveUser = useSaveUser();
   const vendorId = sessionStorage.getItem('vendor_id')
   const store = stores?.find((store) => store.vendor_id === vendorId)
   const storeId = store?.id
 
-  const onSubmit = (data: UserFormData) => {
-    const newUserData = {
-      ...data,
-      vendorId,
-      storeId,
-    }
-    createUser.mutate(newUserData, {
-      onSuccess: () => {
-        closeModal();
-        reset();
-      },
-    });
-  };
+  const [editingUserId, setEditingUserId] = useState<string | null>(null); // Track the user ID for editing
 
+// Update openModal to support editing
+const openModal = (user?: any) => {
+  if (user) {
+    // Populate form with user data if editing
+    reset(user);
+    setEditingUserId(user.id);
+  } else {
+    reset(); // Clear form for new user creation
+    setEditingUserId(null);
+  }
+  setIsModalOpen(true);
+}
+
+const onSubmit = (data: UserFormData) => {
+  const userData = {
+    ...data,
+    vendor_id: vendorId,
+  };
+  saveUser.mutate({ userId: editingUserId, userData }, {
+    onSuccess: () => {
+      closeModal();
+      reset();
+    },
+  });
+}
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
@@ -120,7 +131,7 @@ const Users = () => {
           onClick={openModal}
         >
           <Plus className="h-4 w-4" />
-          Invite Users
+          Create User
         </Button>
       </div>
 
@@ -215,7 +226,7 @@ const Users = () => {
                     </IconButton>
                   </DropdownMenu.Trigger>
                   <DropdownMenu.Content>
-                    <DropdownMenu.Item className="text-green-700">
+                    <DropdownMenu.Item className="text-green-700" onClick={() => openModal(user)}>
                       <PencilSquare className="mr-2" />
                       Edit
                     </DropdownMenu.Item>
@@ -243,19 +254,19 @@ const Users = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="first_name">First Name</Label>
                   <Input
-                    id="firstName"
+                    id="first_name"
                     placeholder="John"
-                    {...register("firstName")}
+                    {...register("first_name")}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="last_name">Last Name</Label>
                   <Input
-                    id="lastName"
+                    id="last_name"
                     placeholder="Doe"
-                    {...register("lastName")}
+                    {...register("last_name")}
                   />
                 </div>
               </div>
@@ -320,7 +331,7 @@ const Users = () => {
                 </Button>
               </div>
             </form>
-            {createUser.isError && (
+            {saveUser.isError && (
               <p className="text-rose-500 mt-4">
                 An error occurred while creating the user. Please try again.
               </p>

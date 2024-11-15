@@ -13,6 +13,7 @@ interface StoreData {
   vendor_id: string;
   default_sales_channel_id: string; 
   name: string; 
+  store_type: string;
 }
 
 class StoreService extends MedusaStoreService {

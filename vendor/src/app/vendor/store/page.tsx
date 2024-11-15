@@ -11,6 +11,7 @@ import {
   Table,
   Text,
   toast,
+  Select,
 } from "@medusajs/ui";
 import {
   EllipsisHorizontal,
@@ -27,18 +28,19 @@ import { useRouter } from "next/navigation";
 import { useCreateStore } from "@/app/hooks/store/useCreateStore";
 import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel";
 import Link from "next/link";
+import Image from "next/image";
 
 const Store = () => {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSalesChannelCreated, setIsSalesChannelCreated] = useState(false); // Track if sales channel is created
-  const [loading, setLoading] = useState(false); // To handle loading state
+  const [isSalesChannelCreated, setIsSalesChannelCreated] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => {
     setIsModalOpen(false);
-    setIsSalesChannelCreated(false); // Reset state when closing the modal
+    setIsSalesChannelCreated(false);
   };
   const PAGE_SIZE = 10;
   const TABLE_HEIGHT = (PAGE_SIZE + 1) * 48;
@@ -49,7 +51,6 @@ const Store = () => {
   const { mutate: createStore } = useCreateStore();
   const { mutate: createSalesChannel } = useCreateSalesChannel();
 
-  // Filter stores based on salesChannelId
   const storesWithMatchingSalesChannels = storesData?.map(
     (store: { default_sales_channel_id: any }) => {
       const matchingSalesChannel = saleschannelsData?.find(
@@ -59,7 +60,7 @@ const Store = () => {
 
       return {
         ...store,
-        matchingSalesChannel, // Attach the matching sales channel details to the store
+        matchingSalesChannel,
       };
     }
   );
@@ -73,6 +74,7 @@ const Store = () => {
     paymentLinkTemplate: "",
     inviteLinkTemplate: "",
     vendor_id: vendorId ?? "",
+    store_type: "", // New field for store type
   });
 
   const filteredStores = useMemo(() => {
@@ -106,15 +108,12 @@ const Store = () => {
 
   const formatDate = (isoDate: string | number | Date) => {
     const date = new Date(isoDate);
-
-    // Get day, month, and year
     const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // getMonth() returns 0-based month
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
-
     return `${day}-${month}-${year}`;
   };
-  // Handle form changes
+
   const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -123,10 +122,9 @@ const Store = () => {
     }));
   };
 
-  // Common handleSubmit function for both forms
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setLoading(true); // Start loading state
+    setLoading(true);
 
     try {
       let salesChannelResponseData: SalesChannelResponse;
@@ -154,8 +152,6 @@ const Store = () => {
               } else {
                 throw new Error("Failed to retrieve sales channel ID.");
               }
-
-              // Proceed to store creation after sales channel is created
               setIsSalesChannelCreated(true);
             },
             onError: (error) => {
@@ -166,20 +162,18 @@ const Store = () => {
               });
             },
           }
-        );
-        setLoading(false); // Stop loading state for sales channel creation
-      }
-
-      // Handle store creation after sales channel
-      else {
+        )
+        setLoading(false);
+      } else {
         createStore(
           {
             name: formData.storeName,
-            default_sales_channel_id: formData.salesChannelId, // Use updated salesChannelId
+            default_sales_channel_id: formData.salesChannelId,
             swap_link_template: formData.swapLinkTemplate,
             payment_link_template: formData.paymentLinkTemplate,
             invite_link_template: formData.inviteLinkTemplate,
             vendor_id: formData.vendor_id,
+            store_type: formData.store_type,  
           },
           {
             onSuccess: () => {
@@ -205,7 +199,7 @@ const Store = () => {
     } catch (error) {
       console.error("Error during submission:", error);
     } finally {
-      setLoading(false); // End loading state
+      setLoading(false);
     }
   };
 
@@ -213,18 +207,18 @@ const Store = () => {
     const storeUrls: { [key: string]: string } = {
       "Baseball Franchise": "http://localhost:8004/",
       "Football Franchise": "http://localhost:8003/",
-      // Add more store mappings here
     };
-
-    // Return the matching URL or a default URL
     return storeUrls[storeName] || "http://localhost:8004/";
   };
 
   if (isLoading) {
-    <div>
-      <StoreSkeleton />
-    </div>;
+    return (
+      <div>
+        <StoreSkeleton />
+      </div>
+    );
   }
+
   return (
     <>
       <div className="flex items-center justify-end gap-x-2"></div>
@@ -261,21 +255,16 @@ const Store = () => {
                   Sales Channel Name
                 </Table.HeaderCell>
                 <Table.HeaderCell className="py-2 px-4 border-b text-left">
+                  Store Type
+                </Table.HeaderCell>
+                <Table.HeaderCell className="py-2 px-4 border-b text-left">
                   Actions
                 </Table.HeaderCell>
               </Table.Row>
             </Table.Header>
             <Table.Body>
               {filteredStores?.map(
-                (
-                  store: {
-                    created_at: any;
-                    name: any;
-                    matchingSalesChannel: { name: any };
-                    id: any;
-                  },
-                  index: number
-                ) => (
+                (store: any, index: number) => (
                   <Table.Row key={store.id} className="hover:bg-gray-100">
                     <Link
                       href={getStoreUrl(store?.name)}
@@ -293,6 +282,9 @@ const Store = () => {
                       </Table.Cell>
                       <Table.Cell className="py-2 px-4 border-b">
                         {store?.matchingSalesChannel?.name || "N/A"}
+                      </Table.Cell>
+                      <Table.Cell className="py-2 px-4 border-b">
+                        {store?.store_type || "N/A"}
                       </Table.Cell>
                     </Link>
                     <Table.Cell className="py-2 px-4 border-b">
@@ -344,7 +336,6 @@ const Store = () => {
             </div>
             <hr />
             {!isSalesChannelCreated ? (
-              // Sales Channel form
               <>
                 <Heading
                   level="h2"
@@ -398,7 +389,6 @@ const Store = () => {
                 </form>
               </>
             ) : (
-              // Store form
               <>
                 <Heading
                   level="h2"
@@ -423,6 +413,24 @@ const Store = () => {
                         onChange={handleChange}
                         className="mt-1 py-3 block w-full border border-gray-300 rounded-md shadow-sm"
                       />
+                    </div>
+                    <div className="pt-3">
+                      <Label className="block text-sm font-medium text-gray-700">
+                        Store type <span className="text-red-600">*</span>
+                      </Label>
+                      <Select
+                        name="store_type"
+                        value={formData.store_type}
+                        onValueChange={(value) => handleChange({ target: { name: 'store_type', value } })}
+                      >
+                        <Select.Trigger className="w-full">
+                          <Select.Value placeholder="Select store type" />
+                        </Select.Trigger>
+                        <Select.Content>
+                          <Select.Item value="design_ui">Design UI store</Select.Item>
+                          <Select.Item value="grocery">Pick And Buy Grocery store</Select.Item>
+                        </Select.Content>
+                      </Select>
                     </div>
                     <div className="pt-3">
                       <Label className="block text-sm font-medium text-gray-700">
@@ -486,6 +494,7 @@ const Store = () => {
     </>
   );
 };
+
 
 const SkeletonLoader = ({ width, height, className }) => (
   <div

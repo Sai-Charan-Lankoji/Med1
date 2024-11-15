@@ -50,13 +50,6 @@ class VendorUserService extends TransactionBaseService {
         );
       }
 
-      if (!data.last_name) {
-        throw new MedusaError(
-          MedusaError.Types.INVALID_DATA,
-          "Last name is required"
-        );
-      }
-
       if (!data.role) {
         throw new MedusaError(
           MedusaError.Types.INVALID_DATA,
