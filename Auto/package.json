@@ -1,0 +1,20 @@
+{
+  "name": "multi-store-project",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "node server.js"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

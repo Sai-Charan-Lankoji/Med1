@@ -373,7 +373,6 @@ const CartPage = () => {
                           {/* Checkbox */}
                           <div className="pt-2">
                             <input
-                            aria-label="Select item"
                               type="checkbox"
                               checked={selectedItems.has(item.id)}
                               onChange={() => handleItemSelect(item.id)}
@@ -571,7 +570,6 @@ const CartPage = () => {
                                               [item.id]: index,
                                             }))
                                           }
-                                          title={`Upload ${index + 1}`}
                                         >
                                           <Image
                                             src={image}
@@ -756,7 +754,6 @@ const CartPage = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Confirm Deletion</h2>
               <button
-              title="close"
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
