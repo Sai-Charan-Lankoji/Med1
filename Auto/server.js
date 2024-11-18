@@ -3,6 +3,7 @@ const { exec } = require("child_process");
 const fs = require("fs").promises;
 const path = require("path");
 const cors = require("cors");
+const fetch = require("node-fetch");
 
 const app = express();
 
@@ -163,16 +164,34 @@ app.get("/stores", (req, res) => {
 
 app.get("/health", async (req, res) => {
   const healthStatus = await checkAllStoresHealth();
-  res.json(healthStatus);
+  const overallHealth = Object.values(healthStatus).every(
+    (status) => status === "healthy"
+  );
+  res.json({
+    overallHealth: overallHealth ? "healthy" : "unhealthy",
+    stores: healthStatus,
+  });
 });
 
 async function checkAllStoresHealth() {
   const status = {};
   for (const store of storeRegistry) {
     try {
-      const response = await fetch(`http://localhost:${store.port}/api/health`);
-      status[store.directoryName] = response.ok ? "healthy" : "unhealthy";
+      const response = await fetch(
+        `http://localhost:${store.port}/api/health`,
+        {
+          timeout: 5000, // 5 seconds timeout
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        status[store.directoryName] =
+          data.status === "ok" ? "healthy" : "unhealthy";
+      } else {
+        status[store.directoryName] = "unhealthy";
+      }
     } catch (error) {
+      console.error(`Health check failed for ${store.directoryName}:`, error);
       status[store.directoryName] = "unreachable";
     }
   }
