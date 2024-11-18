@@ -12,6 +12,8 @@ import {
   Text,
   toast,
   Select,
+  Toaster
+  
 } from "@medusajs/ui";
 import {
   EllipsisHorizontal,
@@ -52,11 +54,15 @@ const Store = () => {
   const TABLE_HEIGHT = (PAGE_SIZE + 1) * 48;
   const vendorId = sessionStorage.getItem("vendor_id");
   
-  const { data: storesData, error, isLoading, mutate: refreshStores } = useGetStores();
+  const { data: storesData, error, isLoading, refetch: refreshStores } = useGetStores();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { mutate: createStore } = useCreateStore();
   const { mutate: createSalesChannel } = useCreateSalesChannel();
   const { mutate: deleteStore } = useDeleteStore();
+  //loading
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
+  const [loadingStage, setLoadingStage] = useState("");
+  const [isStoreCreated, setIsStoreCreated] = useState(false);
 
   const storesWithMatchingSalesChannels = storesData?.map((store) => {
     const matchingSalesChannel = saleschannelsData?.find(
@@ -168,6 +174,7 @@ const Store = () => {
                 salesChannelId: response.id,
               }));
               setIsSalesChannelCreated(true);
+              setLoading(false);
             },
             onError: (error) => {
               console.error("Error while creating sales channel:", error);
@@ -175,10 +182,15 @@ const Store = () => {
                 description: "Error while creating sales channel",
                 duration: 1000,
               });
+              setLoading(false);
             },
           }
         );
       } else {
+        // Show loading modal before starting store creation
+        setShowLoadingModal(true);
+        setLoadingStage("Initializing store creation...");
+
         const storeData = {
           name: formData.storeName,
           default_sales_channel_id: formData.salesChannelId,
@@ -192,6 +204,7 @@ const Store = () => {
         createStore(storeData, {
           onSuccess: async (response) => {
             try {
+              setLoadingStage("Creating store instance...");
               await createStoreInstance({
                 ...response,
                 name: formData.storeName,
@@ -199,38 +212,54 @@ const Store = () => {
                 default_sales_channel_id: formData.salesChannelId,
               });
               
+              setLoadingStage("Store created successfully!");
+              setLoading(false);
+              setIsStoreCreated(true);
+              
               toast.success("Success", {
                 description: "Store Created Successfully",
                 duration: 1000,
               });
               
               refreshStores();
+              
+              // Delay closing modals to show success state
               setTimeout(() => {
+                setShowLoadingModal(false);
                 closeModal();
+                setIsStoreCreated(false);
                 router.refresh();
               }, 2000);
             } catch (error) {
+              setLoadingStage("Error creating store instance");
               toast.error("Error", {
                 description: "Error creating store instance",
                 duration: 1000,
               });
+              setTimeout(() => {
+                setShowLoadingModal(false);
+              }, 2000);
             }
           },
           onError: (error) => {
             console.error("Error while creating store:", error);
+            setLoadingStage("Error creating store");
             toast.error("Error", {
               description: "Error while creating store",
               duration: 1000,
             });
+            setTimeout(() => {
+              setShowLoadingModal(false);
+            }, 2000);
           },
         });
       }
     } catch (error) {
       console.error("Error during submission:", error);
-    } finally {
-      if (!isSalesChannelCreated) {
-        setLoading(false);
-      }
+      setLoadingStage("Error occurred");
+      setTimeout(() => {
+        setShowLoadingModal(false);
+      }, 2000);
     }
   };
 
@@ -256,12 +285,45 @@ const Store = () => {
     return storeUrls[storeName] || "#";
   };
 
+  const LoadingModal = () => (
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center p-4 z-50">
+      <Container className="bg-white rounded-lg p-8 max-w-md w-full">
+        <div className="text-center">
+          {!isStoreCreated ? (
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600 mx-auto mb-4"></div>
+          ) : (
+            <div className="h-12 w-12 mx-auto mb-4 text-green-500">
+              <svg
+                className="h-full w-full"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+          )}
+          <Heading level="h3" className="text-xl font-semibold mb-2">
+            {isStoreCreated ? "Success!" : "Please Wait"}
+          </Heading>
+          <Text className="text-gray-600">{loadingStage}</Text>
+        </div>
+      </Container>
+    </div>
+  );
+
   if (isLoading) {
     return <StoreSkeleton />;
   }
 
   return (
     <>
+    <Toaster position="top-right"/>
     <div className="flex items-center justify-end gap-x-2"></div>
     <div className="shadow-elevation-card-rest bg-ui-bg-base w-full rounded-lg overflow-hidden p-0">
       <Container className="overflow-hidden p-0">
@@ -351,13 +413,8 @@ const Store = () => {
             </IconButton>
           </div>
           <hr />
+          {showLoadingModal && <LoadingModal />}
           
-          {loading && storeCreationStatus && (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600 mx-auto mb-2"></div>
-              <Text>{storeCreationStatus}</Text>
-            </div>
-          )}
 
             {!isSalesChannelCreated ? (
               <>
@@ -580,5 +637,7 @@ const StoreSkeleton = () => {
     </div>
   );
 };
+
+
 
 export default withAuth(Store);
