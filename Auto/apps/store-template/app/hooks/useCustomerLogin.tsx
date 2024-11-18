@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
 //import { useCart } from '@/context/cartContext'; // Import the cart context
-import {NEXT_PUBLIC_API_URL} from "../../constants/constant"
+import {NEXT_PUBLIC_API_URL} from "../../constants/constants"
 
 interface StoreLoginResponse {
   customer: any;

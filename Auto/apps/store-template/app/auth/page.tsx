@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import medusaIcon from "../../public/medusaIcon.jpeg"
+import medusaIcon from "../../public/medusaIcon.jpeg";
 import Image from "next/image";
 // import { EyeMini, EyeSlashMini } from "@medusajs/icons";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { useCustomerLogin } from "../hooks/useCustomerLogin";
 import { useCustomerSignup } from "../hooks/useCustomerSignup";
-import {NEXT_PUBLIC_VENDOR_ID} from "../../constants/constant"
+import {NEXT_PUBLIC_VENDOR_ID} from "../../constants/constants"
 
 type Errors = {
   firstName?: string;

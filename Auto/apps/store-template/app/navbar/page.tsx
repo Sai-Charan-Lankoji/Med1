@@ -14,7 +14,7 @@ import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
 import { IDesign, IProps } from "@/@types/models";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
-import { NEXT_STORE_NAME } from "@/constants/constant";
+import { NEXT_STORE_NAME } from "@/constants/constants";
 
 const Navbar: React.FC = () => {
   const { cartItems, deleteCart } = useNewCart();

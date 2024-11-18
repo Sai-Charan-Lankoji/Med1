@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {NEXT_PUBLIC_API_URL} from "../../constants/constant"  
+import {NEXT_PUBLIC_API_URL} from "../../constants/constants"  
 
 const CreateApparelDesign = async (data : any) =>{  
     const baseUrl = NEXT_PUBLIC_API_URL

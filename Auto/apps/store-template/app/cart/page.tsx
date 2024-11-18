@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight, XMarkMini } from "@medusajs/icons";
 import { ICartItem } from "@/@types/models";
 import { IDesign, IProps } from "@/@types/models";
 import { DesignContext } from "@/context/designcontext";
-import {NEXT_PUBLIC_VENDOR_ID} from "../../constants/constant"
+import {NEXT_PUBLIC_VENDOR_ID} from "../../constants/constants"
 
 interface OrderData {
   line_items: Array<{

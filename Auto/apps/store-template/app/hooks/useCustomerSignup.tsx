@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
 //import { useCart } from '@/context/cartContext';
-import {NEXT_PUBLIC_API_URL} from "../../constants/constant"
+import {NEXT_PUBLIC_API_URL} from "../../constants/constants"
 
 interface StoreSignupResponse {
   token: string;
