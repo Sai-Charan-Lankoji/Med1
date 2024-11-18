@@ -395,42 +395,94 @@ export default function DesignArea(): React.ReactElement {
     // Get the current design state for saving
     const currentDesignState = designs.map(design => ({
       ...design,
-      svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design
+      svgImage: design.id === design?.id ? svgUrl : design.svgImage
     }));
   
     // Get the current text props state for saving
     const currentPropsState = {
       ...props,
-      designId: design?.id // Ensure we associate props with current design
+      designId: design?.id
     };
   
+    // If user is not logged in, save states and redirect
     if (!customerToken) {
+      // Save design states to localStorage
+      localStorage.setItem('pendingCartAdd', 'true');
+      localStorage.setItem('pendingDesignState', JSON.stringify(currentDesignState));
+      localStorage.setItem('pendingPropsState', JSON.stringify(currentPropsState));
       saveStateToLocalStorage();
       router.push("/auth");
       return;
     }
     
     const success = await addDesignToCart(
-      designs, // Current designs being added to cart
-      customerToken, 
+      designs,
+      customerToken,
       svgUrl,
-      currentDesignState, // Full design state for saving
+      currentDesignState,
       currentPropsState,
     );
     
-    console.log("Success", success);
     if (success) {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
+      localStorage.removeItem('pendingCartAdd');
+      localStorage.removeItem('pendingDesignState');
+      localStorage.removeItem('pendingPropsState');
       updateColor("#fff");
-      //router.refresh();
       dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: "#fff" });
-
     }
- 
-   
   };
+  
+  // Add this effect in your component
+  useEffect(() => {
+    const checkPendingCartAdd = async () => {
+      const hasPendingAdd = localStorage.getItem('pendingCartAdd');
+      
+      // Check if there's a pending cart addition after login
+      if (customerToken && hasPendingAdd === 'true') {
+        const pendingDesignStateStr = localStorage.getItem('pendingDesignState');
+        const pendingPropsStateStr = localStorage.getItem('pendingPropsState');
+        
+        if (!pendingDesignStateStr || !pendingPropsStateStr) {
+          return; // Exit if either state is missing
+        }
+  
+        try {
+          const pendingDesignState = JSON.parse(pendingDesignStateStr);
+          const pendingPropsState = JSON.parse(pendingPropsStateStr);
+          
+          const success = await addDesignToCart(
+            pendingDesignState,
+            customerToken,
+            svgUrl,
+            pendingDesignState,
+            pendingPropsState
+          );
+          
+          if (success) {
+            dispatchDesign({ type: "CLEAR_ALL" });
+            localStorage.removeItem('savedDesignState');
+            localStorage.removeItem('savedPropsState');
+            localStorage.removeItem('pendingCartAdd');
+            localStorage.removeItem('pendingDesignState');
+            localStorage.removeItem('pendingPropsState');
+            updateColor("#fff");
+            dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: "#fff" });
+          }
+        } catch (error) {
+          console.error('Error processing pending cart addition:', error);
+          // Clean up invalid stored data
+          localStorage.removeItem('pendingCartAdd');
+          localStorage.removeItem('pendingDesignState');
+          localStorage.removeItem('pendingPropsState');
+        }
+      }
+    };
+  
+    checkPendingCartAdd();
+  }, [customerToken]); 
 
 
 

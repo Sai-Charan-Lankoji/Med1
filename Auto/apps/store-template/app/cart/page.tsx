@@ -210,13 +210,14 @@ const CartPage = () => {
 
     createOrder(orderData, {
       onSuccess: async () => {
-        try {
-          // Remove ordered items from cart
-          for (const itemId of selectedItems) {
-            await deleteCart(itemId);
-          }
-          setSelectedItems(new Set()); 
+    
           router.push("./order-confirmation");
+          try {
+            // Remove ordered items from cart
+            for (const itemId of selectedItems) {
+              await deleteCart(itemId);
+            }
+            setSelectedItems(new Set()); 
         } catch (err) {
           console.error("Error processing order:", err);
           setError("Failed to complete order process.");
