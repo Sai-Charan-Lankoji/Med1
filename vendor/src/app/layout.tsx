@@ -19,7 +19,7 @@ export default function  RootLayout({
   children: React.ReactNode;
 }>): React.ReactElement {
   const pathname = usePathname();
-  const isVendorpath = pathname.startsWith('/vendor');
+  const isVendorpath = pathname.startsWith('/vendor') ;
   const showHeader = isVendorpath;
   const showSidebar = isVendorpath;
   return (
@@ -36,7 +36,7 @@ export default function  RootLayout({
             {showSidebar && <Sidebar />}
             <div className="flex flex-col flex-1">
               {showHeader && <NavBar />}
-              <main className="flex-1 p-6 bg-gray-100  overflow-auto">
+              <main className="flex-1  bg-gray-100  overflow-auto">
                 {children}
               </main>
             </div>
