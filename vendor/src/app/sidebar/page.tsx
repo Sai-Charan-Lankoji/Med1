@@ -29,9 +29,9 @@ export default function Sidebar() {
           className="text-gray-50 flex h-8 w-8 items-center justify-center bg-black rounded-full cursor-pointer"
           onClick={togglePopup}
         >
-          {email?.slice(0, 1).toLocaleUpperCase()}
+          {contactName?.slice(0, 1).toLocaleUpperCase()}
         </div>
-        <span className="ml-3 text-[rgb(17, 24, 39)] font-semibold">{email}</span>
+        <span className="ml-3 text-[rgb(17, 24, 39)] font-semibold">{contactName}</span>
 
         {showPopup && (
           <div className="absolute top-16 left-6 w-40 bg-white shadow-lg rounded-lg p-2 z-10">
