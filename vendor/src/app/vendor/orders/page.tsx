@@ -1,50 +1,43 @@
 "use client";
+
 import {
   Badge,
   Button,
-  Text,
   Heading,
-  IconButton,
   Table,
-  DropdownMenu,
-  Label,
   Tooltip,
+  Select,
 } from "@medusajs/ui";
 import withAuth from "@/lib/withAuth";
 import React, { useMemo, useState } from "react";
 import { Input } from "@medusajs/ui";
-import { Eye, XMarkMini } from "@medusajs/icons";
+import { Eye } from "@medusajs/icons";
 import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
 import { useRouter } from "next/navigation";
-import useSearch from "@/app/hooks/useSearch";
 import { getColors } from "@/app/utils/dummyData";
-import Filter from "@/app/utils/filter";
 import Pagination from "@/app/utils/pagination";
-import { FiSearch, FiUpload } from "react-icons/fi";
+import { FiSearch } from "react-icons/fi";
 import { parseISO, format } from "date-fns";
+import { useGetStores } from "@/app/hooks/store/useGetStores";
+import { useGetStore } from "@/app/hooks/store/useGetStore";
 
 const Order = () => {
   const { data: OrdersData, isLoading } = useGetOrders();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { data: customersData } = useGetCustomers();
+  const { data: stores } = useGetStores();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState("all");
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
   const router = useRouter();
   const pageSize = 6;
-  const [filters, setFilters] = useState({
-    status: false,
-    paymentStatus: false,
-    fulfillmentStatus: false,
-    regions: false,
-    salesChannel: false,
-    date: false,
-    filterName: "",
-  });
+
+  const { data: store } = useGetStore(selectedStore !== "all" ? selectedStore : undefined);
 
   const getCustomerFirstName = (customerId: any) => {
     const customer = customersData?.find(
@@ -53,50 +46,26 @@ const Order = () => {
     return customer ? `${customer.first_name} ${customer.last_name}` : "N/A";
   };
 
-  const storesWithMatchingSalesChannels = OrdersData?.map(
-    (order: { vendor_id: any }) => {
-      const matchingSalesChannel = saleschannelsData?.find(
-        (salesChannel: { vendor_id: any }) =>
-          salesChannel.vendor_id === order.vendor_id
-      );
-      return {
-        ...order,
-        matchingSalesChannel,
-      };
-    }
-  );
-
-  const handleInputChange = (e: { target: { name: any; checked: any } }) => {
-    const { name, checked } = e.target;
-    setFilters((prevFilters) => ({ ...prevFilters, [name]: checked }));
-  };
-
-  const handleNameChange = (e: { target: { value: any } }) => {
-    setFilters((prevFilters) => ({
-      ...prevFilters,
-      filterName: e.target.value,
-    }));
-  };
-
   const filteredOrders = useMemo(() => {
-    if (!storesWithMatchingSalesChannels) return [];
+    if (!OrdersData) return [];
 
     const searchLower = searchQuery.toLowerCase();
 
-    return storesWithMatchingSalesChannels.filter((order) => {
-      return (
+    return OrdersData.filter((order) => {
+      const matchesSearch = 
         getCustomerFirstName(order.customer_id).toLowerCase().includes(searchLower) ||
         order.payment_status.toLowerCase().includes(searchLower) ||
         order.status.toLowerCase().includes(searchLower) ||
         order.id.toLowerCase().includes(searchLower) ||
         order.email.toLowerCase().includes(searchLower) ||
-        order.matchingSalesChannel?.name.toLowerCase().includes(searchLower) ||
-        order.created_at.toLowerCase().includes(searchLower)
-      );
-    });
-  }, [storesWithMatchingSalesChannels, searchQuery,getCustomerFirstName]);
+        order.created_at.toLowerCase().includes(searchLower);
 
-  // Get paginated data
+      const matchesStore = selectedStore === "all" || order.store_id === selectedStore;
+
+      return matchesSearch && matchesStore;
+    });
+  }, [OrdersData, searchQuery, selectedStore, getCustomerFirstName]);
+
   const paginatedOrders = useMemo(() => {
     const startIndex = currentPage * pageSize;
     const endIndex = startIndex + pageSize;
@@ -130,142 +99,25 @@ const Order = () => {
       <Heading level="h2" className="font-semibold text-2xl mb-4">
         Orders
       </Heading>
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6  ">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
         <div className="flex flex-col sm:flex-row items-center justify-between flex-wrap space-x-0 sm:space-x-4 space-y-2 sm:space-y-0 mt-4 sm:mt-0 w-full">
           <div className="flex flex-row items-center space-x-2">
-            <div className="flex flex-row justify-center items-center">
-              <DropdownMenu>
-                <DropdownMenu.Trigger asChild>
-                  <IconButton
-                    size="small"
-                    className="px-12"
-                    variant="transparent"
-                  >
-                    <Filter
-                      count={0}
-                      onAddFilter={function (): void {
-                        throw new Error("Function not implemented.");
-                      }}
-                      label={""}
-                    />
-                  </IconButton>
-                </DropdownMenu.Trigger>
-                <DropdownMenu.Content>
-                  <DropdownMenu.Item className="gap-x-2">
-                    <Label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="status"
-                        checked={filters.status}
-                        onChange={handleInputChange}
-                        className="form-checkbox text-indigo-600 h-5 w-5 cursor-pointer"
-                      />
-                      <span className="text-gray-700">Status</span>
-                    </Label>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item className="gap-x-2">
-                    <Label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="paymentStatus"
-                        checked={filters.paymentStatus}
-                        onChange={handleInputChange}
-                        className="form-checkbox text-indigo-600 h-5 w-5"
-                      />
-                      <span className="text-gray-700">Payment Status</span>
-                    </Label>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item className="gap-x-2">
-                    <Label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="fulfillmentStatus"
-                        checked={filters.fulfillmentStatus}
-                        onChange={handleInputChange}
-                        className="form-checkbox text-indigo-600 h-5 w-5"
-                      />
-                      <span className="text-gray-700">Fulfillment Status</span>
-                    </Label>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item className="gap-x-2">
-                    <Label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="regions"
-                        checked={filters.regions}
-                        onChange={handleInputChange}
-                        className="form-checkbox text-indigo-600 h-5 w-5"
-                      />
-                      <span className="text-gray-700">Regions</span>
-                    </Label>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item className="gap-x-2">
-                    <Label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="salesChannel"
-                        checked={filters.salesChannel}
-                        onChange={handleInputChange}
-                        className="form-checkbox text-indigo-600 h-5 w-5"
-                      />
-                      <span className="text-gray-700">Sales Channel</span>
-                    </Label>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item className="gap-x-2">
-                    <Label className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        name="date"
-                        checked={filters.date}
-                        onChange={handleInputChange}
-                        className="form-checkbox text-indigo-600 h-5 w-5"
-                      />
-                      <span className="text-gray-700">Date</span>
-                    </Label>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item className="gap-x-2">
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        type="text"
-                        placeholder="Name your filter..."
-                        value={filters.filterName}
-                        onChange={handleNameChange}
-                        className="border border-gray-300 rounded-md p-2 flex-1"
-                      />
-                      <Button
-                        variant="secondary"
-                        className="px-4 py-2  bg-gray-200 text-gray-700 rounded-md"
-                      >
-                        Save
-                      </Button>
-                    </div>
-                  </DropdownMenu.Item>
-                  <DropdownMenu.Separator />
-                  <DropdownMenu.Item className="gap-x-2">
-                    <div className="flex flex-row justify-between space-x-20">
-                      <Button
-                        variant="secondary"
-                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md"
-                      >
-                        Clear
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        className="px-4 py-2 bg-purple-600 text-white rounded-md"
-                      >
-                        Apply
-                      </Button>
-                    </div>
-                  </DropdownMenu.Item>
-                </DropdownMenu.Content>
-              </DropdownMenu>
-            </div>
+            <Select
+              value={selectedStore}
+              onValueChange={(value) => setSelectedStore(value)}
+            >
+              <Select.Trigger>
+                <Select.Value placeholder="Select a store" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="all">All Stores</Select.Item>
+                {stores?.map((store: any) => (
+                  <Select.Item key={store.id} value={store.id}>
+                    {store.name}
+                  </Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
             <Badge
               size="small"
               className="hover:border-violet-400 hover:text-violet-400 cursor-pointer"
@@ -334,7 +186,7 @@ const Order = () => {
                     className="hover:bg-gray-50 text-[rgb(17, 24, 39)]"
                   >
                     <Table.Cell className="px-4 py-3 flex flex-row justify-between text-[12px] md:text-[14px] text-gray-700 text-center hover:text-violet-500">
-                    <Tooltip
+                      <Tooltip
                         className="font-semibold text-[rgb(107, 114, 128)] text-[12px] md:text-[14px]"
                         content="View Order"
                       >
@@ -343,11 +195,11 @@ const Order = () => {
                           className="text-[12px] md:text-[14px] text-[rgb(17, 24, 39)] hover:bg-none"
                         >
                           <Eye onClick={() => {
-                      router.push(`/vendor/orders/${order.id}`);
-                    }}/>
+                            router.push(`/vendor/orders/${order.id}`);
+                          }}/>
                         </Button>
                       </Tooltip>
-                     {getRowIndex(index)}
+                      {getRowIndex(index)}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center">
                       <Tooltip
@@ -399,16 +251,6 @@ const Order = () => {
                       <span className="text-[12px] font-medium text-gray-400">
                         {order.currency_code.toUpperCase()}
                       </span>
-                      <Tooltip
-                        className="font-semibold text-[rgb(107, 114, 128)] text-[12px] md:text-[14px]"
-                        content={order.currency_code}
-                      >
-                        {/*<Button variant="transparent">
- 
-                             {order.currency_code}
-                          
-                        </Button> */}
-                      </Tooltip>
                     </Table.Cell>
                   </Table.Row>
                 ))}
@@ -423,34 +265,6 @@ const Order = () => {
           data={filteredOrders}
         />
       </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-6 h-[200px] w-[700px]">
-            <div className="flex flex-row justify-between border-ui-border-base border-b">
-              <Heading level="h2" className="text-xl font-semibold mb-4">
-                Export Orders
-              </Heading>
-              <IconButton variant="transparent">
-                <XMarkMini onClick={closeModal} />
-              </IconButton>
-            </div>
-            <Text className="text-[12px] text-gray-400 font-semibold py-4 border-ui-border-base border-b">
-              Initialize an export of your data
-            </Text>
-            <div className="flex justify-end py-4">
-              <Button variant="secondary" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button
-                variant="transparent"
-                className="ml-2 px-4   border-none rounded-md outline-none text-white font-bold font-cabin bg-violet-600 hover:bg-violet-500"
-              >
-                Export
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

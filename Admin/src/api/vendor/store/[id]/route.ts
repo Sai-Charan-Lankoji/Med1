@@ -13,37 +13,37 @@ const getStoreService = (req: MedusaRequest): StoreService | null => {
   }
 }
 
-// //Retrive a specific product
-// export const GET = async (
-//  req: MedusaRequest,
-//  res: MedusaResponse
-// ): Promise<void> => {
-//  try {
-//    const storeservice = getStoreService(req as any);
-//    if (!storeservice) {
-//      res.status(500).json({ error: "Store service could not be resolved." });
-//      return;
-//    }
+//Retrive a specific product
+export const GET = async (
+ req: MedusaRequest,
+ res: MedusaResponse
+): Promise<void> => {
+ try {
+   const storeservice = getStoreService(req as any);
+   if (!storeservice) {
+     res.status(500).json({ error: "Store service could not be resolved." });
+     return;
+   }
 
-//    const storeId = req.params.id as string;
+   const storeId = req.params.id as string;
 
-//    if (!storeId) {
-//      res.status(400).json({ error: "Store ID is required." });
-//      return;
-//    }
+   if (!storeId) {
+     res.status(400).json({ error: "Store ID is required." });
+     return;
+   }
 
-//    const store = await storeservice.listByStore(storeId);
+   const store = await storeservice.retrieveByStoreId(storeId);
 
-//    if (!store) {
-//      res.status(404).json({ error: "Store not found." });
-//    }else{
-//      res.status(200).json({ message: "Store retrieve successfully.", store: store });
-//    }
-//  } catch (error) {
-//    console.error("Error in GET /store:", error);
-//    res.status(500).json({ error: error.message || "An unknown error occurred." });
-//  }
-// };
+   if (!store) {
+     res.status(404).json({ error: "Store not found." });
+   }else{
+     res.status(200).json({ message: "Store retrieve successfully.", store: store });
+   }
+ } catch (error) {
+   console.error("Error in GET /store:", error);
+   res.status(500).json({ error: error.message || "An unknown error occurred." });
+ }
+};
 
 // // // Update a specific product
 // // export const PUT = async (
