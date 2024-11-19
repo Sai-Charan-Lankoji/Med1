@@ -56,6 +56,25 @@ const config: Config = {
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       keyframes: {
+        slideIn: {
+          '0%': { transform: 'translateY(-10px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        fadeIn: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        slideUp: {
+          '0%': { transform: 'translateY(20px)', opacity: '0' },
+          '100%': { transform: 'translateY(0)', opacity: '1' },
+        },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        },
+       
+
+
+        
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -83,7 +102,15 @@ const config: Config = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         blob: "blob 7s infinite",
+        slideIn: 'slideIn 0.3s ease-out',
+        fadeIn: 'fadeIn 0.5s ease-out',
+        slideUp: 'slideUp 0.5s ease-out',
+        shimmer: 'shimmer 1.5s infinite',
       },
+
+
+
+      
     },
   },
   plugins: [require("tailwindcss-animate")],

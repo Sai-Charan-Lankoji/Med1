@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, Bolt, Sparkles } from "@medusajs/icons";
 import { Button } from "@medusajs/ui"
 import { Card } from "./ui/card";
-import VendorForm from "./vendor-form";
+import VendorForm from "./vendorForm/vendor-form";
 
 const plans = [
   {
@@ -64,9 +64,9 @@ export function PlanSelection() {
 
       <div className="container mx-auto px-4 relative z-10">
         <h2 className="text-4xl font-bold text-center text-white mb-12">Choose Your Plan</h2>
-        <div className="grid gap-8 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           {plans.map((plan) => (
-            <Card key={plan.id} className="p-6 bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/40 transition-all hover:scale-105 rounded-lg">
+            <Card key={plan.id} className="p-6 max-w-sm bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/40 transition-all hover:scale-105 rounded-lg">
               <div className="flex flex-col h-full">
                 <div className="mb-6">
                   <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
