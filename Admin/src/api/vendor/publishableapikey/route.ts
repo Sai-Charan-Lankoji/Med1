@@ -68,7 +68,7 @@ export const POST = async (
 
     const newApiKey = await publishableApiKeyService.create(salesChannelId, keyData);
 
-    res.status(201).json({ status: "success", apiKey: newApiKey });
+    res.status(201).json(newApiKey);
   } catch (error) {
     console.error("Error in POST /vendor/publishable-api-keys:", error);
     res.status(500).json({ error: error.message || "An unknown error occurred." });

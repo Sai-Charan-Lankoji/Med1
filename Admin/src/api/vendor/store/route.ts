@@ -81,17 +81,16 @@ export const POST = async (
   res: MedusaResponse
 ): Promise<void> => {
   try {
-    console.log("Request body:", req.body);
+    console.log("STORE Request body:", req.body);
 
     const storeService = getStoreService(req);
-    const publishableapikey = getPublishableApiKeyService(req);
-    if (!storeService || !publishableapikey) {
+    if (!storeService) {
       console.error("Store service or publishableapikeyservice could not be resolved.");
       res.status(500).json({ error: "Store service or publishableapikeyservice could not be resolved." });
       return;
     }
 
-    const { vendor_id, default_sales_channel_id, name } = req.body as StoreData; 
+    const { vendor_id,publishableapikey, default_sales_channel_id, name } = req.body as StoreData; 
 
     // Validate required fields
     if (!vendor_id) {
@@ -114,6 +113,7 @@ export const POST = async (
     const storeDataWithVendor = {
       ...newStoreData,
       vendor_id,
+      publishableapikey,
       default_sales_channel_id,
     };
 

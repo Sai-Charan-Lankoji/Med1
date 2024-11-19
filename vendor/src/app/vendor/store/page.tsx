@@ -193,7 +193,7 @@ const Store = () => {
                       description: "Publishable API Key Created Successfully",
                       duration: 1000,
                     });
-                    
+                    console.log("Praveen API Key Created Successfully: ", apiKeyResponse.id)
                     // Add the publishable API key ID to the formData
                     setFormData(prev => ({
                       ...prev,
@@ -247,6 +247,7 @@ const Store = () => {
                 name: formData.storeName,
                 vendor_id: formData.vendor_id,
                 default_sales_channel_id: formData.salesChannelId,
+                publishableapikey: formData.publishableapikey
               });
               
               setLoadingStage("Store created successfully!");
