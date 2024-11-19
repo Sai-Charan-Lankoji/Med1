@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
-
+import { Button } from "@medusajs/ui"
+import { ArrowRightMini, ArrowLeftMini } from "@medusajs/icons"
 interface PaginationProps<T> {
   currentPage: number;
   setCurrentPage: (page: number) => void;
@@ -54,21 +55,21 @@ const Pagination = <T extends { [key: string]: any }>({
       </div>
       <div className="flex space-x-2">
         <button 
-          onClick={previousPage} 
+           onClick={previousPage} 
           disabled={!canPreviousPage} 
           className="cursor-pointer disabled:opacity-50"
         >
-          prev
+          <ArrowLeftMini />
         </button>
         <span className="tex-gray-00">
           page {currentPage + 1} of {pageCount}
         </span>
         <button 
-          onClick={nextPage} 
+           onClick={nextPage} 
           disabled={!canNextPage} 
           className="cursor-pointer disabled:opacity-50"
-        >
-          next
+         >
+          <ArrowRightMini />
         </button>
       </div>
     </div>

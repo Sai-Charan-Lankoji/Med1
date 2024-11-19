@@ -15,6 +15,14 @@ type CreateVendorUserInput = {
   vendor_id?: string;
 };
 
+type UpdateVendorUserInput = Partial<{
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  vendor_id: string;
+}>;
 class VendorUserService extends TransactionBaseService {
   protected readonly manager_: EntityManager;
   protected readonly vendorUserRepository_: Repository<VendorUser>;
@@ -108,6 +116,62 @@ class VendorUserService extends TransactionBaseService {
       const vendorUserRepo = transactionManager.getRepository(VendorUser);
       const vendor = await vendorUserRepo.findOne({ where: { email: email } });
       return vendor || null;
+    });
+  }
+
+  async updateUser(
+    userId: string,
+    updateData: UpdateVendorUserInput
+  ): Promise<VendorUser | null> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const vendorUserRepo = transactionManager.getRepository(VendorUser);
+      const user = await vendorUserRepo.findOne({ where: { id: userId } });
+
+      if (!user) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `Vendor User with id ${userId} was not found`
+        );
+      }
+
+      // If email is being updated, check for duplicates
+      if (updateData.email && updateData.email !== user.email) {
+        const existingUser = await this.findByEmail(updateData.email);
+        if (existingUser) {
+          throw new MedusaError(
+            MedusaError.Types.DUPLICATE_ERROR,
+            `A user with email ${updateData.email} already exists`
+          );
+        }
+      }
+
+      // If password is being updated, hash it
+      if (updateData.password) {
+        updateData.password = await bcrypt.hash(updateData.password, 10);
+      }
+
+      // Update the user
+      Object.assign(user, updateData);
+
+      const updated = await vendorUserRepo.save(user);
+      return updated;
+    });
+  }
+
+  async delete(userId: string): Promise<void> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const vendorUserRepo = transactionManager.getRepository(VendorUser);
+
+      const user = await this.retrieve(userId);
+
+      if (!user) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `User with id ${userId} was not found`
+        );
+      }
+
+      await vendorUserRepo.delete({ id: userId });
     });
   }
 }

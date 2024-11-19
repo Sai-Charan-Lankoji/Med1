@@ -13,7 +13,7 @@ import {
 import withAuth from "@/lib/withAuth";
 import React, { useMemo, useState } from "react";
 import { Input } from "@medusajs/ui";
-import { XMarkMini } from "@medusajs/icons";
+import { Eye, XMarkMini } from "@medusajs/icons";
 import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
@@ -85,12 +85,16 @@ const Order = () => {
 
     return storesWithMatchingSalesChannels.filter((order) => {
       return (
+        getCustomerFirstName(order.customer_id).toLowerCase().includes(searchLower) ||
+        order.payment_status.toLowerCase().includes(searchLower) ||
+        order.status.toLowerCase().includes(searchLower) ||
+        order.id.toLowerCase().includes(searchLower) ||
         order.email.toLowerCase().includes(searchLower) ||
         order.matchingSalesChannel?.name.toLowerCase().includes(searchLower) ||
         order.created_at.toLowerCase().includes(searchLower)
       );
     });
-  }, [storesWithMatchingSalesChannels, searchQuery]);
+  }, [storesWithMatchingSalesChannels, searchQuery,getCustomerFirstName]);
 
   // Get paginated data
   const paginatedOrders = useMemo(() => {
@@ -327,13 +331,23 @@ const Order = () => {
                 {paginatedOrders.map((order: any, index: any) => (
                   <Table.Row
                     key={order.id}
-                    onClick={() => {
-                      router.push(`/vendor/orders/${order.id}`);
-                    }}
-                    className="hover:bg-gray-50 text-[rgb(17, 24, 39)] hover:cursor-pointer"
+                    className="hover:bg-gray-50 text-[rgb(17, 24, 39)]"
                   >
-                    <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center hover:text-violet-500">
-                    {getRowIndex(index)}
+                    <Table.Cell className="px-4 py-3 flex flex-row justify-between text-[12px] md:text-[14px] text-gray-700 text-center hover:text-violet-500">
+                    <Tooltip
+                        className="font-semibold text-[rgb(107, 114, 128)] text-[12px] md:text-[14px]"
+                        content="View Order"
+                      >
+                        <Button
+                          variant="transparent"
+                          className="text-[12px] md:text-[14px] text-[rgb(17, 24, 39)] hover:bg-none"
+                        >
+                          <Eye onClick={() => {
+                      router.push(`/vendor/orders/${order.id}`);
+                    }}/>
+                        </Button>
+                      </Tooltip>
+                     {getRowIndex(index)}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center">
                       <Tooltip
