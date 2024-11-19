@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import SalesChannelService from "../../../services/salesChannel";
+import PublishableApiKeyService from "../../../services/publishableapikey";
 
 interface SalesChannelData {
   name: string;
@@ -19,17 +20,26 @@ const getSalesChannelService = (
   }
 };
 
+const getPublishableApiKeyService = (req: MedusaRequest): PublishableApiKeyService | null => {
+  try {
+    return req.scope.resolve("publishableApiKeyService") as PublishableApiKeyService;
+  } catch (error) {
+    console.error("Failed to resolve publishableApiKeyService:", error);
+    return null;
+  }
+}
+
 export const GET = async (
   req: MedusaRequest,
   res: MedusaResponse
 ): Promise<void> => {
   try {
     const salesChannelService = getSalesChannelService(req);
-    if (!salesChannelService) {
-      console.error("Sales channel service could not be resolved.");
-      res
-        .status(500)
-        .json({ error: "Sales channel service could not be resolved." });
+    const publishableapikeyService = getPublishableApiKeyService(req);
+
+    if (!salesChannelService || !publishableapikeyService) {
+      console.error("Store service or publishableapikeyservice could not be resolved.");
+      res.status(500).json({ error: "Store service or publishableapikeyservice could not be resolved." });
       return;
     }
 
@@ -74,11 +84,12 @@ export const POST = async (
     console.log("Request body:", req.body);
 
     const salesChannelService = getSalesChannelService(req);
-    if (!salesChannelService) {
-      console.error("Sales channel service could not be resolved.");
-      res
-        .status(500)
-        .json({ error: "Sales channel service could not be resolved." });
+    const publishableapikeyService = getPublishableApiKeyService(req);
+
+    if (!salesChannelService || !publishableapikeyService) {
+      console.error("Store service or publishableapikeyservice could not be resolved.");
+      res.status(500).json({ error: "Store service or publishableapikeyservice could not be resolved." });
+      return;
     }
 
     const { vendor_id, name } = req.body as SalesChannelData;
@@ -111,7 +122,7 @@ export const POST = async (
   }
 };
 
- // Update sales channel:
+ 
 
 
 

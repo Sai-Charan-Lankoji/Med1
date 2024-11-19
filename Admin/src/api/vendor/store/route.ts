@@ -1,5 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import StoreService from "../../../services/store";
+import PublishableApiKeyService from "../../../services/publishableapikey";
 
 interface StoreData {
   name: string;
@@ -11,6 +12,7 @@ interface StoreData {
   invite_link_template?: string;
   default_location_id?: string;
   metadata?: Record<string, unknown>;
+  publishableapikey: string;
 }
 
 // Function to get the StoreService from the request context
@@ -23,15 +25,25 @@ const getStoreService = (req: MedusaRequest): StoreService | null => {
   }
 };
 
+const getPublishableApiKeyService = (req: MedusaRequest): PublishableApiKeyService | null => {
+  try {
+    return req.scope.resolve("publishableApiKeyService") as PublishableApiKeyService;
+  } catch (error) {
+    console.error("Failed to resolve publishableApiKeyService:", error);
+    return null;
+  }
+}
+
 export const GET = async (
   req: MedusaRequest,
   res: MedusaResponse
 ): Promise<void> => {
   try {
     const storeService = getStoreService(req);
-    if (!storeService) {
-      console.error("Store service could not be resolved.");
-      res.status(500).json({ error: "Store service could not be resolved." });
+    const publishableapikey = getPublishableApiKeyService(req);
+    if (!storeService || !publishableapikey) {
+      console.error("Store service or publishableapikeyservice could not be resolved.");
+      res.status(500).json({ error: "Store service or publishableapikeyservice could not be resolved." });
       return;
     }
 
@@ -72,9 +84,10 @@ export const POST = async (
     console.log("Request body:", req.body);
 
     const storeService = getStoreService(req);
-    if (!storeService) {
-      console.error("Store service could not be resolved.");
-      res.status(500).json({ error: "Store service could not be resolved." });
+    const publishableapikey = getPublishableApiKeyService(req);
+    if (!storeService || !publishableapikey) {
+      console.error("Store service or publishableapikeyservice could not be resolved.");
+      res.status(500).json({ error: "Store service or publishableapikeyservice could not be resolved." });
       return;
     }
 
@@ -105,7 +118,6 @@ export const POST = async (
     };
 
     const newStore = await storeService.createStore(storeDataWithVendor as any);
-
     res.status(201).json(newStore);
   } catch (error) {
     console.error("Error in POST /stores:", error);

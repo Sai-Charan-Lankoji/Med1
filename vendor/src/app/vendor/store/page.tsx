@@ -32,6 +32,8 @@ import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesCh
 import Link from "next/link";
 import Image from "next/image";
 import { useDeleteStore } from "@/app/hooks/store/useDeleteStore";
+import { useCreatePublishableApiKey } from "@/app/hooks/publishableapikey/useCreatepublishablekey";
+import { PublishableApiKey } from "@medusajs/medusa";
 
 const Store = () => {
   const router = useRouter();
@@ -58,6 +60,7 @@ const Store = () => {
   const { data: saleschannelsData } = useGetSalesChannels();
   const { mutate: createStore } = useCreateStore();
   const { mutate: createSalesChannel } = useCreateSalesChannel();
+  const { mutate: createPublishableApiKey } = useCreatePublishableApiKey()
   const { mutate: deleteStore } = useDeleteStore();
   //loading
   const [showLoadingModal, setShowLoadingModal] = useState(false);
@@ -81,6 +84,7 @@ const Store = () => {
     inviteLinkTemplate: "",
     vendor_id: vendorId ?? "",
     store_type: "",
+    publishableapikey: ""
   });
 
   const createStoreInstance = async (storeDetails) => {
@@ -154,7 +158,7 @@ const Store = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-
+  
     try {
       if (!isSalesChannelCreated) {
         createSalesChannel(
@@ -169,12 +173,45 @@ const Store = () => {
                 description: "Sales Channel Created Successfully",
                 duration: 1000,
               });
+  
               setFormData(prev => ({
                 ...prev,
                 salesChannelId: response.id,
               }));
-              setIsSalesChannelCreated(true);
-              setLoading(false);
+              
+              createPublishableApiKey(
+                {
+                  salesChannelId: response.id,
+                  keyData: {
+                    title: response.name,
+                    created_by: response.vendor_id
+                  }
+                },
+                {
+                  onSuccess: (apiKeyResponse) => {
+                    toast.success("Success", {
+                      description: "Publishable API Key Created Successfully",
+                      duration: 1000,
+                    });
+                    
+                    // Add the publishable API key ID to the formData
+                    setFormData(prev => ({
+                      ...prev,
+                      publishableapikey: apiKeyResponse.id
+                    }));
+                    
+                    setIsSalesChannelCreated(true);
+                    setLoading(false);
+                  },
+                  onError: (error) => {
+                    console.error("Error creating publishable API key:", error);
+                    toast.error("Error", {
+                      description: "Error creating publishable API key",
+                      duration: 1000,
+                    });
+                    setLoading(false);
+                  }
+                })
             },
             onError: (error) => {
               console.error("Error while creating sales channel:", error);
@@ -187,10 +224,9 @@ const Store = () => {
           }
         );
       } else {
-        // Show loading modal before starting store creation
         setShowLoadingModal(true);
         setLoadingStage("Initializing store creation...");
-
+  
         const storeData = {
           name: formData.storeName,
           default_sales_channel_id: formData.salesChannelId,
@@ -199,8 +235,9 @@ const Store = () => {
           invite_link_template: formData.inviteLinkTemplate,
           vendor_id: formData.vendor_id,
           store_type: formData.store_type,
+          publishableapikey: formData.publishableapikey  
         };
-
+  
         createStore(storeData, {
           onSuccess: async (response) => {
             try {
@@ -223,7 +260,6 @@ const Store = () => {
               
               refreshStores();
               
-              // Delay closing modals to show success state
               setTimeout(() => {
                 setShowLoadingModal(false);
                 closeModal();
@@ -262,6 +298,7 @@ const Store = () => {
       }, 2000);
     }
   };
+
 
   const handleDelete = (id, event) => {
     event.stopPropagation();

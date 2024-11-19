@@ -109,12 +109,14 @@ const OrderDetailsView = () => {
   };
 
   return (
+    <>
+          <BackButton name="Orders" className="mb-4" />
+
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <BackButton name="orders" className="mb-4" />
           <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
-          <p className="text-sm text-gray-500">Order ID: {order.id}</p>
+          <p className="text-sm text-gray-500"><span className="text-slate-900">Order ID:</span> {order.id}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -368,7 +370,7 @@ const OrderDetailsView = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-100">
               <div className="p-4 sm:p-6">
                 <h2 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">
-                  Customer
+                  Customer Details
                 </h2>
                 <div>
                   {matchingCustomers?.length > 0 ? (
@@ -423,7 +425,7 @@ const OrderDetailsView = () => {
 
             {/* Order Summary */}
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-medium mb-4">Summary</h3>
+              <h3 className="text-lg font-medium mb-4">Order Summary</h3>
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Subtotal</span>
@@ -467,6 +469,7 @@ const OrderDetailsView = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

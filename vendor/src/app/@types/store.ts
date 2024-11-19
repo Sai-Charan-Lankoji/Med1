@@ -19,5 +19,6 @@ export interface StoreFormData {
   payment_link_template: string,
   invite_link_template: string,
   vendor_id: string,
-  store_type: string
+  store_type: string,
+  publishableapikey: string
 }

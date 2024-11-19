@@ -14,6 +14,7 @@ interface StoreData {
   default_sales_channel_id: string; 
   name: string; 
   store_type: string;
+  publishableapikey: string;
 }
 
 class StoreService extends MedusaStoreService {

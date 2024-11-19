@@ -46,12 +46,12 @@ const Order = () => {
     filterName: "",
   });
 
-  const getCustomerFirstName = (customerId: any) => {
+  const getCustomerFirstName = useCallback((customerId: any) => {
     const customer = customersData?.find(
       (customer: { id: any }) => customer.id === customerId
     );
     return customer ? `${customer.first_name} ${customer.last_name}` : "N/A";
-  };
+  });
 
   const storesWithMatchingSalesChannels = OrdersData?.map(
     (order: { vendor_id: any }) => {

@@ -44,10 +44,10 @@ class PublishableApiKeyService extends TransactionBaseService {
   }
    
   
-  async retrieve_(selector: Selector<PublishableApiKey>, config?: FindConfig<PublishableApiKey>): Promise<PublishableApiKey | never>{
-    return this.runAtomicPhase(async (manager) => {
+  retrieve(publishableApiKeyId: string, config?: FindConfig<PublishableApiKey>): Promise<PublishableApiKey | never>{
+  return this.runAtomicPhase(async (manager) => {
       const publishableapikeyRepo = manager.withRepository(this.publishableapikeyRepository);
-      const apiKey = await publishableapikeyRepo.findOne(selector, config);
+      const apiKey = await this.publishableapikeysaleschannelRepository.findOne({ where: { sales_channel_id: publishableApiKeyId }});
       if (!apiKey) {
         throw new Error("Publishable API not found");
       }
@@ -67,25 +67,26 @@ class PublishableApiKeyService extends TransactionBaseService {
     salesChannelId: string,
     keyData: Partial<PublishableApiKey>
   ): Promise<PublishableApiKey> {
-    if (!keyData.title) {
-      throw new Error("Title is required.");
-    }
+    return this.atomicPhase_(async (transactionManager: EntityManager) => {
+      if (!keyData.title) {
+        throw new Error("Title is required.");
+      }
 
-    const newApiKey = this.publishableapikeyRepository.create({
-      ...keyData,
-      title: keyData.title,
+      const publishableapikeyRepo = transactionManager.withRepository(this.publishableapikeyRepository);
+      const publishableapikeysaleschannelRepo = transactionManager.withRepository(this.publishableapikeysaleschannelRepository);
+
+      const newApiKey = publishableapikeyRepo.create(keyData);
+      const savedApiKey = await publishableapikeyRepo.save(newApiKey);
+
+      const publishableApiKeySalesChannel = publishableapikeysaleschannelRepo.create({
+        publishable_key_id: savedApiKey.id,
+        sales_channel_id: salesChannelId,
+      });
+
+      const newpublishableapikeysaleschannel = await publishableapikeysaleschannelRepo.save(publishableApiKeySalesChannel);
+      console.log("NEWPUBLISHABLEAPIKEYSALESCHANNEL ", newpublishableapikeysaleschannel)
+      return savedApiKey;
     });
-
-    const savedApiKey = await this.publishableapikeyRepository.save(newApiKey);
-
-    const publishableApiKeySalesChannel = this.publishableapikeysaleschannelRepository.create({
-      publishable_key_id: savedApiKey.id,
-      sales_channel_id: salesChannelId,
-    });
-
-    await this.publishableapikeysaleschannelRepository.save(publishableApiKeySalesChannel);
-
-    return savedApiKey;
   }
 }
 
