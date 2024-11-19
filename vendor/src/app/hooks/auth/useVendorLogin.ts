@@ -57,7 +57,7 @@ export const useVendorLogin = () => {
           sessionStorage.setItem('business_type', data.vendor.business_type);
           sessionStorage.setItem('company_name', data.vendor.company_name);
           setAuthEmail(data.vendor.contact_email)
-          setAuthEmail(data.vendor.contact_name)
+          setContactName(data.vendor.contact_name)
         } 
         else{
           sessionStorage.setItem('vendor_id', data.vendorUser.vendor_id)

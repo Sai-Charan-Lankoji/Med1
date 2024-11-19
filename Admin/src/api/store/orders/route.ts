@@ -6,6 +6,7 @@ interface OrderData {
   payment_status: string;
   customer_id: string;
   vendor_id: string;
+  store_id: string;
   email: string;
   region_id: string;
   currency_code: string;
@@ -41,7 +42,7 @@ export const POST = async (
       return;
     }
 
-    const { line_items, public_api_key, customer_id, total_amount, ...rest } =
+    const { line_items, public_api_key, customer_id, total_amount, store_id, ...rest } =
       req.body as OrderData;
 
     if (!line_items || !Array.isArray(line_items) || line_items.length === 0) {
@@ -54,6 +55,8 @@ export const POST = async (
       line_items,
       public_api_key,
       customer_id,
+      store_id,
+      vendor_id: rest.vendor_id, // Make sure vendor_id is included
       total_amount,
       ...rest,
     };

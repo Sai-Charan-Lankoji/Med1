@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight, XMarkMini } from "@medusajs/icons";
 import { ICartItem } from "@/@types/models";
 import { IDesign, IProps } from "@/@types/models";
 import { DesignContext } from "@/context/designcontext";
-import {NEXT_PUBLIC_VENDOR_ID} from "../../constants/constants"
+import {NEXT_PUBLIC_VENDOR_ID,NEXT_PUBLIC_STORE_ID} from "../../constants/constants"
 
 interface OrderData {
   line_items: Array<{
@@ -31,6 +31,7 @@ interface OrderData {
   region_id: string;
   vendor_id: string | null;
   public_api_key: string | null;
+  store_id : string | null;
 }
 
 const CartPage = () => {
@@ -204,8 +205,9 @@ const CartPage = () => {
       customer_id: sessionStorage.getItem("customerId"),
       email: sessionStorage.getItem("customerEmail"),
       region_id: "reg_01J2GRDEGRBXFBD4HZW443AF8K",
-      vendor_id: NEXT_PUBLIC_VENDOR_ID || null,
+      vendor_id: NEXT_PUBLIC_VENDOR_ID,
       public_api_key: process.env.NEXT_PUBLIC_API_KEY || null,
+      store_id : NEXT_PUBLIC_STORE_ID 
     };
 
     createOrder(orderData, {

@@ -12,6 +12,7 @@ import {
 import { User } from "./user";
 import { Product } from "./product";
 import { Vendor } from "./vendor"; 
+import { Order } from "./order";
 
 @Entity()
 export class Store extends MedusaStore {
@@ -30,4 +31,8 @@ vendor_id?: string;
 @ManyToOne(() => Vendor, (vendor) => vendor.stores, { nullable: true })
 @JoinColumn({ name: "vendor_id" })  
 vendor?: Vendor;
+
+@OneToMany(() => Order, (order) => order.store)
+orders?: Order[];
+
 }

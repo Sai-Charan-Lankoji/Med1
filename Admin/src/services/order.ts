@@ -19,10 +19,12 @@ enum OrderStatus {
 
 type Order = MedusaOrder & {
     vendor_id?: string;
+    store_id?: string;
 };
 
 interface CreateOrderData {
     vendor_id: string;
+    store_id: string;
     status?: OrderStatus;
 }
 
@@ -60,18 +62,24 @@ class OrderService extends MedusaOrderService {
     }
 
     async createOrder(orderData: CreateOrderData): Promise<Order> {
-      if (!orderData.vendor_id) {
+        if (!orderData.vendor_id) {
           throw new Error("Vendor ID is required to create an order.");
-      }
-  
-      const order: DeepPartial<Order> = {
+        }
+    
+        if (!orderData.store_id) {
+          throw new Error("Store ID is required to create an order.");
+        }
+        console.log(`Creating order with store_id: ${orderData.store_id}`);
+    
+        const order: DeepPartial<Order> = {
           ...orderData,
+          store_id: orderData.store_id,
           status: orderData.status as any || OrderStatus.Pending,
-      };
-  
-      const newOrder = this.orderRepository_.create(order);
-      return await this.orderRepository_.save(newOrder);
-  }
+        };
+    
+        const newOrder = this.orderRepository_.create(order);
+        return await this.orderRepository_.save(newOrder);
+      }
 
     async listOrdersByVendor(vendorId: string): Promise<Order[]> {
         // if (!vendorId) {
