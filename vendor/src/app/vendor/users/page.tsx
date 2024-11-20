@@ -10,6 +10,8 @@ import {
   Heading,
   Select,
   Label,
+  toast,
+  Toaster,
 } from "@medusajs/ui"
 import {
   EllipsisHorizontal,
@@ -103,12 +105,20 @@ const Users = () => {
     if (editingUser) {
       updateUser.mutate({ id: editingUser.id, ...userData }, {
         onSuccess: () => {
+          toast.success("Success", {
+            description: "User Updated Successfully",
+            duration: 1000,
+          });
           closeModal()
         },
       })
     } else {
       createUser.mutate(userData, {
         onSuccess: () => {
+          toast.success("Success", {
+            description: "User Created Successfully",
+            duration: 1000,
+          });
           closeModal()
         },
       })
@@ -129,6 +139,10 @@ const Users = () => {
     if (userToDelete) {
       deleteUser.mutate(userToDelete.id, {
         onSuccess: () => {
+          toast.success("Success", {
+            description: "User Deleted Successfully",
+            duration: 1000,
+          });
           closeDeleteModal()
         },
       })
@@ -136,6 +150,9 @@ const Users = () => {
   }
 
   return (
+    <>
+        <Toaster position="top-right"/>
+        
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -244,12 +261,12 @@ const Users = () => {
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content>
                       <DropdownMenu.Item onClick={() => openModal(user)}>
-                        <PencilSquare className="mr-2" />
-                        Edit
+                        <PencilSquare className="mr-2 text-green-500" />
+                        <span className="text-green-500">Edit</span>
                       </DropdownMenu.Item>
                       <DropdownMenu.Item onClick={() => openDeleteModal(user)}>
-                        <Trash className="mr-2" />
-                        Delete
+                        <Trash className="mr-2 text-red-500" />
+                        <span className="text-red-500">Delete</span>
                       </DropdownMenu.Item>
                     </DropdownMenu.Content>
                   </DropdownMenu>
@@ -393,6 +410,7 @@ const Users = () => {
         </div>
       )}
     </div>
+    </>
   )
 }
 
