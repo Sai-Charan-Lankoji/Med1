@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useState } from "react";
+import { useState, useEffect } from "react"
 import {
   DropdownMenu,
   IconButton,
@@ -10,22 +10,28 @@ import {
   Heading,
   Select,
   Label,
-} from "@medusajs/ui";
+} from "@medusajs/ui"
 import {
   EllipsisHorizontal,
   PencilSquare,
   Plus,
   Trash,
   XMark,
-  XMarkMini,
-} from "@medusajs/icons";
-import { useGetUsers } from "@/app/hooks/users/useGetUsers";
-import { useSaveUser } from "@/app/hooks/users/useCreateUser";
-import { useForm } from "react-hook-form";
-import { useGetStores } from "@/app/hooks/store/useGetStores";
-import withAuth from "@/lib/withAuth";
+} from "@medusajs/icons"
+import { useForm } from "react-hook-form"
+import withAuth from "@/lib/withAuth"
+import { useGetStores } from "@/app/hooks/store/useGetStores"
+import { useCreateUser } from "@/app/hooks/users/useCreateUser"
+import { useDeleteUser } from "@/app/hooks/users/useDeleteUser"
+import { useGetUsers } from "@/app/hooks/users/useGetUsers"
+import { useUpdateUser } from "@/app/hooks/users/useUpdateUser"
 
-type UserRoles = "admin" | "member" | "developer";
+export declare enum UserRoles {
+  ADMIN = "admin",
+  MEMBER = "member",
+  DEVELOPER = "developer"
+}
+
 interface UserFormData {
   first_name: string;
   last_name: string;
@@ -36,86 +42,99 @@ interface UserFormData {
 }
 
 const permissions = [
-  {
-    value: "all",
-    label: "All",
-  },
-  {
-    value: "admin",
-    label: "Admin",
-  },
-  {
-    value: "member",
-    label: "Member",
-  },
-  {
-    value: "developer",
-    label: "Developer",
-  },
-];
+  { value: "all", label: "All" },
+  { value: "admin", label: "Admin" },
+  { value: "member", label: "Member" },
+  { value: "developer", label: "Developer" },
+]
 
 const statuses = [
-  {
-    value: "all",
-    label: "All",
-  },
-  {
-    value: "active",
-    label: "Active",
-  },
-  {
-    value: "pending",
-    label: "Pending",
-  },
-  {
-    value: "expired",
-    label: "Expired",
-  },
-];
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "pending", label: "Pending" },
+  { value: "expired", label: "Expired" },
+]
+
 const Users = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const { data: stores } = useGetStores();
-  const { data: Users } = useGetUsers();
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const closeModal = () => setIsModalOpen(false);
+  const [searchQuery, setSearchQuery] = useState("")
+  const { data: stores } = useGetStores()
+  const { data: users } = useGetUsers()
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingUser, setEditingUser] = useState(null)
+  const [userToDelete, setUserToDelete] = useState(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<UserFormData>();
-  const saveUser = useSaveUser();
-  const vendorId = sessionStorage.getItem('vendor_id')
-  const store = stores?.find((store) => store.vendor_id === vendorId)
-  const storeId = store?.id
+    setValue,
+  } = useForm<UserFormData>()
+  const createUser = useCreateUser()
+  const updateUser = useUpdateUser()
+  const deleteUser = useDeleteUser()
+  const vendor_id = sessionStorage.getItem('vendor_id')
 
-  const [editingUserId, setEditingUserId] = useState<string | null>(null); // Track the user ID for editing
-
-// Update openModal to support editing
-const openModal = (user?: any) => {
-  if (user) {
-    // Populate form with user data if editing
-    reset(user);
-    setEditingUserId(user.id);
-  } else {
-    reset(); // Clear form for new user creation
-    setEditingUserId(null);
+  const openModal = (user = null) => {
+    setEditingUser(user)
+    setIsModalOpen(true)
+    if (user) {
+      setValue("first_name", user.first_name)
+      setValue("last_name", user.last_name)
+      setValue("email", user.email)
+      setValue("role", user.role)
+      setValue("password", "")
+    } else {
+      reset()
+    }
   }
-  setIsModalOpen(true);
-}
 
-const onSubmit = (data: UserFormData) => {
-  const userData = {
-    ...data,
-    vendor_id: vendorId,
-  };
-  saveUser.mutate({ userId: editingUserId, userData }, {
-    onSuccess: () => {
-      closeModal();
-      reset();
-    },
-  });
-}
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditingUser(null)
+    reset()
+  }
+
+  const onSubmit = (data: UserFormData) => {
+    const userData = {
+      ...data,
+      vendor_id
+    }
+    if (editingUser) {
+      updateUser.mutate({ id: editingUser.id, ...userData }, {
+        onSuccess: () => {
+          closeModal()
+        },
+      })
+    } else {
+      createUser.mutate(userData, {
+        onSuccess: () => {
+          closeModal()
+        },
+      })
+    }
+  }
+
+  const openDeleteModal = (user) => {
+    setUserToDelete(user)
+    setIsDeleteModalOpen(true)
+  }
+
+  const closeDeleteModal = () => {
+    setUserToDelete(null)
+    setIsDeleteModalOpen(false)
+  }
+
+  const confirmDelete = () => {
+    if (userToDelete) {
+      deleteUser.mutate(userToDelete.id, {
+        onSuccess: () => {
+          closeDeleteModal()
+        },
+      })
+    }
+  }
+
   return (
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
@@ -126,12 +145,12 @@ const onSubmit = (data: UserFormData) => {
           </p>
         </div>
         <Button
-          variant="transparent"
-          className="flex items-center gap-2 border border-ui-border-strong bg-ui-bg-base-hover"
-          onClick={openModal}
+          variant="secondary"
+          className="flex items-center gap-2 rounded-md"
+          onClick={() => openModal()}
         >
           <Plus className="h-4 w-4" />
-          Create User
+          Invite User
         </Button>
       </div>
 
@@ -175,13 +194,11 @@ const onSubmit = (data: UserFormData) => {
         </div>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-sm overflow-hidden">
         <Table>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell className="px-4 py-2 text-left text-xs font-medium text-gray-500 tracking-wider">
-                Name
-              </Table.HeaderCell>{" "}
+              <Table.HeaderCell>Name</Table.HeaderCell>
               <Table.HeaderCell>Email</Table.HeaderCell>
               <Table.HeaderCell>Team permissions</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
@@ -189,65 +206,66 @@ const onSubmit = (data: UserFormData) => {
             </Table.Row>
           </Table.Header>
           <Table.Body>
-            {Users?.map((user) => (
-            <Table.Row key={user?.id}>
-              <Table.Cell className="px-4 py-3 text-[13px] text-gray-500 border-b border-gray-300">
-                {user?.first_name} {user?.last_name}
-              </Table.Cell>
-              <Table.Cell className="px-4 py-3 text-[13px] border-b border-gray-300">
-                <div className="flex justify-left items-center">
-                  <div className="w-6 h-6 mr-2 flex items-center justify-center rounded-full text-white text-center bg-slate-700">
-                    {user?.email ? user?.email.charAt(0) : " "}
+            {users?.map((user) => (
+              <Table.Row key={user?.id}>
+                <Table.Cell>
+                  {user?.first_name} {user?.last_name}
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 mr-2 flex items-center justify-center rounded-full text-white text-sm bg-indigo-600">
+                      {user?.email ? user?.email.charAt(0).toUpperCase() : ""}
+                    </div>
+                    <span>{user?.email}</span>
                   </div>
-                  <span className="text-gray-700">{user?.email}</span>
-                </div>
-              </Table.Cell>
-              <Table.Cell>
-                <span
-                  className={`inline-flex items-center px-2 py-1 rounded-full text-sm ${
-                    user?.role === "admin"
-                      ? "bg-purple-100 text-purple-700"
-                      : "bg-blue-100 text-blue-700"
-                  }`}
-                >
-                  {user?.role[0].toUpperCase() + user?.role.slice(1)}
-                </span>
-              </Table.Cell>
-              <Table.Cell>
-                <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-100 text-green-700 text-sm">
-                  {user?.deleted_at ? "deleted" : "active"}
-                </span>
-              </Table.Cell>
-              <Table.Cell>
-                <DropdownMenu>
-                  <DropdownMenu.Trigger asChild>
-                    <IconButton variant="transparent">
-                      <EllipsisHorizontal className="text-ui-fg-subtle" />
-                    </IconButton>
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Content>
-                    <DropdownMenu.Item className="text-green-700" onClick={() => openModal(user)}>
-                      <PencilSquare className="mr-2" />
-                      Edit
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item className="text-red-700">
-                      <Trash className="mr-2" />
-                      Delete
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
-                </DropdownMenu>
-              </Table.Cell>
-            </Table.Row>
-             ))} 
+                </Table.Cell>
+                <Table.Cell>
+                  <span
+                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      user?.role === "admin"
+                        ? "bg-purple-100 text-purple-800"
+                        : "bg-blue-100 text-blue-800"
+                    }`}
+                  >
+                    {user?.role[0].toUpperCase() + user?.role.slice(1)}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    {user?.deleted_at ? "Deleted" : "Active"}
+                  </span>
+                </Table.Cell>
+                <Table.Cell>
+                  <DropdownMenu>
+                    <DropdownMenu.Trigger asChild>
+                      <IconButton variant="transparent">
+                        <EllipsisHorizontal className="text-ui-fg-subtle" />
+                      </IconButton>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content>
+                      <DropdownMenu.Item onClick={() => openModal(user)}>
+                        <PencilSquare className="mr-2" />
+                        Edit
+                      </DropdownMenu.Item>
+                      <DropdownMenu.Item onClick={() => openDeleteModal(user)}>
+                        <Trash className="mr-2" />
+                        Delete
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu>
+                </Table.Cell>
+              </Table.Row>
+            ))}
           </Table.Body>
         </Table>
       </div>
+
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
           <div className="bg-white rounded-lg p-6 w-full max-w-[600px]">
             <div className="flex justify-between items-center mb-4">
-              <Heading level="h2">Invite Users</Heading>
-              <Button variant="secondary" size="small" onClick={closeModal}>
+              <Heading level="h2">{editingUser ? 'Edit User' : 'Invite User'}</Heading>
+              <Button variant="secondary" onClick={closeModal}>
                 <XMark />
               </Button>
             </div>
@@ -258,16 +276,26 @@ const onSubmit = (data: UserFormData) => {
                   <Input
                     id="first_name"
                     placeholder="John"
-                    {...register("first_name")}
+                    {...register("first_name", { required: "First name is required" })}
                   />
+                  {errors.first_name && (
+                    <p className="text-rose-500 text-sm mt-1">
+                      {errors.first_name.message}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="last_name">Last Name</Label>
                   <Input
                     id="last_name"
                     placeholder="Doe"
-                    {...register("last_name")}
+                    {...register("last_name", { required: "Last name is required" })}
                   />
+                  {errors.last_name && (
+                    <p className="text-rose-500 text-sm mt-1">
+                      {errors.last_name.message}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -288,16 +316,22 @@ const onSubmit = (data: UserFormData) => {
                   )}
                 </div>
                 <div>
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="password">
+                    Password {!editingUser && <span className="text-rose-500">*</span>}
+                  </Label>
                   <Input
                     id="password"
                     type="password"
-                    {...register("password")}
+                    {...register("password", { required: !editingUser })}
                   />
+                  {errors.password && (
+                    <p className="text-rose-500 text-sm mt-1">
+                      {errors.password.message}
+                    </p>
+                  )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-1 mb-4 mt-6">
-                <div>
+              <div>
                   <Label
                     htmlFor="role"
                     className="block text-sm font-medium text-gray-700"
@@ -321,27 +355,45 @@ const onSubmit = (data: UserFormData) => {
                     </p>
                   )}
                 </div>
-              </div>
               <div className="flex justify-end space-x-2 mt-6">
                 <Button variant="secondary" onClick={closeModal}>
                   Cancel
                 </Button>
                 <Button variant="primary" type="submit">
-                  Create User
+                  {editingUser ? 'Update User' : 'Create User'}
                 </Button>
               </div>
             </form>
-            {saveUser.isError && (
+            {(createUser.isError || updateUser.isError) && (
               <p className="text-rose-500 mt-4">
-                An error occurred while creating the user. Please try again.
+                An error occurred while {editingUser ? 'updating' : 'creating'} the user. Please try again.
               </p>
             )}
           </div>
         </div>
       )}
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-[400px]">
+            <Heading level="h3" className="mb-4">Confirm Deletion</Heading>
+            <p className="mb-4">
+              Are you sure you want to delete{" "}
+              <strong>{userToDelete?.first_name} {userToDelete?.last_name}</strong>?
+            </p>
+            <div className="flex justify-end space-x-2">
+              <Button variant="secondary" onClick={closeDeleteModal}>
+                Cancel
+              </Button>
+              <Button variant="danger" onClick={confirmDelete}>
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
 
-
-export default withAuth(Users);
+export default withAuth(Users)

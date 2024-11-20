@@ -1,57 +1,41 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import bcrypt from 'bcryptjs';
-
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-type UserRoles = "admin" | "member" | "developer";
+export declare enum UserRoles {
+    ADMIN = "admin",
+    MEMBER = "member",
+    DEVELOPER = "developer"
+  }
 interface UserFormData {
   first_name: string
   last_name: string
   email: string
   password: string
-  role: UserRoles
+  role:UserRoles
   vendor_id: string
 }
 
-export const useSaveUser = () => {
+export const useCreateUser = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ userId, userData, existingHashedPassword }: { userId?: string, userData: UserFormData, existingHashedPassword?: string }) => {
-      const url = userId ? `${baseUrl}/vendor/vendoruser/${userId}` : `${baseUrl}/vendor/vendoruser`;
-      const method = userId ? 'PUT' : 'POST';
-
-      // Check if the password needs to be updated
-      if (userId && existingHashedPassword) {
-        const isSamePassword = await bcrypt.compare(userData.password, existingHashedPassword);
-        if (!isSamePassword) {
-          // Hash the new password if it's different from the existing one
-          userData.password = await bcrypt.hash(userData.password, 10);
-        } else {
-          // Keep the existing hashed password if it's the same
-          delete userData.password;
-        }
-      } else {
-        // Hash the password for new users
-        userData.password = await bcrypt.hash(userData.password, 10);
-      }
-
-      const response = await fetch(url, {
-        method,
+    mutationFn: async (newUser: UserFormData) => {
+      const response = await fetch(`${baseUrl}/vendor/vendoruser`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(userData),
-      });
+        body: JSON.stringify(newUser),
+      })
 
       if (!response.ok) {
-        throw new Error(userId ? 'Failed to update user' : 'Failed to create user');
+        throw new Error('Failed to create user')
       }
 
-      return response.json();
+      return response.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
+      queryClient.invalidateQueries({ queryKey: ['users'] })
     },
-  });
+  })
 }

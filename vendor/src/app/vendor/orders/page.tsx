@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { getColors } from "@/app/utils/dummyData";
 import Pagination from "@/app/utils/pagination";
 import { FiSearch } from "react-icons/fi";
-import { parseISO, format } from "date-fns";
+import { parseISO, format, parse, isValid } from "date-fns";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { useGetStore } from "@/app/hooks/store/useGetStore";
 
@@ -30,14 +30,9 @@ const Order = () => {
   const { data: stores } = useGetStores();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState("all");
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
   const router = useRouter();
   const pageSize = 6;
-
-  const { data: store } = useGetStore(selectedStore !== "all" ? selectedStore : undefined);
 
   const getCustomerFirstName = (customerId: any) => {
     const customer = customersData?.find(
@@ -46,19 +41,42 @@ const Order = () => {
     return customer ? `${customer.first_name} ${customer.last_name}` : "N/A";
   };
 
+  const formatTimestamp = (timestamp: string) => {
+    const date = parseISO(timestamp);
+    return format(date, "dd MMM yyyy hh:mm a").toLocaleString();
+  };
+
+  const formatDate = (timestamp: string) => {
+    const date = parseISO(timestamp);
+    return format(date, "dd-MM-yyyy");
+  };
+
+  const parseDateString = (dateString: string) => {
+    const formats = ['dd-MM-yyyy', 'yyyy-MM-dd', 'MM-dd-yyyy'];
+    for (const formatString of formats) {
+      const parsedDate = parse(dateString, formatString, new Date());
+      if (isValid(parsedDate)) {
+        return parsedDate;
+      }
+    }
+    return null;
+  };
+
   const filteredOrders = useMemo(() => {
     if (!OrdersData) return [];
 
     const searchLower = searchQuery.toLowerCase();
+    const searchDate = parseDateString(searchQuery);
 
     return OrdersData.filter((order) => {
+      const orderDate = parseISO(order.created_at);
       const matchesSearch = 
         getCustomerFirstName(order.customer_id).toLowerCase().includes(searchLower) ||
         order.payment_status.toLowerCase().includes(searchLower) ||
         order.status.toLowerCase().includes(searchLower) ||
         order.id.toLowerCase().includes(searchLower) ||
         order.email.toLowerCase().includes(searchLower) ||
-        order.created_at.toLowerCase().includes(searchLower);
+        (searchDate && format(orderDate, 'dd-MM-yyyy') === format(searchDate, 'dd-MM-yyyy'));
 
       const matchesStore = selectedStore === "all" || order.store_id === selectedStore;
 
@@ -72,26 +90,17 @@ const Order = () => {
     return filteredOrders.slice(startIndex, endIndex);
   }, [filteredOrders, currentPage, pageSize]);
 
-  const formatTimestamp = (timestamp: string) => {
-    const date = parseISO(timestamp);
-    return format(date, "dd MMM yyyy hh:mm a").toLocaleString();
-  };
-
-  const formatDate = (timestamp: string) => {
-    const date = parseISO(timestamp);
-    return format(date, "dd MMM yyyy");
-  };
-
   const getRowIndex = (index: number) => {
     return (currentPage * pageSize) + index + 1;
   };
 
+  const getStoreName = (storeId: string) => {
+    const store = stores?.find((s: any) => s.id === storeId);
+    return store ? store.name : "N/A";
+  };
+
   if (isLoading) {
-    return (
-      <div>
-        <OrderSkeleton />
-      </div>
-    );
+    return <OrderSkeleton />;
   }
 
   return (
@@ -118,25 +127,13 @@ const Order = () => {
                 ))}
               </Select.Content>
             </Select>
-            <Badge
-              size="small"
-              className="hover:border-violet-400 hover:text-violet-400 cursor-pointer"
-            >
-              Completed
-            </Badge>
-            <Badge
-              size="small"
-              className="hover:border-violet-400 hover:text-violet-400 cursor-pointer"
-            >
-              Incompleted
-            </Badge>
           </div>
 
           <div className="flex flex-row items-center space-x-4">
-            <div className="relative w-full sm:w-auto">
+            <div className="relative w-full rounded-md sm:w-auto">
               <Input
                 type="text"
-                placeholder="Search"
+                placeholder="Search or enter date (DD-MM-YYYY)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="text-[13px] pl-11 py-1 border bg-transparent border-gray-300 rounded-md shadow-sm sm:w-auto focus:border-blue-500 outline-none"
@@ -149,7 +146,7 @@ const Order = () => {
       <div className="flex flex-col gap-4">
         {filteredOrders.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
-            <p>No Orders placed yet.</p>
+            <p>No Orders found.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -172,7 +169,7 @@ const Order = () => {
                     Payment Status
                   </Table.HeaderCell>
                   <Table.HeaderCell className="px-2 py-2 text-center text-xs md:text-sm font-medium text-gray-700">
-                    Sales Channel
+                    Store
                   </Table.HeaderCell>
                   <Table.HeaderCell className="px-2 py-2 text-center text-xs md:text-sm font-medium text-gray-700">
                     Total
@@ -193,10 +190,11 @@ const Order = () => {
                         <Button
                           variant="transparent"
                           className="text-[12px] md:text-[14px] text-[rgb(17, 24, 39)] hover:bg-none"
-                        >
-                          <Eye onClick={() => {
+                          onClick={() => {
                             router.push(`/vendor/orders/${order.id}`);
-                          }}/>
+                          }}
+                        >
+                          <Eye />
                         </Button>
                       </Tooltip>
                       {getRowIndex(index)}
@@ -234,7 +232,7 @@ const Order = () => {
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center flex items-center justify-center space-x-2">
                       <span
                         className={`w-2.5 h-2.5 rounded-full inline-block ${
-                          order.paymentStatus === "Paid"
+                          order.payment_status === "captured"
                             ? "bg-green-500"
                             : "bg-red-500"
                         }`}
@@ -242,7 +240,7 @@ const Order = () => {
                       <span>{order.payment_status}</span>
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center">
-                      {order.matchingSalesChannel?.name}
+                      {getStoreName(order.store_id)}
                     </Table.Cell>
                     <Table.Cell className="px-4 py-3 text-[12px] md:text-[14px] text-gray-700 text-center flex flex-row justify-center space-x-2">
                       <span className="text-[14px] font-medium text-slate-600">
@@ -285,7 +283,24 @@ const OrderSkeleton = () => {
                 <th className="px-2 py-2 text-xs font-medium text-gray-700">
                   <div className="bg-gray-200 h-4 w-16 rounded"></div>
                 </th>
-                {/* Repeat above div for each header column */}
+                <th className="px-2 py-2 text-xs font-medium text-gray-700">
+                  <div className="bg-gray-200 h-4 w-16 rounded"></div>
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-700">
+                  <div className="bg-gray-200 h-4 w-16 rounded"></div>
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-700">
+                  <div className="bg-gray-200 h-4 w-16 rounded"></div>
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-700">
+                  <div className="bg-gray-200 h-4 w-16 rounded"></div>
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-700">
+                  <div className="bg-gray-200 h-4 w-16 rounded"></div>
+                </th>
+                <th className="px-2 py-2 text-xs font-medium text-gray-700">
+                  <div className="bg-gray-200 h-4 w-16 rounded"></div>
+                </th>
               </tr>
             </thead>
             <tbody>

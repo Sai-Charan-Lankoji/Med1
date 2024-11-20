@@ -81,6 +81,7 @@ class VendorUserService extends TransactionBaseService {
 
       const toCreate = {
         ...data,
+        vendor_id: data.vendor_id,
         password: hashedPassword,
       };
 
