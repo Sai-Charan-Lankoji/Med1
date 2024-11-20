@@ -83,10 +83,10 @@ const Customer = () => {
         <Table>
           <Table.Header>
             <Table.Row className="border-t-0">
-              <Table.HeaderCell className="w-1/4 px-4 py-4 text-xs font-semibold text-ui-fg-subtle">
+              <Table.HeaderCell className="w-1/4 px-2 py-4 text-xs font-semibold text-ui-fg-subtle">
                 Customer
               </Table.HeaderCell>
-              <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
+              <Table.HeaderCell className="w-1/4 px-2 py-4 text-xs font-semibold text-ui-fg-subtle">
                 Date added
               </Table.HeaderCell>
               <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
@@ -111,10 +111,10 @@ const Customer = () => {
                   }
                   className="cursor-pointer transition-colors hover:bg-ui-bg-base-hover"
                 >
-                  <Table.Cell className="w-1/4 px-4 py-4 text-sm text-ui-fg-subtle">
+                  <Table.Cell className="w-1/4 px-2 py-4 text-sm text-ui-fg-subtle">
                     {getRowIndex(index)}
                   </Table.Cell>
-                  <Table.Cell className="w-1/4 px-6 py-4 text-sm text-ui-fg-subtle">
+                  <Table.Cell className="w-1/4 px-2 py-4 text-sm text-ui-fg-subtle">
                     {formatDate(customer.created_at)}
                   </Table.Cell>
 

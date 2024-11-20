@@ -28,7 +28,7 @@ const PrintOrder = ({ order, selectedDesigns, currentImageIndex }) => {
               position: relative;
               height: 280px;
               border: 1px solid #e5e7eb;
-              border-radius: 6px;
+              border-radius: 16px;
               overflow: hidden;
             }
             .apparel-image {

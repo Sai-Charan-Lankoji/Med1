@@ -1,23 +1,16 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useAdminCustomer, useAdminOrders } from "medusa-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   Button,
   Container,
-  DropdownMenu,
-  IconButton,
   Table,
 } from "@medusajs/ui";
 import {
   ChevronDownMini,
   ChevronUpMini,
-  EllipsisHorizontal,
-  PencilSquare,
-  Trash,
 } from "@medusajs/icons";
-import Image from "next/image";
 import Pagination from "@/app/utils/pagination";
 import { BackButton } from "@/app/utils/backButton";
 import { useGetCustomer } from "@/app/hooks/customer/useGetCustomer";
@@ -26,8 +19,7 @@ import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 const Customer = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [showRawData, setShowRawData] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const router = useRouter()
   const params = useParams();
   const customerId = params?.id as string | undefined;
   const { data: customer } = useGetCustomer(customerId);
@@ -45,241 +37,227 @@ const Customer = () => {
   }, [currentPage, orders, pageSize]);
 
   return (
-    <div>
-  <BackButton name="Customers" />
-  {!customer && (
-    <span>
-      <CustomerDetailsSkeleton />
-    </span>
-  )}
-   {customer && (
-    <>
-      <Container className="bg-white shadow-none border border-gray-300 mb-2">
-        <div className="flex flex-col">
-          <div className="flex items-center ">
-            <div className="bg-purple-600 text-white text-2xl w-16 h-16 rounded-full flex items-center justify-center mr-3">
-              {customer.first_name?.charAt(0)}
-            </div>
-            <div className="flex flex-col">
-              <h2 className="text-xl font-semibold">
-                {customer.first_name} {customer.last_name}
-              </h2>
-              <p className="text-gray-500 text-sm">{customer.email}</p>
-            </div>
-          </div>
-
-          <div className="flex mt-8">
-            <div className="">
-              <p className="text-sm text-gray-400">First seen</p>
-              <p className="text-gray-600 text-sm">
-                {new Date(customer.created_at).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="border border-r-gray-300 mx-4"></div>
-
-            <div className="">
-              <p className="text-sm text-gray-400">Phone</p>
-              <p className="text-gray-600 text-sm">
-                {customer.phone || "N/A"}
-              </p>
-            </div>
-            <div className="border border-r-gray-300 mx-4"></div>
-
-            <div className="">
-              <p className="text-sm text-gray-400">Orders</p>
-              <p className="text-gray-600 text-sm">
-                {customerOrders?.length}
-              </p>
-            </div>
-            <div className="border border-r-gray-300 mx-4"></div>
-
-            <div className="">
-              <p className="text-sm text-gray-400">Status</p>
-              <p className="text-gray-600 flex items-center text-sm">
-                <span
-                  className={`w-2 h-2 rounded-full mr-2 ${
-                    customer.has_account ? "bg-green-500" : "bg-red-500"
-                  }`}
-                ></span>
-                {customer.has_account ? "Registered" : "No Account"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </Container>
-
-      <Container className="bg-white">
-        <div className="mb-2">
-          <h1 className="text-2xl font-semibold">
-            Orders {customerOrders?.length}
-          </h1>
-          <p className="text-[12px] text-gray-500">
-            An overview of Customer Orders
-          </p>
-        </div>
-
-        {customerOrders?.length > 0 ? (
-          <>
-            <Table>
-              <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell>S/No</Table.HeaderCell>
-                  <Table.HeaderCell>Date</Table.HeaderCell>
-                  <Table.HeaderCell>Fulfillment</Table.HeaderCell>
-                  <Table.HeaderCell>Amount</Table.HeaderCell>
-                  <Table.HeaderCell>Total</Table.HeaderCell>
-                </Table.Row>
-              </Table.Header>
-              <Table.Body>
-                {customerOrders?.map((order, index) => {
-                  return (
-                    <Table.Row
-                      key={order.id}
-                      className="[&_td:last-child]:w-[1%] [&_td:last-child]:whitespace-nowrap"
-                    >
-                      <Table.Cell>{index + 1}</Table.Cell>
-
-                      <Table.Cell>
-                        {new Date(order.created_at).toLocaleDateString(
-                          "en-US",
-                          { year: "numeric", month: "long", day: "numeric" }
-                        )}
-                      </Table.Cell>
-                      <Table.Cell className="flex items-center">
-                        <span
-                          className={`h-2 w-2 rounded-full mr-2 ${
-                            order.fulfillment_status === "not_fulfilled"
-                              ? "bg-red-500"
-                              : "bg-green-500"
-                          }`}
-                        ></span>
-                        {order.fulfillment_status}
-                      </Table.Cell>
-                      <Table.Cell>
-                        <div className="flex items-center">
-                          <span
-                            className={`h-2 w-2 rounded-full mr-2 ${
-                              order.status === "pending"
-                                ? "bg-yellow-500"
-                                : "bg-green-500"
-                            }`}
-                          ></span>
-                          {order.status}
-                        </div>
-                      </Table.Cell>
-
-                      <Table.Cell>{order.total_amount}</Table.Cell>
-                    </Table.Row>
-                  );
-                })}
-              </Table.Body>
-            </Table>
-
-            <Pagination
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              totalItems={customerOrders?.length ?? 0}
-              data={currentOrders}
-            />
-          </>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <BackButton name="Customers" />
+        
+        {!customer ? (
+          <CustomerDetailsSkeleton />
         ) : (
-          <div className="text-center py-8">
-            <h2 className="text-xl font-semibold">No Orders Found</h2>
-            <p className="text-gray-500 text-sm">
-              This customer has not placed any orders yet.
-            </p>
-          </div>
-        )}
-      </Container>
+          <>
+            {/* Customer Profile Card */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden backdrop-blur-sm">
+              <div className="p-8">
+                <div className="flex items-center space-x-6">
+                  <div className="bg-gradient-to-br from-violet-500 to-purple-600 text-white text-2xl w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-200">
+                    {customer.first_name?.charAt(0)}
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-semibold text-slate-800">
+                      {customer.first_name} {customer.last_name}
+                    </h2>
+                    <p className="text-slate-500 mt-1">{customer.email}</p>
+                  </div>
+                </div>
 
-      <Container className=" mt-4 bg-white shadow-none rounded-lg ">
-        <h1 className="text-[24px] mb-2">Raw Customer Details</h1>
-        <div className="flex flex-row justify-between ">
-          <Button
-            variant="transparent"
-            onClick={() => setShowRawData(!showRawData)}
-            className="mt-4 px-4 py-2 text-slate-900 rounded-md "
-          >
-            <p className="text-[14px] text-gray-400">
-              .... ({Object.keys(customer).length} items)
-            </p>
-            {showRawData ? <ChevronUpMini /> : <ChevronDownMini />}
-          </Button>
-        </div>
-        {showRawData && (
-          <pre className="mt-4 p-4 bg-gray-100 rounded-md text-sm text-blue-800">
-            {JSON.stringify(customer, null, 2)}
-          </pre>
-        )}
-      </Container>
-    </>
-  )}
-</div>
+                <div className="mt-8 flex divide-x divide-slate-200">
+                  <div className="px-6 first:pl-0">
+                    <p className="text-sm font-medium text-slate-400">First seen</p>
+                    <p className="mt-1 text-slate-700">
+                      {new Date(customer.created_at).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+                  <div className="px-6">
+                    <p className="text-sm font-medium text-slate-400">Phone</p>
+                    <p className="mt-1 text-slate-700">{customer.phone || "Not provided"}</p>
+                  </div>
+                  <div className="px-6">
+                    <p className="text-sm font-medium text-slate-400">Total Orders</p>
+                    <p className="mt-1 text-slate-700">{customerOrders?.length || 0}</p>
+                  </div>
+                  <div className="px-6">
+                    <p className="text-sm font-medium text-slate-400">Account Status</p>
+                    <div className="mt-1 flex items-center">
+                      <span className={`w-2 h-2 rounded-full mr-2 ${
+                        customer.has_account ? "bg-emerald-500" : "bg-rose-500"
+                      }`} />
+                      <span className="text-slate-700">
+                        {customer.has_account ? "Registered" : "Guest"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
+            {/* Orders Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+              <div className="p-6 border-b border-slate-100">
+                <h2 className="text-xl font-semibold text-slate-800">
+                  Orders History
+                </h2>
+                <p className="text-sm text-slate-500 mt-1">
+                  Overview of customer purchase history
+                </p>
+              </div>
+
+              {customerOrders?.length ? (
+                <div className="p-6">
+                  <Table>
+                    <Table.Header>
+                      <Table.Row className="bg-slate-50">
+                        <Table.HeaderCell className="text-slate-600">Order</Table.HeaderCell>
+                        <Table.HeaderCell className="text-slate-600">Date</Table.HeaderCell>
+                        <Table.HeaderCell className="text-slate-600">Status</Table.HeaderCell>
+                        <Table.HeaderCell className="text-slate-600">Payment</Table.HeaderCell>
+                        <Table.HeaderCell className="text-slate-600">Total</Table.HeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {customerOrders?.map((order, index) => (
+                        <Table.Row key={order.id} className="hover:bg-slate-50/50 transition-colors hover:cursor-pointer" onClick={() => {
+                          router.push(`/vendor/orders/${order.id}`);
+                        }}>
+                          <Table.Cell className="font-medium text-slate-900">
+                            #{index + 1}
+                          </Table.Cell>
+                          <Table.Cell>
+                            {new Date(order.created_at).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric"
+                            })}
+                          </Table.Cell>
+                          <Table.Cell>
+                            <div className="flex items-center">
+                              <span className={`h-2 w-2 rounded-full mr-2 ${
+                                order.fulfillment_status === "not_fulfilled"
+                                  ? "bg-amber-400"
+                                  : "bg-emerald-400"
+                              }`} />
+                              <span className="capitalize text-slate-700">
+                                {order.fulfillment_status.replace(/_/g, " ")}
+                              </span>
+                            </div>
+                          </Table.Cell>
+                          <Table.Cell>
+                            <div className="flex items-center">
+                              <span className={`h-2 w-2 rounded-full mr-2 ${
+                                order.status === "pending"
+                                  ? "bg-amber-400"
+                                  : "bg-emerald-400"
+                              }`} />
+                              <span className="capitalize text-slate-700">
+                                {order.status}
+                              </span>
+                            </div>
+                          </Table.Cell>
+                          <Table.Cell className="font-medium text-slate-900">
+                            ${order.total_amount}
+                          </Table.Cell>
+                        </Table.Row>
+                      ))}
+                    </Table.Body>
+                  </Table>
+
+                  <div className="mt-4">
+                    <Pagination
+                      currentPage={currentPage}
+                      setCurrentPage={setCurrentPage}
+                      totalItems={customerOrders?.length ?? 0}
+                      data={currentOrders}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="p-12 text-center">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-800">No Orders Yet</h3>
+                  <p className="text-slate-500 mt-1">This customer hasn&apos;t placed any orders.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Raw Data Section */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-slate-800">
+                    Raw Customer Data
+                  </h2>
+                  <Button
+                    variant="transparent"
+                    onClick={() => setShowRawData(!showRawData)}
+                    className="flex items-center space-x-2 text-slate-600 hover:text-slate-900"
+                  >
+                    <span className="text-sm">
+                      {showRawData ? "Hide" : "Show"} Details
+                    </span>
+                    {showRawData ? <ChevronUpMini /> : <ChevronDownMini />}
+                  </Button>
+                </div>
+                
+                {showRawData && (
+                  <div className="mt-4 p-4 bg-slate-50 rounded-xl overflow-auto">
+                    <pre className="text-sm font-mono text-slate-800">
+                      {JSON.stringify(customer, null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 };
 
 export default Customer;
 
 const CustomerDetailsSkeleton = () => (
-  <div className="min-h-screen bg-gray-50">
-    <div className="max-w-6xl mx-auto px-4 py-8">
+  <div className="space-y-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden p-8">
       <div className="animate-pulse">
-        {/* Customer Info Skeleton */}
-        <div className="bg-white shadow-none border border-gray-300 p-6 mb-6 rounded-lg">
-          <div className="flex items-center">
-            <div className="bg-gray-200 rounded-full h-16 w-16 mr-3"></div>
-            <div className="flex flex-col space-y-2">
-              <div className="h-6 bg-gray-200 rounded w-32"></div>
-              <div className="h-4 bg-gray-200 rounded w-48"></div>
-            </div>
-          </div>
-
-          <div className="flex mt-8 space-x-8">
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-16"></div>
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-16"></div>
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-16"></div>
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-            </div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-16"></div>
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-            </div>
+        <div className="flex items-center space-x-6">
+          <div className="bg-slate-200 rounded-2xl h-20 w-20"></div>
+          <div className="space-y-3">
+            <div className="h-6 bg-slate-200 rounded w-48"></div>
+            <div className="h-4 bg-slate-200 rounded w-64"></div>
           </div>
         </div>
 
-        {/* Orders Table Skeleton */}
-        <div className="bg-white p-6 mb-6 rounded-lg">
-          <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
-          <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center space-x-4">
-                <div className="h-8 w-8 bg-gray-200 rounded"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-24"></div>
-                  <div className="h-4 bg-gray-200 rounded w-20"></div>
-                </div>
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-              </div>
-            ))}
-          </div>
+        <div className="mt-8 flex divide-x divide-slate-200">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="px-6 first:pl-0 space-y-3">
+              <div className="h-4 bg-slate-200 rounded w-20"></div>
+              <div className="h-4 bg-slate-200 rounded w-24"></div>
+            </div>
+          ))}
         </div>
+      </div>
+    </div>
 
-        {/* Raw Customer Data Skeleton */}
-        <div className="bg-white p-6 rounded-lg">
-          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden">
+      <div className="p-6 border-b border-slate-100">
+        <div className="h-6 bg-slate-200 rounded w-32"></div>
+        <div className="h-4 bg-slate-200 rounded w-48 mt-2"></div>
+      </div>
+      <div className="p-6">
+        <div className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="flex space-x-4">
+              <div className="h-8 bg-slate-200 rounded w-full"></div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
