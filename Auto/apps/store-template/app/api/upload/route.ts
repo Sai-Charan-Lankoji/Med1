@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { writeFile } from 'fs/promises';
 import path from 'path';
+import { NEXT_PORT } from '@/constants/constants';
 
 export async function POST(request: Request) { 
   try {
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
 
     // Generate the URL for the saved file
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-    const host = request.headers.get('host') || 'localhost:8003';
+    const host = request.headers.get('host') || `localhost:${NEXT_PORT}`;
     const fileUrl = `${protocol}://${host}/uploads/${filename}`;
 
     return NextResponse.json({ fileUrl });

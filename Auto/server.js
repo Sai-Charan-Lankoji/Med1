@@ -67,8 +67,45 @@ export const NEXT_STORE_NAME = "${storeDetails.name}"
 export const NEXT_PUBLIC_STORE_ID = "${storeDetails.id}"
 export const NEXT_PUBLIC_SALES_CHANNEL_ID = "${storeDetails.default_sales_channel_id}"
 export const NEXT_PUBLIC_CURRENCY_CODE = "${storeDetails.default_currency_code}"
+export const NEXT_PORT = "${lastUsedPort}"
     `;
     await fs.writeFile(constantsPath, constantsContent);
+
+    // Update next.config.mjs
+    const nextConfigPath = path.join(targetPath, "next.config.mjs");
+    const nextConfigContent = `
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: false,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '${lastUsedPort}',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ik.imagekit.io',
+        port: '',
+        pathname: '/zz7harqme/**',
+      },
+    ],
+  },
+  webpack: (config) => {
+    config.externals.push({
+      "utf-8-validate": "commonjs utf-8-validate",
+      bufferutil: "commonjs bufferutil",
+      canvas: "commonjs canvas",
+    });
+    return config;
+  }
+};
+
+export default nextConfig;
+    `;
+    await fs.writeFile(nextConfigPath, nextConfigContent);
 
     return {
       directoryName: newStoreName,
