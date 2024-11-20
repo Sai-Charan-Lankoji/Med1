@@ -6,7 +6,8 @@ import { useGetOrder } from "@/app/hooks/orders/useGetOrder";
 import { BackButton } from "@/app/utils/backButton";
 import { FiMail } from "react-icons/fi";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
-import { ChevronDownMini, ChevronUpMini, User, Phone } from "@medusajs/icons";
+import { ChevronDownMini, ChevronUpMini, User, Phone } from "@medusajs/icons"; 
+import PrintOrder from "../printOrder";
 
 const OrderDetailsView = () => {
   const { id } = useParams();
@@ -20,7 +21,8 @@ const OrderDetailsView = () => {
     Record<string, "apparel" | "uploaded">
   >({});
   const [currentImageIndex, setCurrentImageIndex] = useState({});
-  const [showRawOrderData, setShowRawOrderData] = useState(false);
+  const [showRawOrderData, setShowRawOrderData] = useState(false); 
+  
 
   const matchingCustomers = customers?.filter(
     (customer) => customer?.id === order?.customer_id
@@ -426,6 +428,11 @@ const OrderDetailsView = () => {
             {/* Order Summary */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium mb-4">Order Summary</h3>
+              <PrintOrder 
+      order={order}
+      selectedDesigns={selectedDesigns}
+      currentImageIndex={currentImageIndex}
+    />
               <div className="space-y-2">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Subtotal</span>
