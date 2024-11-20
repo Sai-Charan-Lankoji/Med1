@@ -103,7 +103,7 @@ export default function Component() {
               />
               <button
                 type="button"
-                className="absolute inset-y-0 right-3 flex items-center text-white/70 hover:text-white transition duration-200"
+                className="absolute inset-y-0 right-3 flex items-center text-black hover:text-blue-800 transition duration-200"
                 onClick={togglePasswordVisibility}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
