@@ -57,9 +57,9 @@ const PersonalInformation = () => {
 
   return (
     <div className="bg-grey-5 min-h-screen">
-      <Container className="max-w-[1280px] w-full mx-auto px-8 py-6">
+      <Container className="max-w-[1280px] w-full mx-auto px-8 py-6 mt-12 rounded-xl">
         <BackButton name="Settings" />
-        <div className="bg-white rounded-lg  mt-6">
+        <div className="bg-white rounded-lg h-[506px]">
           <div className="p-8 pb-0">
             <Heading level="h1" className="text-grey-90 mb-2">Personal Information</Heading>
             <Text className="text-grey-50">Manage your Medusa profile</Text>
@@ -106,58 +106,28 @@ const PersonalInformation = () => {
       </Container>
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-40 flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-lg p-8 w-full max-w-md  shadow-sm">
-            <div className="flex justify-between items-center mb-6">
+          <div className="bg-white rounded-xl p-8 w-full max-w-md  shadow-sm">
+            <div className="flex justify-between items-center mb-6 border-b">
               <Heading level="h2" className="text-grey-90">Edit information</Heading>
               <IconButton variant="transparent" onClick={closeModal}>
                 <XMarkMini />
               </IconButton>
             </div>
             <form>
-            {customer?.map((cus) => (
-                <>
-                  <div
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"
-                    key={cus.id}
-                  >
-                    <div>
-                      <Label className="block text-sm font-medium text-gray-700 mb-1">
-                        First name <span className="text-red-600">*</span>
-                      </Label>
-                      <Input
-                        type="text"
-                        name="firstName"  
-                        value={formData.firstName || cus.first_name}  
-                        onChange={handleChange}
-                        placeholder="First name..."
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <Label className="block text-sm font-medium text-gray-700 mb-1">
-                        Last name <span className="text-red-600">*</span>
-                      </Label>
-                      <Input
-                        type="text"
-                        name="lastName" 
-                        value={formData.lastName || cus.last_name} 
-                        onChange={handleChange}
-                        placeholder="Last name..."
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                  <hr className="mb-6" />
-                  <div className="flex justify-end space-x-2">
-                    <Button variant="secondary" onClick={closeModal}>
-                      Cancel
-                    </Button>
-                    <Button className="bg-violet-600 hover:bg-violet-500 text-white">
-                      Submit and close
-                    </Button>
-                  </div>
-                </>
-              ))}
+              <div className="grid grid-cols-2 gap-2 gap-y-4">
+                <div>
+                  <Label htmlFor="firstName" className="text-grey-50 mb-1">First name</Label>
+                  <Input id="firstName" type="text" placeholder="First name" className="rounded-[2px]"/>
+                </div>
+                <div>
+                  <Label htmlFor="lastName" className="text-grey-50 mb-1">Last name</Label>
+                  <Input id="lastName" type="text" placeholder="Last name" className="rounded-[2px]"/>
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2 mt-8">
+                <Button variant="secondary" onClick={closeModal} className="rounded-[2px]">Cancel</Button>
+                <Button variant="secondary" className="rounded-[2px] bg-fuchsia-500 text-white hover:bg-fuchsia-700">Submit and close</Button>
+              </div>
             </form>
           </div>
         </div>
@@ -165,7 +135,7 @@ const PersonalInformation = () => {
       {isModalOpen2 && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-40 flex justify-center items-center p-4 z-50">
           <div className="bg-white rounded-lg p-8 w-full max-w-2xl">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6 border-b">
               <Heading level="h2" className="text-grey-90">Edit preferences</Heading>
               <IconButton variant="transparent" onClick={closeModal2}>
                 <XMarkMini />
@@ -199,8 +169,8 @@ const PersonalInformation = () => {
                 </div>
               </div>
               <div className="flex justify-end space-x-2 mt-8">
-                <Button variant="secondary" onClick={closeModal2}>Cancel</Button>
-                <Button variant="secondary" className="bg-violet-600 hover:bg-violet-500 text-white">Submit and close</Button>
+                <Button variant="secondary" onClick={closeModal2} className="rounded-[2px]">Cancel</Button>
+                <Button variant="secondary" className="rounded-[2px] bg-fuchsia-500 text-white hover:bg-fuchsia-700">Submit and close</Button>
               </div>
             </form>
           </div>

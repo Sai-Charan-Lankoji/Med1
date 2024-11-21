@@ -328,7 +328,7 @@ const Store = () => {
       <Container className="bg-white rounded-lg p-8 max-w-md w-full">
         <div className="text-center">
           {!isStoreCreated ? (
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 -2 border-violet-600 mx-auto mb-4"></div>
           ) : (
             <div className="h-12 w-12 mx-auto mb-4 text-green-500">
               <svg
@@ -362,10 +362,9 @@ const Store = () => {
   return (
     <>
     <Toaster position="top-right"/>
-    <div className="flex items-center justify-end gap-x-2"></div>
-    <div className="shadow-elevation-card-rest bg-ui-bg-base w-full rounded-lg overflow-hidden p-0">
-      <Container className="overflow-hidden p-0">
-        <div className="flex items-center justify-between px-8 pt-6 pb-4">
+    <div className="p-4">
+      <Container className="overflow-hidden rounded-xl p-0">
+        <div className="flex items-center rounded-xl justify-between px-8 pt-6 pb-4">
           <Heading className="text-2xl">Store</Heading>
           <div className="flex items-center gap-x-2">
             <Input
@@ -374,8 +373,9 @@ const Store = () => {
               placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              className="rounded-xl "
             />
-            <Button variant="secondary" onClick={openModal}>
+            <Button variant="secondary" className="rounded-[6px] px-6" onClick={openModal}>
               <Plus /> New Store
             </Button>
           </div>
@@ -383,29 +383,29 @@ const Store = () => {
         <Table className="min-w-full m-2">
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell className="py-2 px-4 border-b text-left">S/N</Table.HeaderCell>
-              <Table.HeaderCell className="py-2 px-4 border-b text-left">Date Added</Table.HeaderCell>
-              <Table.HeaderCell className="py-2 px-4 border-b text-left">Store Name</Table.HeaderCell>
-              <Table.HeaderCell className="py-2 px-4 border-b text-left">Sales Channel Name</Table.HeaderCell>
-              <Table.HeaderCell className="py-2 px-4 border-b text-left">Store Type</Table.HeaderCell>
-              <Table.HeaderCell className="py-2 px-4 border-b text-left">Actions</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4  text-left">S/N</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4  text-left">Date Added</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4  text-left">Store Name</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4  text-left">Sales Channel Name</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4  text-left">Store Type</Table.HeaderCell>
+              <Table.HeaderCell className="py-2 px-4  text-left">Actions</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {filteredStores?.map((store, index) => (
               <Table.Row key={store.id} className="hover:bg-gray-100">
                 <Link href={getStoreUrl(store?.name)} target="_blank" className="contents">
-                  <Table.Cell className="py-2 px-4 border-b">{index + 1}</Table.Cell>
-                  <Table.Cell className="py-2 px-4 border-b">
+                  <Table.Cell className="py-2 px-4  ">{index + 1}</Table.Cell>
+                  <Table.Cell className="py-2 px-4 ">
                     {formatDate(store?.created_at) || "N/A"}
                   </Table.Cell>
-                  <Table.Cell className="py-2 px-4 border-b">{store?.name || "N/A"}</Table.Cell>
-                  <Table.Cell className="py-2 px-4 border-b">
+                  <Table.Cell className="py-2 px-4 ">{store?.name || "N/A"}</Table.Cell>
+                  <Table.Cell className="py-2 px-4 ">
                     {store?.matchingSalesChannel?.name || "N/A"}
                   </Table.Cell>
-                  <Table.Cell className="py-2 px-4 border-b">{store?.store_type || "N/A"}</Table.Cell>
+                  <Table.Cell className="py-2 px-4 ">{store?.store_type || "N/A"}</Table.Cell>
                 </Link>
-                <Table.Cell className="py-2 px-4 border-b">
+                <Table.Cell className="py-2 px-4 ">
                   <DropdownMenu>
                     <DropdownMenu.Trigger asChild>
                       <IconButton variant="transparent">
@@ -625,8 +625,8 @@ const SkeletonLoader = ({ width, height, className }) => (
 const StoreSkeleton = () => {
   return (
     <div>
-      <div className="bg-white rounded-lg shadow-sm border border-ui-border-base">
-        <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-ui-border-base animate-pulse">
+      <div className="bg-white rounded-lg shadow-sm border border-ui-ase">
+        <div className="flex flex-col sm:flex-row justify-between items-center p-6  border-ui-ase animate-pulse">
           <div className="bg-gray-200 h-8 w-24 rounded mb-4 sm:mb-0"></div>
           <div className="w-full sm:w-72">
             <div className="bg-gray-200 h-10 rounded w-full"></div>
