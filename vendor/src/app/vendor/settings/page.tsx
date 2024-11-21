@@ -1,141 +1,104 @@
 'use client'
 
-import { ArrowUturnLeft, BuildingTax, Channels, ChevronRight, CurrencyDollar, FaceSmile, Key, Lifebuoy, MapPin, Users } from '@medusajs/icons'
-import { Container } from '@medusajs/ui'
-import React from 'react'
-import Link from 'next/link'; 
+import {
+  ArrowUturnLeft,
+  BuildingTax,
+  Channels,
+  ChevronRight,
+  CurrencyDollar,
+  FaceSmile,
+  Key,
+  Lifebuoy,
+  MapPin,
+  Users,
+} from '@medusajs/icons';
+import { Container } from '@medusajs/ui';
+import React from 'react';
+import Link from 'next/link';
 import withAuth from '@/lib/withAuth';
 
 const Settings = () => {
   return (
-    <div className='p-4'> 
-      <div className="mb-4">
-        <h1 className='text-2xl font-semibold'>General</h1> 
-        <p className='text-16px text-gray-500 pl-1'>Manage the general settings for your store</p> 
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-gray-800">General</h1>
+        <p className="text-lg text-gray-600">Manage the general settings for your store</p>
       </div>
-   
-      <div className="grid grid-cols-2 gap-4 mb-2"> 
 
-        <Link href="/vendor/settings/api-key-management" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><Key/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>API Key Management</h1>
-              <p className='text-[14px] text-gray-500 '>Create and manage API Keys</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/currencies" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><CurrencyDollar/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>Currencies</h1>
-              <p className='text-[14px] text-gray-500 '>Manage the currencies of your store</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/personal-information" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><FaceSmile/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>Personal Information</h1>
-              <p className='text-[14px] text-gray-500 '>Manage your Medusa profile</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/regions" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><MapPin/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>Regions</h1>
-              <p className='text-[14px] text-gray-500 '>Manage shipping, payment, and fulfillment across regions</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/return-reasons" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><ArrowUturnLeft/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>Return Reasons</h1>
-              <p className='text-[14px] text-gray-500 '>Manage reasons for returned items</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/sales-channels" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><Channels/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>Sales Channels</h1>
-              <p className='text-[14px] text-gray-500 '>Control which products are available in which channel</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/store-details" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><Lifebuoy/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>Store Details</h1>
-              <p className='text-[14px] text-gray-500 '>Manage your business details</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/taxes" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><BuildingTax/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>Taxes</h1>
-              <p className='text-[14px] text-gray-500 '>Manage taxes across regions and products</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-
-        <Link href="/vendor/settings/team" passHref>
-          <Container className='bg-gray-50 flex items-center p-4 shadow-none border border-gray-300'>
-            <div className='p-4 '>
-              <h1 className='rounded-md bg-gray-100 p-2'><Users/></h1>
-            </div>
-            <div className="flex flex-col justify-center">
-              <h1 className='font-semibold text-black text-[16px]'>The Team</h1>
-              <p className='text-[14px] text-gray-500 '>Manage users of your Medusa Store</p>
-            </div>
-            <h1 className='ml-auto'><ChevronRight/></h1>
-          </Container>
-        </Link>
-        
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Link Card Component */}
+        {[
+          {
+            href: "/vendor/settings/api-key-management",
+            icon: <Key />,
+            title: "API Key Management",
+            description: "Create and manage API Keys",
+          },
+          {
+            href: "/vendor/settings/currencies",
+            icon: <CurrencyDollar />,
+            title: "Currencies",
+            description: "Manage the currencies of your store",
+          },
+          {
+            href: "/vendor/settings/personal-information",
+            icon: <FaceSmile />,
+            title: "Personal Information",
+            description: "Manage your Medusa profile",
+          },
+          {
+            href: "/vendor/settings/regions",
+            icon: <MapPin />,
+            title: "Regions",
+            description: "Manage shipping, payment, and fulfillment across regions",
+          },
+          {
+            href: "/vendor/settings/return-reasons",
+            icon: <ArrowUturnLeft />,
+            title: "Return Reasons",
+            description: "Manage reasons for returned items",
+          },
+          {
+            href: "/vendor/settings/sales-channels",
+            icon: <Channels />,
+            title: "Sales Channels",
+            description: "Control which products are available in which channel",
+          },
+          {
+            href: "/vendor/settings/store-details",
+            icon: <Lifebuoy />,
+            title: "Store Details",
+            description: "Manage your business details",
+          },
+          {
+            href: "/vendor/settings/taxes",
+            icon: <BuildingTax />,
+            title: "Taxes",
+            description: "Manage taxes across regions and products",
+          },
+          {
+            href: "/vendor/settings/team",
+            icon: <Users />,
+            title: "The Team",
+            description: "Manage users of your Medusa Store",
+          },
+        ].map((item, index) => (
+          <Link href={item.href} passHref key={index}>
+            <Container className="flex items-center gap-4 p-6 bg-white border border-gray-200 rounded-xl shadow-sm transition-transform transform hover:scale-105 hover:shadow-lg">
+              <div className="flex items-center justify-center w-12 h-12 bg-gray-200 rounded-xl text-gray-600">
+                {item.icon}
+              </div>
+              <div className="flex flex-col">
+                <h1 className="font-semibold text-lg text-gray-800">{item.title}</h1>
+                <p className="text-sm text-gray-500">{item.description}</p>
+              </div>
+              <ChevronRight className="ml-auto text-gray-400" />
+            </Container>
+          </Link>
+        ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default withAuth(Settings);

@@ -1,4 +1,5 @@
 "use client";
+
 import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { Heading, Input, Table } from "@medusajs/ui";
@@ -8,6 +9,7 @@ import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 import { getColors } from "@/app/utils/dummyData";
 import { useRouter } from "next/navigation";
 import Pagination from "@/app/utils/pagination";
+import { Search } from 'lucide-react';
 
 const Customer = () => {
   const { data: customers, error, isLoading } = useGetCustomers();
@@ -27,7 +29,6 @@ const Customer = () => {
     return format(date, "dd MMM yyyy");
   };
 
-  // Memoize the filtered customers
   const filteredCustomers = useMemo(() => {
     if (!customers) return [];
 
@@ -43,7 +44,6 @@ const Customer = () => {
     });
   }, [customers, searchQuery]);
 
-  // Calculate the paginated customers
   const paginatedCustomers = useMemo(() => {
     const startIndex = currentPage * pageSize;
     const endIndex = startIndex + pageSize;
@@ -53,49 +53,46 @@ const Customer = () => {
   const getRowIndex = (index: number) => {
     return (currentPage * pageSize) + index + 1;
   };
+
   if (isLoading) {
-    return (
-      <div>
-        <CustomerSkeleton />
-      </div>
-    );
+    return <CustomerSkeleton />;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-ui-border-base p-2">
-      <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-ui-border-base">
-        <Heading className="text-ui-fg-base text-xl leading-6 font-medium mb-4 sm:mb-0">
+    <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl shadow-lg border border-indigo-100/50 p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <Heading className="text-2xl font-bold text-indigo-900 mb-4 sm:mb-0">
           Customers
         </Heading>
-        <div className="w-full sm:w-72">
+        <div className="w-full sm:w-72 relative">
           <Input
             size="base"
             type="search"
             placeholder="Search customers..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full"
+            className="w-full pl-10 pr-4 py-2 rounded-full border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto bg-white rounded-xl shadow-inner">
         <Table>
           <Table.Header>
-            <Table.Row className="border-t-0">
-              <Table.HeaderCell className="w-1/4 px-2 py-4 text-xs font-semibold text-ui-fg-subtle">
+            <Table.Row className="bg-indigo-50">
+              <Table.HeaderCell className="px-6 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
                 Customer
               </Table.HeaderCell>
-              <Table.HeaderCell className="w-1/4 px-2 py-4 text-xs font-semibold text-ui-fg-subtle">
+              <Table.HeaderCell className="px-6 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
                 Date added
               </Table.HeaderCell>
-              <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
+              <Table.HeaderCell className="px-6 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
                 Name
               </Table.HeaderCell>
-              <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
+              <Table.HeaderCell className="px-6 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
                 Email
               </Table.HeaderCell>
-              <Table.HeaderCell className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle">
+              <Table.HeaderCell className="px-6 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
                 Orders
               </Table.HeaderCell>
             </Table.Row>
@@ -106,115 +103,91 @@ const Customer = () => {
               paginatedCustomers.map((customer, index) => (
                 <Table.Row
                   key={customer.id}
-                  onClick={() =>
-                    router.push(`/vendor/customers/${customer.id}`)
-                  }
-                  className="cursor-pointer transition-colors hover:bg-ui-bg-base-hover"
+                  onClick={() => router.push(`/vendor/customers/${customer.id}`)}
+                  className="cursor-pointer transition-colors hover:bg-indigo-50"
                 >
-                  <Table.Cell className="w-1/4 px-2 py-4 text-sm text-ui-fg-subtle">
-                    {getRowIndex(index)}
+                  <Table.Cell className="px-6 py-4 whitespace-nowrap text-sm font-bold text-indigo-900">
+                    #{getRowIndex(index)}
                   </Table.Cell>
-                  <Table.Cell className="w-1/4 px-2 py-4 text-sm text-ui-fg-subtle">
+                  <Table.Cell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600">
                     {formatDate(customer.created_at)}
                   </Table.Cell>
-
-                  <Table.Cell className="w-1/4 px-0 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div
-                        className={`w-8 h-8 flex items-center justify-center rounded-full text-white text-sm font-medium ${getColors(
-                          index
-                        )}`}
-                      >
+                  <Table.Cell className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center text-white text-sm font-medium ${getColors(index)}`}>
                         {customer.first_name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="text-sm font-medium text-ui-fg-base whitespace-nowrap">
-                        {customer.first_name} {customer.last_name}
-                      </span>
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-indigo-900">
+                          {customer.first_name} {customer.last_name}
+                        </div>
+                      </div>
                     </div>
                   </Table.Cell>
-
-                  <Table.Cell className="w-1/4 px-0 py-4">
-                    <span className="text-sm text-ui-fg-subtle">
-                      {customer.email}
-                    </span>
+                  <Table.Cell className="px-6 py-4 whitespace-nowrap text-sm text-indigo-600">
+                    {customer.email}
                   </Table.Cell>
-
-                  <Table.Cell className="w-1/4 px-10 py-4">
-                    <span className="text-sm font-medium text-ui-fg-base">
-                      {getOrderCountForCustomer(customer.id)}
-                    </span>
+                  <Table.Cell className="px-6 py-4 whitespace-nowrap text-sm font-medium text-indigo-900">
+                    {getOrderCountForCustomer(customer.id)}
                   </Table.Cell>
                 </Table.Row>
               ))
             ) : (
-              <Table.Row className="flex flex-row justify-center text-center">
-                <Table.Cell className="py-10 text-center"></Table.Cell>
+              <Table.Row>
+                <Table.Cell className="px-6 py-10 text-center text-indigo-600">
+                  No customers found
+                </Table.Cell>
               </Table.Row>
             )}
           </Table.Body>
         </Table>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        totalItems={filteredCustomers.length}
-        data={filteredCustomers}
-      />
+      <div className="mt-6">
+        <Pagination
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalItems={filteredCustomers.length}
+          data={filteredCustomers}
+        />
+      </div>
     </div>
   );
 };
 
 const CustomerSkeleton = () => {
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-ui-border-base">
-      <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-b border-ui-border-base animate-pulse">
-        <div className="bg-gray-200 h-8 w-24 rounded mb-4 sm:mb-0"></div>
-        <div className="w-full sm:w-72">
-          <div className="bg-gray-200 h-10 rounded w-full"></div>
+    <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl shadow-lg border border-indigo-100/50 p-6 animate-pulse">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <div className="h-8 bg-indigo-200 rounded w-40 mb-4 sm:mb-0"></div>
+        <div className="w-full sm:w-72 h-10 bg-indigo-200 rounded-full"></div>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-inner overflow-hidden">
+        <div className="border-b border-indigo-200">
+          <div className="flex px-6 py-3">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="flex-1 h-4 bg-indigo-100 rounded mr-2"></div>
+            ))}
+          </div>
+        </div>
+        <div className="divide-y divide-indigo-100">
+          {[...Array(5)].map((_, rowIndex) => (
+            <div key={rowIndex} className="flex px-6 py-4">
+              {[...Array(5)].map((_, cellIndex) => (
+                <div key={cellIndex} className="flex-1 h-4 bg-indigo-50 rounded mr-2"></div>
+              ))}
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr>
-              {[...Array()].map((_, index) => (
-                <th
-                  key={index}
-                  className="w-1/4 px-6 py-4 text-xs font-semibold text-ui-fg-subtle"
-                >
-                  <div className="bg-gray-200 h-4 w-24 rounded"></div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {[...Array(5)].map((_, rowIndex) => (
-              <tr key={rowIndex} className="border-t border-gray-100">
-                <td className="w-1/4 px-6 py-4">
-                  <div className="bg-gray-200 h-6 w-24 rounded"></div>
-                </td>
-                <td className="w-1/4 px-6 py-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-gray-300 w-8 h-8 rounded-full"></div>
-                    <div className="bg-gray-200 h-6 w-32 rounded"></div>
-                  </div>
-                </td>
-                <td className="w-1/4 px-6 py-4">
-                  <div className="bg-gray-200 h-6 w-40 rounded"></div>
-                </td>
-                <td className="w-1/4 px-6 py-4">
-                  <div className="bg-gray-200 h-6 w-12 rounded"></div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="mt-6 flex justify-center">
+        <div className="h-8 bg-indigo-200 rounded w-64"></div>
       </div>
     </div>
   );
 };
 
 export default withAuth(Customer);
+

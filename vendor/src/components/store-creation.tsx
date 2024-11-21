@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+import { Toaster, toast } from "@medusajs/ui";
 
 const templates = [
   {
@@ -63,7 +63,6 @@ interface StoreCreationProps {
 
 const   StoreCreation = ({ onStoreCreated }: StoreCreationProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const form = useForm<StoreFormValues>({
     resolver: zodResolver(storeFormSchema),
@@ -80,17 +79,16 @@ const   StoreCreation = ({ onStoreCreated }: StoreCreationProps) => {
       // For demo purposes, we&apos;ll simulate an API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
       
-      toast({
-        title: "Store created successfully!",
-        description: "Your store is now ready to be customized.",
+      toast.success("Success", {
+        description: "Store Updated Successfully.",
+        duration: 1000,
       });
 
       onStoreCreated();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive",
+      toast.error("Error", {
+        description: "Something went wrong.",
+        duration: 1000,
       });
     } finally {
       setIsLoading(false);

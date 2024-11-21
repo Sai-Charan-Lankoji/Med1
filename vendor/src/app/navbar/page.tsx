@@ -1,70 +1,67 @@
-"use client"; // Ensure client-side rendering
-import { useRouter } from "next/navigation";
+"use client";
+
 import React from "react";
-import { useAdminDeleteSession } from "medusa-react";
-import { BellAlert } from "@medusajs/icons";
-import { FaRegBell } from "react-icons/fa";
-import { FaRegCircleQuestion } from "react-icons/fa6";
-import { Button, Drawer, Input, Label } from "@medusajs/ui";
-import { FiSearch } from "react-icons/fi"; 
+import { useRouter } from "next/navigation";
+import { BellAlert, QuestionMarkCircle } from "@medusajs/icons";
+import { Button, Drawer, Input } from "@medusajs/ui";
 import { useAuth } from "../context/AuthContext";
 
-const NavBar = () => { 
-const { contactName } = useAuth() || { contactName: "" };
-  
-  return (
-    <nav className="flex justify-between p-4 bg-transparent text-gray-500 h-16 ml-62  border-b border-gray-300">
-      <div className="flex items-center space-x-4">
-       </div>
+const Navbar = () => {
+  const { contactName } = useAuth() || { contactName: "" };
+  const router = useRouter();
 
-      <div className="flex justify-center items-center mr-6">
+  return (
+    <nav className="flex  justify-between items-center p-4 bg-gradient-to-r from-blue-100 via-purple-100 to-blue-100 text-black h-16  shadow-md border-b-2 border-indigo-500">
+      <div className="flex items-center space-x-4">
+         
+      </div>
+
+      <div className="flex items-center space-x-4">
         <Drawer>
           <Drawer.Trigger asChild>
-            <button className="m-4 text-xl font-semibold text-black ">
-              <FaRegCircleQuestion />
+            <button
+              className=" transition-colors"
+            >
+              <QuestionMarkCircle className="w-6 h-6 text-black/100 hover:text-black  " />
             </button>
+
+
           </Drawer.Trigger>
-          <Drawer.Content className="bg-white">
+          <Drawer.Content className="bg-gradient-to-br from-blue-100 via-purple-100 to-blue-100 text-black">
             <Drawer.Header>
-              <Drawer.Title>SUPPORT FORM</Drawer.Title>
+              <Drawer.Title className="text-2xl font-bold text-black">Support</Drawer.Title>
             </Drawer.Header>
-            <Drawer.Body className="p-4 border-none ">
-              <div className="flex flex-col m-6">
-                <Drawer.Title className="text-2xl">
-                  How can we help?
-                </Drawer.Title>
-                <Drawer.Description className="text-[12px]  ">
-                  We usually respond in a few hours
-                </Drawer.Description>
-
-                <label
-                  htmlFor="help"
-                  className="text-[12px] py-4 text-black  font-semibold"
-                >
-                  Subject
-                </label>
-                <input
-                  type="text"
-                  placeholder="What is it About"
-                  className="text-[13px] pl-4 py-2 border   bg-transparent border-gray-300 rounded-md shadow-sm sm:w-auto focus:border-violet-600 outline-none"
-                />
-
-                <label
-                  htmlFor="how can we help"
-                  className="text-[12px] py-4 font-semibold"
-                >
-                  How can We help
-                </label>
-                <textarea
-                  rows={6}
-                  id="how can we help"
-                  placeholder="Write a message"
-                  className="text-[13px] pl-4 py-2 border   bg-transparent border-gray-300 rounded-md shadow-sm sm:w-auto focus:border-violet-600 outline-none"
-                />
+            <Drawer.Body className="p-6">
+              <h3 className="text-xl font-semibold mb-2 text-black">How can we help?</h3>
+              <p className="text-sm text-white-black mb-6">We usually respond in a few hours</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium text-black mb-1">
+                    Subject
+                  </label>
+                  <Input
+                    id="subject"
+                    type="text"
+                    placeholder="What is it about?"
+                    className="w-full bg-transparent border border-gray-500 rounded-xl  "
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-black mb-1">
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    rows={6}
+                    placeholder="Write your message here..."
+                    className="w-full p-2 border bg-transparent  border-gray-500 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-800 transition-all duration-300"
+                  />
+                </div>
               </div>
             </Drawer.Body>
             <Drawer.Footer>
-              <Button className="w-full bg-violet-600 text-white py-3 hover:bg-violet-500">
+              <Button className="w-full rounded-xl bg-gradient-to-tr from-indigo-400 via-purple-400 to-blue-400 transition-colors">
                 Send Message
               </Button>
             </Drawer.Footer>
@@ -73,29 +70,28 @@ const { contactName } = useAuth() || { contactName: "" };
 
         <Drawer>
           <Drawer.Trigger asChild>
-            <button className=" text-xl font-semibold text-black pr-4">
-              <FaRegBell />
+            <button
+           
+              className="text-black/100 hover:text-black transition-colors"
+            >
+              <BellAlert className="w-6 h-6" />
             </button>
           </Drawer.Trigger>
-          <Drawer.Content className="bg-white">
+          <Drawer.Content className="bg-gradient-to-br from-blue-100 via-purple-100 to-blue-100 text-black">
             <Drawer.Header>
-              <Drawer.Title>Activity</Drawer.Title>
+              <Drawer.Title className="text-2xl font-bold text-black">Notifications</Drawer.Title>
             </Drawer.Header>
-            <Drawer.Body className="p-4 border-none">
-  
-              <Drawer.Description className="text-[12px]  ">This is where you edit the variant&apos;s details</Drawer.Description>
+            <Drawer.Body className="p-6">
+              <p className="text-black">You have no new notifications.</p>
             </Drawer.Body>
-            <Drawer.Footer>
-              <Drawer.Close asChild>
-                <Button variant="secondary">Cancel</Button>
-              </Drawer.Close>
-              <Button>Save</Button>
-            </Drawer.Footer>
           </Drawer.Content>
         </Drawer>
+
+        
       </div>
     </nav>
   );
 };
 
-export default NavBar;
+export default Navbar;
+

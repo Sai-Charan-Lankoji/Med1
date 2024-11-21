@@ -11,7 +11,7 @@ interface UserFormData {
   last_name: string
   email: string
   password: string
-  role:UserRoles
+  role: UserRoles
   vendor_id: string
 }
 

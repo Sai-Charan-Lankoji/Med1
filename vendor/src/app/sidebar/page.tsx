@@ -1,59 +1,151 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ArrowRightOnRectangle, CogSixTooth } from "@medusajs/icons";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from 'react';
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { useVendorLogout } from "../hooks/auth/useVendorLogout";
-import MenuItems from '../utils/menuItems';
 import Link from 'next/link';
+import { Settings, LogOut, ChevronDown, Menu } from 'lucide-react';
+import { DropdownMenu, IconButton } from "@medusajs/ui"
+import { Button } from "@medusajs/ui";
+import { cn } from '@/lib/utils';
+import MenuItems from '../utils/menuItems';
 
 export default function Sidebar() {
   const { email, contactName } = useAuth() ?? { email: '' };
-  const [showPopup, setShowPopup] = useState(false);
-  const { logout, loading, error } = useVendorLogout(); // Use the custom hook
+  const { logout, loading } = useVendorLogout();
   const router = useRouter();
+  const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  const togglePopup = () => {
-    setShowPopup(!showPopup);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsCollapsed(window.innerWidth < 1024);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
   };
 
-  const handleLogout = () => {
-    logout();
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
   };
 
   return (
-    <div className="w-64 bg-transparent text-gray-500 h-screen shadow-lg relative">
-      <div className="mb-4 flex w-full items-center px-4 py-6 relative">
-        <div
-          className="text-gray-50 flex h-8 w-8 items-center justify-center bg-black rounded-full cursor-pointer"
-          onClick={togglePopup}
-        >
-          {contactName?.slice(0, 1).toLocaleUpperCase()}
-        </div>
-        <span className="ml-3 text-[rgb(17, 24, 39)] font-semibold">{contactName}</span>
+    <aside className={cn(
+      "relative h-screen bg-gradient-to-b from-blue-100 via-purple-100 to-blue-100 transition-all duration-300 ease-in-out",
+      isCollapsed ? "w-20" : "w-64",
+      "flex flex-col",
+      "border-r border-transparent",
+      "before:content-[''] before:absolute before:top-0 before:right-0 before:bottom-0 before:w-[1px]",
+      "before:bg-gradient-to-b before:from-blue-600 before:via-purple-600 before:to-blue-600"
+    )}>
+      {/* Mobile Toggle */}
+      <Button
+        variant="transparent"
+        className="absolute right-[-40px] top-4 md:hidden"
+        onClick={toggleSidebar}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
 
-        {showPopup && (
-          <div className="absolute top-16 left-6 w-40 bg-white shadow-lg rounded-lg p-2 z-10">
-            <ul className="space-y-2">
-              <li>
-                <Link href="/vendor/settings" className="text-[13px] font-semibold flex justify-evenly text-gray-700 hover:bg-gray-200 rounded p-1">
-                  <CogSixTooth /> Settings
-                </Link>
-              </li>
-              <li>
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-[13px] font-semibold flex justify-evenly text-left text-red-500 hover:bg-gray-200 rounded p-1"
-                >
-                  <ArrowRightOnRectangle /> Logout
-                </button>
-              </li>
-            </ul>
-          </div>
+      {/* Header */}
+      <div className="p-4 flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          {!isCollapsed && (
+            <span className="text-xl font-bold text-blue-700">
+              Vendor
+            </span>
+          )}
+        </div>
+        {!isMobile && (
+          <Button
+            variant="transparent"
+            className="hidden md:flex text-blue-600 hover:text-purple-600 transition-colors"
+            onClick={toggleSidebar}
+          >
+            <ChevronDown className={cn(
+              "h-4 w-4 transition-transform",
+              isCollapsed ? "rotate-90" : "-rotate-90"
+            )} />
+          </Button>
         )}
       </div>
-      <MenuItems /> 
-    </div>
+
+      {/* Profile Section */}
+      <div className={cn(
+        "p-4 flex items-center",
+        isCollapsed ? "justify-center" : "justify-start"
+      )}>
+        <DropdownMenu>
+          <DropdownMenu.Trigger asChild>
+            <Button
+              variant="transparent"
+              className={cn(
+                "relative flex items-center space-x-3 hover:bg-white/50 transition-colors",
+                isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start p-2"
+              )}
+            >
+              <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-medium">
+                  {contactName?.slice(0, 1).toUpperCase()}
+                </span>
+              </div>
+              {!isCollapsed && (
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium text-gray-900">
+                    {contactName}
+                  </span>
+                  <span className="text-xs text-gray-500 truncate max-w-[150px]">
+                    {email}
+                  </span>
+                </div>
+              )}
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="start" className="w-56">
+            <DropdownMenu.Item asChild>
+              <Link href="/vendor/settings" className="flex items-center">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </Link>
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item
+              className="text-red-600 focus:text-red-600"
+              onClick={handleLogout}
+              disabled={loading}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>{loading ? 'Logging out...' : 'Logout'}</span>
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto py-4">
+        <MenuItems collapsed={isCollapsed} currentPath={pathname} />
+      </nav>
+
+      {/* Footer */}
+      <div className={cn(
+        "p-4 text-xs text-gray-500",
+        isCollapsed ? "text-center" : "text-left"
+      )}>
+        {!isCollapsed && (
+          <p>© 2024 Admin Dashboard</p>
+        )}
+      </div>
+    </aside>
   );
 }
+

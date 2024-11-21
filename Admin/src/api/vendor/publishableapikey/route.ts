@@ -24,29 +24,7 @@ const getPublishableApiKeyService = (
   }
 };
 
-export const GET = async (
-  req: MedusaRequest,
-  res: MedusaResponse
-): Promise<void> => {
-  try {
-    const publishableApiKeyService = getPublishableApiKeyService(req);
-    if (!publishableApiKeyService) {
-      res
-        .status(500)
-        .json({ error: "Publishable API Key service could not be resolved." });
-      return;
-    }
-
-    const selector = { title: ILike('%') };
-    const publishableApiKeys = await publishableApiKeyService.list(selector);
-    res.status(200).json({ status: "success", apiKeys: publishableApiKeys });
-  } catch (error) {
-    console.error("Error in GET /vendor/publishable-api-keys:", error);
-    res
-      .status(500)
-      .json({ error: error.message || "An unknown error occurred." });
-  }
-};
+ 
 
 export const POST = async (
   req: MedusaRequest,
