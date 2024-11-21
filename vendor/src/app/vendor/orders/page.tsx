@@ -104,7 +104,7 @@ const Order = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-lg">
+    <div className="p-4">
       <Heading level="h2" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
         Orders
       </Heading>
@@ -149,9 +149,9 @@ const Order = () => {
             <p>No Orders found.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-white rounded-xl shadow-md">
+          <div className="overflow-x-auto rounded-xl shadow-md">
             <Table className="w-full">
-              <Table.Header className="bg-indigo-50">
+              <Table.Header className="">
                 <Table.Row>
                   <Table.HeaderCell className="px-4 py-3 text-center text-xs font-semibold text-indigo-800">
                     Order

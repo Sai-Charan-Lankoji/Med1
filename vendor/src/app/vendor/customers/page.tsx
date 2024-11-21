@@ -59,7 +59,7 @@ const Customer = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 to-white rounded-xl shadow-lg border border-indigo-100/50 p-6">
+    <div className=" bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100  rounded-xl shadow-lg border border-indigo-100/50 p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
         <Heading className="text-2xl font-bold text-indigo-900 mb-4 sm:mb-0">
           Customers
@@ -77,9 +77,9 @@ const Customer = () => {
       </div>
 
       <div className="overflow-x-auto bg-white rounded-xl shadow-inner">
-        <Table>
+        <Table className=" bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100">
           <Table.Header>
-            <Table.Row className="bg-indigo-50">
+            <Table.Row className="">
               <Table.HeaderCell className="px-6 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">
                 Customer
               </Table.HeaderCell>

@@ -128,29 +128,29 @@ export default function ServicesDashboard() {
   const currentStores = stores?.length || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-white p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center space-y-2 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500 bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
             Service Plans
           </h1>
-          <p className="text-sm text-gray-500 max-w-xl mx-auto">
+          <p className="text-sm text-gray-600 max-w-xl mx-auto">
             Choose the perfect plan for your business needs
           </p>
         </div>
 
         {activePlan && (
-          <Card className="mb-6 rounded-xl overflow-hidden border-0 bg-white/90 backdrop-blur-sm shadow-lg">
-            <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-white p-4">
+          <Card className="mb-6 rounded-xl overflow-hidden border-0 bg-white shadow-lg">
+            <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-gray-100 p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl shadow-md bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+                <div className="p-2.5 rounded-2xl shadow-md bg-gradient-to-br from-blue-500 to-blue-600">
                   <Activity className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <CardTitle className="text-xl font-bold text-gray-900">
+                  <CardTitle className="text-xl font-bold text-gray-800">
                     Current Plan Status
                   </CardTitle>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-600">
                     {activePlan.name} Plan Overview
                   </p>
                 </div>
@@ -160,39 +160,39 @@ export default function ServicesDashboard() {
             <CardContent className="p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-4">
-                  <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-md border border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-900 mb-3">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 shadow-md border border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-800 mb-3">
                       Store Usage
                     </h3>
                     <div className="flex items-end gap-2 mb-3">
-                      <span className="text-2xl font-bold text-gray-900">
+                      <span className="text-2xl font-bold text-gray-800">
                         {currentStores}
                       </span>
-                      <span className="text-sm text-gray-500 mb-0.5">
+                      <span className="text-sm text-gray-600 mb-0.5">
                         of {activePlan.maxStores} stores
                       </span>
                     </div>
                     <Progress
                       value={(currentStores / activePlan.maxStores) * 100}
-                      className="h-2 rounded-full bg-gray-100"
+                      className="h-2 rounded-full bg-gray-200"
                     />
                   </div>
 
-                  <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-md border border-gray-100">
-                    <h3 className="text-base font-semibold text-gray-900 mb-2">
+                  <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
+                    <h3 className="text-base font-semibold text-gray-800 mb-2">
                       Available Capacity
                     </h3>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-gray-900">
+                      <span className="text-2xl font-bold text-gray-800">
                         {Math.max(0, activePlan.maxStores - currentStores)}
                       </span>
-                      <span className="text-sm text-gray-500">stores remaining</span>
+                      <span className="text-sm text-gray-600">stores remaining</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-4 shadow-md border border-gray-100">
-                  <h3 className="text-base font-semibold text-gray-900 mb-3">
+                <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
+                  <h3 className="text-base font-semibold text-gray-800 mb-3">
                     Active Stores
                   </h3>
                   <ScrollArea className="h-[180px] pr-4">
@@ -200,16 +200,16 @@ export default function ServicesDashboard() {
                       {stores?.map((store, index) => (
                         <div
                           key={index}
-                          className="flex items-center gap-3 p-2.5 rounded-lg bg-white shadow-sm border border-gray-100 transition-all hover:shadow-md"
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 shadow-sm border border-gray-200 transition-all hover:shadow-md"
                         >
-                          <div className="p-1.5 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+                          <div className="p-1.5 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
                             <ShoppingBag className="w-3.5 h-3.5 text-white" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-gray-800">
                               {store.name}
                             </p>
-                            <p className="text-xs text-gray-500">Active</p>
+                            <p className="text-xs text-gray-600">Active</p>
                           </div>
                         </div>
                       ))}
@@ -228,8 +228,8 @@ export default function ServicesDashboard() {
               className={cn(
                 "relative overflow-hidden border-0 transition-all duration-300",
                 plan.isActive
-                  ? "shadow-xl bg-white"
-                  : "shadow-lg hover:shadow-xl bg-white/90"
+                  ? "shadow-lg border border-blue-200 rounded-xl bg-white"
+                  : "shadow-md hover:shadow-lg bg-white"
               )}
             >
               {plan.isActive && (
@@ -242,18 +242,18 @@ export default function ServicesDashboard() {
 
               <CardHeader className="p-4 pb-3">
                 <div className="mb-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
                     <plan.icon className="w-5 h-5 text-white" />
                   </div>
                 </div>
-                <CardTitle className="text-xl font-bold text-gray-900">
+                <CardTitle className="text-xl font-bold text-gray-800">
                   {plan.name}
                 </CardTitle>
                 <div className="mt-1">
-                  <span className="text-2xl font-bold text-gray-900">
+                  <span className="text-2xl font-bold text-gray-800">
                     {plan.price}
                   </span>
-                  <span className="text-sm text-gray-500">/month</span>
+                  <span className="text-sm text-gray-600">/month</span>
                 </div>
               </CardHeader>
 
@@ -261,14 +261,14 @@ export default function ServicesDashboard() {
                 <ul className="space-y-3">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="flex items-start gap-2">
-                      <div className="mt-0.5 p-1 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500 bg-opacity-10">
-                        <feature.icon className="w-3.5 h-3.5 text-gray-700" />
+                      <div className="mt-0.5 p-1 rounded-xl bg-blue-100">
+                        <feature.icon className="w-3.5 h-3.5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-gray-800">
                           {feature.title}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-600">
                           {feature.description}
                         </p>
                       </div>
@@ -282,10 +282,10 @@ export default function ServicesDashboard() {
                   variant={plan.isActive ? "secondary" : "primary"}
                   disabled={plan.isActive}
                   className={cn(
-                    "w-full py-5 text-xs font-medium text-black rounded-xl transition-all",
+                    "w-full py-5 text-xs font-medium rounded-xl transition-all",
                     plan.isActive
-                      ? "text-black bg-gray-100"
-                      : "bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500 text-white shadow-md hover:shadow-lg"
+                      ? "text-gray-700 bg-gray-100 border border-gray-200"
+                      : "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg"
                   )}
                 >
                   {plan.isActive ? "Current Plan" : "Upgrade to " + plan.name}
@@ -298,3 +298,4 @@ export default function ServicesDashboard() {
     </div>
   );
 }
+
