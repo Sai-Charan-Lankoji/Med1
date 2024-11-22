@@ -49,7 +49,7 @@ const Pagination = <T extends { [key: string]: any }>({
     totalItems > 0 ? Math.min((currentPage + 1) * pageSize, totalItems) : 0;
 
   return (
-    <div className="flex justify-between items-center mt-4 text-gray-500 text-xs">
+    <div className="flex justify-between items-center mt-4 text-black text-xs">
       <div className="mr-4">
         Showing {start} - {end} of {totalItems} items
       </div>

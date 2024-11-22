@@ -88,6 +88,18 @@ class PublishableApiKeyService extends TransactionBaseService {
       return savedApiKey;
     });
   }
+
+  async delete(publishableApiKeyId: string): Promise<void>{
+    return this.runAtomicPhase(async (manager) => {
+      const apiKey = await this.publishableapikeyRepository.findOne({ where: { id: publishableApiKeyId }});
+      if (!apiKey) {
+        throw new Error("Publishable API not found");
+      }
+      await this.publishableapikeyRepository.delete(apiKey);
+    });
+  }
+
+
 }
 
 export default PublishableApiKeyService;

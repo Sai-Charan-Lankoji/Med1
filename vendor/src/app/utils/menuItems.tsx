@@ -4,6 +4,7 @@ import { ShoppingCart, Tag, Users, Settings, Store, Wrench, LayoutDashboard } fr
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@medusajs/ui";
+import { User } from '@medusajs/icons';
 
 interface MenuItemsProps {
   collapsed: boolean;
@@ -35,6 +36,11 @@ const menuItems = [
     title: "Services",
     icon: Wrench,
     href: "/vendor/services",
+  },
+  {
+    title: "Users",
+    icon: User,
+    href: "/vendor/users",
   },
   {
     title: "Settings",

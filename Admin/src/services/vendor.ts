@@ -16,7 +16,6 @@ import bcrypt from "bcryptjs";
 import { compact, first, last } from "lodash";
 import { VendorUser } from "../models/vendor-user";
 
-
 class VendorService extends TransactionBaseService {
   protected manager_: EntityManager;
   protected vendorRepository_: typeof VendorRepository;
@@ -63,7 +62,14 @@ class VendorService extends TransactionBaseService {
     });
   }
 
-  async retrieve(id: string): Promise<{ vendor: Vendor; user: User; vendorAddress: Address, registrationAddress: Address }> {
+  async retrieve(
+    id: string
+  ): Promise<{
+    vendor: Vendor;
+    user: User;
+    vendorAddress: Address;
+    registrationAddress: Address;
+  }> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
       const vendor = await vendorRepo.findOne({
@@ -90,12 +96,12 @@ class VendorService extends TransactionBaseService {
       }
       const addressRepo = manager.withRepository(this.addressRepository_);
       const vendorAddress = await addressRepo.findOne({
-        where: { vendor_address_id: vendor.id }
-      })
+        where: { vendor_address_id: vendor.id },
+      });
 
       const registrationAddress = await addressRepo.findOne({
-        where: { registration_address_id: vendor.id }
-      })
+        where: { registration_address_id: vendor.id },
+      });
       // if (address.vendor_address_id) {
       //   address = await addressRepo.findOne({
       //     where: { id: address.vendor_address_id },
@@ -106,7 +112,6 @@ class VendorService extends TransactionBaseService {
       return { vendor, user, vendorAddress, registrationAddress };
     });
   }
-
 
   async find(selector: Partial<Vendor>): Promise<Vendor | undefined> {
     return await this.runAtomicPhase(async (manager) => {
@@ -138,27 +143,10 @@ class VendorService extends TransactionBaseService {
       // const vendoruserRepo = manager.withRepository(this.vendoruserRepository_);
       const addressRepo = manager.withRepository(this.addressRepository_);
 
-      // // Create User
-      // let user;
-      // if (data.userData) {
-      //   user = vendoruserRepo.create({
-      //     email: data.contact_email,
-      //     ...data.userData,
-      //   });
-      //   await vendoruserRepo.save(user);
-      //   data.user_id = user.id;
-      // }
-
       // Hash the password and create Vendor
       const hashedPassword = await bcrypt.hash(data.password, 10);
       data.password = hashedPassword;
       const vendor = await vendorRepo.createVendor(data);
-
-      // Associate the User with the Vendor
-      // if (user) {
-      //   user.vendor_id = vendor.id;
-      //   await userRepo.save(user);
-      // }
 
       const vendorAddress1 = data.vendorAddressData.address_1 || "";
       const registrationAddress1 = data.registrationAddressData.address_1 || "";
@@ -168,20 +156,21 @@ class VendorService extends TransactionBaseService {
       const registrationAddress2 = data.registrationAddressData.address_2 || "";
       const combinedAddress2 = `${vendorAddress2} - ${registrationAddress2}`;
 
-      const vendorCity = data.vendorAddressData?.city || '';
-      const registrationCity = data.registrationAddressData?.city || '';
+      const vendorCity = data.vendorAddressData?.city || "";
+      const registrationCity = data.registrationAddressData?.city || "";
       const combinedCity = `${vendorCity} - ${registrationCity}`;
 
-      const vendorProvince = data.vendorAddressData?.province || '';
-      const registrationProvince = data.registrationAddressData?.province || '';
+      const vendorProvince = data.vendorAddressData?.province || "";
+      const registrationProvince = data.registrationAddressData?.province || "";
       const combinedProvince = `${vendorProvince} - ${registrationProvince}`;
 
-      const vendorPostalCode = data.vendorAddressData?.postal_code || '';
-      const registrationPostalCode = data.registrationAddressData?.postal_code || '';
+      const vendorPostalCode = data.vendorAddressData?.postal_code || "";
+      const registrationPostalCode =
+        data.registrationAddressData?.postal_code || "";
       const combinedPostalCode = `${vendorPostalCode} - ${registrationPostalCode}`;
 
-      const vendorPhone = data.vendorAddressData?.phone || '';
-      const registrationPhone = data.registrationAddressData?.phone || '';
+      const vendorPhone = data.vendorAddressData?.phone || "";
+      const registrationPhone = data.registrationAddressData?.phone || "";
       const combinedPhone = `${vendorPhone} - ${registrationPhone}`;
 
       // Create Address with concatenated values
@@ -197,7 +186,7 @@ class VendorService extends TransactionBaseService {
           postal_code: combinedPostalCode,
           phone: combinedPhone,
           vendor_address_id: vendor.id,
-          registration_address_id: vendor.id
+          registration_address_id: vendor.id,
         });
         await addressRepo.save(address);
       }
@@ -206,22 +195,27 @@ class VendorService extends TransactionBaseService {
     });
   }
 
-
-
   async findByEmail(email: string): Promise<Vendor | null> {
-    const vendor = await this.vendorRepository_.findOne({ where: { contact_email: email } });
+    const vendor = await this.vendorRepository_.findOne({
+      where: { contact_email: email },
+    });
     return vendor || null;
-  } 
+  }
 
-
-  async findByBussinessType(bussinessType: string): Promise<Vendor | null>{
-    const vendor = await this.vendorRepository_.findOne({ where: { business_type: BusinessModel.ApparelDesign } });
+  async findByBussinessType(bussinessType: string): Promise<Vendor | null> {
+    const vendor = await this.vendorRepository_.findOne({
+      where: { business_type: BusinessModel.ApparelDesign },
+    });
     return vendor || null;
   }
 
   async update(
     id: string,
-    data: Partial<Vendor> & { vendorAddressData?: Partial<Address>; registrationAddressData?: Partial<Address>; userData?: Partial<User> }
+    data: Partial<Vendor> & {
+      vendorAddressData?: Partial<Address>;
+      registrationAddressData?: Partial<Address>;
+      userData?: Partial<User>;
+    }
   ): Promise<Vendor> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
@@ -256,7 +250,12 @@ class VendorService extends TransactionBaseService {
 
       // Update address data if provided
       if (vendor.id) {
-        const address = await addressRepo.findOne({ where: { vendor_address_id: vendor.id, registration_address_id: vendor.id } });
+        const address = await addressRepo.findOne({
+          where: {
+            vendor_address_id: vendor.id,
+            registration_address_id: vendor.id,
+          },
+        });
 
         if (!address) {
           throw new MedusaError(
@@ -266,27 +265,31 @@ class VendorService extends TransactionBaseService {
         }
 
         const vendorAddress1 = data.vendorAddressData.address_1 || "";
-        const registrationAddress1 = data.registrationAddressData.address_1 || "";
+        const registrationAddress1 =
+          data.registrationAddressData.address_1 || "";
         const combinedAddress1 = `${vendorAddress1} - ${registrationAddress1}`;
 
         const vendorAddress2 = data.vendorAddressData.address_2 || "";
-        const registrationAddress2 = data.registrationAddressData.address_2 || "";
+        const registrationAddress2 =
+          data.registrationAddressData.address_2 || "";
         const combinedAddress2 = `${vendorAddress2} - ${registrationAddress2}`;
 
-        const vendorCity = data.vendorAddressData?.city || '';
-        const registrationCity = data.registrationAddressData?.city || '';
+        const vendorCity = data.vendorAddressData?.city || "";
+        const registrationCity = data.registrationAddressData?.city || "";
         const combinedCity = `${vendorCity} - ${registrationCity}`;
 
-        const vendorProvince = data.vendorAddressData?.province || '';
-        const registrationProvince = data.registrationAddressData?.province || '';
+        const vendorProvince = data.vendorAddressData?.province || "";
+        const registrationProvince =
+          data.registrationAddressData?.province || "";
         const combinedProvince = `${vendorProvince} - ${registrationProvince}`;
 
-        const vendorPostalCode = data.vendorAddressData?.postal_code || '';
-        const registrationPostalCode = data.registrationAddressData?.postal_code || '';
+        const vendorPostalCode = data.vendorAddressData?.postal_code || "";
+        const registrationPostalCode =
+          data.registrationAddressData?.postal_code || "";
         const combinedPostalCode = `${vendorPostalCode} - ${registrationPostalCode}`;
 
-        const vendorPhone = data.vendorAddressData?.phone || '';
-        const registrationPhone = data.registrationAddressData?.phone || '';
+        const vendorPhone = data.vendorAddressData?.phone || "";
+        const registrationPhone = data.registrationAddressData?.phone || "";
         const combinedPhone = `${vendorPhone} - ${registrationPhone}`;
 
         Object.assign(address, {
@@ -300,8 +303,8 @@ class VendorService extends TransactionBaseService {
           postal_code: combinedPostalCode,
           phone: combinedPhone,
           vendor_address_id: vendor.id,
-          registration_address_id: vendor.id
-        })
+          registration_address_id: vendor.id,
+        });
 
         await addressRepo.save(address);
       }
@@ -312,10 +315,6 @@ class VendorService extends TransactionBaseService {
     });
   }
 
-
-
-
-
   async delete(id: string): Promise<void> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
@@ -325,7 +324,10 @@ class VendorService extends TransactionBaseService {
       const vendor = await vendorRepo.findOne({ where: { id } });
 
       if (!vendor) {
-        throw new MedusaError(MedusaError.Types.NOT_FOUND, `Vendor with id ${id} not found.`);
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `Vendor with id ${id} not found.`
+        );
       }
 
       // Delete associated user
@@ -342,8 +344,6 @@ class VendorService extends TransactionBaseService {
       await vendorRepo.deleteVendor(id);
     });
   }
-
-
 }
 
 export default VendorService;
