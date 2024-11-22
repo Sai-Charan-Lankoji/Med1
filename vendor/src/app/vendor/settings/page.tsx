@@ -19,7 +19,7 @@ import withAuth from '@/lib/withAuth';
 
 const Settings = () => {
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-800">General</h1>
         <p className="text-lg text-gray-600">Manage the general settings for your store</p>

@@ -16,7 +16,9 @@ const CurrencyManager = () => {
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  const handleCurrencyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  const handleCurrencyChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     setDefaultCurrency(event.target.value);
   };
 
@@ -42,10 +44,10 @@ const CurrencyManager = () => {
 
   return (
     <>
-      <BackButton name = "Settings" />
       <div className="flex flex-row justify-evenly">
         <div className="w-8/12">
-          <Container className="mb-4 ">
+          <Container className="mb-4 p-4 mt-4 rounded-xl">
+            <BackButton name="Settings" />
             <div className="flex flex-col justify-start p-2">
               <h1 className="text-2xl font-bold">Currencies</h1>
               <p className="text-gray-500 mb-4">
@@ -53,7 +55,7 @@ const CurrencyManager = () => {
               </p>
             </div>
           </Container>
-          <Container className="mb-4">
+          <Container className="mb-4 rounded-xl ">
             <div className="flex flex-row justify-between">
               <div>
                 <h2 className="text-lg font-semibold mb-2">Store Currencies</h2>
@@ -63,20 +65,20 @@ const CurrencyManager = () => {
               </div>
               <div>
                 <button
-                  className="mt-4 text-slate-700 text-sm border border-slate-300 p-2 rounded-md hover:bg-slate-100"
+                  className="mt-4 text-slate-700 text-sm border border-slate-300 p-2 rounded-[6px] hover:bg-slate-100"
                   onClick={openModal}
                 >
                   Edit Currencies
                 </button>
               </div>
             </div>
-            {currencies.currencies.length === 0 && (
-              <span>No Currencies</span>
-            )}
+            {currencies.currencies.length === 0 && <span>No Currencies</span>}
             <p className="text-gray-500 mb-4 text-sm font-bold">Currency</p>
-            <ul className="list-none pl-5">
+            <ul className="list-none pl-5 rounded-[6px]">
               {selectedCurrencies.map((code) => {
-                const currency = currencies.currencies.find((c) => c.code === code);
+                const currency = currencies.currencies.find(
+                  (c) => c.code === code
+                );
                 return currency ? (
                   <li
                     key={code}
@@ -84,7 +86,9 @@ const CurrencyManager = () => {
                   >
                     {currency.code.toLocaleUpperCase()} - {currency.name}
                     {defaultCurrency === currency.code && (
-                      <span className="ml-2 text-slate-700 text-sm p-1 bg-gray-100 text-bold">Default</span>
+                      <span className="ml-2 text-slate-700 text-sm p-1 bg-gray-100 text-bold">
+                        Default
+                      </span>
                     )}
                   </li>
                 ) : null;
@@ -92,11 +96,9 @@ const CurrencyManager = () => {
             </ul>
           </Container>
         </div>
-        <div className="w-3/12">
-          <Container>
-            <h2 className="text-xl font-semibold mb-2">
-              Store Currencies
-            </h2>
+        <div className="w-3/12 pt-4">
+          <Container className="rounded-xl">
+            <h2 className="text-xl font-semibold mb-2">Store Currencies</h2>
             <p className="text-gray-500 mb-4">
               This is the currency your prices are shown in.
             </p>
@@ -109,7 +111,9 @@ const CurrencyManager = () => {
                 Select a currency
               </option>
               {selectedCurrencies.map((code) => {
-                const currency = currencies.currencies.find((c) => c.code === code);
+                const currency = currencies.currencies.find(
+                  (c) => c.code === code
+                );
                 return currency ? (
                   <option key={code} value={currency.code}>
                     {currency.code.toLocaleUpperCase()} - {currency.name}
@@ -139,9 +143,7 @@ const CurrencyManager = () => {
                 <div className="flex flex-col gap-4">
                   {currentCurrencies.map((currency) => (
                     <React.Fragment key={currency.code}>
-                      <label
-                        className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition duration-150 ease-in-out"
-                      >
+                      <label className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition duration-150 ease-in-out">
                         <input
                           type="checkbox"
                           checked={selectedCurrencies.includes(currency.code)}
