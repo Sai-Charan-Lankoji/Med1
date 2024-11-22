@@ -17,10 +17,10 @@ const PublishableApiKeysTable = () => {
   const { data: stores } = useGetStores();
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <Container className="py-10">
+    <div className="p-4">
+      <Container className="py-4 rounded-xl">
         <BackButton name="Settings" />
-        <div className="bg-white shadow-lg rounded-lg p-6">
+        <div className="rounded-lg p-2">
           <div className="flex justify-between items-center mb-6">
             <div>
               <Heading className="text-3xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Publishable API Keys</Heading>
