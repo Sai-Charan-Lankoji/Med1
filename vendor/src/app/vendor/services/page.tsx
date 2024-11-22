@@ -1,6 +1,6 @@
-"use client";
+"use client"
 
-import React from "react";
+import React from "react"
 import {
   Building2,
   Store,
@@ -13,19 +13,14 @@ import {
   Globe,
   Database,
   HeadphonesIcon,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@medusajs/ui";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useGetStores } from "@/app/hooks/store/useGetStores";
-import { cn } from "@/lib/utils";
+} from "lucide-react"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Button } from "@medusajs/ui"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useGetStores } from "@/app/hooks/store/useGetStores"
+import { cn } from "@/lib/utils"
+import { motion } from "framer-motion"
 
 interface Feature {
   title: string;
@@ -120,182 +115,213 @@ const SERVICES: ServicePlan[] = [
     ],
     icon: Crown,
   },
-];
+]
 
 export default function ServicesDashboard() {
-  const { data: stores } = useGetStores();
-  const activePlan = SERVICES.find((plan) => plan.isActive);
-  const currentStores = stores?.length || 0;
+  const { data: stores } = useGetStores()
+  const activePlan = SERVICES.find((plan) => plan.isActive)
+  const currentStores = stores?.length || 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="text-center space-y-2 mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Service Plans
-          </h1>
-          <p className="text-sm text-gray-600 max-w-xl mx-auto">
-            Choose the perfect plan for your business needs
-          </p>
-        </div>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+      {/* Animated Wave Background */}
+      {/* <div className="absolute inset-0 z-0">
+        <div className="wave"></div>
+        <div className="wave"></div>
+        <div className="wave"></div>
+      </div> */}
+      
+      
+      <div className="relative z-10 min-h-screen p-4 md:p-6">
+        <div className="max-w-6xl mx-auto space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-center space-y-2 mb-8"
+          >
+            <h1 className="text-3xl md:text-4xl font-bold text-white">
+              Service Plans
+            </h1>
+            <p className="text-sm text-white/80 max-w-xl mx-auto">
+              Choose the perfect plan for your business needs
+            </p>
+          </motion.div>
 
-        {activePlan && (
-          <Card className="mb-6 rounded-xl overflow-hidden border-0 bg-white shadow-lg">
-            <CardHeader className="border-b bg-gradient-to-r from-gray-50 to-gray-100 p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl shadow-md bg-gradient-to-br from-blue-500 to-blue-600">
-                  <Activity className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-gray-800">
-                    Current Plan Status
-                  </CardTitle>
-                  <p className="text-xs text-gray-600">
-                    {activePlan.name} Plan Overview
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-4">
-                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 shadow-md border border-gray-200">
-                    <h3 className="text-base font-semibold text-gray-800 mb-3">
-                      Store Usage
-                    </h3>
-                    <div className="flex items-end gap-2 mb-3">
-                      <span className="text-2xl font-bold text-gray-800">
-                        {currentStores}
-                      </span>
-                      <span className="text-sm text-gray-600 mb-0.5">
-                        of {activePlan.maxStores} stores
-                      </span>
-                    </div>
-                    <Progress
-                      value={(currentStores / activePlan.maxStores) * 100}
-                      className="h-2 rounded-full bg-gray-200"
-                    />
-                  </div>
-
-                  <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                    <h3 className="text-base font-semibold text-gray-800 mb-2">
-                      Available Capacity
-                    </h3>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-gray-800">
-                        {Math.max(0, activePlan.maxStores - currentStores)}
-                      </span>
-                      <span className="text-sm text-gray-600">stores remaining</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-xl p-4 shadow-md border border-gray-200">
-                  <h3 className="text-base font-semibold text-gray-800 mb-3">
-                    Active Stores
-                  </h3>
-                  <ScrollArea className="h-[180px] pr-4">
-                    <div className="space-y-2">
-                      {stores?.map((store, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-r from-gray-50 to-gray-100 shadow-sm border border-gray-200 transition-all hover:shadow-md"
-                        >
-                          <div className="p-1.5 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
-                            <ShoppingBag className="w-3.5 h-3.5 text-white" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">
-                              {store.name}
-                            </p>
-                            <p className="text-xs text-gray-600">Active</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {SERVICES.map((plan) => (
-            <Card
-              key={plan.name}
-              className={cn(
-                "relative overflow-hidden border-0 transition-all duration-300",
-                plan.isActive
-                  ? "shadow-lg border border-blue-200 rounded-xl bg-white"
-                  : "shadow-md hover:shadow-lg bg-white"
-              )}
+          {activePlan && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
             >
-              {plan.isActive && (
-                <div className="absolute top-3 right-3">
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                    Current Plan
-                  </span>
-                </div>
-              )}
-
-              <CardHeader className="p-4 pb-3">
-                <div className="mb-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600">
-                    <plan.icon className="w-5 h-5 text-white" />
+              <Card className="mb-6 rounded-xl overflow-hidden border-0 bg-white/10 backdrop-blur-md shadow-2xl">
+                <CardHeader className="border-b border-white/20 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-2xl shadow-md bg-white/20">
+                      <Activity className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-bold text-white">
+                        Current Plan Status
+                      </CardTitle>
+                      <p className="text-xs text-white/80">
+                        {activePlan.name} Plan Overview
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <CardTitle className="text-xl font-bold text-gray-800">
-                  {plan.name}
-                </CardTitle>
-                <div className="mt-1">
-                  <span className="text-2xl font-bold text-gray-800">
-                    {plan.price}
-                  </span>
-                  <span className="text-sm text-gray-600">/month</span>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="p-4 pt-0">
-                <ul className="space-y-3">
-                  {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-2">
-                      <div className="mt-0.5 p-1 rounded-xl bg-blue-100">
-                        <feature.icon className="w-3.5 h-3.5 text-blue-600" />
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
+                        <h3 className="text-base font-semibold text-white mb-3">
+                          Store Usage
+                        </h3>
+                        <div className="flex items-end gap-2 mb-3">
+                          <span className="text-2xl font-bold text-white">
+                            {currentStores}
+                          </span>
+                          <span className="text-sm text-white/80 mb-0.5">
+                            of {activePlan.maxStores} stores
+                          </span>
+                        </div>
+                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${Math.min((currentStores / activePlan.maxStores) * 100, 100)}%`
+                        }}
+                      />
+                    </div>
+                  
                       </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-800">
-                          {feature.title}
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
 
-              <CardFooter className="p-4">
-                <Button
-                  variant={plan.isActive ? "secondary" : "primary"}
-                  disabled={plan.isActive}
+                      <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
+                        <h3 className="text-base font-semibold text-white mb-2">
+                          Available Capacity
+                        </h3>
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-2xl font-bold text-white">
+                            {Math.max(0, activePlan.maxStores - currentStores)}
+                          </span>
+                          <span className="text-sm text-white/80">stores remaining</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
+                      <h3 className="text-base font-semibold text-white mb-3">
+                        Active Stores
+                      </h3>
+                      <ScrollArea className="h-[180px] pr-4">
+                        <div className="space-y-2">
+                          {stores?.map((store, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 shadow-sm border border-white/20 transition-all hover:bg-white/20"
+                            >
+                              <div className="p-1.5 rounded-xl bg-white/20">
+                                <ShoppingBag className="w-3.5 h-3.5 text-white" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-white">
+                                  {store.name}
+                                </p>
+                                <p className="text-xs text-white/80">Active</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {SERVICES.map((plan, index) => (
+              <motion.div
+                key={plan.name}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
+              >
+                <Card
                   className={cn(
-                    "w-full py-5 text-xs font-medium rounded-xl transition-all",
+                    "relative overflow-hidden border-0 transition-all duration-300 bg-white/10 backdrop-blur-md shadow-2xl flex flex-col h-full",
                     plan.isActive
-                      ? "text-gray-700 bg-gray-100 border border-gray-200"
-                      : "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg"
+                      ? "border border-white/40 rounded-xl"
+                      : "hover:bg-white/20"
                   )}
                 >
-                  {plan.isActive ? "Current Plan" : "Upgrade to " + plan.name}
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                  {plan.isActive && (
+                    <div className="absolute top-3 right-3">
+                      <span className="px-2 py-0.5 bg-green-500/20 text-green-100 rounded-full text-xs font-medium">
+                        Current Plan
+                      </span>
+                    </div>
+                  )}
+
+                  <CardHeader className="p-4 pb-3">
+                    <div className="mb-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20">
+                        <plan.icon className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                    <CardTitle className="text-xl font-bold text-white">
+                      {plan.name}
+                    </CardTitle>
+                    <div className="mt-1">
+                      <span className="text-2xl font-bold text-white">
+                        {plan.price}
+                      </span>
+                      <span className="text-sm text-white/80">/month</span>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-4 pt-0 flex-grow">
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2">
+                          <div className="mt-0.5 p-1 rounded-xl bg-white/20">
+                            <feature.icon className="w-3.5 h-3.5 text-white" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              {feature.title}
+                            </p>
+                            <p className="text-xs text-white/80">
+                              {feature.description}
+                            </p>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </CardContent>
+
+                  <CardFooter className="p-4 mt-auto">
+                    <Button
+                      variant={plan.isActive ? "secondary" : "primary"}
+                      disabled={plan.isActive}
+                      className={cn(
+                        "w-full py-3 text-xs font-medium rounded-xl transition-all",
+                        plan.isActive
+                          ? "text-purple-100 bg-white/10 border border-white/20 hover:bg-white/20"
+                          : "bg-white text-purple-600 shadow-md hover:shadow-lg hover:bg-white/90"
+                      )}
+                    >
+                      {plan.isActive ? "Current Plan" : "Upgrade to " + plan.name}
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
-
