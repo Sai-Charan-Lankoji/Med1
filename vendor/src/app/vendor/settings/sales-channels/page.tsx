@@ -1,83 +1,75 @@
-"use client";
-import React, { useState } from "react";
-import {
-  EllipsisHorizontal,
-  MagnifyingGlassMini,
-  PencilSquare,
-  Plus,
-  PlusMini,
-  XMarkMini,
-} from "@medusajs/icons";
-import {
-  Button,
-  Container,
-  DropdownMenu,
-  FocusModal,
-  Heading,
-  IconButton,
-  Input,
-  Label,
-  ProgressAccordion,
-} from "@medusajs/ui";
-import { BackButton } from "@/app/utils/backButton";
-import SalesTable from "../../components/saleschannelTableView/salesTable";
-import withAuth from "@/lib/withAuth";
-import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
-import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel";
-import { useUpdateSalesChannel } from "@/app/hooks/saleschannel/useUpdateSalesChannel"; // Custom hook for updating sales channels
-import { identity } from "lodash";
+'use client'
 
-const SalesChannels = () => {
-  const [selectedRegion, setSelectedRegion] = useState<string | null>(
-    "Default Sales Channel"
-  );
+import React, { useState } from "react"
+import { motion } from "framer-motion"
+import Link from "next/link"
+import { ArrowLeft, Plus, Search, MoreHorizontal, PenSquare, X } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@radix-ui/react-label"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import withAuth from "@/lib/withAuth"
+import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels"
+import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel"
+import { useUpdateSalesChannel } from "@/app/hooks/saleschannel/useUpdateSalesChannel"
+import SalesTable from "../../components/saleschannelTableView/salesTable"
+import DashboardComponent from "../../components/dashboard/page"
+
+function SalesChannels() {
+  const [selectedRegion, setSelectedRegion] = useState<string | null>("Default Sales Channel")
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     vendor_id: sessionStorage.getItem("vendor_id"),
-  });
-  const { data: SalesChannels } = useGetSalesChannels();
-  const channelId = SalesChannels?.find(
-    (channel) => channel.name === selectedRegion
-  )?.id; // Get channel ID to update
-  console.log("Channel ID: " + channelId)
-  const { mutate: createSalesChannel } = useCreateSalesChannel();
-  const { mutate: updateSalesChannel } = useUpdateSalesChannel(channelId); // Hook for updating sales channels
-  const vendorName = sessionStorage.getItem("contactName");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const openEditModal = () => setIsEditModalOpen(true);
-  const closeEditModal = () => setIsEditModalOpen(false);
+  })
+  const { data: SalesChannels } = useGetSalesChannels()
+  const channelId = SalesChannels?.find((channel) => channel.name === selectedRegion)?.id
+  const { mutate: createSalesChannel } = useCreateSalesChannel()
+  const { mutate: updateSalesChannel } = useUpdateSalesChannel(channelId)
+  const vendorName = sessionStorage.getItem("contactName")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
+  const openModal = () => setIsModalOpen(true)
+  const closeModal = () => setIsModalOpen(false)
+  const openEditModal = () => setIsEditModalOpen(true)
+  const closeEditModal = () => setIsEditModalOpen(false)
 
   const handleRadioChange = (region: string) => {
-    setSelectedRegion(region);
-    const selectedChannel = SalesChannels.find(
-      (channel) => channel.name === region
-    );
+    setSelectedRegion(region)
+    const selectedChannel = SalesChannels?.find((channel) => channel.name === region)
     if (selectedChannel) {
       setFormData({
         name: selectedChannel.name,
         description: selectedChannel.description,
-        vendor_id: sessionStorage.getItem("vendor_id"),
-      });
+        vendor_id: sessionStorage.getItem("vendor_id") || "",
+      })
     }
-  };
+  }
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
-    }));
-    console.log("Form data changed", formData)
-  };
+    }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     createSalesChannel(
       {
         name: formData.name,
@@ -86,267 +78,225 @@ const SalesChannels = () => {
       },
       {
         onSuccess: (response) => {
-          console.log("Successfully Created Sales Channel ", response);
-          closeModal(); // Close modal after successful creation
+          console.log("Successfully Created Sales Channel ", response)
+          closeModal()
         },
         onError: (error) => {
-          console.error("Error while creating sales channel:", error);
+          console.error("Error while creating sales channel:", error)
         },
       }
-    );
-  };
+    )
+  }
 
   const handleUpdateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    updateSalesChannel(
-      {
-        channelId,
-        name: formData.name,
-        description: formData.description
-      },
-      {
-        onSuccess: (response) => {
-          console.log("Successfully Updated Sales Channel", response);
-          closeEditModal();
+    e.preventDefault()
+    if (channelId) {
+      updateSalesChannel(
+        {
+          channelId,
+          name: formData.name,
+          description: formData.description
         },
-        onError: (error) => {
-          console.error("Error while updating sales channel:", error);
-        },
-      }
-    );
-    
-    
-  };
+        {
+          onSuccess: (response) => {
+            console.log("Successfully Updated Sales Channel", response)
+            closeEditModal()
+          },
+          onError: (error) => {
+            console.error("Error while updating sales channel:", error)
+          },
+        }
+      )
+    }
+  }
 
   const renderSidebarContent = () => {
     switch (selectedRegion) {
       case selectedRegion:
         return (
           <>
-            <div className="flex justify-between items-center px-8">
-              <h2 className="text-xl font-semibold">{selectedRegion}</h2>
-              <div className="flex justify-between items-center w-36 ">
-                <p className="text-[12px] text-gray-500">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full mr-2 inline-block ${"bg-green-500"}`}
-                  ></span>
+            <div className="flex justify-between items-center px-8 mb-6">
+              <h2 className="text-2xl font-semibold text-white">{selectedRegion}</h2>
+              <div className="flex items-center space-x-4">
+                <p className="text-sm text-white/80">
+                  <span className="w-2.5 h-2.5 rounded-full mr-2 inline-block bg-green-500"></span>
                   Enabled
                 </p>
                 <DropdownMenu>
-                  <DropdownMenu.Trigger asChild>
-                    <IconButton>
-                      <EllipsisHorizontal />
-                    </IconButton>
-                  </DropdownMenu.Trigger>
-                  <DropdownMenu.Content className="bg-white">
-                    <DropdownMenu.Item
-                      className="gap-x-2 text-sm"
-                      onClick={openEditModal}
-                    >
-                      <PencilSquare className="text-ui-fg-subtle" />
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="bg-white/10 text-white hover:bg-white/20">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg">
+                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-white hover:bg-white/20" onClick={openEditModal}>
+                      <PenSquare className="h-4 w-4" />
                       Edit General info
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item className="gap-x-2 text-sm hover:bg-gray-100">
-                      <Plus className="text-ui-fg-subtle" />
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-white hover:bg-white/20">
+                      <Plus className="h-4 w-4" />
                       Add Products
-                    </DropdownMenu.Item>
-                  </DropdownMenu.Content>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
                 </DropdownMenu>
               </div>
             </div>
             <SalesTable />
           </>
-        );
+        )
       default:
         return (
-          <h2 className="text-xl font-semibold">
-            Select a region to view settings
-          </h2>
-        );
+          <div className="flex items-center justify-center h-full">
+            <h2 className="text-xl font-semibold text-white/60">
+              Select a channel to view details
+            </h2>
+          </div>
+        )
     }
-  };
+  }
 
   return (
-    <div className="px-16">
-      <BackButton name="Settings" />
-      <div className="grid grid-cols-[1fr_2fr] gap-4">
-        <Container className="bg-white min-h-screen w-[450px]">
-          <div className="my-4">
-            <div className="flex flex-row justify-between">
-              <h3 className="text-2xl font-semibold">Sales channels</h3>
-              <div className="flex flex-row justify-around">
-                <Button variant="transparent">
-                  <MagnifyingGlassMini />
-                </Button>
-                <FocusModal>
-                  <FocusModal.Trigger asChild>
-                    <Button variant="transparent">
-                      <PlusMini />
-                    </Button>
-                  </FocusModal.Trigger>
-                  <FocusModal.Content className="bg-white">
-                    <FocusModal.Header className="flex justify-between">
-                      <div>
-                        <Button variant="primary" onClick={closeModal}>
-                          Save as draft
-                        </Button>
-                        <Button
-                          onClick={handleSubmit}
-                          variant="transparent"
-                          className="bg-violet-500 text-white ml-4"
-                        >
-                          Publish Channel
-                        </Button>
-                      </div>
-                    </FocusModal.Header>
-                    <FocusModal.Body className="flex flex-col justify-start items-center py-16 w-full bg-white">
-                      <ProgressAccordion type="multiple">
-                        <Heading className="text-[24px] font-semibold pb-4">
-                          Create new sales channel
-                        </Heading>
-                        <ProgressAccordion.Item
-                          value="general-info"
-                          className="pb-12 w-[900px]"
-                        >
-                          <ProgressAccordion.Header className="font-semibold text-lg">
-                            General info
-                          </ProgressAccordion.Header>
-                          <ProgressAccordion.Content>
-                            <form onSubmit={handleSubmit}>
-                              <div className="flex flex-col gap-y-2 py-4">
-                                <Label
-                                  htmlFor="title"
-                                  className="text-ui-fg-subtle"
-                                >
-                                  Title
-                                </Label>
-                                <Input
-                                  id="title"
-                                  value={formData.name}
-                                  name="name"
-                                  onChange={handleChange}
-                                  placeholder="Website, app, Amazon, physical store POS, facebook product feed..."
-                                  className="py-5 border hover:border-violet-600 focus:border-violet-600"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-y-2 pb-4">
-                                <Label
-                                  htmlFor="description"
-                                  className="text-ui-fg-subtle"
-                                >
-                                  Description
-                                </Label>
-                                <Input
-                                  id="description"
-                                  name="description"
-                                  value={formData.description}
-                                  onChange={handleChange}
-                                  placeholder="Available products at our website, app..."
-                                  className="py-5 border hover:border-violet-600 focus:border-violet-600"
-                                />
-                              </div>
-                            </form>
-                          </ProgressAccordion.Content>
-                        </ProgressAccordion.Item>
-                        <hr />
-                      </ProgressAccordion>
-                    </FocusModal.Body>
-                  </FocusModal.Content>
-                </FocusModal>
-              </div>
+    <DashboardComponent
+      title="Sales Channels"
+      description="Control which products are available in which channels"
+    >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="md:col-span-1 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-xl font-bold text-white">Channels</CardTitle>
+            <div className="flex space-x-2">
+              <Button variant="ghost" size="icon" className="bg-white/10 text-white hover:bg-white/20">
+                <Search className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="bg-white/10 text-white hover:bg-white/20" onClick={openModal}>
+                <Plus className="h-4 w-4" />
+              </Button>
             </div>
-            <p className="text-sm">
-              Control which products are available in which channels
-            </p>
-            <div className="my-4">
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
               {SalesChannels?.map((channel) => (
-                <Container
+                <motion.div
                   key={channel.id}
-                  className={`cursor-pointer p-4 my-2 border ${
+                  className={`cursor-pointer p-4 rounded-lg transition-colors ${
                     selectedRegion === channel.name
-                      ? "border-violet-600"
-                      : "border-gray-300"
+                      ? "bg-white/20 text-white"
+                      : "bg-white/5 text-white/80 hover:bg-white/10"
                   }`}
                   onClick={() => handleRadioChange(channel.name)}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  <input
-                    type="radio"
-                    checked={selectedRegion === channel.name}
-                    onChange={() => handleRadioChange(channel.name)}
-                    className="hidden"
-                  />
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col">
                       <h3 className="font-semibold">{channel.name}</h3>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-white/60">
                         {channel.description}
                       </p>
                     </div>
-                    <p className="text-xs text-gray-500">
-                    Created By { vendorName}
+                    <p className="text-xs text-white/60">
+                      Created By {vendorName}
                     </p>
                   </div>
-                </Container>
+                </motion.div>
               ))}
             </div>
-          </div>
-        </Container>
-        <Container className="bg-white w-full">
-          {renderSidebarContent()}
-        </Container>
+          </CardContent>
+        </Card>
+
+        <Card className="md:col-span-2 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl">
+          <CardContent className="p-6">
+            {renderSidebarContent()}
+          </CardContent>
+        </Card>
       </div>
 
-      {isEditModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-6 h-[280px] w-[600px]">
-            <div className="flex flex-row justify-between">
-              <Heading className="text-xl font-semibold">
-                Sales Channel Details
-              </Heading>
-              <IconButton onClick={closeEditModal}>
-                <XMarkMini />
-              </IconButton>
-            </div>
-            <form onSubmit={handleUpdateSubmit}>
-              <Label htmlFor="title" className="text-ui-fg-subtle">
-                Title
-              </Label>
-              <Input
-                id="title"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className="border py-2 px-4 mb-4"
-              />
-              <Label htmlFor="description" className="text-ui-fg-subtle">
-                Description
-              </Label>
-              <Input
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                className="border py-2 px-4"
-              />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mt-6"
+      >
+        <Link href="/vendor/settings" passHref>
+          <Button variant="ghost" className="text-white hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
+          </Button>
+        </Link>
+      </motion.div>
 
-              <div className="flex justify-end pt-4">
-                <Button variant="secondary" onClick={closeEditModal}>
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="transparent"
-                  className="ml-2 px-8 py-2 border-none rounded-md outline-none text-white font-bold font-cabin bg-violet-600 hover:bg-violet-500"
-                >
-                  Save
-                </Button>
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-white">
+          <DialogHeader>
+            <DialogTitle>Create new sales channel</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                />
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="description" className="text-right">Description</Label>
+                <Input
+                  id="description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
+              <Button type="submit">Create Channel</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
-export default withAuth(SalesChannels);
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-white">
+          <DialogHeader>
+            <DialogTitle>Edit Sales Channel</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-name" className="text-right">Name</Label>
+                <Input
+                  id="edit-name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-description" className="text-right">Description</Label>
+                <Input
+                  id="edit-description"
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="secondary" onClick={closeEditModal}>Cancel</Button>
+              <Button type="submit">Save Changes</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </DashboardComponent>
+  )
+}
+
+export default withAuth(SalesChannels)

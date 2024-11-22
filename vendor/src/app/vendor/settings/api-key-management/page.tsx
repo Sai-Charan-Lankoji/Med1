@@ -1,99 +1,110 @@
-"use client";
-import React, { useState } from "react";
-import {
-  Button,
-  Container,
-  Heading,
-  Table,
-} from "@medusajs/ui";
-import { BackButton } from "@/app/utils/backButton";
-import withAuth from "@/lib/withAuth";
-import { useGetStores } from "../../../hooks/store/useGetStores";
+'use client'
 
-const PublishableApiKeysTable = () => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isCustomDrawerOpen, setIsCustomDrawerOpen] = useState(false);
-  const pageSize = 6;
-  const { data: stores } = useGetStores();
+import React, { useState } from "react"
+import { motion } from "framer-motion"
+import Link from "next/link"
+import { ArrowLeft, Plus } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import withAuth from "@/lib/withAuth"
+import { useGetStores } from "@/app/hooks/store/useGetStores"
+import DashboardComponent from "../../components/dashboard/page"
+
+function PublishableApiKeysTable() {
+  const [currentPage, setCurrentPage] = useState(0)
+  const [isCustomDrawerOpen, setIsCustomDrawerOpen] = useState(false)
+  const pageSize = 6
+  const { data: stores } = useGetStores()
 
   return (
-    <div className="p-4">
-      <Container className="py-4 rounded-xl">
-        <BackButton name="Settings" />
-        <div className="rounded-lg p-2">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <Heading className="text-3xl font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">Publishable API Keys</Heading>
-              <p className="text-gray-600 mt-2 text-sm bg-gradient-to-r from-violet-300 to-fuchsia-300 bg-clip-text text-transparent">
-                Manage your publishable keys to authenticate API requests.
-              </p>
-            </div>
-            <Button
-              variant="secondary"
-              className="bg-violet-600 text-white hover:bg-violet-700 rounded-lg px-6 py-2 hidden"
-            >
-              Create API Key
-            </Button>
-          </div>
-
+    <DashboardComponent
+      title="Publishable API Keys"
+      description="Manage your publishable keys to authenticate API requests."
+    >
+      {/* <Card className="mb-6 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl"> */}
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-xl font-bold text-white">
+            API Keys
+          </CardTitle>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="bg-white/10 text-white hover:bg-white/20 hidden"
+          >
+            <Plus className="mr-2 h-4 w-4" /> Create API Key
+          </Button>
+        </CardHeader>
+        <CardContent>
           {stores?.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-gray-500">No API Keys created yet</p>
+              <p className="text-white/80">No API Keys created yet</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="w-full border border-gray-200 rounded-xl">
-                <Table.Header className="bg-gray-100">
-                  <Table.Row>
-                    <Table.HeaderCell className="px-4 py-3 text-left text-indigo-600 font-semibold">
-                      S/No
-                    </Table.HeaderCell>
-                    <Table.HeaderCell className="px-4 py-3 text-left text-indigo-600 font-semibold">
-                      Name
-                    </Table.HeaderCell>
-                    <Table.HeaderCell className="px-4 py-3 text-left text-indigo-600 font-semibold">
-                      Token
-                    </Table.HeaderCell>
-                    <Table.HeaderCell className="px-4 py-3 text-left text-indigo-600 font-semibold">
-                      Created
-                    </Table.HeaderCell>
-                    <Table.HeaderCell className="px-4 py-3 text-left text-indigo-600 font-semibold">
-                      Status
-                    </Table.HeaderCell>
-                  </Table.Row>
-                </Table.Header>
-                <Table.Body>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-b border-white/10">
+                    <TableHead className="text-white">S/No</TableHead>
+                    <TableHead className="text-white">Name</TableHead>
+                    <TableHead className="text-white">Token</TableHead>
+                    <TableHead className="text-white">Created</TableHead>
+                    <TableHead className="text-white">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {stores?.map((apiKey, index) => (
-                    <Table.Row
-                      key={index}
-                      className={`${
-                        index % 2 === 0 ? "bg-gray-50" : "bg-white"
-                      } hover:bg-gray-100`}
-                    >
-                      <Table.Cell className="px-4 py-3 text-violet-800">{index + 1}</Table.Cell>
-                      <Table.Cell className="px-4 py-3 text-violet-800">{apiKey.name}</Table.Cell>
-                      <Table.Cell className="px-4 py-3 text-violet-800">{apiKey.publishableapikey}</Table.Cell>
-                      <Table.Cell className="px-4 py-3 text-violet-800">
+                    <TableRow key={index} className="border-b border-white/10">
+                      <TableCell className="text-white">{index + 1}</TableCell>
+                      <TableCell className="text-white">
+                        {apiKey.name}
+                      </TableCell>
+                      <TableCell className="text-white">
+                        {apiKey.publishableapikey}
+                      </TableCell>
+                      <TableCell className="text-white">
                         {new Date(apiKey.created_at).toLocaleDateString()}
-                      </Table.Cell>
-                      <Table.Cell className="px-4 py-3">
-                        <span
-                          className={`inline-block w-3 h-3 rounded-full mr-2 ${
-                            apiKey.revoked_at ? "bg-red-500" : "bg-green-500"
-                          }`}
-                        ></span>
-                        {apiKey.revoked_at ? "Revoked" : "Live"}
-                      </Table.Cell>
-                    </Table.Row>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={apiKey.revoked_at ? "destructive" : "secondary"}
+                          className={`rounded-full text-xs font-medium ${
+                            apiKey.revoked_at 
+                              ? "bg-red-500/10 text-red-500" 
+                              : "bg-green-500/10 text-green-400"
+                          }`}                        >
+                          {apiKey.revoked_at ? "Revoked" : "Live"}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </Table.Body>
+                </TableBody>
               </Table>
             </div>
           )}
-        </div>
-      </Container>      
-    </div>
-  );
-};
+        </CardContent>
+      {/* </Card> */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Link href="/vendor/settings" passHref>
+          <Button variant="ghost" className="text-white hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
+          </Button>
+        </Link>
+      </motion.div>
+    </DashboardComponent>
+  )
+}
 
-export default withAuth(PublishableApiKeysTable);
+export default withAuth(PublishableApiKeysTable)

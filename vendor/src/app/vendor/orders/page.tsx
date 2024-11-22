@@ -136,7 +136,7 @@ const Order = () => {
                 placeholder="Search Orders"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 text-sm pl-11 py-4 border bg-white border-indigo-200 rounded-xl shadow-sm"
+                className="w-full sm:w-64 text-sm pl-11 py-4 border bg-white/50 border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
               />
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" />
             </div>

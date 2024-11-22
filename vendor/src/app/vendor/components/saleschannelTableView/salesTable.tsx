@@ -1,89 +1,84 @@
-"use client"; // Ensure the component is client-side
+'use client'
 
-import { Container, Table } from "@medusajs/ui";
-import React, { useState } from "react";
-import { useGetProducts } from "@/app/hooks/products/useGetProducts"; 
-import Image from "next/image";
+import React, { useState } from "react"
+import Image from "next/image"
+import { useGetProducts } from "@/app/hooks/products/useGetProducts"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const SalesTable = () => {
-  const { data: productsData, error, isLoading } = useGetProducts();
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  const { data: productsData, error, isLoading } = useGetProducts()
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([])
 
-  // Handle the "Select All" checkbox
-  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.checked) {
-      const allProductIds = productsData?.map((product: any) => product.id) || [];
-      setSelectedProducts(allProductIds);
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allProductIds = productsData?.map((product: any) => product.id) || []
+      setSelectedProducts(allProductIds)
     } else {
-      setSelectedProducts([]);
+      setSelectedProducts([])
     }
-  };
+  }
 
-  // Handle individual checkbox selection
   const handleSelectProduct = (productId: string) => {
     setSelectedProducts((prevSelected) => {
       if (prevSelected.includes(productId)) {
-        return prevSelected.filter((id) => id !== productId);
+        return prevSelected.filter((id) => id !== productId)
       } else {
-        return [...prevSelected, productId];
+        return [...prevSelected, productId]
       }
-    });
-  };
+    })
+  }
 
-  const isAllSelected = productsData?.length > 0 && selectedProducts.length === productsData.length;
+  const isAllSelected = productsData?.length > 0 && selectedProducts.length === productsData?.length
+
+  if (isLoading) return <div className="text-center text-white">Loading...</div>
+  if (error) return <div className="text-center text-red-500">Error loading products</div>
 
   return (
-    <>
-      <Container>
-        <Table>
-          <Table.Header>
-            <Table.Row>
-              <Table.HeaderCell>
-                <input
-                  type="checkbox"
-                  id="select-all"
-                  className="border border-gray-200 text-violet-700"
-                  checked={isAllSelected}
-                  onChange={handleSelectAll}
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse">
+        <thead>
+          <tr className="bg-white/5">
+            <th className="p-3">
+              <Checkbox
+                checked={isAllSelected}
+                onCheckedChange={handleSelectAll}
+                aria-label="Select all products"
+              />
+            </th>
+            <th className="p-3 text-left text-sm font-medium text-white/80">Name</th>
+            <th className="p-3 text-left text-sm font-medium text-white/80">Collection</th>
+          </tr>
+        </thead>
+        <tbody>
+          {productsData?.map((product: any) => (
+            <tr key={product.id} className="border-t border-white/10 hover:bg-white/5">
+              <td className="p-3">
+                <Checkbox
+                  checked={selectedProducts.includes(product.id)}
+                  onCheckedChange={() => handleSelectProduct(product.id)}
+                  aria-label={`Select ${product.title}`}
                 />
-              </Table.HeaderCell>
-              <Table.HeaderCell className="text-gray-500 text-sm">Name</Table.HeaderCell>
-              <Table.HeaderCell className="text-gray-500 text-sm">Collection</Table.HeaderCell>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {productsData?.map((product: any) => (
-              <Table.Row key={product.id}>
-                <Table.Cell>
-                  <input
-                    type="checkbox"
-                    id={`select-${product.id}`}
-                    className="border border-gray-300 text-violet-700 text-center"
-                    checked={selectedProducts.includes(product.id)}
-                    onChange={() => handleSelectProduct(product.id)}
+              </td>
+              <td className="p-3 flex items-center">
+                <div className="w-12 h-12 mr-4 relative">
+                  <Image
+                    src={product.thumbnail || "/placeholder.svg"}
+                    alt={product.title}
+                    className="rounded-md object-cover"
+                    fill
+                    sizes="(max-width: 48px) 100vw, 48px"
+                    priority
                   />
-                </Table.Cell>
-                <Table.Cell className="text-center text-sm text-gray-500 flex justify-start items-center">
-                  <div className="w-12 h-12 mr-4">
-                    <Image
-                      src={product.thumbnail || ""}
-                      alt={product.title}
-                      className="rounded-md object-cover w-auto h-auto"
-                      width={30}
-                      height={20}
-                      priority
-                    />
-                  </div>
-                  {product.title}
-                </Table.Cell>
-                <Table.Cell className="text-center">{product.collection || "-"}</Table.Cell>
-              </Table.Row>
-            ))}
-          </Table.Body>
-        </Table>
-      </Container>
-    </>
-  );
-};
+                </div>
+                <span className="text-sm text-white">{product.title}</span>
+              </td>
+              <td className="p-3 text-sm text-white/80">{product.collection || "-"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
 
-export default SalesTable;
+export default SalesTable

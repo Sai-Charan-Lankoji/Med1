@@ -68,7 +68,7 @@ const Product = () => {
 
   return (
     <>
-      <div className="flex items-center justify-end flex-wrap pb-4 space-x-0 sm:space-x-4 space-y-4 sm:space-y-0 mt-4 sm:mt-0">
+      <div className="flex items-center justify-end flex-wrap pb-4 p-8 space-x-0 sm:space-x-4 space-y-4 sm:space-y-0 mt-4 sm:mt-0">
         <div className="justify-start mr-auto">
         <Heading level="h1" className="text-[26px] ">Products</Heading>
         </div>
@@ -78,7 +78,7 @@ const Product = () => {
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="text-[13px] pl-11 py-1 border bg-transparent border-gray-300 rounded-md shadow-sm sm:w-auto focus:border-blue-500 outline-none"
+            className="text-[13px] pl-11 py-1 border bg-white/50 rounded-md shadow-sm sm:w-auto border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
         </div>
@@ -117,7 +117,7 @@ const Product = () => {
           <Loader />
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 justify-center items-center">
           {filteredData.length === 0 || currentProducts.length === 0 ? (
             <div className="text-center text-gray-500 py-8">
               <p>No products created yet</p>
