@@ -21,7 +21,7 @@ import Pagination from "@/app/utils/pagination";
 import { FiSearch } from "react-icons/fi";
 import { parseISO, format, parse, isValid } from "date-fns";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
-import { useGetStore } from "@/app/hooks/store/useGetStore";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Order = () => {
   const { data: OrdersData, isLoading } = useGetOrders();
@@ -104,18 +104,39 @@ const Order = () => {
   }
 
   return (
-    <div className="p-4">
-      <Heading level="h2" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
-        Orders
-      </Heading>
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8">
+    <motion.div 
+      initial={{ opacity: 0 }} 
+      animate={{ opacity: 1 }} 
+      transition={{ duration: 0.5 }}
+      className="p-4"
+    >
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Heading level="h2" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
+          Orders
+        </Heading>
+      </motion.div>
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="flex flex-col sm:flex-row justify-between items-center mb-8"
+      >
         <div className="flex flex-col sm:flex-row items-center justify-between flex-wrap space-x-0 sm:space-x-4 space-y-4 sm:space-y-0 w-full">
-          <div className="flex flex-row items-center space-x-4 w-full sm:w-auto">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.4 }}
+            className="flex flex-row items-center space-x-4 w-full sm:w-auto"
+          >
             <Select
               value={selectedStore}
               onValueChange={(value) => setSelectedStore(value)}
             >
-              <Select.Trigger className="bg-white border px-6 border-indigo-200 rounded-xl   ">
+              <Select.Trigger className="bg-white border px-6 border-indigo-200 rounded-xl">
                 <Select.Value placeholder="Select a store" />
               </Select.Trigger>
               <Select.Content className="bg-white rounded-xl border-2 border-indigo-200 shadow-lg">
@@ -127,9 +148,14 @@ const Order = () => {
                 ))}
               </Select.Content>
             </Select>
-          </div>
+          </motion.div>
 
-          <div className="flex flex-row items-center space-x-4 w-full sm:w-auto">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.5 }}
+            className="flex flex-row items-center space-x-4 w-full sm:w-auto"
+          >
             <div className="relative w-full rounded-lg sm:w-auto">
               <Input
                 type="text"
@@ -140,14 +166,24 @@ const Order = () => {
               />
               <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" />
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-      <div className="flex flex-col gap-4">
+      </motion.div>
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="flex flex-col gap-4"
+      >
         {filteredOrders.length === 0 ? (
-          <div className="text-center text-indigo-500 py-8 bg-white rounded-lg shadow">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="text-center text-indigo-500 py-8 bg-white rounded-lg shadow"
+          >
             <p>No Orders found.</p>
-          </div>
+          </motion.div>
         ) : (
           <div className="overflow-x-auto rounded-xl shadow-md">
             <Table className="w-full">
@@ -177,84 +213,106 @@ const Order = () => {
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {paginatedOrders.map((order: any, index: any) => (
-                  <Table.Row
-                    key={order.id}
-                    className="hover:bg-indigo-50 transition-colors duration-150 ease-in-out"
-                  >
-                    <Table.Cell className="px-4 py-3 flex flex-row justify-center text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                      <Tooltip
-                        content="View Order"
-                        className="bg-gradient-to-r from-blue-400 to-purple-300 text-white text-xs font-mono rounded-xl py-2 px-2"
-                      >
-                        <Button
-                          variant="transparent"
-                          className="text-indigo-600 hover:text-indigo-800 transition-colors duration-150"
-                          onClick={() => {
-                            router.push(`/vendor/orders/${order.id}`);
-                          }}
+                <AnimatePresence>
+                  {paginatedOrders.map((order: any, index: any) => (
+                    <motion.tr
+                      key={order.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      className="hover:bg-indigo-50 transition-colors duration-150 ease-in-out"
+                    >
+                      <Table.Cell className="px-4 py-3 flex flex-row justify-center text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+                        <Tooltip
+                          content="View Order"
+                          className="bg-gradient-to-r from-blue-400 to-purple-300 text-white text-xs font-mono rounded-xl py-2 px-2"
                         >
-                          <Eye className="w-5 h-5" />
-                        </Button>
-                      </Tooltip>
-                      <span className="ml-2">{getRowIndex(index)}</span>
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                      <Tooltip
-                        content={formatTimestamp(order.created_at)}
-                        className="bg-gradient-to-r from-blue-400 to-purple-300 text-white text-xs rounded-xl py-2 px-2"
-                      >
-                        <span className="cursor-help">
-                          {formatDate(order.created_at)}
-                        </span>
-                      </Tooltip>
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center space-x-2">
-                      <div className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${getColors(index)}`}>
-                        {getCustomerFirstName(order.customer_id).charAt(0).toUpperCase()}
-                      </div>
-                      <span>{getCustomerFirstName(order.customer_id)}</span>
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                      <Badge className="bg-indigo-100 text-indigo-800 rounded-full px-2 py-1">
-                        {order.fulfillment_status}
-                      </Badge>
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                      <Badge
-                        color={order.payment_status === "captured" ? "green" : "orange"}
-                        className="rounded-full px-2 py-1"
-                      >
-                        {order.payment_status}
-                      </Badge>
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                      {getStoreName(order.store_id)}
-                    </Table.Cell>
-                    <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                      <span className="font-medium">{order.total_amount}</span>{" "}
-                      <span className="text-xs text-indigo-500">{order.currency_code.toUpperCase()}</span>
-                    </Table.Cell>
-                  </Table.Row>
-                ))}
+                          <Button
+                            variant="transparent"
+                            className="text-indigo-600 hover:text-indigo-800 transition-colors duration-150"
+                            onClick={() => {
+                              router.push(`/vendor/orders/${order.id}`);
+                            }}
+                          >
+                            <Eye className="w-5 h-5" />
+                          </Button>
+                        </Tooltip>
+                        <span className="ml-2">{getRowIndex(index)}</span>
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+                        <Tooltip
+                          content={formatTimestamp(order.created_at)}
+                          className="bg-gradient-to-r from-blue-400 to-purple-300 text-white text-xs rounded-xl py-2 px-2"
+                        >
+                          <span className="cursor-help">
+                            {formatDate(order.created_at)}
+                          </span>
+                        </Tooltip>
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center space-x-2">
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                          className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${getColors(index)}`}
+                        >
+                          {getCustomerFirstName(order.customer_id).charAt(0).toUpperCase()}
+                        </motion.div>
+                        <span>{getCustomerFirstName(order.customer_id)}</span>
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+                        <Badge className="bg-indigo-100 text-indigo-800 rounded-full px-2 py-1">
+                          {order.fulfillment_status}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+                        <Badge
+                          color={order.payment_status === "captured" ? "green" : "orange"}
+                          className="rounded-full px-2 py-1"
+                        >
+                          {order.payment_status}
+                        </Badge>
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+                        {getStoreName(order.store_id)}
+                      </Table.Cell>
+                      <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
+                        <span className="font-medium">{order.total_amount}</span>{" "}
+                        <span className="text-xs text-indigo-500">{order.currency_code.toUpperCase()}</span>
+                      </Table.Cell>
+                    </motion.tr>
+                  ))}
+                </AnimatePresence>
               </Table.Body>
             </Table>
           </div>
         )}
-        <Pagination
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalItems={filteredOrders.length}
-          data={filteredOrders}
-        />
-      </div>
-    </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Pagination
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            totalItems={filteredOrders.length}
+            data={filteredOrders}
+          />
+        </motion.div>
+      </motion.div>
+    </motion.div>
   );
 };
 
 const OrderSkeleton = () => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-lg">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-lg"
+    >
       <div className="animate-pulse">
         <div className="bg-indigo-200 h-8 w-32 rounded-lg mb-6"></div>
         <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
@@ -281,9 +339,8 @@ const OrderSkeleton = () => {
           <div className="bg-indigo-200 h-10 w-48 rounded-lg"></div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 
 export default withAuth(Order);
-
