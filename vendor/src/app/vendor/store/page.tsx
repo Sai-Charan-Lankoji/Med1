@@ -258,14 +258,12 @@ const Store = () => {
                   setLoadingStage("Store created and updated successfully!")
                   setLoading(false)
                   setIsStoreCreated(true)
-                  
+                  refreshStores()
                   toast({
                     title: "Success",
                     description: "Store Created and Updated Successfully",
                   })
-                  
-                  refreshStores()
-                  
+                                    
                   setTimeout(() => {
                     setShowLoadingModal(false)
                     setIsModalOpen(false)
@@ -477,7 +475,7 @@ const Store = () => {
                       </motion.div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-indigo-900">
-                          <Link href={getStoreUrl(store.name)} target="_blank" className="hover:underline">
+                          <Link href={store?.store_url || "#"} target="_blank" className="hover:underline">
                             {store.name}
                           </Link>
                         </div>
