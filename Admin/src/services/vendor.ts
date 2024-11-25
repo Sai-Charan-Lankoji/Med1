@@ -132,6 +132,7 @@ class VendorService extends TransactionBaseService {
       | "user_id"
       | "business_type"
       | "password"
+      | "plan"
     > & {
       vendorAddressData?: Partial<Address>;
       registrationAddressData?: Partial<Address>;
@@ -140,7 +141,6 @@ class VendorService extends TransactionBaseService {
   ): Promise<Vendor> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
-      // const vendoruserRepo = manager.withRepository(this.vendoruserRepository_);
       const addressRepo = manager.withRepository(this.addressRepository_);
 
       // Hash the password and create Vendor

@@ -61,6 +61,7 @@ describe("VendorService", () => {
         user_id: undefined,
         business_type: BusinessModel.ApparelDesign,
         password: "praveen@1234",
+        plan: "Basic",
         vendorAddressData: {
           first_name: "John",
           last_name: "Doe",
@@ -79,11 +80,6 @@ describe("VendorService", () => {
           postal_code: "R67890",
           phone: "555-5678"
         },
-        userData: {
-          first_name: "johndoe",
-          last_name: "johndoe",
-          password: "johndoe@123"
-        }
       };
   
       const mockVendor = { ...vendorData, id: "vendor-id" };
@@ -118,15 +114,6 @@ describe("VendorService", () => {
           contact_email: vendorData.contact_email
         })
       );
-  
-      // Assert user creation
-      expect(mockUserRepository.create).toHaveBeenCalledWith({
-        email: vendorData.contact_email,
-        first_name: vendorData.userData.first_name,
-        last_name: vendorData.userData.last_name,
-        password: expect.any(String), // hashed password
-      });
-      expect(mockUserRepository.save).toHaveBeenCalledWith(mockUser);
   
       // Assert address creation with concatenated values
       expect(mockAddressRepository.create).toHaveBeenCalledWith(

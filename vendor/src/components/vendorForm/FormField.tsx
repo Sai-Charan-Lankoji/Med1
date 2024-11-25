@@ -14,6 +14,7 @@ interface FormFieldProps {
   name: any;
   error?: string;
   options?: { value: string; label: string }[]; // Added options for select
+  disabled?: boolean;
 }
 
 export const FormField = ({

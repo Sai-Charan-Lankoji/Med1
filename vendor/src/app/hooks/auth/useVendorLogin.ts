@@ -10,6 +10,7 @@ interface VendorLoginResponse {
     contact_name: string;
     business_type: string;
     company_name: string;
+    plan: string;
   };
   vendorUser: {
     email: string;
@@ -56,6 +57,7 @@ export const useVendorLogin = () => {
           sessionStorage.setItem('vendor_id', data.vendor.id); 
           sessionStorage.setItem('business_type', data.vendor.business_type);
           sessionStorage.setItem('company_name', data.vendor.company_name);
+          sessionStorage.setItem('plan',data.vendor.plan)
           setAuthEmail(data.vendor.contact_email)
           setContactName(data.vendor.contact_name)
         } 

@@ -15,6 +15,7 @@ export const VendorFormSchema = z.object({
   registered_number: z.string().optional(),
   tax_number: z.string().optional(),
   business_type: z.string().nonempty("Business type is required"),
+  plan: z.string().optional(),
   vendorAddressData: z.object({
     address_1: z.string().nonempty("Address 1 is required"),
     address_2: z.string().optional(),

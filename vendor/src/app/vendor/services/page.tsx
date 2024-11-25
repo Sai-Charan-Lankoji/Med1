@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import {
   Building2,
   Store,
@@ -40,7 +40,7 @@ interface ServicePlan {
 const SERVICES: ServicePlan[] = [
   {
     name: "Basic",
-    isActive: true,
+    isActive: false,
     maxStores: 3,
     price: "$29",
     features: [
@@ -119,19 +119,31 @@ const SERVICES: ServicePlan[] = [
 
 export default function ServicesDashboard() {
   const { data: stores } = useGetStores()
-  const activePlan = SERVICES.find((plan) => plan.isActive)
+  const [activePlan, setActivePlan] = useState<ServicePlan | null>(null)
   const currentStores = stores?.length || 0
+
+  useEffect(() => {
+    const storedPlan = sessionStorage.getItem("plan")
+    const foundPlan = SERVICES.find(plan => plan.name.toLowerCase() === storedPlan?.toLowerCase())
+    if (foundPlan) {
+      foundPlan.isActive = true
+      setActivePlan(foundPlan)
+    } else {
+      // Default to Basic plan if no plan is found
+      const defaultPlan = SERVICES.find(plan => plan.name === "Basic")
+      if (defaultPlan) {
+        defaultPlan.isActive = true
+        setActivePlan(defaultPlan)
+      }
+    }
+  }, [])
+
+  if (!activePlan) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden ">
-      {/* Animated Wave Background */}
-      {/* <div className="absolute inset-0 z-0">
-        <div className="wave"></div>
-        <div className="wave"></div>
-        <div className="wave"></div>
-      </div> */}
-      
-      
       <div className="relative z-10 min-h-screen p-4 md:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
           <motion.div
@@ -144,102 +156,99 @@ export default function ServicesDashboard() {
               Service Plans
             </h1>
             <p className="text-sm text-black/80 max-w-xl mx-auto">
-              Choose the perfect plan for your business needs
+              Your current plan: {activePlan.name}
             </p>
           </motion.div>
 
-          {activePlan && (
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="mb-6 rounded-xl overflow-hidden border-0 bg-white/10 backdrop-blur-md shadow-2xl">
-                <CardHeader className="border-b border-white/20 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-2xl shadow-md bg-white/20">
-                      <Activity className="w-5 h-5 text-blue-700" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-bold text-black">
-                        Current Plan Status
-                      </CardTitle>
-                      <p className="text-xs text-black/80">
-                        {activePlan.name} Plan Overview
-                      </p>
-                    </div>
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="mb-6 rounded-xl overflow-hidden border-0 bg-white/10 backdrop-blur-md shadow-2xl">
+              <CardHeader className="border-b border-white/20 p-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 rounded-2xl shadow-md bg-white/20">
+                    <Activity className="w-5 h-5 text-blue-700" />
                   </div>
-                </CardHeader>
+                  <div>
+                    <CardTitle className="text-xl font-bold text-black">
+                      Current Plan Status
+                    </CardTitle>
+                    <p className="text-xs text-black/80">
+                      {activePlan.name} Plan Overview
+                    </p>
+                  </div>
+                </div>
+              </CardHeader>
 
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-4">
-                      <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
-                        <h3 className="text-base font-semibold text-black mb-3">
-                          Store Usage
-                        </h3>
-                        <div className="flex items-end gap-2 mb-3">
-                          <span className="text-2xl font-bold text-black">
-                            {currentStores}
-                          </span>
-                          <span className="text-sm text-black/80 mb-0.5">
-                            of {activePlan.maxStores} stores
-                          </span>
-                        </div>
-                        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-blue-600 rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${Math.min((currentStores / activePlan.maxStores) * 100, 100)}%`
-                        }}
-                      />
-                    </div>
-                  
+              <CardContent className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
+                      <h3 className="text-base font-semibold text-black mb-3">
+                        Store Usage
+                      </h3>
+                      <div className="flex items-end gap-2 mb-3">
+                        <span className="text-2xl font-bold text-black">
+                          {currentStores}
+                        </span>
+                        <span className="text-sm text-black/80 mb-0.5">
+                          of {activePlan.maxStores} stores
+                        </span>
                       </div>
-
-                      <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
-                        <h3 className="text-base font-semibold text-black mb-2">
-                          Available Capacity
-                        </h3>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-bold text-black">
-                            {Math.max(0, activePlan.maxStores - currentStores)}
-                          </span>
-                          <span className="text-sm text-black/80">stores remaining</span>
-                        </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                          style={{ 
+                            width: `${Math.min((currentStores / activePlan.maxStores) * 100, 100)}%`
+                          }}
+                        />
                       </div>
                     </div>
 
                     <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
-                      <h3 className="text-base font-semibold text-black mb-3">
-                        Active Stores
+                      <h3 className="text-base font-semibold text-black mb-2">
+                        Available Capacity
                       </h3>
-                      <ScrollArea className="h-[180px] pr-4">
-                        <div className="space-y-2">
-                          {stores?.map((store, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 shadow-sm border border-white/20 transition-all hover:bg-white/20"
-                            >
-                              <div className="p-1.5 rounded-xl bg-white/20">
-                                <ShoppingBag className="w-3.5 h-3.5 text-blue-700" />
-                              </div>
-                              <div>
-                                <p className="text-sm font-medium text-black">
-                                  {store.name}
-                                </p>
-                                <p className="text-xs text-black/80">Active</p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </ScrollArea>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-bold text-black">
+                          {Math.max(0, activePlan.maxStores - currentStores)}
+                        </span>
+                        <span className="text-sm text-black/80">stores remaining</span>
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+
+                  <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
+                    <h3 className="text-base font-semibold text-black mb-3">
+                      Active Stores
+                    </h3>
+                    <ScrollArea className="h-[180px] pr-4">
+                      <div className="space-y-2">
+                        {stores?.map((store, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 shadow-sm border border-white/20 transition-all hover:bg-white/20"
+                          >
+                            <div className="p-1.5 rounded-xl bg-white/20">
+                              <ShoppingBag className="w-3.5 h-3.5 text-blue-700" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-black">
+                                {store.name}
+                              </p>
+                              <p className="text-xs text-black/80">Active</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {SERVICES.map((plan, index) => (
@@ -252,12 +261,12 @@ export default function ServicesDashboard() {
                 <Card
                   className={cn(
                     "relative overflow-hidden border-0 transition-all duration-300 bg-white/10 backdrop-blur-md shadow-2xl flex flex-col h-full",
-                    plan.isActive
+                    plan.name === activePlan.name
                       ? "border border-white/40 rounded-xl"
                       : "hover:bg-white/20"
                   )}
                 >
-                  {plan.isActive && (
+                  {plan.name === activePlan.name && (
                     <div className="absolute top-3 right-3">
                       <span className="px-2 py-0.5 bg-green-500/50 text-gray-700 rounded-full text-xs font-medium">
                         Current Plan
@@ -304,16 +313,16 @@ export default function ServicesDashboard() {
 
                   <CardFooter className="p-4 mt-auto">
                     <Button
-                      variant={plan.isActive ? "secondary" : "primary"}
-                      disabled={plan.isActive}
+                      variant={plan.name === activePlan.name ? "secondary" : "primary"}
+                      disabled={plan.name === activePlan.name}
                       className={cn(
                         "w-full py-3 text-xs font-medium rounded-xl transition-all",
-                        plan.isActive
+                        plan.name === activePlan.name
                           ? "text-purple-100 bg-white/10 border border-white/20 hover:bg-white/20"
                           : "bg-white text-purple-600 shadow-md hover:shadow-lg hover:bg-white/90"
                       )}
                     >
-                      {plan.isActive ? "Current Plan" : "Upgrade to " + plan.name}
+                      {plan.name === activePlan.name ? "Current Plan" : "Upgrade to " + plan.name}
                     </Button>
                   </CardFooter>
                 </Card>
@@ -325,3 +334,4 @@ export default function ServicesDashboard() {
     </div>
   )
 }
+

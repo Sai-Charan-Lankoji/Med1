@@ -40,6 +40,9 @@ export class Vendor extends SoftDeletableEntity {
   @Column({ type: "varchar", length: 256, nullable: true })
   password: string;
 
+  @Column({ type: "varchar", length: 256, nullable: true })
+  plan: string;
+
   @Index("UserId")
   @Column({ type: "varchar", length: 120, nullable: true })
   user_id?: string;

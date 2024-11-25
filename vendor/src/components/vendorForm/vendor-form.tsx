@@ -5,23 +5,22 @@ import { Button, Container, Heading, Toaster, toast } from "@medusajs/ui";
 import { useRouter } from "next/navigation";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Building2, MapPin } from "lucide-react";
-import {
-  VendorFormSchema,
-  VendorFormData,
-  BusinessTypes,
-} from "./types";
+import { VendorFormSchema, VendorFormData, BusinessTypes } from "./types";
 import { FormField } from "./FormField";
 import { AddressSection } from "./AddressSection";
 
-const VendorForm = ({    }: { plan: string }) => {
+const VendorForm = ({ plan }: { plan: string }) => {
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<VendorFormData>({
     resolver: zodResolver(VendorFormSchema),
+    defaultValues: {
+      plan: plan, // Set the default value for the plan
+    },
   });
-
+  console.log("VENDOR SELECTED PLAN: ", plan);
   const router = useRouter();
 
   const onSubmit = async (data: VendorFormData) => {
@@ -30,7 +29,7 @@ const VendorForm = ({    }: { plan: string }) => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(data),
+        body: JSON.stringify(data), // The plan is now included in the data object
       });
 
       if (!response.ok) {
@@ -137,6 +136,15 @@ const VendorForm = ({    }: { plan: string }) => {
                     register={register}
                     name="tax_number"
                     error={errors.tax_number?.message}
+                  />
+                  <FormField
+                    label="Plan"
+                    id="plan"
+                    placeholder={plan}
+                    register={register}
+                    name="plan"
+                    error={errors.plan?.message}
+                    disabled // Make this field read-only
                   />
                   <FormField
                     label="Business Type"
