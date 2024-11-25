@@ -68,6 +68,10 @@ const Store = () => {
   const [loadingStage, setLoadingStage] = useState("")
   const [isStoreCreated, setIsStoreCreated] = useState(false)
   const { mutate: updateStore } = useUpdateStore()
+  //added for confirm delete
+  const [storeToDelete, setStoreToDelete] = useState(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isDeletingStore, setIsDeletingStore] = useState(false)
 
   const storesWithMatchingSalesChannels = storesData?.map((store) => {
     const matchingSalesChannel = saleschannelsData?.find(
@@ -315,15 +319,22 @@ const Store = () => {
       }, 2000)
     }
   }
-
-  const handleDelete = async (id, event) => {
+  const initiateDelete = (id, event) => {
     event.stopPropagation()
+    setStoreToDelete(id)
+    setIsDeleteModalOpen(true)
+  }
+
+  const handleDelete = async () => {
+    if (!storeToDelete) return
+
+    setIsDeletingStore(true)
     try {
       // First, delete the store from your backend
-      await deleteStore(id)
+      await deleteStore(storeToDelete)
 
       // Then, delete the store instance
-      const response = await fetch(`http://localhost:3000/delete-store/${id}`, {
+      const response = await fetch(`http://localhost:3000/delete-store/${storeToDelete}`, {
         method: 'DELETE',
       })
 
@@ -348,17 +359,20 @@ const Store = () => {
         description: "Error deleting store and its instance",
         variant: "destructive",
       })
+    } finally {
+      setIsDeletingStore(false)
+      setIsDeleteModalOpen(false)
+      setStoreToDelete(null)
     }
   }
 
-  const getStoreUrl = (storeName) => { 
-    console.log(storeName)
-    return storeUrls[storeName] || "#"
-  }
+  
 
   const getRowIndex = (index: number) => {
     return (currentPage * PAGE_SIZE) + index + 1
   }
+
+  
 
   const LoadingModal = () => (
     <Dialog open={showLoadingModal} onOpenChange={setShowLoadingModal}>
@@ -390,6 +404,48 @@ const Store = () => {
       </DialogContent>
     </Dialog>
   )
+  const DeleteConfirmationModal = () => (
+    <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Confirm Delete</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <p className="text-center text-sm text-gray-500">
+            Are you sure you want to delete this store? This action cannot be undone.
+          </p>
+        </div>
+        <div className="flex justify-end mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsDeleteModalOpen(false)}
+            className="mr-2 w-20"
+            disabled={isDeletingStore}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeletingStore}
+            className="w-24"
+          >
+            {isDeletingStore ? (
+              <div className="flex items-center">
+                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                <span>Deleting...</span>
+              </div>
+            ) : (
+              "Delete"
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+
 
   if (isLoading) {
     return <StoreSkeleton />
@@ -500,7 +556,7 @@ const Store = () => {
                         <DropdownMenuItem onClick={() => router.push(`/vendor/store/${store.id}`)}>
                           <PencilIcon className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(event) => handleDelete(store.id, event)}>
+                        <DropdownMenuItem onClick={(event) => initiateDelete(store.id, event)}>
                           <TrashIcon className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -655,6 +711,7 @@ const Store = () => {
       </Dialog>
 
       <LoadingModal />
+      <DeleteConfirmationModal />
     </motion.div>
   )
 }
