@@ -7,7 +7,7 @@ export const BackButton = ({name}: any) => {
   return (
     <div className="p-4 flex items-center">
       <button
-        className="text-sm  text-white/80 hover:text-white transition-colors font-semibold flex items-center"
+        className="text-sm  text-black/80 hover:text-black transition-colors font-semibold flex items-center"
         onClick={() => {
           router.back();
         }}

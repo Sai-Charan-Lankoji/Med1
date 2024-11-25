@@ -116,24 +116,24 @@ function SalesChannels() {
         return (
           <>
             <div className="flex justify-between items-center px-8 mb-6">
-              <h2 className="text-2xl font-semibold text-white">{selectedRegion}</h2>
+              <h2 className="text-2xl font-semibold text-black">{selectedRegion}</h2>
               <div className="flex items-center space-x-4">
-                <p className="text-sm text-white/80">
+                <p className="text-sm text-black/80">
                   <span className="w-2.5 h-2.5 rounded-full mr-2 inline-block bg-green-500"></span>
                   Enabled
                 </p>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="bg-white/10 text-white hover:bg-white/20">
+                    <Button variant="ghost" size="icon" className="bg-white/10 text-black hover:bg-white/20">
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg">
-                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-white hover:bg-white/20" onClick={openEditModal}>
+                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-black hover:bg-white/20" onClick={openEditModal}>
                       <PenSquare className="h-4 w-4" />
                       Edit General info
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-white hover:bg-white/20">
+                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-black hover:bg-white/20">
                       <Plus className="h-4 w-4" />
                       Add Products
                     </DropdownMenuItem>
@@ -147,7 +147,7 @@ function SalesChannels() {
       default:
         return (
           <div className="flex items-center justify-center h-full">
-            <h2 className="text-xl font-semibold text-white/60">
+            <h2 className="text-xl font-semibold text-black/60">
               Select a channel to view details
             </h2>
           </div>
@@ -163,12 +163,12 @@ function SalesChannels() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="md:col-span-1 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-bold text-white">Channels</CardTitle>
+            <CardTitle className="text-xl font-bold text-black">Channels</CardTitle>
             <div className="flex space-x-2">
-              <Button variant="ghost" size="icon" className="bg-white/10 text-white hover:bg-white/20">
+              <Button variant="ghost" size="icon" className="bg-white/10 text-black hover:bg-white/20">
                 <Search className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="bg-white/10 text-white hover:bg-white/20" onClick={openModal}>
+              <Button variant="ghost" size="icon" className="bg-white/10 text-black hover:bg-white/20" onClick={openModal}>
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
@@ -180,8 +180,8 @@ function SalesChannels() {
                   key={channel.id}
                   className={`cursor-pointer p-4 rounded-lg transition-colors ${
                     selectedRegion === channel.name
-                      ? "bg-white/20 text-white"
-                      : "bg-white/5 text-white/80 hover:bg-white/10"
+                      ? "bg-white/20 text-black"
+                      : "bg-white/5 text-black/80 hover:bg-white/10"
                   }`}
                   onClick={() => handleRadioChange(channel.name)}
                   whileHover={{ scale: 1.02 }}
@@ -190,11 +190,11 @@ function SalesChannels() {
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col">
                       <h3 className="font-semibold">{channel.name}</h3>
-                      <p className="text-sm text-white/60">
+                      <p className="text-sm text-black/60">
                         {channel.description}
                       </p>
                     </div>
-                    <p className="text-xs text-white/60">
+                    <p className="text-xs text-black/60">
                       Created By {vendorName}
                     </p>
                   </div>
@@ -218,14 +218,14 @@ function SalesChannels() {
         className="mt-6"
       >
         <Link href="/vendor/settings" passHref>
-          <Button variant="ghost" className="text-white hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+          <Button variant="ghost" className="text-black hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
           </Button>
         </Link>
       </motion.div>
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-white">
+        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-black">
           <DialogHeader>
             <DialogTitle>Create new sales channel</DialogTitle>
           </DialogHeader>
@@ -238,7 +238,7 @@ function SalesChannels() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                  className="col-span-3 bg-white/10 border-white/20 text-black"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -248,7 +248,7 @@ function SalesChannels() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                  className="col-span-3 bg-white/10 border-white/20 text-black"
                 />
               </div>
             </div>
@@ -261,7 +261,7 @@ function SalesChannels() {
       </Dialog>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-white">
+        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-black">
           <DialogHeader>
             <DialogTitle>Edit Sales Channel</DialogTitle>
           </DialogHeader>
@@ -274,7 +274,7 @@ function SalesChannels() {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                  className="col-span-3 bg-white/10 border-white/20 text-black"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -284,7 +284,7 @@ function SalesChannels() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-white"
+                  className="col-span-3 bg-white/10 border-white/20 text-black"
                 />
               </div>
             </div>

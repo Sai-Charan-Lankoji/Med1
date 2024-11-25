@@ -13,7 +13,7 @@ interface DashboardComponentProps {
 
 export default function DashboardComponent({ title, description, children }: DashboardComponentProps) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br">
       <div className="relative z-10 min-h-screen p-4 md:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
           <motion.div
@@ -22,10 +22,10 @@ export default function DashboardComponent({ title, description, children }: Das
             transition={{ duration: 0.5 }}
             className="text-center space-y-2 mb-8"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-700">
               {title}
             </h1>
-            <p className="text-sm text-white/80 max-w-xl mx-auto">
+            <p className="text-sm text-black/80 max-w-xl mx-auto">
               {description}
             </p>
           </motion.div>
@@ -51,7 +51,7 @@ export function DashboardCard({ title, children, className }: { title: string; c
   return (
     <Card className={cn("bg-white/10 rounded-xl p-4 shadow-md border border-white/20", className)}>
       <CardHeader className="p-0">
-        <CardTitle className="text-base font-semibold text-white mb-3">
+        <CardTitle className="text-base font-semibold text-black mb-3">
           {title}
         </CardTitle>
       </CardHeader>

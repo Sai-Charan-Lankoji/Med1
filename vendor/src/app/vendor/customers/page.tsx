@@ -98,7 +98,7 @@ const Customer = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="overflow-x-auto bg-white rounded-xl shadow-md"
       >
-        <Table className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100  ">
+        <Table className=" ">
           <Table.Header>
             <Table.Row className="">
               <Table.HeaderCell className="px-4 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">

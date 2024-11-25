@@ -37,7 +37,7 @@ const CustomerDetails = () => {
   }, [currentPage, orders, pageSize]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white p-6">
+    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100  overflow-auto p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <BackButton name="Customers" className="text-indigo-600 hover:text-indigo-800 transition-colors" />
         
@@ -46,7 +46,7 @@ const CustomerDetails = () => {
         ) : (
           <>
             {/* Customer Profile Card */}
-            <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
+            <div className="bg-white/10 backdrop-blur-md  rounded-xl shadow-2xl ">
               <div className="p-8">
                 <div className="flex items-center space-x-6">
                   <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg">
@@ -95,7 +95,7 @@ const CustomerDetails = () => {
             </div>
 
             {/* Orders Section */}
-            <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
               <div className="p-6 border-b border-indigo-100">
                 <h2 className="text-xl font-bold text-indigo-900">
                   Orders History
@@ -186,7 +186,7 @@ const CustomerDetails = () => {
             </div>
 
             {/* Raw Data Section */}
-            <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
+            <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
               <div className="p-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-indigo-900">

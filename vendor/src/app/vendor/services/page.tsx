@@ -123,7 +123,7 @@ export default function ServicesDashboard() {
   const currentStores = stores?.length || 0
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+    <div className="relative min-h-screen overflow-hidden ">
       {/* Animated Wave Background */}
       {/* <div className="absolute inset-0 z-0">
         <div className="wave"></div>
@@ -140,10 +140,10 @@ export default function ServicesDashboard() {
             transition={{ duration: 0.5 }}
             className="text-center space-y-2 mb-8"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-500">
               Service Plans
             </h1>
-            <p className="text-sm text-white/80 max-w-xl mx-auto">
+            <p className="text-sm text-black/80 max-w-xl mx-auto">
               Choose the perfect plan for your business needs
             </p>
           </motion.div>
@@ -158,13 +158,13 @@ export default function ServicesDashboard() {
                 <CardHeader className="border-b border-white/20 p-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2.5 rounded-2xl shadow-md bg-white/20">
-                      <Activity className="w-5 h-5 text-white" />
+                      <Activity className="w-5 h-5 text-blue-700" />
                     </div>
                     <div>
-                      <CardTitle className="text-xl font-bold text-white">
+                      <CardTitle className="text-xl font-bold text-black">
                         Current Plan Status
                       </CardTitle>
-                      <p className="text-xs text-white/80">
+                      <p className="text-xs text-black/80">
                         {activePlan.name} Plan Overview
                       </p>
                     </div>
@@ -175,14 +175,14 @@ export default function ServicesDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-4">
                       <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
-                        <h3 className="text-base font-semibold text-white mb-3">
+                        <h3 className="text-base font-semibold text-black mb-3">
                           Store Usage
                         </h3>
                         <div className="flex items-end gap-2 mb-3">
-                          <span className="text-2xl font-bold text-white">
+                          <span className="text-2xl font-bold text-black">
                             {currentStores}
                           </span>
-                          <span className="text-sm text-white/80 mb-0.5">
+                          <span className="text-sm text-black/80 mb-0.5">
                             of {activePlan.maxStores} stores
                           </span>
                         </div>
@@ -198,20 +198,20 @@ export default function ServicesDashboard() {
                       </div>
 
                       <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
-                        <h3 className="text-base font-semibold text-white mb-2">
+                        <h3 className="text-base font-semibold text-black mb-2">
                           Available Capacity
                         </h3>
                         <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-bold text-white">
+                          <span className="text-2xl font-bold text-black">
                             {Math.max(0, activePlan.maxStores - currentStores)}
                           </span>
-                          <span className="text-sm text-white/80">stores remaining</span>
+                          <span className="text-sm text-black/80">stores remaining</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-white/10 rounded-xl p-4 shadow-md border border-white/20">
-                      <h3 className="text-base font-semibold text-white mb-3">
+                      <h3 className="text-base font-semibold text-black mb-3">
                         Active Stores
                       </h3>
                       <ScrollArea className="h-[180px] pr-4">
@@ -222,13 +222,13 @@ export default function ServicesDashboard() {
                               className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 shadow-sm border border-white/20 transition-all hover:bg-white/20"
                             >
                               <div className="p-1.5 rounded-xl bg-white/20">
-                                <ShoppingBag className="w-3.5 h-3.5 text-white" />
+                                <ShoppingBag className="w-3.5 h-3.5 text-blue-700" />
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-white">
+                                <p className="text-sm font-medium text-black">
                                   {store.name}
                                 </p>
-                                <p className="text-xs text-white/80">Active</p>
+                                <p className="text-xs text-black/80">Active</p>
                               </div>
                             </div>
                           ))}
@@ -259,7 +259,7 @@ export default function ServicesDashboard() {
                 >
                   {plan.isActive && (
                     <div className="absolute top-3 right-3">
-                      <span className="px-2 py-0.5 bg-green-500/20 text-green-100 rounded-full text-xs font-medium">
+                      <span className="px-2 py-0.5 bg-green-500/50 text-gray-700 rounded-full text-xs font-medium">
                         Current Plan
                       </span>
                     </div>
@@ -268,17 +268,17 @@ export default function ServicesDashboard() {
                   <CardHeader className="p-4 pb-3">
                     <div className="mb-3">
                       <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20">
-                        <plan.icon className="w-5 h-5 text-white" />
+                        <plan.icon className="w-5 h-5 text-blue-700" />
                       </div>
                     </div>
-                    <CardTitle className="text-xl font-bold text-white">
+                    <CardTitle className="text-xl font-bold text-blue-700">
                       {plan.name}
                     </CardTitle>
                     <div className="mt-1">
-                      <span className="text-2xl font-bold text-white">
+                      <span className="text-2xl font-bold text-blue-700">
                         {plan.price}
                       </span>
-                      <span className="text-sm text-white/80">/month</span>
+                      <span className="text-sm text-black/80">/month</span>
                     </div>
                   </CardHeader>
 
@@ -287,13 +287,13 @@ export default function ServicesDashboard() {
                       {plan.features.map((feature, index) => (
                         <li key={index} className="flex items-start gap-2">
                           <div className="mt-0.5 p-1 rounded-xl bg-white/20">
-                            <feature.icon className="w-3.5 h-3.5 text-white" />
+                            <feature.icon className="w-3.5 h-3.5 text-black" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-white">
+                            <p className="text-sm font-medium text-black">
                               {feature.title}
                             </p>
-                            <p className="text-xs text-white/80">
+                            <p className="text-xs text-black/80">
                               {feature.description}
                             </p>
                           </div>

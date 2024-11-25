@@ -45,8 +45,8 @@ const SalesTable = () => {
                 aria-label="Select all products"
               />
             </th>
-            <th className="p-3 text-left text-sm font-medium text-white/80">Name</th>
-            <th className="p-3 text-left text-sm font-medium text-white/80">Collection</th>
+            <th className="p-3 text-left text-sm font-medium text-black/80">Name</th>
+            <th className="p-3 text-left text-sm font-medium text-black/80">Collection</th>
           </tr>
         </thead>
         <tbody>

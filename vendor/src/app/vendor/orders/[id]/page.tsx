@@ -90,7 +90,7 @@ const OrderDetailsView = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+    <div className="relative min-h-screen bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100  overflow-auto">
       <div className="relative z-10 min-h-screen p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header Section */}
@@ -100,14 +100,14 @@ const OrderDetailsView = () => {
             transition={{ duration: 0.5 }}
             className="text-center space-y-2 mb-8"
           >
-            <BackButton name="Orders" className="mb-4 text-white/80 hover:text-white transition-colors" />
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <BackButton name="Orders" className="mb-4 text-black hover:text-black transition-colors" />
+            <h1 className="text-3xl md:text-4xl font-bold text-black">
               Order Details
             </h1>
-            <p className="text-sm text-white/80 text-start">
+            <p className="text-sm text-black text-start">
               Order ID: {order.id}
             </p>
-            <div className="mt-4 text-start text-white">
+            <div className="mt-4 text-start text-black">
               <p>Status: {getStatusBadge(order.status)}</p>
             </div>
           </motion.div>
@@ -133,14 +133,14 @@ const OrderDetailsView = () => {
                     className="group p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl transition-all duration-300 hover:bg-white/20"
                   >
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-white">
+                      <h3 className="text-xl font-bold text-black">
                         Item {itemIndex + 1}
                       </h3>
                       <div className="flex items-center space-x-4">
-                        <span className="text-sm text-white/80">
+                        <span className="text-sm text-black/80">
                           Quantity: {item.quantity}
                         </span>
-                        <span className="text-lg font-semibold text-white">
+                        <span className="text-lg font-semibold text-black">
                           ${item.price.toFixed(2)}
                         </span>
                       </div>
@@ -254,7 +254,7 @@ const OrderDetailsView = () => {
                                 }}
                               />
                               <div className="absolute inset-x-0 bottom-0 bg-indigo-900/70 py-1">
-                                <span className="text-[10px] text-white text-center block">
+                                <span className="text-[10px] text-black text-center block">
                                   {design.apparel.side}
                                 </span>
                               </div>
@@ -295,7 +295,7 @@ const OrderDetailsView = () => {
                           <div className="space-y-4">
                             <button
                               onClick={() => toggleImageType(item.product_id)}
-                              className="w-full px-4 py-2 text-sm font-medium text-white bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+                              className="w-full px-4 py-2 text-sm font-medium text-black bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
                             >
                               {imageType === "apparel" ? "View Uploaded Design" : "View on Apparel"}
                             </button>
@@ -317,28 +317,28 @@ const OrderDetailsView = () => {
             >
               {/* Customer Information */}
               <Container className="p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl">
-                <h2 className="text-xl font-bold text-white border-b border-white/20 mb-4 pb-4">
+                <h2 className="text-xl font-bold text-black border-b border-white/20 mb-4 pb-4">
                   Customer Information
                 </h2>
                 {matchingCustomers?.length > 0 ? (
                   matchingCustomers.map((customer, index) => (
                     <div key={index} className="space-y-3">
-                      <div className="flex items-center text-sm text-white/80">
+                      <div className="flex items-center text-sm text-black/80">
                         <User className="w-4 h-4 mr-2" />
                         <span>{`${customer.first_name} ${customer.last_name}`}</span>
                       </div>
-                      <div className="flex items-center text-sm text-white/80">
+                      <div className="flex items-center text-sm text-black/80">
                         <FiMail className="w-4 h-4 mr-2" />
                         <span>{customer.email}</span>
                       </div>
-                      <div className="flex items-center text-sm text-white/80">
+                      <div className="flex items-center text-sm text-black/80">
                         <Phone className="w-4 h-4 mr-2" />
                         <span>{customer.phone || "Not provided"}</span>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="flex items-center text-sm text-white/80">
+                  <div className="flex items-center text-sm text-black/80">
                     <FiMail className="w-4 h-4 mr-2" />
                     <span>{order.email}</span>
                   </div>
@@ -347,27 +347,27 @@ const OrderDetailsView = () => {
 
               {/* Order Summary */}
               <Container className="p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl">
-                <h2 className="text-xl font-bold text-white border-b border-white/20 mb-4 pb-4">
+                <h2 className="text-xl font-bold text-black border-b border-white/20 mb-4 pb-4">
                   Order Summary
                 </h2>
                 <div className="space-y-4">
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/80">Subtotal</span>
-                      <span className="font-medium text-white">
+                      <span className="text-black/80">Subtotal</span>
+                      <span className="font-medium text-black">
                         ${subtotalAmount.toFixed(2)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/80">Tax</span>
-                      <span className="font-medium text-white">
+                      <span className="text-black/80">Tax</span>
+                      <span className="font-medium text-black">
                         ${taxAmount.toFixed(2)}
                       </span>
                     </div>
                     <div className="pt-4 border-t border-white/20">
                       <div className="flex items-center justify-between">
-                        <span className="text-lg font-semibold text-white">Total</span>
-                        <span className="text-xl font-bold text-white">
+                        <span className="text-lg font-semibold text-black">Total</span>
+                        <span className="text-xl font-bold text-black">
                           ${totalAmount.toFixed(2)}
                         </span>
                       </div>
@@ -379,12 +379,12 @@ const OrderDetailsView = () => {
               {/* Raw Order Data */}
               <Container className="p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">
+                  <h2 className="text-xl font-bold text-black">
                     Raw Order Data
                   </h2>
                   <button
                     onClick={() => setShowRawOrderData(!showRawOrderData)}
-                    className="flex items-center space-x-2 text-sm text-white/80 hover:text-white transition-colors"
+                    className="flex items-center space-x-2 text-sm text-black/80 hover:text-black transition-colors"
                   >
                     <span>{showRawOrderData ? "Hide" : "Show"} Details</span>
                     {showRawOrderData ? (
@@ -396,7 +396,7 @@ const OrderDetailsView = () => {
                 </div>
                 {showRawOrderData && (
                   <div className="mt-4 p-4 bg-blue-600 rounded-lg overflow-auto">
-                    <pre className="text-xs text-white font-mono">
+                    <pre className="text-xs text-black font-mono">
                       {JSON.stringify(order, null, 2)}
                     </pre>
                   </div>
@@ -411,23 +411,23 @@ const OrderDetailsView = () => {
 };
 
 const OrderDetailsSkeleton = () => (
-  <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+  <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
     <div className="relative z-10 min-h-screen p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         <div className="animate-pulse space-y-8">
           <div className="text-center space-y-4">
-            <div className="h-8 bg-white/20 rounded-lg w-48 mx-auto"></div>
-            <div className="h-4 bg-white/20 rounded-lg w-32 mx-auto"></div>
+            <div className="h-8 bg-black/20 rounded-lg w-48 mx-auto"></div>
+            <div className="h-4 bg-black/20 rounded-lg w-32 mx-auto"></div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               {[1, 2].map((i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-md rounded-xl p-6">
-                  <div className="h-[400px] bg-white/20 rounded-xl mb-4"></div>
+                <div key={i} className="bg-black/10 backdrop-blur-md rounded-xl p-6">
+                  <div className="h-[400px] bg-blacl/20 rounded-xl mb-4"></div>
                   <div className="grid grid-cols-4 gap-2">
                     {[1, 2, 3, 4].map((j) => (
-                      <div key={j} className="h-20 bg-white/20 rounded-lg"></div>
+                      <div key={j} className="h-20 bg-black/20 rounded-lg"></div>
                     ))}
                   </div>
                 </div>
@@ -436,12 +436,12 @@ const OrderDetailsSkeleton = () => (
 
             <div className="space-y-6">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white/10 backdrop-blur-md rounded-xl p-6">
-                  <div className="h-5 bg-white/20 rounded-lg w-32 mb-4"></div>
+                <div key={i} className="bg-black/10 backdrop-blur-md rounded-xl p-6">
+                  <div className="h-5 bg-black/20 rounded-lg w-32 mb-4"></div>
                   <div className="space-y-3">
-                    <div className="h-4 bg-white/20 rounded-lg w-full"></div>
-                    <div className="h-4 bg-white/20 rounded-lg w-5/6"></div>
-                    <div className="h-4 bg-white/20 rounded-lg w-4/6"></div>
+                    <div className="h-4 bg-black/20 rounded-lg w-full"></div>
+                    <div className="h-4 bg-black/20 rounded-lg w-5/6"></div>
+                    <div className="h-4 bg-black/20 rounded-lg w-4/6"></div>
                   </div>
                 </div>
               ))}

@@ -67,13 +67,13 @@ function PersonalInformation() {
         <Card className="overflow-hidden border-0 rounded-[12px] bg-white/10 backdrop-blur-md shadow-2xl">
           <CardHeader className="flex flex-row items-center gap-4">
             <div
-              className={`w-12 h-12 flex text-2xl items-center justify-center rounded-full text-white ${getColors(2)}`}
+              className={`w-12 h-12 flex text-2xl items-center justify-center rounded-full text-black ${getColors(2)}`}
             >
               {email.charAt(0).toUpperCase()}
             </div>
             <div>
-              <CardTitle className="text-xl font-bold text-white">{email}</CardTitle>
-              <p className="text-sm text-white/80">Your account email</p>
+              <CardTitle className="text-xl font-bold text-black">{email}</CardTitle>
+              <p className="text-sm text-black/80">Your account email</p>
             </div>
           </CardHeader>
           <CardContent>
@@ -81,7 +81,7 @@ function PersonalInformation() {
               variant="secondary"
               size="small"
               onClick={() => setIsEditInfoOpen(true)}
-              className="w-full bg-white/10 text-white hover:bg-white/20"
+              className="w-full bg-white/10 text-black hover:bg-white/20"
             >
               Edit Information
             </Button>
@@ -90,12 +90,12 @@ function PersonalInformation() {
 
         <Card className="overflow-hidden border-0 rounded-[12px] bg-white/10 backdrop-blur-md shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-white">Language</CardTitle>
+            <CardTitle className="text-xl font-bold text-black">Language</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-white/80 mb-4">Adjust the language of Medusa Admin</p>
+            <p className="text-black/80 mb-4">Adjust the language of Medusa Admin</p>
             <Select onValueChange={setLanguage} value={language}>
-              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
+              <SelectTrigger className="w-full bg-white/10 border-white/20 text-black">
                 <SelectValue placeholder="Select language" />
               </SelectTrigger>
               <SelectContent>
@@ -109,15 +109,15 @@ function PersonalInformation() {
 
         <Card className="md:col-span-2 overflow-hidden border-0 rounded-[12px] bg-white/10 backdrop-blur-md shadow-2xl">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-white">Usage Insights</CardTitle>
+            <CardTitle className="text-xl font-bold text-black">Usage Insights</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-white/80 mb-4">Share usage insights and help us improve Medusa</p>
+            <p className="text-black/80 mb-4">Share usage insights and help us improve Medusa</p>
             <Button
               variant="secondary"
               size="small"
               onClick={() => setIsEditPreferencesOpen(true)}
-              className="w-full bg-white/10 text-white hover:bg-white/20"
+              className="w-full bg-white/10 text-black hover:bg-white/20"
             >
               Edit Preferences
             </Button>
@@ -132,7 +132,7 @@ function PersonalInformation() {
         className="mt-6"
       >
         <Link href="/vendor/settings" passHref>
-          <Button variant="transparent" className="text-white hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+          <Button variant="transparent" className="text-black hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
           </Button>
         </Link>

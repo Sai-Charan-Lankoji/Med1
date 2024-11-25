@@ -398,8 +398,8 @@ const Store = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="overflow-x-auto bg-white rounded-xl shadow-md"
       >
-        <Table className="bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100">
-          <TableHeader className="bg-white">
+        <Table className="">
+          <TableHeader className="bg-gray-100">
             <TableRow>
               <TableHead className="px-4 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">Store</TableHead>
               <TableHead className="px-4 py-3 text-left text-xs font-semibold text-indigo-900 uppercase tracking-wider">Date Added</TableHead>
@@ -492,8 +492,8 @@ const Store = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogTrigger asChild>
-          <Button className="fixed bottom-8 right-8 shadow-lg">
-            <Plus className="mr-2 h-4 w-4" /> New Store
+          <Button className=" right-8 shadow-lg mt-4">
+            <Plus className="mr-2 h-4 w-4 " /> New Store
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">

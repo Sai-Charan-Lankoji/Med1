@@ -64,22 +64,22 @@ function CurrencyManager() {
       title="Currency Management"
       description="Manage the currencies for your store"
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-2 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 ">
+        <Card className="md:col-span-2 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-bold text-white">Store Currencies</CardTitle>
+            <CardTitle className="text-xl font-bold text-black">Store Currencies</CardTitle>
             <Button
               variant="secondary"
               size="small"
               onClick={openModal}
-              className="bg-white/10 text-white hover:bg-white/20"
+              className="bg-white/10 text-black hover:bg-white/20"
             >
               Edit Currencies
             </Button>
           </CardHeader>
           <CardContent>
             {selectedCurrencies.length === 0 ? (
-              <p className="text-white/80">No currencies selected</p>
+              <p className="text-black/80">No currencies selected</p>
             ) : (
               <ul className="space-y-2">
                 {selectedCurrencies.map((code) => {
@@ -89,7 +89,7 @@ function CurrencyManager() {
                       key={code}
                       className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
                     >
-                      <span className="text-white">
+                      <span className="text-black">
                         {currency.code.toLocaleUpperCase()} - {currency.name}
                       </span>
                       {defaultCurrency === currency.code && (
@@ -105,14 +105,14 @@ function CurrencyManager() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border-0 rounded-[12px] bg-white/10 backdrop-blur-md shadow-2xl">
+        <Card className="overflow-hidden border-0 rounded-[12px] bg-white/10 backdrop-blur-md shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl font-bold text-white">Default Currency</CardTitle>
+            <CardTitle className="text-xl font-bold text-black">Default Currency</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-white/80 mb-4">Select the default currency for your store.</p>
+            <p className="text-black/80 mb-4">Select the default currency for your store.</p>
             <Select onValueChange={handleCurrencyChange} value={defaultCurrency}>
-              <SelectTrigger className="w-full bg-white/10 border-white/20 text-white">
+              <SelectTrigger className="w-full bg-white/10 border-white/20 text-black">
                 <SelectValue placeholder="Select a currency"  />
               </SelectTrigger>
               <SelectContent>
@@ -137,7 +137,7 @@ function CurrencyManager() {
         className="mt-6"
       >
         <Link href="/vendor/settings" passHref>
-          <Button variant="transparent" className="text-white hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+          <Button variant="transparent" className="text-black hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
           </Button>
         </Link>

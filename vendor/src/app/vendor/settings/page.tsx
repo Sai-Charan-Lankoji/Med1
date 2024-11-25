@@ -38,36 +38,12 @@ const Settings = () => {
       title: "Personal Information",
       description: "Manage your Medusa profile",
     },
-    // {
-    //   href: "/vendor/settings/regions",
-    //   icon: <MapPin />,
-    //   title: "Regions",
-    //   description: "Manage  fulfillment across regions",
-    // },
-    // {
-    //   href: "/vendor/settings/return-reasons",
-    //   icon: <ArrowUturnLeft />,
-    //   title: "Return Reasons",
-    //   description: "Manage Returns",
-    // },
     {
       href: "/vendor/settings/sales-channels",
       icon: <Channels />,
       title: "Sales Channels",
       description: "Control  products availability",
     },
-    // {
-    //   href: "/vendor/settings/store-details",
-    //   icon: <Lifebuoy />,
-    //   title: "Store Details",
-    //   description: "Manage your business details",
-    // },
-    // {
-    //   href: "/vendor/settings/taxes",
-    //   icon: <BuildingTax />,
-    //   title: "Taxes",
-    //   description: "Manage taxes across regions ",
-    // },
     {
       href: "/vendor/settings/team",
       icon: <Users />,
@@ -77,7 +53,7 @@ const Settings = () => {
   ]
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+    <div className="relative min-h-screen overflow-hidden ">
       <div className="relative z-10 min-h-screen p-4 md:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
           <motion.div
@@ -86,10 +62,10 @@ const Settings = () => {
             transition={{ duration: 0.5 }}
             className="text-center space-y-2 mb-8"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-800">
               General Settings
             </h1>
-            <p className="text-sm text-white/80 max-w-xl mx-auto">
+            <p className="text-sm text-gray-500 max-w-xl mx-auto">
               Manage the general settings for your store
             </p>
           </motion.div>
@@ -104,16 +80,16 @@ const Settings = () => {
               >
                 <Link href={item.href}>
                   <Container className="group flex items-center gap-4 p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl transition-all duration-300 hover:bg-white/20">
-                    <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl text-white transition-all group-hover:bg-white/30">
+                    <div className="flex items-center justify-center w-12 h-12 bg-blue-500 rounded-xl text-white transition-all group-hover:bg-blue-700">
                       {item.icon}
                     </div>
                     <div className="flex-1">
-                      <h2 className="font-semibold text-lg text-white">
+                      <h2 className="font-semibold text-lg text-black">
                         {item.title}
                       </h2>
-                      <p className="text-sm text-white/80">{item.description}</p>
+                      <p className="text-sm text-black/80">{item.description}</p>
                     </div>
-                    <ChevronRight className="text-white/60 group-hover:text-white transition-colors" />
+                    <ChevronRight className="text-black/60 group-hover:text-black transition-colors" />
                   </Container>
                 </Link>
               </motion.div>

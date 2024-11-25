@@ -41,12 +41,12 @@ export default function Sidebar() {
 
   return (
     <aside className={cn(
-      "relative h-screen bg-gradient-to-b from-blue-100 via-purple-100 to-blue-100 transition-all duration-300 ease-in-out",
+      "relative h-screen bg-gradient-to-b from-blue-50 via-purple-50 to-blue-50 transition-all duration-300 ease-in-out",
       isCollapsed ? "w-20" : "w-64",
       "flex flex-col",
-      "border-r border-transparent",
+      "border-r border-gray-300",
       "before:content-[''] before:absolute before:top-0 before:right-0 before:bottom-0 before:w-[1px]",
-      "before:bg-gradient-to-b before:from-blue-600 before:via-purple-600 before:to-blue-600"
+      "before:bg-gradient-to-b before:from-blue-100 before:via-purple-100 before:to-blue-100"
     )}>
       {/* Mobile Toggle */}
       <Button
