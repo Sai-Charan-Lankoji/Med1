@@ -1,4 +1,5 @@
 /** @type {import('next').NextConfig} */
+import {NEXT_PORT} from "./constants/port.js";
 const nextConfig = {
   reactStrictMode: false, 
   images: {
@@ -6,7 +7,7 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
-        port: '8003',
+        port: NEXT_PORT,
         pathname: '/uploads/**',
       },
       {

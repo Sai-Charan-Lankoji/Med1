@@ -1,6 +1,14 @@
 import type { MiddlewaresConfig } from "@medusajs/medusa";
 import cors from "cors";
 
+const generatePortArray = (start: number, end: number) => {
+  const ports = [];
+  for (let i = start; i <= end; i++) {
+    ports.push(`http://localhost:${i}`);
+  }
+  return ports;
+};
+
 export const config: MiddlewaresConfig = {
   routes: [
     {
@@ -19,7 +27,7 @@ export const config: MiddlewaresConfig = {
       matcher: "/store*",
       middlewares: [
         cors({
-          origin:["http://localhost:8003", "http://localhost:8004"],       
+          origin:generatePortArray(8000, 80100),       
           credentials: true,
         }),
       ],
@@ -29,7 +37,7 @@ export const config: MiddlewaresConfig = {
       matcher: "/uploads*",
       middlewares: [
         cors({
-          origin:["http://localhost:8003", "http://localhost:8004"],       
+          origin:generatePortArray(8000, 80100),       
           credentials: true,
         }),
       ],
