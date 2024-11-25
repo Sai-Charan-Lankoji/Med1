@@ -35,6 +35,11 @@ const fetchStore = async (id: string) => {
 
 export const useGetStore = (id: string) => {
   return useQuery(['store',id], () => fetchStore(id), {
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
+    cacheTime: 0,                
+    staleTime: 1000 * 60 * 5,               
+    retry: false, 
     onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching products:', error.message);

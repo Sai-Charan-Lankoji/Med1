@@ -332,7 +332,7 @@ const OrderDetailsView = () => {
                         <span>{customer.email}</span>
                       </div>
                       <div className="flex items-center text-sm text-black/80">
-                        <Phone className="w-4 h-4 mr-2" />
+                        <Phone className="w-4 h-6 mr-2" />
                         <span>{customer.phone || "Not provided"}</span>
                       </div>
                     </div>

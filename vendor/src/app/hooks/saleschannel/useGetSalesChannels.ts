@@ -53,10 +53,10 @@ const fetchSalesChannels = async () => {
 
 export const useGetSalesChannels = () => {
   return useQuery(['salesChannels'], fetchSalesChannels, {
-    refetchOnWindowFocus: true,  
-    refetchOnMount: true,        
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
     cacheTime: 0,                
-    staleTime: 0,               
+    staleTime: 1000 * 60 * 5,               
     retry: false,               
 
     onError: (error: unknown) => {

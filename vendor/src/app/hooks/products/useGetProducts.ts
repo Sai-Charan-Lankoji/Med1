@@ -54,11 +54,11 @@ const fetchProducts = async () => {
 
 export const useGetProducts = () => {
   return useQuery(['products'], fetchProducts, {
-    refetchOnWindowFocus: true,  
-    refetchOnMount: true,        
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
     cacheTime: 0,                
-    staleTime: 0,               
-    retry: false,               
+    staleTime: 1000 * 60 * 5,               
+    retry: false,            
 
     onError: (error: unknown) => {
       if (error instanceof Error) {

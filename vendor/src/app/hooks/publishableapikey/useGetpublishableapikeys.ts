@@ -21,6 +21,11 @@ const fetchPublishableapikeys = async (id: string) => {
 
 export const useGetPublishableApiKeys = (id: string) => {
   return useQuery(['publishabelapikey', id], () => fetchPublishableapikeys(id), {
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
+    cacheTime: 0,                
+    staleTime: 1000 * 60 * 5,               
+    retry: false, 
     onError: (error) => {
       console.error('Error fetching publishable details:', error);
     },

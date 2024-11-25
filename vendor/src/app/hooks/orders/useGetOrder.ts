@@ -22,6 +22,11 @@ const fetchOrderDetails = async (id: string) => {
 
 export const useGetOrder = (id: string) => {
   return useQuery(['order', id], () => fetchOrderDetails(id), {
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
+    cacheTime: 0,                
+    staleTime: 1000 * 60 * 5,               
+    retry: false,
     onError: (error) => {
       console.error('Error fetching order details:', error);
     },

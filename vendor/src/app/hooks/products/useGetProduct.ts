@@ -21,6 +21,11 @@ const fetchProductDetails = async (id: string) => {
 
 export const useGetProduct = (id: string) => {
   return useQuery(['product', id], () => fetchProductDetails(id), {
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
+    cacheTime: 0,                
+    staleTime: 1000 * 60 * 5,               
+    retry: false, 
     onError: (error) => {
       console.error('Error fetching product details:', error);
     },

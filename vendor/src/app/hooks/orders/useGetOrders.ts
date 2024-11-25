@@ -55,10 +55,10 @@ const fetchOrders = async () => {
 
 export const useGetOrders = () => {
   return useQuery(['orders'], fetchOrders, {
-    refetchOnWindowFocus: true,  
-    refetchOnMount: true,        
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
     cacheTime: 0,                
-    staleTime: 0,               
+    staleTime: 1000 * 60 * 5,               
     retry: false,               
 
     onError: (error: unknown) => {
