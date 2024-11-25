@@ -70,30 +70,8 @@ export const GET = async (
  }
 };
 
-// // // Update a specific product
-// // export const PUT = async (
-// //  req: MedusaRequest,
-// //  res: MedusaResponse
-// // ): Promise<void> => {
-// //  try {
-// //    const storeservice = getStoreService(req as any);
-// //    if (!storeservice) {
-// //      res.status(500).json({ error: "Store service could not be resolved." });
-// //      return;
-// //    }
+// Update a specific product
 
-// //    const storeId = req.params.id;
-// //    const updateData = req.body;
-
-// //    const updateStore = await storeservice.updateStore(storeId, updateData);
-   
-
-// //    res.status(200).json({ message: "Store updated successfully.", store: updateStore });
-// //  } catch (error) {
-// //    console.error("Error in PUT /store/:id:", error);
-// //    res.status(500).json({ error: error.message || "An unknown error occurred." });
-// //  }
-// // };
 
 
 

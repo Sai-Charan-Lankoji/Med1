@@ -13,6 +13,7 @@ interface StoreData {
   default_location_id?: string;
   metadata?: Record<string, unknown>;
   publishableapikey: string;
+  store_url?: string;
 }
 
 // Function to get the StoreService from the request context
@@ -124,3 +125,28 @@ export const POST = async (
     res.status(500).json({ error: error.message || "An unknown error occurred." });
   }
 };
+
+
+export const PUT = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+ ): Promise<void> => {
+  try {
+    const storeservice = getStoreService(req as any);
+    if (!storeservice) {
+      res.status(500).json({ error: "Store service could not be resolved." });
+      return;
+    }
+ 
+    const storeId = req.query.id as string;
+    const updateData = req.body;
+ 
+    const updateStore = await storeservice.updateStore(storeId, updateData);
+    
+ 
+    res.status(200).json({ message: "Store updated successfully.", store: updateStore });
+  } catch (error) {
+    console.error("Error in PUT /store/:id:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+ };

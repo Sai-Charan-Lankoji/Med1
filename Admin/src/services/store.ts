@@ -33,7 +33,6 @@ class StoreService extends MedusaStoreService {
     if (!storeData.default_sales_channel_id) {
       throw new Error("Default sales channel ID is required to create a store.");
     }
-
     const store = this.storeRepository_.create(storeData);
     return await this.storeRepository_.save(store);
   }

@@ -13,7 +13,7 @@ import {
 import { FormField } from "./FormField";
 import { AddressSection } from "./AddressSection";
 
-const VendorForm = ({ plan }: { plan: string }) => {
+const VendorForm = ({    }: { plan: string }) => {
   const {
     register,
     handleSubmit,

@@ -22,6 +22,9 @@ export class Store extends MedusaStore {
   @Column({ type: "varchar", length: 120, nullable: true })
   publishableapikey: string | null;
 
+  @Column({ type: "varchar", length: 452, nullable: true })
+  store_url: string | null;
+
 @OneToMany(() => User, (user) => user?.store)
 members?: User[];
 

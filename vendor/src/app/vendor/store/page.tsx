@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
 
 const Store = () => {
   const router = useRouter()
@@ -66,6 +67,7 @@ const Store = () => {
   const [showLoadingModal, setShowLoadingModal] = useState(false)
   const [loadingStage, setLoadingStage] = useState("")
   const [isStoreCreated, setIsStoreCreated] = useState(false)
+  const { mutate: updateStore } = useUpdateStore()
 
   const storesWithMatchingSalesChannels = storesData?.map((store) => {
     const matchingSalesChannel = saleschannelsData?.find(
@@ -219,7 +221,8 @@ const Store = () => {
             },
           }
         )
-      } else {
+      } 
+      else {
         setShowLoadingModal(true)
         setLoadingStage("Initializing store creation...")
 
@@ -238,7 +241,7 @@ const Store = () => {
           onSuccess: async (response) => {
             try {
               setLoadingStage("Creating store instance...")
-              await createStoreInstance({
+              const storeInstance = await createStoreInstance({
                 ...response,
                 name: formData.storeName,
                 vendor_id: formData.vendor_id,
@@ -246,23 +249,40 @@ const Store = () => {
                 publishableapikey: formData.publishableapikey
               })
               
-              setLoadingStage("Store created successfully!")
-              setLoading(false)
-              setIsStoreCreated(true)
-              
-              toast({
-                title: "Success",
-                description: "Store Created Successfully",
+              // Update the store with the new URL
+              updateStore({
+                storeId: storeInstance.storeId,
+                store_url: storeInstance.url
+              }, {
+                onSuccess: (response) => {
+                  setLoadingStage("Store created and updated successfully!")
+                  setLoading(false)
+                  setIsStoreCreated(true)
+                  
+                  toast({
+                    title: "Success",
+                    description: "Store Created and Updated Successfully",
+                  })
+                  
+                  refreshStores()
+                  
+                  setTimeout(() => {
+                    setShowLoadingModal(false)
+                    setIsModalOpen(false)
+                    setIsStoreCreated(false)
+                    router.refresh()
+                  }, 2000)
+                },
+                onError: (error) => {
+                  console.error("Error updating store:", error)
+                  setLoadingStage("Error updating store URL")
+                  toast({
+                    title: "Error",
+                    description: "Error updating store URL",
+                    variant: "destructive",
+                  })
+                }
               })
-              
-              refreshStores()
-              
-              setTimeout(() => {
-                setShowLoadingModal(false)
-                setIsModalOpen(false)
-                setIsStoreCreated(false)
-                router.refresh()
-              }, 2000)
             } catch (error) {
               setLoadingStage("Error creating store instance")
               toast({
@@ -333,7 +353,8 @@ const Store = () => {
     }
   }
 
-  const getStoreUrl = (storeName) => {
+  const getStoreUrl = (storeName) => { 
+    console.log(storeName)
     return storeUrls[storeName] || "#"
   }
 
