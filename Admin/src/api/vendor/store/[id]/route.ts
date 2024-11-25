@@ -2,6 +2,8 @@ import type { MedusaRequest, MedusaResponse,
   
 } from "@medusajs/medusa";
 import StoreService from "../../../../services/store";
+import PublishableApiKeyService from "../../../../services/publishableapikey";
+import SalesChannelService from "../../../../services/salesChannel";
  
 const getStoreService = (req: MedusaRequest): StoreService | null => {
   try {
@@ -13,6 +15,29 @@ const getStoreService = (req: MedusaRequest): StoreService | null => {
   }
 }
 
+const getPublishableApiKeyService = (
+  req: MedusaRequest
+): PublishableApiKeyService | null => {
+  try {
+    return req.scope.resolve(
+      "publishableApiKeyService"
+    ) as PublishableApiKeyService;
+  } catch (error) {
+    console.error("Failed to resolve publishableApiKeyService:", error);
+    return null;
+  }
+};
+
+const getSalesChannelService = (
+  req: MedusaRequest
+): SalesChannelService | null => {
+  try {
+    return req.scope.resolve("salesChannelService") as SalesChannelService;
+  } catch (error) {
+    console.error("Failed to resolve salesChannelService:", error);
+    null;
+  }
+};
 //Retrive a specific product
 export const GET = async (
  req: MedusaRequest,
@@ -78,34 +103,65 @@ export const DELETE = async (
 ): Promise<void> => {
   try {
     const storeService = getStoreService(req as any);
+    const salesChannelService = getSalesChannelService(req);
+    const publishableapikeyService = getPublishableApiKeyService(req);
     if (!storeService) {
       res.status(500).json({ error: "Store service could not be resolved." });
+      return;
+    }
+    if (!salesChannelService || !publishableapikeyService) {
+      console.error("Store service or publishableapikeyservice could not be resolved.");
+      res.status(500).json({ error: "Store service or publishableapikeyservice could not be resolved." });
       return;
     }
 
     const storeId = req.params.id;
     
-    // First check if the store exists
+    // First retrieve the store to check existence and get associated entities
+    let store;
     try {
-      await storeService.retrieveByStoreId(storeId);
+      store = await storeService.retrieveByStoreId(storeId);
     } catch (error) {
       res.status(404).json({ error: "Store not found" });
       return;
     }
 
-    // Delete the store
+    const deletedPublishableapikey = await publishableapikeyService.delete(store.publishableapikey)
+    // Delete the store and its associated entities
     await storeService.delete(storeId);
+    const deletedSalesChannel = await salesChannelService.delete(store.default_sales_channel_id)
 
-    // Return success response
-    res.status(200).json({ message: "Store deleted successfully." });
+
+    // Return success response with details about what was deleted
+    res.status(200).json({ 
+      message: "Store and associated entities deleted successfully",
+      details: {
+        storeId: storeId,
+        deletedEntities: {
+          store: true,
+          salesChannel: store.default_sales_channel_id ? true : false,
+          publishableApiKey: store.publishableapikey ? true : false
+        }
+      }
+    });
   } catch (error) {
     console.error("Error during store deletion:", error);
-    res.status(500).json({ 
-      error: error.message || "Failed to delete store",
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
-    });
+    
+    // // Enhanced error response
+    // const errorResponse = {
+    //   error: error.message || "Failed to delete store",
+    //   details: error.details || null, // In case the service provides detailed error info
+    //   code: error.code || 'DELETION_ERROR'
+    // };
+
+    // // Only include stack trace in development
+    // if (process.env.NODE_ENV === 'development') {
+    //   errorResponse['stack'] = error.stack;
+    // }
+
+    res.status(500).json(error);
   }
-};
+};;
 
 
 

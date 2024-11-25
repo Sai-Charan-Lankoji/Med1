@@ -53,6 +53,14 @@ class SalesChannelService extends MedusaSalesChannelService {
     return await this.salesChannelRepository_.save(updatedProduct);
   }
 
+  async delete(salesChannelId: string): Promise<void>{
+    const salesChannel = await this.salesChannelRepository_.findOne({ where: { id: salesChannelId }});
+    if (!salesChannel) {
+      throw new Error('Sales Channel not found.');
+    }
+    await this.salesChannelRepository_.delete({ id: salesChannelId })
+  }
+
 
   async listSalesChannelsByVendor(vendorId: string | null): Promise<SalesChannel[]> {
     const whereClause: FindOptionsWhere<SalesChannel> = {};

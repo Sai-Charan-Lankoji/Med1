@@ -379,7 +379,7 @@ const Store = () => {
           initial={{ scale: 0.9, opacity: 0 }} 
           animate={{ scale: 1, opacity: 1 }} 
           transition={{ delay: 0.2, duration: 0.3 }}
-          className="w-full sm:w-72 relative"
+          className="flex flex-row justify-center space-x-2 w-full sm:w-72 relative"
         >
           <Input
             type="search"
@@ -389,6 +389,7 @@ const Store = () => {
             className="w-full pl-10 pr-4 py-2 rounded-full border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" size={18} />
+
         </motion.div>
       </motion.div>
 
@@ -599,11 +600,18 @@ const Store = () => {
               </div>
             )}
             <div className="flex justify-end mt-4">
-              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="mr-2">
+              <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="mr-2 w-20">
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Creating..." : "Create"}
+              <Button type="submit" disabled={loading} className="w-24">
+                {loading ? (
+                  <div className="flex items-center">
+                    <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    <span>Creating...</span>
+                  </div>
+                ) : (
+                  "Create"
+                )}
               </Button>
             </div>
           </form>
