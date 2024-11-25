@@ -212,9 +212,7 @@ const OrderDetailsView = () => {
                           hasUploadedImages && (
                             <Image
                               src={
-                                selectedDesign.uploadedImages[
-                                  currentUploadedImageIndex
-                                ]
+                                selectedDesign.pngImage
                               }
                               alt={`Uploaded design ${
                                 currentUploadedImageIndex + 1
