@@ -245,56 +245,83 @@ async function checkAllStoresHealth() {
   return status;
 }
 
-function findProcessId(port) {
+async function findProcessId(port) {
   return new Promise((resolve, reject) => {
     const command = process.platform === 'win32'
       ? `netstat -ano | findstr :${port}`
       : `lsof -i :${port} -t`;
 
     exec(command, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Error finding process for port ${port}:`, error);
-        reject(error);
+      if (error || !stdout.trim()) {
+        resolve(null);
       } else {
         const pid = process.platform === 'win32'
           ? stdout.split('\n')[0].split(/\s+/)[5]
           : stdout.trim();
-        resolve(pid);
+        resolve(pid || null);
       }
     });
   });
 }
 
-// Modify the shutdownStore function
-async function shutdownStore(directoryName, port) {
-  try {
-    const pid = await findProcessId(port);
-    if (pid) {
-      return new Promise((resolve, reject) => {
-        treeKill(pid, 'SIGINT', (err) => {
-          if (err) {
-            console.error(`Error shutting down ${directoryName}:`, err);
-            reject(err);
-          } else {
-            console.log(`${directoryName} has been shut down`);
-            resolve();
-          }
-        });
-      });
-    } else {
-      console.log(`No process found running on port ${port}`);
+async function killProcess(pid) {
+  return new Promise((resolve, reject) => {
+    treeKill(pid, 'SIGKILL', (err) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+async function retryOperation(operation, maxRetries = 10, delay = 2000) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      await operation();
+      return;
+    } catch (error) {
+      console.log(`Attempt ${attempt + 1} failed. Retrying in ${delay}ms...`);
+      if (attempt === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-  } catch (error) {
-    console.error(`Error in shutdownStore for ${directoryName}:`, error);
   }
 }
 
-// Modify the delete store API endpoint
+async function shutdownStore(directoryName, port) {
+  await retryOperation(async () => {
+    const pid = await findProcessId(port);
+    if (pid) {
+      await killProcess(pid);
+      // Wait longer to ensure the process has been killed and all file handles are closed
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      // Check if the process is still running
+      const pidAfterKill = await findProcessId(port);
+      if (pidAfterKill) {
+        throw new Error(`Failed to kill process on port ${port}`);
+      }
+    }
+    console.log(`${directoryName} has been shut down`);
+  });
+}
+
+async function forceDeleteDirectory(directoryPath) {
+  await retryOperation(async () => {
+    try {
+      await fs.rm(directoryPath, { recursive: true, force: true });
+      console.log(`Successfully deleted directory: ${directoryPath}`);
+    } catch (error) {
+      console.error(`Error deleting directory ${directoryPath}:`, error);
+      throw error; // Rethrow the error to trigger a retry
+    }
+  });
+}
+
 app.delete("/delete-store/:storeId", async (req, res) => {
   const { storeId } = req.params;
 
   try {
-    // Find the store in the registry
     const storeIndex = storeRegistry.findIndex(store => store.storeId === storeId);
     if (storeIndex === -1) {
       return res.status(404).json({ success: false, message: "Store not found" });
@@ -302,16 +329,19 @@ app.delete("/delete-store/:storeId", async (req, res) => {
 
     const store = storeRegistry[storeIndex];
 
-    // Shut down the store
+    console.log(`Attempting to shut down ${store.directoryName}...`);
     await shutdownStore(store.directoryName, store.port);
+    console.log(`${store.directoryName} shutdown complete.`);
 
-    // Wait for a moment to ensure the process has fully terminated
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const storePath = path.join(__dirname, "apps", store.directoryName);
+    
+    console.log(`Waiting for directory to be safe for deletion...`);
+    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 10 seconds
 
-    // Delete the store folder
-    await fs.rm(path.join(__dirname, "apps", store.directoryName), { recursive: true, force: true });
+    console.log(`Attempting to forcefully delete directory...`);
+    await forceDeleteDirectory(storePath);
+    console.log(`Directory deletion complete.`);
 
-    // Remove the store from the registry
     storeRegistry.splice(storeIndex, 1);
     await saveStoreRegistry();
 
@@ -319,7 +349,6 @@ app.delete("/delete-store/:storeId", async (req, res) => {
       success: true,
       message: "Store deleted successfully",
       deletedStore: store,
-      
     });
   } catch (error) {
     console.error("Error deleting store:", error);
@@ -330,7 +359,6 @@ app.delete("/delete-store/:storeId", async (req, res) => {
     });
   }
 });
-
 
 
 async function startServer() {
