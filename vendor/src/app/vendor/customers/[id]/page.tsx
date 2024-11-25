@@ -37,7 +37,7 @@ const CustomerDetails = () => {
   }, [currentPage, orders, pageSize]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100  overflow-auto p-6">
+    <div className="min-h-screen   overflow-auto p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         <BackButton name="Customers" className="text-indigo-600 hover:text-indigo-800 transition-colors" />
         

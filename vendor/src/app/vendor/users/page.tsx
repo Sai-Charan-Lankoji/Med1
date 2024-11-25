@@ -27,6 +27,7 @@ import { useCreateUser } from "@/app/hooks/users/useCreateUser"
 import { useDeleteUser } from "@/app/hooks/users/useDeleteUser"
 import { useGetUsers } from "@/app/hooks/users/useGetUsers"
 import { useUpdateUser } from "@/app/hooks/users/useUpdateUser"
+import { BackButton } from "@/app/utils/backButton"
 
 export declare enum UserRoles {
   ADMIN = "admin",
@@ -152,7 +153,7 @@ const Users = () => {
   return (
     <>
         <Toaster position="top-right"/>
-        
+
     <div className="container mx-auto p-6">
       <div className="flex justify-between items-center mb-6">
         <div>

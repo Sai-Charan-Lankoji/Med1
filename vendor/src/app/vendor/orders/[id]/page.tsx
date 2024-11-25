@@ -53,27 +53,27 @@ const OrderDetailsView = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       completed: {
-        bg: "bg-green-400/20",
-        text: "text-green-200",
+        bg: "bg-green-400",
+        text: "text-black",
         ring: "ring-green-400/30",
         label: "Completed",
       },
       pending: {
-        bg: "bg-yellow-400/20",
-        text: "text-yellow-200",
+        bg: "bg-yellow-400",
+        text: "text-black",
         ring: "ring-yellow-400/30",
         label: "Pending",
       },
       cancelled: {
-        bg: "bg-red-400/20",
-        text: "text-red-200",
+        bg: "bg-red-400/70",
+        text: "text-black",
         ring: "ring-red-400/30",
         label: "Cancelled",
       },
       default: {
-        bg: "bg-blue-400/20",
+        bg: "bg-blue-400",
         text: "text-blue-200",
-        ring: "ring-blue-400/30",
+        ring: "ring-white",
         label: status,
       },
     };
@@ -90,7 +90,7 @@ const OrderDetailsView = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-r from-blue-100 via-indigo-100 to-purple-100  overflow-auto">
+    <div className="relative min-h-screen   overflow-auto">
       <div className="relative z-10 min-h-screen p-4 md:p-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Header Section */}
@@ -253,8 +253,8 @@ const OrderDetailsView = () => {
                                   backgroundColor: design.apparel?.color,
                                 }}
                               />
-                              <div className="absolute inset-x-0 bottom-0 bg-indigo-900/70 py-1">
-                                <span className="text-[10px] text-black text-center block">
+                              <div className="absolute inset-x-0 bottom-0 bg-indigo-900/80 py-1">
+                                <span className="text-[10px] text-white text-center block">
                                   {design.apparel.side}
                                 </span>
                               </div>

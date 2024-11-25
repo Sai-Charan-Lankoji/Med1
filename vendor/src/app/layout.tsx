@@ -36,7 +36,7 @@ export default function  RootLayout({
             {showSidebar && <Sidebar />}
             <div className="flex flex-col flex-1">
               {showHeader && <NavBar />}
-              <main className="flex-1 bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500  overflow-auto">
+              <main className="flex-1   overflow-auto">
 
                 {children}
               </main>
