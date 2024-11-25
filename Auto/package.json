@@ -1,6 +1,7 @@
 {
   "name": "multi-store-project",
   "version": "1.0.0",
+  "packageManager": "npm@10.8.2",
   "private": true,
   "workspaces": [
     "apps/*"
@@ -11,10 +12,11 @@
     "start": "node server.js"
   },
   "devDependencies": {
-    "turbo": "latest"
+    "turbo": "^2.3.0"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "tree-kill": "^1.2.2"
   }
 }

@@ -23,10 +23,18 @@ try {
   dotenv.config({ path: process.cwd() + "/" + ENV_FILE_NAME });
 } catch (e) {}
 
+const generatePortString = (start, end) => {
+  const ports = [];
+  for (let i = start; i <= end; i++) {
+    ports.push(`http://localhost:${i}`);
+  }
+  return ports.join(',');
+};
+
 const ADMIN_CORS = process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:7001";
-const STORE_CORS = process.env.STORE_CORS || "http://localhost:8004,http://localhost:8003";
+const STORE_CORS = process.env.STORE_CORS || generatePortString(8000, 80100);
 const VENDOR_CORS = process.env.VENDOR_CORS || "http://localhost:8009";
-const UPLOADS_CORS = process.env.UPLOADS_CORS || "http://localhost:8003";
+const UPLOADS_CORS = process.env.UPLOADS_CORS || generatePortString(8000, 80100);
 const DATABASE_URL = process.env.DATABASE_URL 
 const POSTGRES_SCHEMA = process.env.POSTGRES_SCHEMA;
 

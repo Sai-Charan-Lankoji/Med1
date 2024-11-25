@@ -4,6 +4,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const cors = require("cors");
 const fetch = require("node-fetch");
+const treeKill = require('tree-kill');
 
 const app = express();
 
@@ -61,7 +62,7 @@ async function createStore(storeDetails) {
     const constantsPath = path.join(targetPath, "constants", "constants.ts");
     const constantsContent = `
 export const NEXT_PUBLIC_API_URL = "http://localhost:9000"
-export const NEXT_PUBLIC_API_KEY = "pk_01J9JQNA1HVN8XRFV8PGNAJHP0"
+export const NEXT_PUBLIC_API_KEY = "${storeDetails.publishableapikey}"
 export const NEXT_PUBLIC_VENDOR_ID = "${storeDetails.vendor_id}"
 export const NEXT_STORE_NAME = "${storeDetails.name}"
 export const NEXT_PUBLIC_STORE_ID = "${storeDetails.id}"
@@ -71,41 +72,50 @@ export const NEXT_PORT = "${lastUsedPort}"
     `;
     await fs.writeFile(constantsPath, constantsContent);
 
-    // Update next.config.mjs
-    const nextConfigPath = path.join(targetPath, "next.config.mjs");
-    const nextConfigContent = `
-/** @type {import('next').NextConfig} */
-const nextConfig = {
-  reactStrictMode: false,
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '${lastUsedPort}',
-        pathname: '/uploads/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'ik.imagekit.io',
-        port: '',
-        pathname: '/zz7harqme/**',
-      },
-    ],
-  },
-  webpack: (config) => {
-    config.externals.push({
-      "utf-8-validate": "commonjs utf-8-validate",
-      bufferutil: "commonjs bufferutil",
-      canvas: "commonjs canvas",
-    });
-    return config;
-  }
-};
+//update port.js
+const portPath = path.join(targetPath, "constants", "port.js");
+const portContent = `const NEXT_PORT = "${lastUsedPort}"
 
-export default nextConfig;
-    `;
-    await fs.writeFile(nextConfigPath, nextConfigContent);
+module.exports = {
+    NEXT_PORT,
+  };`;
+await fs.writeFile(portPath, portContent);
+
+  // Update next.config.mjs
+//     const nextConfigPath = path.join(targetPath, "next.config.mjs");
+//     const nextConfigContent = `
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {
+//   reactStrictMode: false,
+//   images: {
+//     remotePatterns: [
+//       {
+//         protocol: 'http',
+//         hostname: 'localhost',
+//         port: '${lastUsedPort}',
+//         pathname: '/uploads/**',
+//       },
+//       {
+//         protocol: 'https',
+//         hostname: 'ik.imagekit.io',
+//         port: '',
+//         pathname: '/zz7harqme/**',
+//       },
+//     ],
+//   },
+//   webpack: (config) => {
+//     config.externals.push({
+//       "utf-8-validate": "commonjs utf-8-validate",
+//       bufferutil: "commonjs bufferutil",
+//       canvas: "commonjs canvas",
+//     });
+//     return config;
+//   }
+// };
+
+// export default nextConfig;
+//     `;
+//     await fs.writeFile(nextConfigPath, nextConfigContent);
 
     return {
       directoryName: newStoreName,
@@ -116,7 +126,7 @@ export default nextConfig;
       currencyCode: storeDetails.default_currency_code,
       port: lastUsedPort,
       url: `http://localhost:${lastUsedPort}`,
-      dashboardUrl: `http://localhost:${lastUsedPort}/dashboard`,
+      
     };
   } catch (error) {
     console.error("Error creating store:", error);
@@ -234,6 +244,94 @@ async function checkAllStoresHealth() {
   }
   return status;
 }
+
+function findProcessId(port) {
+  return new Promise((resolve, reject) => {
+    const command = process.platform === 'win32'
+      ? `netstat -ano | findstr :${port}`
+      : `lsof -i :${port} -t`;
+
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error finding process for port ${port}:`, error);
+        reject(error);
+      } else {
+        const pid = process.platform === 'win32'
+          ? stdout.split('\n')[0].split(/\s+/)[5]
+          : stdout.trim();
+        resolve(pid);
+      }
+    });
+  });
+}
+
+// Modify the shutdownStore function
+async function shutdownStore(directoryName, port) {
+  try {
+    const pid = await findProcessId(port);
+    if (pid) {
+      return new Promise((resolve, reject) => {
+        treeKill(pid, 'SIGINT', (err) => {
+          if (err) {
+            console.error(`Error shutting down ${directoryName}:`, err);
+            reject(err);
+          } else {
+            console.log(`${directoryName} has been shut down`);
+            resolve();
+          }
+        });
+      });
+    } else {
+      console.log(`No process found running on port ${port}`);
+    }
+  } catch (error) {
+    console.error(`Error in shutdownStore for ${directoryName}:`, error);
+  }
+}
+
+// Modify the delete store API endpoint
+app.delete("/delete-store/:storeId", async (req, res) => {
+  const { storeId } = req.params;
+
+  try {
+    // Find the store in the registry
+    const storeIndex = storeRegistry.findIndex(store => store.storeId === storeId);
+    if (storeIndex === -1) {
+      return res.status(404).json({ success: false, message: "Store not found" });
+    }
+
+    const store = storeRegistry[storeIndex];
+
+    // Shut down the store
+    await shutdownStore(store.directoryName, store.port);
+
+    // Wait for a moment to ensure the process has fully terminated
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Delete the store folder
+    await fs.rm(path.join(__dirname, "apps", store.directoryName), { recursive: true, force: true });
+
+    // Remove the store from the registry
+    storeRegistry.splice(storeIndex, 1);
+    await saveStoreRegistry();
+
+    res.json({
+      success: true,
+      message: "Store deleted successfully",
+      deletedStore: store,
+      
+    });
+  } catch (error) {
+    console.error("Error deleting store:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting store",
+      error: error.message,
+    });
+  }
+});
+
+
 
 async function startServer() {
   await initializeStoreRegistry();

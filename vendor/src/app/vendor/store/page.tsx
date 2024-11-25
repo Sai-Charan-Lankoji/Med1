@@ -298,22 +298,39 @@ const Store = () => {
     }
   }
 
-  const handleDelete = (id, event) => {
+  const handleDelete = async (id, event) => {
     event.stopPropagation()
-    deleteStore(id, {
-      onSuccess: () => {
+    try {
+      // First, delete the store from your backend
+      await deleteStore(id)
+
+      // Then, delete the store instance
+      const response = await fetch(`http://localhost:3000/delete-store/${id}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete store instance')
+      }
+
+      const data = await response.json()
+      if (data.success) {
         toast({
           title: "Success",
-          description: "Store Deleted Successfully",
+          description: "Store deleted successfully",
         })
-        setTimeout(() => {
-          router.refresh()
-        }, 2000)
-      },
-      onError: (err) => {
-        console.error("An error occurred:", err)
-      },
-    })
+        refreshStores()
+      } else {
+        throw new Error(data.message || 'Failed to delete store instance')
+      }
+    } catch (error) {
+      console.error("Error deleting store:", error)
+      toast({
+        title: "Error",
+        description: "Error deleting store and its instance",
+        variant: "destructive",
+      })
+    }
   }
 
   const getStoreUrl = (storeName) => {

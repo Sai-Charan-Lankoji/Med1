@@ -1,0 +1,14 @@
+[
+
+  
+  {
+    "directoryName": "store3",
+    "storeName": "test2",
+    "vendorId": "vendor_01J98V6VYJ89KZWNRSEF8G669C",
+    "storeId": "store_01JDH0TBN6TMA0Z2ZME3JKCSN2",
+    "salesChannelId": "sc_01JDH0T68W5MERV4EQQ4SAWK3S",
+    "currencyCode": "usd",
+    "port": 8005,
+    "url": "http://localhost:8005"
+  }
+]

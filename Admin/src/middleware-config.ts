@@ -1,5 +1,13 @@
 import { MiddlewaresConfig } from "@medusajs/medusa";
 import cors from "cors"; // Import CORS middleware
+
+const generatePortArray = (start: number, end: number) => {
+  const ports = [];
+  for (let i = start; i <= end; i++) {
+    ports.push(`http://localhost:${i}`);
+  }
+  return ports;
+};
  
 // Configure CORS settings
 const vendorCorsOptions = {
@@ -10,14 +18,14 @@ const vendorCorsOptions = {
 };
 
 const storeCorsOptions = {
-  origin: ["http://localhost:8003","http://localhost:8004"] , // Your frontend origin
+  origin: generatePortArray(8000, 80100) , // Your frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
   credentials: true, // Allow credentials (if needed)
   optionsSuccessStatus: 200, // For older browsers
 }; 
 
 const uploadsCorsOptions = {
-  origin: "http://localhost:8003", // Your frontend origin
+  origin: generatePortArray(8000, 80100), // Your frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
   credentials: true, // Allow credentials (if needed)
   optionsSuccessStatus: 200, // For older browsers
