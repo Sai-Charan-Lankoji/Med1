@@ -21,14 +21,14 @@ export const GET = async (
     const customerId = req.query.id as string;
 
     if (!customerId) {
-      res.status(400).json({ error: "Customer ID is required" });
+      res.status(400).json({ error: "Customer ID is required", message: "Customer ID is required"});
       return;
     }
 
     const carts = await cartService?.retrieveByCustomerId(customerId);
 
     if (!carts) {
-      res.status(404).json({ error: "Cart not found" });
+      res.status(404).json({ error: "Cart not found", message: "Cart not found"});
       return;
     }
 
@@ -74,31 +74,31 @@ export const POST = async (
 
     // Validate required fields
     if (!designs || !Array.isArray(designs) || designs.length === 0) {
-      res.status(400).json({ error: "Designs array is required and cannot be empty." });
+      res.status(400).json({ error: "Designs array is required and cannot be empty.", message: "Designs array is required"});
       return;
     }
     if (!designState || !Array.isArray(designState)) {
-      res.status(400).json({ error: "Design state is required and must be an array." });
+      res.status(400).json({ error: "Design state is required and must be an array.", message: "Design state is required"});
       return;
     }
     if (!propsState) {
-      res.status(400).json({ error: "Props state is required." });
+      res.status(400).json({ error: "Props state is required.", message: "Props state is required"});
       return;
     }
     if (!quantity || typeof quantity !== "number") {
-      res.status(400).json({ error: "Quantity is required and should be a number." });
+      res.status(400).json({ error: "Quantity is required and should be a number.", message: "Quantity is required and should be a number"});
       return;
     }
     if (!price || typeof price !== "number") {
-      res.status(400).json({ error: "Price is required and should be a number." });
+      res.status(400).json({ error: "Price is required and should be a number.", message: "Price is required and should be a number"});
       return;
     }
     if (!email || typeof email !== "string") {
-      res.status(400).json({ error: "Email is required and should be a string." });
+      res.status(400).json({ error: "Email is required and should be a string.", message: "Email is required and should be a string"});
       return;
     }
     if (!customer_id || typeof customer_id !== "string") {
-      res.status(400).json({ error: "Customer ID is required and should be a string." });
+      res.status(400).json({ error: "Customer ID is required and should be a string.", message: "Customer ID is required and should be a string"});
       return;
     }
 
@@ -133,12 +133,12 @@ export const PATCH = async (
     const { quantity } = req.body as { quantity: number };
 
     if (!cartId) {
-      res.status(400).json({ error: "Cart ID is required" });
+      res.status(400).json({ error: "Cart ID is required", message: "Please enter a valid cart ID." });
       return;
     }
 
     if (typeof quantity !== "number" || quantity < 1) {
-      res.status(400).json({ error: "Valid quantity is required" });
+      res.status(400).json({ error: "Valid quantity is required", message: "Please enter a valid quantity." });
       return;
     }
 
@@ -160,7 +160,7 @@ export const DELETE = async (
     const { cartId } = req.query;
 
     if (!cartId) {
-      res.status(400).json({ error: "Cart ID is required" });
+      res.status(400).json({ error: "Cart ID is required", message: "Please enter a cart ID." });
       return;
     }
 
@@ -182,7 +182,7 @@ export const PUT = async (
     const { designState, propsState, designs } = req.body as any;
 
     if (!cartId) {
-      res.status(400).json({ error: "Cart ID is required" });
+      res.status(400).json({ error: "Cart ID is required", message: "Please enter a valid cart Id" });
       return;
     }
 

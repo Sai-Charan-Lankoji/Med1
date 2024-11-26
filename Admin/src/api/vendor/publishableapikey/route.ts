@@ -40,7 +40,7 @@ export const POST = async (
     const { salesChannelId, keyData } = req.body as PublishableApiKeyRequestBody;
 
     if (!salesChannelId || !keyData || !keyData.title) {
-      res.status(400).json({ error: "Sales channel ID and key data with title are required." });
+      res.status(400).json({ error: "Sales channel ID and key data with title are required.", message: "Sales channel ID and key data with title are required." });
       return;
     }
 

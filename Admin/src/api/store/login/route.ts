@@ -57,7 +57,7 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
     const existingCustomer = await customerService.checkCustomerExists({ email });
 
     if (!existingCustomer) {
-      res.status(404).json({ error: "Customer not found." });
+      res.status(404).json({ error: "Customer not found.", message: "Please enter the email and password." });
       return;
     } 
 
@@ -72,14 +72,14 @@ export const POST = async (req: MedusaRequest, res: MedusaResponse): Promise<voi
     const isPasswordValid = await bcrypt.compare(password, existingCustomer.password_hash);
 
     if (!isPasswordValid) {
-      res.status(401).json({ error: "Invalid password." });
+      res.status(401).json({ error: "Invalid password.", message: "Please enter a valid password." });
       return;
     }
 
     // Check vendor association
     const vendor = await vendorService.findByBussinessType(BusinessModel.FootballFranchise);
     if (!vendor) {
-      res.status(404).json({ error: "Vendor not found." });
+      res.status(404).json({ error: "Vendor not found.", message: "Vendor not found." });
       return;
     }
 

@@ -84,7 +84,7 @@ export const POST = async (
     // Validate required fields
     if (!newVendorData || !newVendorData.company_name || !newVendorData.contact_email || !newVendorData.password) {
       console.error("Invalid request body:", req.body);
-      res.status(400).json({ error: "Invalid request body. Required fields are missing." });
+      res.status(400).json({ message: "Invalid request body. Required fields are missing." });
       return;
     }
 

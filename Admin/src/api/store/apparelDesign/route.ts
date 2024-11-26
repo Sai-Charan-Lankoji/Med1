@@ -65,7 +65,7 @@ export const POST = async (
       // }
   
       if (!customer_id) {
-        res.status(400).json({ error: "Customer ID is required to create an apparel design." });
+        res.status(400).json({ error: "Customer ID is required to create an apparel design.", message: "Customer ID is required to create an apparel design." });
         return;
       }
   

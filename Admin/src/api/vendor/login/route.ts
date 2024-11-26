@@ -45,7 +45,7 @@ export const POST = async (
 
     const { email, password } = req.body as { email: string; password: string };
     if (!email || !password) {
-      res.status(400).json({ error: "Email and password are required." });
+      res.status(400).json({ error: "Email and password are required.", message: "Please enter a valid email and password." });
       return;
     }
 
@@ -90,7 +90,7 @@ export const POST = async (
       return;
     } 
     else {
-      res.status(401).json({ error: "Invalid email or password." });
+      res.status(401).json({ error: "Invalid email or password.", message: "Invalid email or password." });
     }
   } catch (error) {
     res

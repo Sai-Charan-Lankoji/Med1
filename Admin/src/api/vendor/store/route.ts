@@ -55,7 +55,7 @@ export const GET = async (
     // Validate vendor ID
     if (!vendor_id) {
       console.error("Vendor ID is missing in request.");
-      res.status(400).json({ error: "Vendor ID is required." });
+      res.status(400).json({ error: "Vendor ID is required.", message: "Missing vendor ID"});
       return;
     }
 
@@ -64,7 +64,7 @@ export const GET = async (
 
     if (!stores || stores.length === 0) {
       console.log(`No stores found for vendor ID: ${vendor_id}`);
-      res.status(404).json({ error: "No stores found for this vendor." });
+      res.status(404).json({ error: "No stores found for this vendor.", message: "No stores found for this vendor." });
       return;
     }
 
@@ -96,17 +96,17 @@ export const POST = async (
     // Validate required fields
     if (!vendor_id) {
       console.error("Vendor ID is missing in request body.");
-      res.status(400).json({ error: "Vendor ID is required." });
+      res.status(400).json({ error: "Vendor ID is required.", message: "Vendor ID is missing." });
       return;
     }
     if (!default_sales_channel_id) {
       console.error("Default sales channel ID is missing in request body.");
-      res.status(400).json({ error: "Default sales channel ID is required." });
+      res.status(400).json({ error: "Default sales channel ID is required.", message: "Default sales channel ID is missing." });
       return;
     }
     if (!name) {
       console.error("Store name is missing in request body.");
-      res.status(400).json({ error: "Store name is required." });
+      res.status(400).json({ error: "Store name is required.", message: "Store name is missing." });
       return;
     }
 
@@ -134,7 +134,7 @@ export const PUT = async (
   try {
     const storeservice = getStoreService(req as any);
     if (!storeservice) {
-      res.status(500).json({ error: "Store service could not be resolved." });
+      res.status(500).json({ error: "Store service could not be resolved."});
       return;
     }
  

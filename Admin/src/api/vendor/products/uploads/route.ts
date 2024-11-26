@@ -34,7 +34,7 @@ export const POST = async (
     res.status(200).json({ fileUrl });
   } catch (error) {
     console.error("Error during file upload:", error);
-    res.status(500).json({ error: "Image upload failed" });
+    res.status(500).json({ error: "Image upload failed", message: "Image upload failed."});
   }
 };
 
