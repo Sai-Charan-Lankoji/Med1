@@ -9,7 +9,7 @@ import {
   Select,
 } from "@medusajs/ui";
 import withAuth from "@/lib/withAuth";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Input } from "@medusajs/ui";
 import { Eye } from "@medusajs/icons";
 import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
@@ -34,12 +34,12 @@ const Order = () => {
   const router = useRouter();
   const pageSize = 6;
 
-  const getCustomerFirstName = (customerId: any) => {
+  const getCustomerFirstName = useCallback((customerId: any) => {
     const customer = customersData?.find(
       (customer: { id: any }) => customer.id === customerId
     );
     return customer ? `${customer.first_name} ${customer.last_name}` : "N/A";
-  };
+  }, [customersData]);
 
   const formatTimestamp = (timestamp: string) => {
     const date = parseISO(timestamp);
@@ -268,7 +268,7 @@ const Order = () => {
                       </Table.Cell>
                       <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
                         <Badge
-                          color={order.payment_status === "captured" ? "green" : "orange"}
+                          color={order.payment_status === "captured" ? "green" : "orange"}       
                           className="rounded-full px-2 py-1"
                         >
                           {order.payment_status}
@@ -332,7 +332,7 @@ const OrderSkeleton = () => {
                 <div key={colIndex} className="bg-indigo-100 h-8 rounded-md"></div>
               ))}
             </div>
-          ))}
+          ))} 
         </div>
 
         <div className="flex justify-center mt-6">
