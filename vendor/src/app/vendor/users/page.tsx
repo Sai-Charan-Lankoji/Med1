@@ -27,21 +27,7 @@ import { useCreateUser } from "@/app/hooks/users/useCreateUser"
 import { useDeleteUser } from "@/app/hooks/users/useDeleteUser"
 import { useGetUsers } from "@/app/hooks/users/useGetUsers"
 import { useUpdateUser } from "@/app/hooks/users/useUpdateUser"
-
-export declare enum UserRoles {
-  ADMIN = "admin",
-  MEMBER = "member",
-  DEVELOPER = "developer"
-}
-
-interface UserFormData {
-  first_name: string;
-  last_name: string;
-  email: string;
-  password: string;
-  role: UserRoles;
-  vendor_id: string;
-}
+import { UserFormData } from "@/app/@types/user"
 
 const permissions = [
   { value: "all", label: "All" },

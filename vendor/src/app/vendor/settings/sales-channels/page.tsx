@@ -26,7 +26,7 @@ import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannel
 import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel"
 import { useUpdateSalesChannel } from "@/app/hooks/saleschannel/useUpdateSalesChannel"
 import SalesTable from "../../components/saleschannelTableView/salesTable"
-import DashboardComponent from "../../components/dashboard/page"
+import DashboardComponent from "../../../../components/dashboard/page"
 
 function SalesChannels() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>("Default Sales Channel")

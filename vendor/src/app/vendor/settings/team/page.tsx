@@ -31,7 +31,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import withAuth from "@/lib/withAuth"
 import { useGetUsers } from "@/app/hooks/users/useGetUsers"
-import DashboardComponent from "../../components/dashboard/page"
+import DashboardComponent from "../../../../components/dashboard/page"
 
 function TeamManagement() {
   const router = useRouter()

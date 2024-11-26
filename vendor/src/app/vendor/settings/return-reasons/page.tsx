@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import withAuth from "@/lib/withAuth"
-import DashboardComponent from "../../components/dashboard/page"
+import DashboardComponent from "../../../../components/dashboard/page"
 
 function ReturnReasons() {
   const [isModalOpen, setIsModalOpen] = useState(false)

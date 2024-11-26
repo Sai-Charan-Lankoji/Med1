@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import withAuth from "@/lib/withAuth"
 import { useGetStores } from "@/app/hooks/store/useGetStores"
-import DashboardComponent from "../../components/dashboard/page"
+import DashboardComponent from "../../../../components/dashboard/page"
 
 function PublishableApiKeysTable() {
   const [currentPage, setCurrentPage] = useState(0)

@@ -26,7 +26,7 @@ import withAuth from "@/lib/withAuth"
 import { useAuth } from "@/app/context/AuthContext"
 import { useGetCustomerByEmail } from "@/app/hooks/customer/useGetCustomerByEmail"
 import { getColors } from "@/app/utils/dummyData"
-import DashboardComponent from "../../components/dashboard/page"
+import DashboardComponent from "../../../../components/dashboard/page"
 
 function PersonalInformation() {
   const { email } = useAuth() ?? { email: "Default Email" }

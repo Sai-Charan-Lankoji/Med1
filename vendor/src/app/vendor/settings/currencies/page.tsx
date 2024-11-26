@@ -24,7 +24,7 @@ import {
  import withAuth from "@/lib/withAuth"
  import Pagination from "../../../utils/pagination"
 import { currencies } from "@/app/utils/currencies "
-import DashboardComponent from "../../components/dashboard/page"
+import DashboardComponent from "../../../../components/dashboard/page"
 
 function CurrencyManager() {
   const [defaultCurrency, setDefaultCurrency] = useState<string>("")
