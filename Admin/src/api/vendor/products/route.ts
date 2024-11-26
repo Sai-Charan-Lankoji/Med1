@@ -22,7 +22,7 @@ export const GET = async (
     const vendorId = req.query.vendorId as string;
 
     if (!vendorId) {
-      res.status(400).json({ error: "Vendor ID is required" });
+      res.status(400).json({ error: "Vendor ID is required", message: "Vendor ID is required"});
       return;
     }
 
@@ -73,8 +73,7 @@ export const POST = async (
     const { vendor_id } = req.body as ProductData; // Typecast as ProductData
 
     if (!vendor_id) {
-      console.error("Vendor ID is missing in request body.");
-      res.status(400).json({ error: "Vendor ID is required." });
+      res.status(400).json({ error: "Vendor ID is required.", message: "Vendor ID is required." });
       return;
     }
 

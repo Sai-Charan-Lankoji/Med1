@@ -44,7 +44,7 @@ export const GET = async (
       customers = await customerService.retrieve(customer_id);
       if (!customers) {
         console.log(`No customer found with ID: ${customer_id}`);
-        res.status(404).json({ error: "No customer found with this ID." });
+        res.status(404).json({ error: "No customer found with this ID.", message: "No Customer found with this ID"});
         return;
       }
     } 
@@ -53,7 +53,7 @@ export const GET = async (
       customers = await customerService.getCustomersByVendorId(vendor_id);
       if (!customers || customers.length === 0) {
         console.log(`No customers found for vendor ID: ${vendor_id}`);
-        res.status(404).json({ error: "No customers found for this vendor." });
+        res.status(404).json({ error: "No customers found for this vendor.", message: "No customers found for this vendor." });
         return;
       }
     } 
@@ -62,7 +62,7 @@ export const GET = async (
       customers = await customerService.retrieveByEmail(email);
       if (!customers || customers.length === 0) {
         console.log("No customers found for given email.");
-        res.status(404).json({ error: "No customers found for given email address." });
+        res.status(404).json({ error: "No customers found for given email address.", message: "No customers found for given email address." });
         return;
       }
     } else {

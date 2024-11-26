@@ -11,7 +11,7 @@ export const GET = async (
     const productsWithNullVendor = await productService.retrieveByNullVendor();
 
     if (!productsWithNullVendor || productsWithNullVendor.length === 0) {
-     res.status(404).json({ error: "No products found with null vendor_id." });
+     res.status(404).json({ error: "No products found with null vendor_id.", message: "Product not found with null vendor_id"});
     }
 
     const formattedProducts = productsWithNullVendor.map((product) => ({

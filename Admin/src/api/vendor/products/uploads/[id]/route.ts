@@ -30,13 +30,13 @@ export const DELETE = async (
     const product = await productService.retrieve(productId);
 
     if (!product) {
-      res.status(404).json({ error: "Product not found" });
+      res.status(404).json({ error: "Product not found", message: "Product not found." });
       return;
     }
 
     const imageUrl = product.thumbnail;
     if (!imageUrl) {
-      res.status(404).json({ error: "Image not found" });
+      res.status(404).json({ error: "Image not found", message: "Image not found."});
       return;
     }
 

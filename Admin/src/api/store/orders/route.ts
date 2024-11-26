@@ -47,7 +47,7 @@ export const POST = async (
 
     if (!line_items || !Array.isArray(line_items) || line_items.length === 0) {
       console.error("Line items are missing or invalid in request body.");
-      res.status(400).json({ error: "At least one line item is required." });
+      res.status(400).json({ error: "At least one line item is required.", message: "Missing line items"});
       return;
     }
 

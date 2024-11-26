@@ -62,7 +62,7 @@ export const DELETE = async (
     try {
       await vendoruserService.retrieve(userId);
     } catch (error) {
-      res.status(404).json({ error: "Vendor User not found" });
+      res.status(404).json({ error: "Vendor User not found", message: "Vendor User not found" });
       return;
     }
 

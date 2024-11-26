@@ -42,12 +42,12 @@ export const GET = async (
       customers = await customerService.retrieve(customer_id);
       if (!customers) {
         console.log(`No customer found with ID: ${customer_id}`);
-        res.status(404).json({ error: "No customer found with this ID." });
+        res.status(404).json({ error: "No customer found with this ID.", message: "No customer found with this ID." });
         return;
       }
     } 
      else {
-      res.status(400).json({ error: "No valid query parameters provided." });
+      res.status(400).json({ error: "No valid query parameters provided.", message: "No valid query parameters provided." });
       return;
     }
 

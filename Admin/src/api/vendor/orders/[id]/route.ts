@@ -31,7 +31,7 @@ export const GET = async (
     if (orderId) {
       const order = await orderService.retrieve(orderId);
       if (!order) {
-        res.status(404).json({ error: "Order not found." });
+        res.status(404).json({ error: "Order not found.", message: "Order not found." });
         return;
       }
       response = order;

@@ -21,7 +21,7 @@ export const DELETE = async (
       const  customer_id  = req.params.id as any;
 
       if (!customer_id) {
-          res.status(400).json({ error: "Customer ID is required" });
+          res.status(400).json({ error: "Customer ID is required", message: "Customer Id is required." });
           return;
       }
 

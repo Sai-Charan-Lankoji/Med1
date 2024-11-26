@@ -28,7 +28,7 @@ export const GET = async (
     const productId = req.params.id as string;
 
     if (!productId) {
-      res.status(400).json({ error: "Product ID is required." });
+      res.status(400).json({ error: "Product ID is required.", message: "Product ID is required." });
       return;
     }
 
@@ -88,7 +88,7 @@ export const DELETE = async (
     const product = await productService.retrieve(productId);
 
     if (!product) {
-      res.status(404).json({ error: "Product not found" });
+      res.status(404).json({ error: "Product not found", message: "Product not found." });
       return;
     }
 

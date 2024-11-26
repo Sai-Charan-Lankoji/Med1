@@ -49,7 +49,7 @@ export const GET = async (
     // Validate vendor ID
     if (!vendor_id) {
       console.error("Vendor ID is missing in request.");
-      res.status(400).json({ error: "Vendor ID is required." });
+      res.status(400).json({ error: "Vendor ID is required.", message: "Missing vendor ID"});
       return;
     }
 
@@ -62,7 +62,7 @@ export const GET = async (
       console.log(`No sales channels found for vendor ID: ${vendor_id}`);
       res
         .status(404)
-        .json({ error: "No sales channels found for this vendor." });
+        .json({ error: "No sales channels found for this vendor.", message: "No sales channels found for this vendor"});
       return;
     }
 
@@ -96,11 +96,11 @@ export const POST = async (
 
     if (!vendor_id) {
       console.error("Vendor ID is missing in request body.");
-      res.status(400).json({ error: "Vendor ID is required." });
+      res.status(400).json({ error: "Vendor ID is required.", message: "Vendor ID is required." });
     }
     if (!name) {
       console.error("Sales Channel name is missing in request body.");
-      res.status(400).json({ error: "Sales Channel name is required." });
+      res.status(400).json({ error: "Sales Channel name is required.", message: "Sales Channel name is required." });
     }
 
     const newSalesChannelData: Partial<SalesChannelData> = req.body;

@@ -53,7 +53,7 @@ export const GET = async (
    const storeId = req.params.id as string;
 
    if (!storeId) {
-     res.status(400).json({ error: "Store ID is required." });
+     res.status(400).json({ error: "Store ID is required.", message: "Store ID is required." });
      return;
    }
 
@@ -100,7 +100,7 @@ export const DELETE = async (
     try {
       store = await storeService.retrieveByStoreId(storeId);
     } catch (error) {
-      res.status(404).json({ error: "Store not found" });
+      res.status(404).json({ error: "Store not found", message: "Store not found" });
       return;
     }
 
@@ -124,19 +124,6 @@ export const DELETE = async (
     });
   } catch (error) {
     console.error("Error during store deletion:", error);
-    
-    // // Enhanced error response
-    // const errorResponse = {
-    //   error: error.message || "Failed to delete store",
-    //   details: error.details || null, // In case the service provides detailed error info
-    //   code: error.code || 'DELETION_ERROR'
-    // };
-
-    // // Only include stack trace in development
-    // if (process.env.NODE_ENV === 'development') {
-    //   errorResponse['stack'] = error.stack;
-    // }
-
     res.status(500).json(error);
   }
 };;
