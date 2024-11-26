@@ -404,47 +404,54 @@ const Store = () => {
       </DialogContent>
     </Dialog>
   )
-  const DeleteConfirmationModal = () => (
-    <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-      <DialogContent className="sm:max-w-[425px] bg-slate-100">
-        <DialogHeader>
-          <DialogTitle className="text-blue-600">Confirm Delete</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <p className="text-center text-md text-gray-700">
-            Are you sure you want to delete this store? This action cannot be undone.
-          </p>
-        </div>
-        <div className="flex justify-end mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setIsDeleteModalOpen(false)}
-            className="mr-2 w-20"
-            disabled={isDeletingStore}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={isDeletingStore}
-            className="w-24"
-          >
-            {isDeletingStore ? (
-              <div className="flex items-center">
-                <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                <span>Deleting...</span>
+  const DeleteConfirmationModal = ( 
+    
+  ) => 
+     (
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="sm:max-w-[425px] bg-slate-100">
+          <DialogHeader>
+            <DialogTitle className="text-blue-600">Confirm Delete</DialogTitle>
+          </DialogHeader>
+          
+          {isDeletingStore ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mb-4"></div>
+              <p className="text-lg text-gray-700 font-semibold">
+                Shutting down and deleting store...
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-4 py-4">
+                <p className="text-center text-md text-gray-700">
+                  Are you sure you want to delete this store? This action cannot be undone.
+                </p>
               </div>
-            ) : (
-              "Delete"
-            )}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
+              <div className="flex justify-end mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                  className="mr-2 w-20"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  className="w-24"
+                >
+                  Delete
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  
 
 
   if (isLoading) {
