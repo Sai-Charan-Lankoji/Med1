@@ -225,25 +225,33 @@ export default function ServicesDashboard() {
                       Active Stores
                     </h3>
                     <ScrollArea className="h-[180px] pr-4">
-                      <div className="space-y-2">
-                        {stores?.map((store, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 shadow-sm border border-white/20 transition-all hover:bg-white/20"
-                          >
-                            <div className="p-1.5 rounded-xl bg-white/20">
-                              <ShoppingBag className="w-3.5 h-3.5 text-blue-700" />
-                            </div>
-                            <div>
-                              <p className="text-sm font-medium text-black">
-                                {store.name}
-                              </p>
-                              <p className="text-xs text-black/80">Active</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
+      {stores && stores.length > 0 ? (
+        <div className="space-y-2">
+          {stores.map((store, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 p-2.5 rounded-xl bg-white/10 shadow-md border border-white/20 transition-all hover:bg-white/20"
+            >
+              <div className="p-1.5 rounded-xl bg-white/20">
+                <ShoppingBag className="w-3.5 h-3.5 text-blue-700" />
+              </div>
+              <div className="flex items-center justify-between w-full">
+                <p className="text-sm font-medium text-black">
+                  {store.name}
+                </p>
+                <p className="px-2 py-0.5 bg-green-500/50 text-gray-700 rounded-full text-xs font-normal">
+                  Active
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-full absolute inset-0">
+          <span className="text-black/60 text-sm">NO active stores</span>
+        </div>
+      )}
+    </ScrollArea>
                   </div>
                 </div>
               </CardContent>

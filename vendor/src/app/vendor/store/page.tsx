@@ -406,12 +406,12 @@ const Store = () => {
   )
   const DeleteConfirmationModal = () => (
     <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] bg-slate-100">
         <DialogHeader>
-          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogTitle className="text-blue-600">Confirm Delete</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <p className="text-center text-sm text-gray-500">
+          <p className="text-center text-md text-gray-700">
             Are you sure you want to delete this store? This action cannot be undone.
           </p>
         </div>
@@ -585,13 +585,13 @@ const Store = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogTrigger asChild>
-          <Button className=" right-8 shadow-lg mt-4">
+          <Button className=" right-8 shadow-lg mt-4 bg-blue-600 hover:bg-blue-900">
             <Plus className="mr-2 h-4 w-4 " /> New Store
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{isSalesChannelCreated ? "Create Store" : "Create Sales Channel"}</DialogTitle>
+            <DialogTitle className="text-blue-600">{isSalesChannelCreated ? "Create Store" : "Create Sales Channel"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
             {!isSalesChannelCreated ? (
@@ -695,7 +695,7 @@ const Store = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="mr-2 w-20">
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="w-24">
+              <Button type="submit" disabled={loading} className="w-24 bg-blue-600 hover:bg-blue-950">
                 {loading ? (
                   <div className="flex items-center">
                     <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
