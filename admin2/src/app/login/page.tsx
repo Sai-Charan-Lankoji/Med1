@@ -30,19 +30,19 @@ export default function Component() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-600 via-gray-400 to-gray-800">
       {/* Animated Wave Background */}
-      <div className="absolute inset-0 z-0">
+      {/* <div className="absolute inset-0 z-0">
         <div className="wave"></div>
         <div className="wave"></div>
         <div className="wave"></div>
-      </div>
+      </div> */}
       
       {/* Subtle Animated Gradient Orbs */}
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
+      {/* <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
       <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
       <div className="absolute bottom-1/4 left-1/2 w-72 h-72 bg-gradient-to-r from-indigo-300 to-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
-      
+       */}
       <div className="relative flex justify-center items-center min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: -50 }}
@@ -71,7 +71,7 @@ export default function Component() {
             transition={{ delay: 0.3 }}
             className="text-3xl font-bold text-center text-white mb-6"
           >
-            Log in to Vendor
+            Admin Login
           </motion.h2>
           <form onSubmit={handleSubmit} method="post" className="space-y-6">
             <motion.div
@@ -126,7 +126,7 @@ export default function Component() {
             >
               <button
                 type="submit"
-                className="w-full px-6 py-3 rounded-xl bg-white text-purple-600 font-semibold text-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                className="w-full px-6 py-3 rounded-xl bg-white text-gray-800 font-semibold text-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                 disabled={loading}
               >
                 {loading ? <Loader className="animate-spin mx-auto" /> : "Continue"}
@@ -140,12 +140,12 @@ export default function Component() {
                   <p className="text-red-200">{error}</p>
                 </motion.div>
               )}
-              <p className="text-white text-sm">
+              {/* <p className="text-white text-sm">
                 Don&apos;t have an account?{" "}
                 <Link href="/" className="text-white font-semibold hover:underline">
                   Join Us 
                 </Link>
-              </p>
+              </p> */}
             </motion.div>
           </form>
         </motion.div>

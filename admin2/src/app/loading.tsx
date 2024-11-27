@@ -8,7 +8,7 @@ interface LoadingScreenProps {
 
 const LoadingScreen: FC<LoadingScreenProps> = ({
   message = "Please wait while we prepare your content",
-  theme = "default"
+  theme = "minimal"
 }) => {
   // Theme-based background classes
   const themeClasses = {
