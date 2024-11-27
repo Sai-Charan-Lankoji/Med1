@@ -31,7 +31,7 @@ export const useVendorLogin = () => {
   
     try {
       const url = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${url}/vendor/login`, {
+      const response = await fetch(`${url}/admin/auth`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -68,7 +68,7 @@ export const useVendorLogin = () => {
         setAuthEmail(data.vendorUser.email);
         setContactName(data.vendorUser.first_name);
         }
-        router.push('/vendor/orders');
+        router.push('/admin/vendors');
       }
     } catch (err: any) {
       console.error('Error during login:', err); 

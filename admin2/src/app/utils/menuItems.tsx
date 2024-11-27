@@ -1,6 +1,7 @@
 "use client";
 
-import { ShoppingCart, Tag, Users, Settings, Store, Wrench, LayoutDashboard } from 'lucide-react';
+import { Store, CreditCard, Settings } from 'lucide-react'
+
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@medusajs/ui";
@@ -11,42 +12,23 @@ interface MenuItemsProps {
   currentPath: string;
 }
 
-const menuItems = [
+
+export const menuItems = [
   {
-    title: "Orders",
-    icon: ShoppingCart,
-    href: "/vendor/orders",
-  },
-  {
-    title: "Products",
-    icon: Tag,
-    href: "/vendor/products",
-  },
-  {
-    title: "Customers",
-    icon: Users,
-    href: "/vendor/customers",
-  },
-  {
-    title: "Store",
+    title: "Vendors",
     icon: Store,
-    href: "/vendor/store",
+    href: "/admin/vendors",
   },
   {
-    title: "Services",
-    icon: Wrench,
-    href: "/vendor/services",
+    title: "Plans",
+    icon: CreditCard,
+    href: "/admin/plans",
   },
   {
-    title: "Users",
-    icon: User,
-    href: "/vendor/users",
-  },
-  {
-    title: "Settings",
+    title: "Billing Service",
     icon: Settings,
-    href: "/vendor/settings",
-  },
+    href: "/admin/billingservice",
+  }
 ];
 
 export default function MenuItems({ collapsed, currentPath }: MenuItemsProps) {
