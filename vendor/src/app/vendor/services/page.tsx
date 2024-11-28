@@ -21,24 +21,12 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { useGetStores } from "@/app/hooks/store/useGetStores"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
+import { ServicePlan } from "@/app/@types/services"
 
-interface Feature {
-  title: string;
-  description: string;
-  icon: React.ElementType;
-}
-
-interface ServicePlan {
-  name: string;
-  isActive: boolean;
-  maxStores: number;
-  price: string;
-  features: Feature[];
-  icon: React.ElementType;
-}
 
 const SERVICES: ServicePlan[] = [
   {
+    id: 1,
     name: "Basic",
     isActive: false,
     maxStores: 3,
@@ -63,6 +51,7 @@ const SERVICES: ServicePlan[] = [
     icon: Zap,
   },
   {
+    id: 2,
     name: "Professional",
     isActive: false,
     maxStores: 10,
@@ -92,6 +81,7 @@ const SERVICES: ServicePlan[] = [
     icon: Shield,
   },
   {
+    id: 3,
     name: "Enterprise",
     isActive: false,
     maxStores: 50,

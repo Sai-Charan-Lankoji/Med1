@@ -30,6 +30,7 @@ export const AddressSection = ({
         label="Address 1"
         id={`${prefix}_address_1`}
         placeholder="Enter address line 1"
+        type="text"
         required
         register={register}
         name={`${addressType}.address_1`}
@@ -38,6 +39,7 @@ export const AddressSection = ({
       <FormField
         label="Address 2"
         id={`${prefix}_address_2`}
+        type="text"
         placeholder="Enter address line 2 (optional)"
         register={register}
         name={`${addressType}.address_2`}
@@ -46,6 +48,7 @@ export const AddressSection = ({
       <FormField
         label="City"
         id={`${prefix}_city`}
+        type="text"
         placeholder="Enter city"
         required
         register={register}
@@ -55,6 +58,7 @@ export const AddressSection = ({
       <FormField
         label="Postal Code"
         id={`${prefix}_postal_code`}
+        type="number"
         placeholder="Enter postal code"
         required
         register={register}
@@ -64,6 +68,7 @@ export const AddressSection = ({
       <FormField
         label="Province"
         id={`${prefix}_province`}
+        type="text"
         placeholder="Enter province"
         required
         register={register}
@@ -73,6 +78,7 @@ export const AddressSection = ({
       <FormField
         label="Phone"
         id={`${prefix}_phone`}
+        type="tel"
         placeholder="Enter phone number"
         required
         register={register}
@@ -82,6 +88,7 @@ export const AddressSection = ({
       <FormField
         label="First Name"
         id={`${prefix}_first_name`}
+        type="text"
         placeholder="Enter first name"
         required
         register={register}
@@ -91,6 +98,7 @@ export const AddressSection = ({
       <FormField
         label="Last Name"
         id={`${prefix}_last_name`}
+        type="text"
         placeholder="Enter last name (optional)"
         register={register}
         name={`${addressType}.last_name`}

@@ -1,14 +1,28 @@
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { BellAlert, QuestionMarkCircle } from "@medusajs/icons";
-import { Button, Drawer, Input } from "@medusajs/ui";
+import { Button, Drawer, DropdownMenu, Input } from "@medusajs/ui";
 import { useAuth } from "../context/AuthContext";
+import { cn } from "@/lib/utils";
+import { Settings, LogOut } from "lucide-react";
+import loading from "../loading";
+import { useVendorLogout } from "../hooks/auth/useVendorLogout";
+import Link from 'next/link';
 
 const Navbar = () => {
-  const { contactName } = useAuth() || { contactName: "" };
   const router = useRouter();
+  const pathname = usePathname();
+  const [isMobile, setIsMobile] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { email, contactName } = useAuth() ?? { email: '' };
+  const { logout, loading } = useVendorLogout();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/login');
+  };
 
   return (
     <nav className="flex  justify-between items-center p-4 bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 text-black h-16  shadow-md border-b border-gray-300">
@@ -17,6 +31,7 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center space-x-4">
+     
         <Drawer>
           <Drawer.Trigger asChild>
             <button
@@ -27,7 +42,7 @@ const Navbar = () => {
 
 
           </Drawer.Trigger>
-          <Drawer.Content className="bg-gradient-to-br from-blue-100 via-purple-100 to-blue-100 text-black">
+          <Drawer.Content className="bg-white text-black">
             <Drawer.Header>
               <Drawer.Title className="text-2xl font-bold text-black">Support</Drawer.Title>
             </Drawer.Header>
@@ -61,7 +76,7 @@ const Navbar = () => {
               </div>
             </Drawer.Body>
             <Drawer.Footer>
-              <Button className="w-full rounded-xl bg-gradient-to-tr from-indigo-400 via-purple-400 to-blue-400 transition-colors">
+              <Button className="w-full rounded-xl bg-white transition-colors">
                 Send Message
               </Button>
             </Drawer.Footer>
@@ -77,7 +92,7 @@ const Navbar = () => {
               <BellAlert className="w-6 h-6" />
             </button>
           </Drawer.Trigger>
-          <Drawer.Content className="bg-gradient-to-br from-blue-100 via-purple-100 to-blue-100 text-black">
+          <Drawer.Content className="bg-white text-black">
             <Drawer.Header>
               <Drawer.Title className="text-2xl font-bold text-black">Notifications</Drawer.Title>
             </Drawer.Header>
@@ -87,7 +102,55 @@ const Navbar = () => {
           </Drawer.Content>
         </Drawer>
 
-        
+        <div className={cn(
+        "p-4 flex items-center",
+        isCollapsed ? "justify-center" : "justify-start"
+      )}>
+        <DropdownMenu>
+          <DropdownMenu.Trigger asChild>
+            <Button
+              variant="transparent"
+              className={cn(
+                "relative flex items-center space-x-3  transition-colors",
+                isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start p-2"
+              )}
+            >
+              <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-medium">
+                  {contactName?.slice(0, 1).toUpperCase()}
+                </span>
+              </div>
+              {!isCollapsed && (
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium text-gray-900">
+                    {contactName}
+                  </span>
+                  <span className="text-xs text-gray-500 truncate max-w-[150px]">
+                    {email}
+                  </span>
+                </div>
+              )}
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="start" className="w-56">
+            <DropdownMenu.Item asChild>
+              <Link href="/vendor/settings" className="flex items-center">
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </Link>
+            </DropdownMenu.Item>
+            <DropdownMenu.Separator />
+            <DropdownMenu.Item
+              className="text-red-600 focus:text-red-600"
+              onClick={handleLogout}
+              disabled={loading}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>{loading ? 'Logging out...' : 'Logout'}</span>
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu>
+      </div>
       </div>
     </nav>
   );

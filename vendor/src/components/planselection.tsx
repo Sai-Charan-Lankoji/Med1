@@ -1,50 +1,95 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Bolt, Sparkles } from "@medusajs/icons";
+import { Check, Bolt, Sparkles, Users } from "@medusajs/icons";
 import { Button } from "@medusajs/ui";
 import { Card } from "./ui/card";
 import VendorForm from "./vendorForm/vendor-form";
+import { ServicePlan } from "@/app/@types/services";
+import { Store, Activity, HeadphonesIcon, Zap, Building2, Database, Shield, Globe, Crown } from "lucide-react";
 
-const plans = [
+const SERVICES: ServicePlan[] = [
   {
-    id: "basic",
+    id: 1,
     name: "Basic",
+    isActive: false,
+    maxStores: 3,
     price: "$29",
     features: [
-      "Single store",
-      "Basic analytics",
-      "Standard support",
-      "1 template included",
+      {
+        title: "Store Management",
+        description: "Manage up to 3 stores",
+        icon: Store,
+      },
+      {
+        title: "Basic Analytics",
+        description: "Essential metrics and insights",
+        icon: Activity,
+      },
+      {
+        title: "Standard Support",
+        description: "Email support within 24 hours",
+        icon: HeadphonesIcon,
+      },
     ],
+    icon: Zap,
   },
   {
-    id: "pro",
+    id:2,
     name: "Professional",
-    price: "$79",
+    isActive: false,
+    maxStores: 10,
+    price: "$99",
     features: [
-      "Multiple stores",
-      "Advanced analytics",
-      "Priority support",
-      "All templates included",
-      "Custom domain",
+      {
+        title: "Enhanced Management",
+        description: "Manage up to 10 stores",
+        icon: Building2,
+      },
+      {
+        title: "Advanced Analytics",
+        description: "Detailed reports and forecasting",
+        icon: Database,
+      },
+      {
+        title: "Priority Support",
+        description: "Priority email & chat support",
+        icon: Shield,
+      },
+      {
+        title: "API Access",
+        description: "Full API integration capabilities",
+        icon: Globe,
+      },
     ],
+    icon: Shield,
   },
   {
-    id: "enterprise",
+    id: 3,
     name: "Enterprise",
-    price: "Custom",
+    isActive: false,
+    maxStores: 50,
+    price: "$299",
     features: [
-      "Unlimited stores",
-      "Enterprise analytics",
-      "24/7 dedicated support",
-      "Custom templates",
-      "API access",
-      "White labeling",
+      {
+        title: "Unlimited Potential",
+        description: "Unlimited store management",
+        icon: Crown,
+      },
+      {
+        title: "Custom Analytics",
+        description: "Tailored reporting solutions",
+        icon: Activity,
+      },
+      {
+        title: "Dedicated Support",
+        description: "24/7 dedicated support team",
+        icon: Users,
+      },
     ],
+    icon: Crown,
   },
-];
-
+]
 export function PlanSelection() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 
@@ -67,50 +112,50 @@ export function PlanSelection() {
       <div className="absolute bottom-1/4 left-1/2 w-72 h-72 bg-gradient-to-r from-indigo-300 to-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
 
       <div className="container mx-auto px-4 relative z-10">
-        <h2 className="text-4xl font-bold text-center text-white mb-12">
-          Choose Your Plan
-        </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {plans.map((plan) => (
-            <Card
-              key={plan.id}
-              className="p-6 max-w-sm bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/40 transition-all hover:scale-105 rounded-xl"
-            >
-              <div className="flex flex-col h-full">
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
-                  <div className="mt-2 text-4xl font-bold text-white">
-                    {plan.price}
-                  </div>
-                  <p className="text-sm text-white/70 mt-2">per month</p>
+      <h2 className="text-4xl font-bold text-center text-white mb-12">
+        Choose Your Plan
+      </h2>
+      <div className="grid gap-6 md:grid-cols-3">
+        {SERVICES.map((plan) => (
+          <Card
+            key={plan.id}
+            className="p-6 max-w-sm bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/40 transition-all hover:scale-105 rounded-xl"
+          >
+            <div className="flex flex-col h-full">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
+                <div className="mt-2 text-4xl font-bold text-white">
+                  {plan.price}
                 </div>
-                <ul className="space-y-3 mb-8 flex-grow">
-                  {plan.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-center space-x-3 text-white"
-                    >
-                      <Check className="h-5 w-5 text-green-400" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  onClick={() => setSelectedPlan(plan.id)}
-                  className="text-lg py-2 px-4 transition-all hover:scale-105 rounded-2xl text-purple-600"
-                  variant="secondary"
-                >
-                  {plan.id === "pro" && <Bolt className="mr-2 h-5 w-5" />}
-                  {plan.id === "enterprise" && (
-                    <Sparkles className="mr-2 h-5 w-5" />
-                  )}
-                  Select Plan
-                </Button>
+                <p className="text-sm text-white/70 mt-2">per month</p>
               </div>
-            </Card>
-          ))}
-        </div>
+              <ul className="space-y-3 mb-8 flex-grow">
+                {plan.features.map((feature) => (
+                  <li
+                    key={feature.title}
+                    className="flex items-center space-x-3 text-white"
+                  >
+                    <Check className="h-5 w-5 text-green-400" />
+                    <span>{feature.description}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                onClick={() => setSelectedPlan(plan.name)}
+                className="text-lg py-2 px-4 transition-all hover:scale-105 rounded-2xl text-purple-600"
+                variant="secondary"
+              >
+                {plan.name === "Professional" && <Bolt className="mr-2 h-5 w-5" />}
+                {plan.name === "Enterprise" && (
+                  <Sparkles className="mr-2 h-5 w-5" />
+                )}
+                Select Plan
+              </Button>
+            </div>
+          </Card>
+        ))}
       </div>
+    </div>
     </div>
   );
 }

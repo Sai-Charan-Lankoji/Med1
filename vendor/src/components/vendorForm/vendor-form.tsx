@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Container, Heading, Toaster, toast } from "@medusajs/ui";
@@ -8,28 +8,109 @@ import { Building2, MapPin } from "lucide-react";
 import { VendorFormSchema, VendorFormData, BusinessTypes } from "./types";
 import { FormField } from "./FormField";
 import { AddressSection } from "./AddressSection";
+import { PasswordField } from "./passwordfield";
+import { PhoneInput } from "./phoneinput";
+import { CountryCode } from "@/app/@types/phonevalidation";
+import { Label } from "../ui/label";
+import { Form } from "../ui/form";
+import { Input } from "../ui/input";
 
 const VendorForm = ({ plan }: { plan: string }) => {
+  const [isPhoneValid, setIsPhoneValid] = useState(false);
+  const router = useRouter();
+  const [sameAsVendorAddress, setSameAsVendorAddress] = useState(false);
+
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [countryCode, setCountryCode] = useState("");
+
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
+    watch,
+    setValue,
+    trigger,
   } = useForm<VendorFormData>({
     resolver: zodResolver(VendorFormSchema),
     defaultValues: {
-      plan: plan, // Set the default value for the plan
+      plan: plan,
+      country_code: undefined,
+      contact_phone_number: "",
     },
-  });
-  console.log("VENDOR SELECTED PLAN: ", plan);
-  const router = useRouter();
+    mode: "onChange"  
+  })
+  const password = watch("password")
+
+  const handlePhoneChange = async (value: string, isValid: boolean) => {
+    setPhoneNumber(value);
+
+    // Split the value to get phone number without country code
+    const phoneNumberOnly = value.split(" ").slice(1).join(" ");
+
+    setValue("contact_phone_number", phoneNumberOnly, {
+      shouldValidate: true,
+    });
+
+    // Trigger validation
+    await trigger(["contact_phone_number"]);
+  };
+
+  const handleCountryChange = async (value: string) => {
+    setCountryCode(value);
+    setPhoneNumber(""); // Reset phone number when country changes
+
+    setValue("country_code", value as CountryCode, {
+      shouldValidate: true,
+    });
+    setValue("contact_phone_number", "", {
+      shouldValidate: true,
+    });
+
+    // Trigger validation
+    await trigger(["country_code", "contact_phone_number"]);
+  };
 
   const onSubmit = async (data: VendorFormData) => {
+    const requiredFields = [
+      "company_name",
+      "password",
+      "confirmPassword",
+      "contact_name",
+      "contact_email",
+      "contact_phone_number",
+      "business_type",
+      "country_code",
+      "vendorAddressData.address_1",
+      "vendorAddressData.city",
+      "vendorAddressData.postal_code",
+      "vendorAddressData.province",
+      "vendorAddressData.phone",
+      "registrationAddressData.address_1",
+      "registrationAddressData.city",
+      "registrationAddressData.postal_code",
+      "registrationAddressData.province",
+      "registrationAddressData.phone",
+    ];
+
+    const missingFields = requiredFields.filter((field) => {
+      const value = field.split(".").reduce((obj, key) => obj?.[key], data);
+      return !value;
+    });
+
+    if (missingFields.length > 0) {
+      toast.error("Error", {
+        description: "Please fill in all required fields",
+        duration: 3000,
+      });
+      return;
+    }
+
     try {
       const response = await fetch("http://localhost:9000/vendor/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(data), // The plan is now included in the data object
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) {
@@ -49,6 +130,14 @@ const VendorForm = ({ plan }: { plan: string }) => {
     }
   };
 
+  const handleSameAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSameAsVendorAddress(e.target.checked);
+    if (e.target.checked) {
+      const vendorAddress = watch("vendorAddressData");
+      setValue("registrationAddressData", vendorAddress);
+    }
+  };
+
   return (
     <div className="min-h-screen gradient-bg py-8 px-4 sm:px-6 lg:px-8">
       <Container className="max-w-6xl mx-auto">
@@ -59,18 +148,15 @@ const VendorForm = ({ plan }: { plan: string }) => {
             </Heading>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               You selected the{" "}
-              <span className="font-medium text-primary animate-pulse">
-                {plan}
-              </span>{" "}
-              plan.
+              <span className="font-medium text-primary ">{plan}</span> plan.
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-            <Card className="card-animated">
+            <Card className="card">
               <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
                 <div className="flex items-center space-x-3">
-                  <Building2 className="h-5 w-5 text-primary animate-bounce" />
+                  <Building2 className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-semibold">Vendor Details</h3>
                 </div>
               </CardHeader>
@@ -79,13 +165,14 @@ const VendorForm = ({ plan }: { plan: string }) => {
                   <FormField
                     label="Company Name"
                     id="company_name"
+                    type="text"
                     placeholder="Enter company name"
                     required
                     register={register}
                     name="company_name"
                     error={errors.company_name?.message}
                   />
-                  <FormField
+                  <PasswordField
                     label="Password"
                     id="password"
                     placeholder="Enter password"
@@ -94,9 +181,21 @@ const VendorForm = ({ plan }: { plan: string }) => {
                     name="password"
                     error={errors.password?.message}
                   />
+                  <PasswordField
+                    label="Confirm Password"
+                    id="confirmPassword"
+                    placeholder="Confirm password"
+                    required
+                    register={register}
+                    name="confirmPassword"
+                    error={errors.confirmPassword?.message}
+                    isConfirm={true}
+                    mainPassword={password}
+                  />
                   <FormField
                     label="Contact Name"
                     id="contact_name"
+                    type="text"
                     placeholder="Enter contact name"
                     required
                     register={register}
@@ -106,24 +205,24 @@ const VendorForm = ({ plan }: { plan: string }) => {
                   <FormField
                     label="Contact Email"
                     id="contact_email"
+                    type="email"
                     placeholder="Enter contact email"
                     required
                     register={register}
                     name="contact_email"
                     error={errors.contact_email?.message}
                   />
-                  <FormField
-                    label="Contact Phone Number"
-                    id="contact_phone_number"
-                    placeholder="Enter phone number"
-                    required
-                    register={register}
-                    name="contact_phone_number"
+                  <PhoneInput
+                    value={phoneNumber.split(" ").slice(1).join(" ")} // Remove country code from display
+                    countryCode={countryCode}
+                    onChange={handlePhoneChange}
+                    onCountryChange={handleCountryChange}
                     error={errors.contact_phone_number?.message}
                   />
                   <FormField
                     label="Registered Number"
                     id="registered_number"
+                    type="text"
                     placeholder="Enter registered number (optional)"
                     register={register}
                     name="registered_number"
@@ -132,6 +231,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
                   <FormField
                     label="Tax Number"
                     id="tax_number"
+                    type="text"
                     placeholder="Enter tax number (optional)"
                     register={register}
                     name="tax_number"
@@ -140,6 +240,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
                   <FormField
                     label="Plan"
                     id="plan"
+                    type="text"
                     placeholder={plan}
                     register={register}
                     name="plan"
@@ -168,10 +269,10 @@ const VendorForm = ({ plan }: { plan: string }) => {
               </CardContent>
             </Card>
 
-            <Card className="card-animated">
+            <Card className="card">
               <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
                 <div className="flex items-center space-x-3">
-                  <MapPin className="h-5 w-5 text-primary animate-bounce" />
+                  <MapPin className="h-5 w-5 text-primary" />
                   <h3 className="text-lg font-semibold">Address Information</h3>
                 </div>
               </CardHeader>
@@ -190,6 +291,17 @@ const VendorForm = ({ plan }: { plan: string }) => {
 
                   {/* Registration Address */}
                   <div className="pl-4">
+                    <div className="mb-4">
+                      <Label className="flex items-center space-x-2">
+                        <Input
+                          type="checkbox"
+                          checked={sameAsVendorAddress}
+                          onChange={handleSameAddressChange}
+                          className="form-checkbox h-5 w-5 text-primary"
+                        />
+                        <span className="text-md font-medium">Same as Vendor Address</span>
+                      </Label>
+                    </div>
                     <AddressSection
                       title="Registration Address"
                       prefix="registration_address"
@@ -201,6 +313,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
                 </div>
               </CardContent>
             </Card>
+
 
             <div className="flex justify-end space-x-4 pt-4">
               <Button

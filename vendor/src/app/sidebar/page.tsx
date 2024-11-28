@@ -18,23 +18,19 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-
+  const [ companyName, setCompanyName ] = useState("")
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
       setIsCollapsed(window.innerWidth < 1024);
     };
-
+    setCompanyName(sessionStorage.getItem('company_name'))
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    router.push('/login');
-  };
-
+  
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
@@ -62,7 +58,7 @@ export default function Sidebar() {
         <div className="flex items-center space-x-3">
           {!isCollapsed && (
             <span className="text-xl font-bold text-blue-700">
-              Vendor
+              {companyName}
             </span>
           )}
         </div>
@@ -81,55 +77,7 @@ export default function Sidebar() {
       </div>
 
       {/* Profile Section */}
-      <div className={cn(
-        "p-4 flex items-center",
-        isCollapsed ? "justify-center" : "justify-start"
-      )}>
-        <DropdownMenu>
-          <DropdownMenu.Trigger asChild>
-            <Button
-              variant="transparent"
-              className={cn(
-                "relative flex items-center space-x-3 hover:bg-white/50 transition-colors",
-                isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start p-2"
-              )}
-            >
-              <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium">
-                  {contactName?.slice(0, 1).toUpperCase()}
-                </span>
-              </div>
-              {!isCollapsed && (
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium text-gray-900">
-                    {contactName}
-                  </span>
-                  <span className="text-xs text-gray-500 truncate max-w-[150px]">
-                    {email}
-                  </span>
-                </div>
-              )}
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content align="start" className="w-56">
-            <DropdownMenu.Item asChild>
-              <Link href="/vendor/settings" className="flex items-center">
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
-              </Link>
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item
-              className="text-red-600 focus:text-red-600"
-              onClick={handleLogout}
-              disabled={loading}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              <span>{loading ? 'Logging out...' : 'Logout'}</span>
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu>
-      </div>
+      
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">

@@ -71,7 +71,7 @@ export default function Component() {
             transition={{ delay: 0.3 }}
             className="text-3xl font-bold text-center text-white mb-6"
           >
-            Log in to Vendor
+            Login
           </motion.h2>
           <form onSubmit={handleSubmit} method="post" className="space-y-6">
             <motion.div
