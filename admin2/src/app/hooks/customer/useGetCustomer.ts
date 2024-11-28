@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 const fetchCustomer = async (id: string) => {
 
-  const url = `${baseUrl}/vendor/customers/${id}`;
+  const url = `${baseUrl}/ven${id}`;
 
   try {
     const response = await fetch(url, {

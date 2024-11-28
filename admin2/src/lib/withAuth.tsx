@@ -13,8 +13,8 @@ const withAuth = <P extends object>(
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      const vendorId = sessionStorage.getItem("vendor_id");
-       if (!vendorId) {
+      const AdminId = sessionStorage.getItem("admin_id");
+       if (!AdminId) {
         router.replace("/");
       } 
       else {

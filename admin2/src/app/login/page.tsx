@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import { EyeMini, EyeSlashMini, Loader } from "@medusajs/icons"
 import medusaIcon from "../../../public/medusaIcon.jpeg"
 import Image from "next/image"
-import { useVendorLogin } from "../hooks/auth/useVendorLogin"
+import { useAdminLogin } from "../hooks/auth/useAdminLogin"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import Link from "next/link"
@@ -13,7 +13,7 @@ export default function Component() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const { login, loading, error } = useVendorLogin()
+  const { login, loading, error } = useAdminLogin()
   const router = useRouter()
 
   const togglePasswordVisibility = () => {
