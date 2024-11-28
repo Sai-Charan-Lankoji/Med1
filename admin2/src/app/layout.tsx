@@ -19,12 +19,12 @@ export default function  RootLayout({
   children: React.ReactNode;
 }>): React.ReactElement {
   const pathname = usePathname();
-  const isVendorpath = pathname.startsWith('/vendor') ;
+  const isVendorpath = pathname.startsWith('/admin') ;
   const showHeader = isVendorpath;
   const showSidebar = isVendorpath;
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-gray-100`}>
+      <body className={`${inter.className} bg-gradient-to-br from-gray-400 via-gray-200 to-gray-600`}>
         <MedusaProvider
           queryClientProviderProps={{ client: queryClient }}
           baseUrl="http://localhost:9000"

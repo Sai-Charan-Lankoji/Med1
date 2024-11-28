@@ -27,7 +27,7 @@ export const menuItems = [
   {
     title: "Billing Service",
     icon: Settings,
-    href: "/admin/billingservice",
+    href: "/admin/billingservices",
   }
 ];
 
