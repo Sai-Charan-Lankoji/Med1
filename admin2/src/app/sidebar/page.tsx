@@ -1,133 +1,149 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, usePathname } from "next/navigation";
-import { useAuth } from "../context/AuthContext";
-import { useVendorLogout } from "../hooks/auth/useVendorLogout";
-import Link from 'next/link';
-import { Settings, LogOut, ChevronDown, Menu } from 'lucide-react';
-import { DropdownMenu, IconButton } from "@medusajs/ui"
-import { Button } from "@medusajs/ui";
-import { cn } from '@/lib/utils';
-import MenuItems from '../utils/menuItems';
+import React, { useState, useEffect } from 'react'
+import { useRouter, usePathname } from "next/navigation"
+import { useAuth } from "../context/AuthContext"
+import { useVendorLogout } from "../hooks/auth/useVendorLogout"
+import Link from 'next/link'
+import { Settings, LogOut, ChevronDown, Menu } from 'lucide-react'
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { cn } from '@/lib/utils'
+import MenuItems from '../utils/menuItems'
 
 export default function Sidebar() {
-  const { email, first_name } = useAuth() ?? { email: '' };
-  const { logout, loading } = useVendorLogout();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [isMobile, setIsMobile] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { email, first_name, role } = useAuth() ?? { email: '', first_name: '', role: '' }
+  const { logout, loading } = useVendorLogout()
+  const router = useRouter()
+  const pathname = usePathname()
+  const [isMobile, setIsMobile] = useState(false)
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      setIsCollapsed(window.innerWidth < 1024);
-    };
+      setIsMobile(window.innerWidth < 768)
+      setIsCollapsed(window.innerWidth < 1024)
+    }
 
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   const handleLogout = async () => {
-    await logout();
-    router.push('/login');
-  };
+    await logout()
+    router.push('/login')
+  }
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
-  };
+    setIsCollapsed(!isCollapsed)
+  }
 
   return (
     <aside className={cn(
-      "relative h-screen bg-gradient-to-b from-blue-50 via-purple-50 to-blue-50 transition-all duration-300 ease-in-out",
+      "relative h-screen bg-background transition-all duration-300 ease-in-out",
       isCollapsed ? "w-20" : "w-64",
       "flex flex-col",
-      "border-r border-gray-300",
-      "before:content-[''] before:absolute before:top-0 before:right-0 before:bottom-0 before:w-[1px]",
-      "before:bg-gradient-to-b before:from-blue-100 before:via-purple-100 before:to-blue-100"
+      "border-r shadow-sm",
     )}>
       {/* Mobile Toggle */}
       <Button
-        variant="transparent"
-        className="absolute right-[-40px] top-4 md:hidden"
+        variant="ghost"
+        size="icon"
+        className="absolute -right-12 top-4 md:hidden"
         onClick={toggleSidebar}
       >
         <Menu className="h-5 w-5" />
+        <span className="sr-only">Toggle Sidebar</span>
       </Button>
 
       {/* Header */}
-      <div className="p-4 flex items-center justify-between">
+      <div className="p-4 flex items-center justify-between border-b bg-card">
         <div className="flex items-center space-x-3">
           {!isCollapsed && (
-            <span className="text-xl font-bold text-blue-700">
+            <span className="text-xl font-bold">
               Admin
             </span>
           )}
         </div>
         {!isMobile && (
           <Button
-            variant="transparent"
-            className="hidden md:flex text-blue-600 hover:text-purple-600 transition-colors"
+            variant="ghost"
+            size="icon"
+            className="hidden md:flex text-muted-foreground hover:text-foreground"
             onClick={toggleSidebar}
           >
             <ChevronDown className={cn(
               "h-4 w-4 transition-transform",
               isCollapsed ? "rotate-90" : "-rotate-90"
             )} />
+            <span className="sr-only">Collapse Sidebar</span>
           </Button>
         )}
       </div>
 
       {/* Profile Section */}
-      <div className={cn(
-        "p-4 flex items-center",
-        isCollapsed ? "justify-center" : "justify-start"
-      )}>
+      <div className="p-4 border-b bg-card">
         <DropdownMenu>
-          <DropdownMenu.Trigger asChild>
+          <DropdownMenuTrigger asChild>
             <Button
-              variant="transparent"
+              variant="ghost"
               className={cn(
-                "relative flex items-center space-x-3 hover:bg-white/50 transition-colors",
-                isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start p-2"
+                "w-full relative flex items-center space-x-3 hover:bg-accent transition-colors rounded-lg",
+                isCollapsed ? "justify-center p-0" : "justify-start p-2"
               )}
             >
-              <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-medium">
-                  {first_name?.slice(0, 1).toUpperCase()}
-                </span>
-              </div>
-              {!isCollapsed && (
-                <div className="flex flex-col items-start">
-                  <span className="text-sm font-medium text-gray-900">
-                    {first_name}
-                  </span>
-                  <span className="text-xs text-gray-500 truncate max-w-[150px]">
-                    {email}
-                  </span>
+              <div className="flex items-center gap-3">
+                <div className="relative flex-shrink-0">
+                  <div className="h-9 w-9 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center ring-2 ring-background">
+                    <span className="text-sm font-semibold text-primary-foreground">
+                      {first_name?.slice(0, 1).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-background bg-green-500" />
                 </div>
-              )}
+                
+                {!isCollapsed && (
+                  <div className="flex flex-col min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium truncate">
+                        {first_name}
+                      </span>
+                      <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary hover:bg-primary/20">
+                        {role}
+                      </span>
+                    </div>
+                    <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                      {email}
+                    </span>
+                  </div>
+                )}
+              </div>
             </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content align="start" className="w-56">
-            <DropdownMenu.Item asChild>
-              <Link href="/vendor/settings" className="flex items-center">
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem asChild>
+              <Link href="/vendor/settings" className="flex items-center cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </Link>
-            </DropdownMenu.Item>
-            <DropdownMenu.Separator />
-            <DropdownMenu.Item
-              className="text-red-600 focus:text-red-600"
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
               onClick={handleLogout}
               disabled={loading}
             >
               <LogOut className="mr-2 h-4 w-4" />
               <span>{loading ? 'Logging out...' : 'Logout'}</span>
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
         </DropdownMenu>
       </div>
 
@@ -138,7 +154,7 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className={cn(
-        "p-4 text-xs text-gray-500",
+        "p-4 text-xs text-muted-foreground border-t bg-card",
         isCollapsed ? "text-center" : "text-left"
       )}>
         {!isCollapsed && (
@@ -146,6 +162,6 @@ export default function Sidebar() {
         )}
       </div>
     </aside>
-  );
+  )
 }
 

@@ -22,11 +22,7 @@ export const useVendorLogout = () => {
       });
 
       if (response.ok) {
-        sessionStorage.removeItem("vendor_id")
-        sessionStorage.removeItem("contactName")
-        sessionStorage.removeItem("email")
-        sessionStorage.removeItem("business_type")
-        sessionStorage.removeItem("company_name")
+        sessionStorage.clear();
 
         router.push('/');
       } else {

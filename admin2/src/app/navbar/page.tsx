@@ -7,7 +7,7 @@ import { Button, Drawer, Input } from "@medusajs/ui";
 import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
-  // const { contactName } = useAuth() || { contactName: "Admin" };
+  // const { contactName } = useAuth() || { contactName: "" };
   // const router = useRouter();
 
   return (

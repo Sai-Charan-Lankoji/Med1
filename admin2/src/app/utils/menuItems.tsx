@@ -1,17 +1,17 @@
-"use client";
-
 import { Store, CreditCard, Settings } from 'lucide-react'
-
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Tooltip } from "@medusajs/ui";
-import { User } from '@medusajs/icons';
+import Link from "next/link"
+import { cn } from "@/lib/utils"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface MenuItemsProps {
-  collapsed: boolean;
-  currentPath: string;
+  collapsed: boolean
+  currentPath: string
 }
-
 
 export const menuItems = [
   {
@@ -29,14 +29,13 @@ export const menuItems = [
     icon: Settings,
     href: "/admin/billingservices",
   }
-];
+]
 
 export default function MenuItems({ collapsed, currentPath }: MenuItemsProps) {
   return (
     <div className="space-y-1 px-3">
       {menuItems.map((item) => {
-        const isActive = currentPath === item.href;
-        
+        const isActive = currentPath === item.href
         const MenuItem = (
           <Link
             key={item.href}
@@ -45,32 +44,37 @@ export default function MenuItems({ collapsed, currentPath }: MenuItemsProps) {
               "flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ease-in-out",
               collapsed ? "justify-center" : "justify-start",
               isActive
-                ? "bg-gradient-to-r from-blue-200 to-purple-200 text-blue-600 shadow-sm"
-                : "text-gray-600 hover:bg-gray-100/80",
+                ? "bg-accent text-accent-foreground shadow-sm dark:bg-accent/50"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
             )}
           >
             <item.icon className={cn(
               "h-5 w-5 transition-colors",
-              isActive ? "text-blue-600" : "text-gray-500",
+              isActive ? "text-foreground" : "text-muted-foreground",
               collapsed ? "mx-0" : "mr-3"
             )} />
             {!collapsed && (
-              <span className={cn(
-                isActive ? "text-blue-600" : "text-gray-700"
-              )}>
+              <span>
                 {item.title}
               </span>
             )}
           </Link>
-        );
+        )
 
         return collapsed ? (
-          <Tooltip key={item.href} content={item.title}>
-            {MenuItem}
-          </Tooltip>
-        ) : MenuItem;
+          <TooltipProvider key={item.href} delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                {MenuItem}
+              </TooltipTrigger>
+              <TooltipContent side="right" className="font-medium">
+                {item.title}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : MenuItem
       })}
     </div>
-  );
+  )
 }
 
