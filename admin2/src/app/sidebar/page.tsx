@@ -96,13 +96,13 @@ export default function Sidebar() {
             >
               <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                 <span className="text-white font-medium">
-                  {contactName?.slice(0, 1).toUpperCase()}
+                  {first_name?.slice(0, 1).toUpperCase()}
                 </span>
               </div>
               {!isCollapsed && (
                 <div className="flex flex-col items-start">
                   <span className="text-sm font-medium text-gray-900">
-                    {contactName}
+                    {first_name}
                   </span>
                   <span className="text-xs text-gray-500 truncate max-w-[150px]">
                     {email}
