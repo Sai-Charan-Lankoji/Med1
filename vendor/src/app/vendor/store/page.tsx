@@ -41,8 +41,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
 import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
+import { useToast } from "@/app/@types/use-toast"
 
 const Store = () => {
   const router = useRouter()
