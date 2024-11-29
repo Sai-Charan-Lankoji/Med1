@@ -1,95 +1,41 @@
-import { TransactionBaseService } from "@medusajs/medusa";
+import { EntityManager, Repository } from "typeorm";
 import { Plan } from "../models/plan";
-import PlanRepository from "../repositories/plan";
-import { EntityManager } from "typeorm";
+import { MedusaError } from "@medusajs/utils";
+import { TransactionBaseService } from "@medusajs/medusa";
+import { FindConfig } from "@medusajs/medusa/dist/types/common";
+import PlanRepository, { CreatePlanData } from "../repositories/plan";
+import { Lifetime } from "awilix"
+import { generateEntityId } from "@medusajs/medusa/dist/utils";
 
 class PlanService extends TransactionBaseService {
-    private readonly planRepository_: typeof PlanRepository;
+  static LIFE_TIME = Lifetime.SCOPED;
+  protected readonly manager_: EntityManager;
+  protected readonly PlanRepository_: Repository<Plan>;
 
-    public runAtomicPhase<T>(
-        callback: (manager: EntityManager) => Promise<T>
-      ): Promise<T> {
-        return this.atomicPhase_(callback);
-      }
-    
-      constructor(container) {
-        super(container);
-        this.manager_ = container.manager;
-        this.planRepository_ = container.planRepository;
-      }
-    
+  constructor(container) {
+    super(container);
 
-    async create(data: Partial<Plan>): Promise<Plan> {
-        return await this.atomicPhase_(async (manager) => {
-            const planRepository = manager.withRepository(this.planRepository_);
-            
-            const plan = planRepository.create({
-                name: data.name,
-                description: data.description || null,
-                price: data.price,
-                features: data.features || [],
-                isActive: data.isActive ?? true,
-            });
+    this.manager_ = container.manager;
+    this.PlanRepository_ = container.manager.getRepository(PlanRepository);
+  }
 
-            return await planRepository.save(plan);
-        });
-    }
+  async create(data: CreatePlanData): Promise<Plan> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const PlanRepo = transactionManager.getRepository(Plan);
+      const plan = PlanRepo.create(data);
+      plan.id = generateEntityId(plan.id, "plan");
+      const created = await PlanRepo.save(plan);
+      return created;
+    });
+  }
 
-    async update(id: string, data: Partial<Plan>): Promise<Plan> {
-        return await this.atomicPhase_(async (manager) => {
-            const planRepository = manager.withRepository(this.planRepository_);
-            
-            const plan = await planRepository.findOne({ where: { id } });
-            
-            if (!plan) {
-                throw new Error(`Plan with id ${id} not found`);
-            }
+  async list(config?: FindConfig<Plan>): Promise<Plan[]> {
+    const planRepo = this.manager_.getRepository(Plan);
+    return await planRepo.find(config);
+  }
 
-            Object.assign(plan, data);
-            
-            return await planRepository.save(plan);
-        });
-    }
-
-    async list(
-        filters: { 
-            isActive?: boolean, 
-            duration?: string 
-        } = {}, 
-        config: { 
-            skip?: number, 
-            take?: number 
-        } = {}
-    ): Promise<Plan[]> {
-        return await this.planRepository_.find({
-            where: {
-                ...(filters.isActive !== undefined && { isActive: filters.isActive }),
-                ...(filters.duration && { duration: filters.duration }),
-            },
-            skip: config.skip,
-            take: config.take,
-        });
-    }
-
-    async retrieve(id: string): Promise<Plan> {
-        const plan = await this.planRepository_.findOne({ 
-            where: { id } 
-        });
-
-        if (!plan) {
-            throw new Error(`Plan with id ${id} not found`);
-        }
-
-        return plan;
-    }
-
-    async delete(id: string): Promise<void> {
-        await this.atomicPhase_(async (manager) => {
-            const planRepository = manager.withRepository(this.planRepository_);
-            
-            await planRepository.softDelete(id);
-        });
-    }
+  // Add other methods as needed (e.g., retrieve, update, delete)
 }
 
 export default PlanService;
+

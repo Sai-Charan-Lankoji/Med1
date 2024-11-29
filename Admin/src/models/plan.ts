@@ -20,7 +20,5 @@ export class Plan extends SoftDeletableEntity {
     @Column({ type: "boolean", default: true })
     isActive: boolean; // Status to determine if the plan is active
 
-    @Column({ type: "varchar", nullable: true })
-    duration: string; // Duration of the plan (e.g., Monthly, Yearly)
 
 }

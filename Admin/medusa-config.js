@@ -30,8 +30,8 @@ const generatePortString = (start, end) => {
   }
   return ports.join(',');
 };
-
-const ADMIN_CORS = process.env.ADMIN_CORS || "http://localhost:7001";
+ 
+const ADMIN_CORS = process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:7001";
 const STORE_CORS = process.env.STORE_CORS || generatePortString(8000, 80100);
 const VENDOR_CORS = process.env.VENDOR_CORS || "http://localhost:8009,http://localhost:7000"; 
 // const tEST_CORS = process.env.tEST_CORS ||  "http://localhost:7000"
