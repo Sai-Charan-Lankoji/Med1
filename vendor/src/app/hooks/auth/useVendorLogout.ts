@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/app/context/AuthContext';
+import { set } from 'lodash';
 
 export const useVendorLogout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { setAuthEmail, setContactName, } = useAuth();
   const router = useRouter();
 
   const logout = async () => {
@@ -22,11 +25,10 @@ export const useVendorLogout = () => {
       });
 
       if (response.ok) {
-        sessionStorage.removeItem("vendor_id")
-        sessionStorage.removeItem("contactName")
-        sessionStorage.removeItem("email")
-        sessionStorage.removeItem("business_type")
-        sessionStorage.removeItem("company_name")
+       sessionStorage.clear();
+       setAuthEmail(null);
+        setContactName(null);
+
 
         router.push('/');
       } else {
