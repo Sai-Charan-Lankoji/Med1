@@ -68,7 +68,7 @@ export default function Sidebar() {
         <div className="flex items-center space-x-3">
           {!isCollapsed && (
             <span className="text-xl font-bold">
-              Admin
+               Dashboard
             </span>
           )}
         </div>

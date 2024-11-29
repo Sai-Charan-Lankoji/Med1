@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Edit, Trash, Check, X } from 'lucide-react'
+import { Edit, Trash, Check, X, Circle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -18,9 +18,13 @@ import {
 interface Plan {
   id: string
   name: string
-  price: number
+  price: string
   features: string[]
-  discount: number
+  isActive: boolean
+  description?: string
+  created_at?: string
+  updated_at?: string
+  deleted_at?: string | null
 }
 
 interface PlanCardProps {
@@ -39,19 +43,31 @@ export function PlanCard({ plan, onUpdate, onDelete }: PlanCardProps) {
     setIsEditing(false)
   }
 
-  const finalPrice = plan.price * (1 - plan.discount / 100)
+  // Convert price to number, handling potential string input
+  const priceValue = parseFloat(plan.price)
+  const isValidPrice = !isNaN(priceValue)
 
   return (
     <>
       <Card className="flex flex-col h-full transition-all hover:shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
-            <span className="text-xl font-semibold">{plan.name}</span>
-            {plan.discount > 0 && (
-              <span className="text-sm font-normal px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">
-                {plan.discount}% OFF
-              </span>
-            )}
+            <div className="flex items-center space-x-2">
+              <span className="text-xl font-semibold">{plan.name}</span>
+              <div className="flex items-center">
+                {plan.isActive ? (
+                  <div className="flex items-center text-green-500">
+                    <Circle className="h-3 w-3 mr-1 fill-current" />
+                    <span className="text-xs">Active</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center text-red-500">
+                    <Circle className="h-3 w-3 mr-1 fill-current" />
+                    <span className="text-xs">Inactive</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="flex-grow">
@@ -69,23 +85,22 @@ export function PlanCard({ plan, onUpdate, onDelete }: PlanCardProps) {
                 <Label htmlFor="price">Price ($)</Label>
                 <Input
                   id="price"
-                  type="number"
                   value={editedPlan.price}
-                  onChange={(e) => setEditedPlan({ ...editedPlan, price: Math.max(0, parseFloat(e.target.value)) })}
-                  step="0.01"
-                  min="0"
+                  onChange={(e) => setEditedPlan({ ...editedPlan, price: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="discount">Discount (%)</Label>
-                <Input
-                  id="discount"
-                  type="number"
-                  value={editedPlan.discount}
-                  onChange={(e) => setEditedPlan({ ...editedPlan, discount: Math.min(100, Math.max(0, parseFloat(e.target.value))) })}
-                  min="0"
-                  max="100"
-                />
+                <Label htmlFor="active">Status</Label>
+                <div className="flex items-center space-x-2">
+                  <Input
+                    id="active"
+                    type="checkbox"
+                    className="h-4 w-4"
+                    checked={editedPlan.isActive}
+                    onChange={(e) => setEditedPlan({ ...editedPlan, isActive: e.target.checked })}
+                  />
+                  <Label htmlFor="active">{editedPlan.isActive ? 'Active' : 'Inactive'}</Label>
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="features">Features (comma-separated)</Label>
@@ -101,13 +116,8 @@ export function PlanCard({ plan, onUpdate, onDelete }: PlanCardProps) {
               <div className="flex items-center justify-between border-b pb-2">
                 <span className="text-muted-foreground">Price</span>
                 <div className="text-right">
-                  {plan.discount > 0 && (
-                    <span className="text-sm line-through text-muted-foreground mr-2">
-                      ${plan.price.toFixed(2)}
-                    </span>
-                  )}
                   <span className="font-medium text-lg">
-                    ${finalPrice.toFixed(2)}
+                    {isValidPrice ? `$${priceValue.toFixed(2)}` : 'N/A'}
                   </span>
                 </div>
               </div>
@@ -175,4 +185,3 @@ export function PlanCard({ plan, onUpdate, onDelete }: PlanCardProps) {
     </>
   )
 }
-

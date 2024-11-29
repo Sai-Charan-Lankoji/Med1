@@ -218,7 +218,7 @@ function BillingServicesPage() {
                     <TableCell className="font-medium">{record.vendor_name}</TableCell>
                     <TableCell>${record.current_bill.toFixed(2)}</TableCell>
                     <TableCell>${record.paid_amount.toFixed(2)}</TableCell>
-                    <TableCell>{new Date(record.due_date).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(record.due_date).toLocaleDateString('en-GB')}</TableCell>
                     <TableCell>
                       <StatusBadge status={record.status} />
                     </TableCell>

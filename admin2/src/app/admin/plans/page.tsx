@@ -18,57 +18,37 @@ import { useGetPlans } from "../../hooks/plan/useGetPlans"
 interface Plan {
   id: string
   name: string
-  price: number
+  price: string
   features: string[]
   discount: number
+  isActive: boolean
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+  description?: string
 }
 
-const initialPlans: Plan[] = [
-  {
-    id: "1",
-    name: "Basic",
-    price: 9.99,
-    features: ["1 Store", "Basic Support", "Basic Analytics"],
-    discount: 0,
-  },
-  {
-    id: "2",
-    name: "Pro",
-    price: 19.99,
-    features: ["5 Stores", "Priority Support", "Advanced Analytics", "Custom Reports"],
-    discount: 10,
-  },
-  {
-    id: "3",
-    name: "Enterprise",
-    price: 49.99,
-    features: ["Unlimited Stores", "24/7 Support", "Advanced Analytics", "Custom Reports", "API Access", "Custom Integration"],
-    discount: 20,
-  },
-]
-
 export default function PlansPage() {
-  const [plans, setPlans] = useState<Plan[]>(initialPlans)
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const { data: Plans } = useGetPlans()
   console.log("PLANS ", Plans) 
+
   const filteredPlans = Plans?.filter((plan) =>
     plan.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleAddPlan = (newPlan: Omit<Plan, "id">) => {
-    const planWithId = { ...newPlan, id: Date.now().toString() }
-    setPlans([...plans, planWithId])
+  const handleAddPlan = (newPlan: Omit<Plan, "id" | "created_at" | "updated_at">) => {
+    // logic
     setIsAddDialogOpen(false)
   }
 
   const handleUpdatePlan = (updatedPlan: Plan) => {
-    setPlans(plans.map((plan) => (plan.id === updatedPlan.id ? updatedPlan : plan)))
+    // logic
   }
 
   const handleDeletePlan = (planId: string) => {
-    setPlans(plans.filter((plan) => plan.id !== planId))
+    // logic
   }
 
   return (
@@ -101,11 +81,11 @@ export default function PlansPage() {
                 <PackageSearch className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No plans found</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {plans.length === 0
+                  {!Plans || Plans.length === 0
                     ? "Start by adding a new subscription plan."
                     : "Try adjusting your search term."}
                 </p>
-                {plans.length === 0 && (
+                {(!Plans || Plans.length === 0) && (
                   <Button
                     onClick={() => setIsAddDialogOpen(true)}
                     variant="outline"
@@ -138,4 +118,3 @@ export default function PlansPage() {
     </div>
   )
 }
-

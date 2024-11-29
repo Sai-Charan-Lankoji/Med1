@@ -11,7 +11,7 @@ const Navbar = () => {
   // const router = useRouter();
 
   return (
-    <nav className="flex  justify-between items-center p-4 bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 text-black h-16  shadow-md border-b border-gray-300">
+    <nav className="flex  justify-between items-center p-4 bg-slate-100 text-black h-16  shadow-md border-b border-gray-300">
       <div className="flex items-center space-x-4">
          
       </div>

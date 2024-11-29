@@ -128,13 +128,20 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
               <Label htmlFor="name" className="text-sm font-medium">
                 Plan Name
               </Label>
-              <Input
+              <select
                 id="name"
                 value={newPlan.name}
                 onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-                className={cn(errors.name && "border-destructive")}
-                placeholder="Enter plan name"
-              />
+                className={cn(
+                  "w-full px-3 py-2 border rounded-md",
+                  errors.name && "border-destructive"
+                )}
+              >
+                <option value="">Select a Plan</option>
+                <option value="Basic">Basic</option>
+                <option value="Pro">Pro</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
               {errors.name && (
                 <p className="text-sm text-destructive">{errors.name}</p>
               )}
@@ -260,10 +267,7 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
             <Button 
               type="submit" 
             >
-             
-                  <Check className="mr-2 h-4 w-4" /> Add Plan
-              
-    
+              <Check className="mr-2 h-4 w-4" /> Add Plan
             </Button>
           </DialogFooter>
         </form>
@@ -271,4 +275,3 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
     </Dialog>
   )
 }
-
