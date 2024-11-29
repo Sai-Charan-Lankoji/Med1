@@ -64,7 +64,7 @@ function VendorsPage() {
         <div className="rounded-full bg-destructive/10 p-3">
           <Building2 className="h-6 w-6 text-destructive" />
         </div>
-        <p className="mt-4 text-sm text-destructive">Error fetching vendors: {error.message}</p>
+        <p className="mt-4 text-sm text-destructive">Error fetching vendors:</p>
       </div>
     )
   }

@@ -48,7 +48,8 @@ export const GET = async (
       res.status(500).json({ error: "Plan service could not be resolved." });
       return;
     }
-    res.status(501).json({ message: "GET method not implemented yet" });
+    const allPlans = await planService.list();
+    res.status(201).json(allPlans);
   } catch (error) {
     console.error("Error in GET /admin/plan:", error);
     res

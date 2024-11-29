@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Plus, Search } from 'lucide-react'
+import { PackageSearch, Plus, Search } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card"
 import { AddPlanDialog } from "./add-plan-model"
 import { PlanCard } from "./plan-card"
+import { useGetPlans } from "../../hooks/plan/useGetPlans"
 
 interface Plan {
   id: string
@@ -50,8 +51,9 @@ export default function PlansPage() {
   const [plans, setPlans] = useState<Plan[]>(initialPlans)
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-
-  const filteredPlans = plans.filter((plan) =>
+  const { data: Plans } = useGetPlans()
+  console.log("PLANS ", Plans) 
+  const filteredPlans = Plans?.filter((plan) =>
     plan.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
@@ -94,7 +96,7 @@ export default function PlansPage() {
               </Button>
             </div>
 
-            {filteredPlans.length === 0 ? (
+            {filteredPlans?.length === 0 ? (
               <div className="text-center py-12">
                 <PackageSearch className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No plans found</h3>
@@ -115,7 +117,7 @@ export default function PlansPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPlans.map((plan) => (
+                {filteredPlans?.map((plan) => (
                   <PlanCard
                     key={plan.id}
                     plan={plan}
@@ -132,7 +134,6 @@ export default function PlansPage() {
       <AddPlanDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
-        onAdd={handleAddPlan}
       />
     </div>
   )

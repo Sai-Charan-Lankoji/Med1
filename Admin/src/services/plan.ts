@@ -29,12 +29,11 @@ class PlanService extends TransactionBaseService {
     });
   }
 
-  async list(config?: FindConfig<Plan>): Promise<Plan[]> {
+  async list(config: FindConfig<Plan> = {}): Promise<Plan[]> {
     const planRepo = this.manager_.getRepository(Plan);
     return await planRepo.find(config);
   }
 
-  // Add other methods as needed (e.g., retrieve, update, delete)
 }
 
 export default PlanService;

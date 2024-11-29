@@ -9,7 +9,7 @@ export const useCreatePlan = () => {
   return useMutation({
     mutationFn: async (newPlan: CreatePlanData) => {
 
-      const response = await fetch(`${baseUrl}/vendor/plan`, {
+      const response = await fetch(`${baseUrl}/admin/plan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
