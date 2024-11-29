@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useGetCustomers } from "@/app/hooks/vendors/useGetVendors"
+import { useGetVendors } from "@/app/hooks/vendors/useGetVendors"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button" 
 // import withAuth from "@/lib/withAuth"
@@ -35,7 +35,7 @@ interface Vendor {
 }
 
 function VendorsPage() { 
-  const { data, error, isLoading } = useGetCustomers()
+  const { data, error, isLoading } = useGetVendors()
   const [searchTerm, setSearchTerm] = useState("")
   const router = useRouter()
 

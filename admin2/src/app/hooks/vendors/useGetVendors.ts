@@ -46,7 +46,7 @@
   };
 
 
-  export const useGetCustomers = () => {
+  export const useGetVendors = () => {
     return useQuery(['customers'], fetchCustomers, {
       refetchOnWindowFocus: false,  
       refetchOnMount: false,        
