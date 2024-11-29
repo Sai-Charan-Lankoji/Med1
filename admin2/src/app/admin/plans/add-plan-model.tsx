@@ -16,12 +16,27 @@ import { useToast } from "@/hooks/use-toast"
 import { useCreatePlan } from "@/app/hooks/plan/useCreatePlan"
 import { CreatePlanData } from "@/app/@types/plan"
 
+interface Plan {
+  id: string
+  name: string
+  price: string
+  features: string[]
+  discount: number
+  isActive: boolean
+  created_at: string
+  updated_at: string
+  deleted_at: string | null
+  description?: string
+}
+
 interface AddPlanDialogProps {
   isOpen: boolean
   onClose: () => void
+  onAdd: (newPlan: Omit<Plan, "id" | "created_at" | "updated_at">) => void
+  
 }
 
-export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
+export function AddPlanDialog({ isOpen, onClose, onAdd }: AddPlanDialogProps) {
   const createPlanMutation = useCreatePlan();
   const { toast } = useToast()
 

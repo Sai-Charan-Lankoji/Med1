@@ -1,203 +1,191 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { DollarSign, Calendar, CreditCard, TrendingUp, Search, Loader2, AlertCircle, Store, User, Phone, Briefcase, CreditCardIcon } from 'lucide-react'
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import {
-  Button,
-  Container,
   Table,
-  Text,
-  Heading,
-} from "@medusajs/ui";
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import {
-  ChevronDownMini,
-  ChevronUpMini,
-} from "@medusajs/icons";
-import Pagination from "@/app/utils/pagination";
-import { BackButton } from "@/app/utils/backButton";
-import { useGetVendor } from "@/app/hooks/vendors/useGetVendor"; 
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { useGetVendor } from "@/app/hooks/vendors/useGetVendor"
 import { useGetStores } from "@/app/hooks/store/useGetStores"
+import { BackButton } from "@/app/utils/backButton"
 
-const CustomerDetails = () => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [showRawData, setShowRawData] = useState(false);
+export default function VendorDetailsPage() {
   const router = useRouter()
-  const params = useParams(); 
-  const vendorId = params?.id as string | any |  undefined; 
-  const { data: vendor } = useGetVendor(vendorId);  
-  const { data: stores } = useGetStores(vendorId) 
+  const params = useParams()
+  const vendorId = params?.id as string
+  const { data: vendor, isLoading, error } = useGetVendor(vendorId)
+  const { data: stores } = useGetStores(vendorId)
 
-  const pageSize = 5;
+  if (isLoading) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <p className="mt-4 text-sm text-muted-foreground">Loading vendor data...</p>
+      </div>
+    )
+  }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <div className="rounded-full bg-destructive/10 p-3">
+          <AlertCircle className="h-6 w-6 text-destructive" />
+        </div>
+        <p className="mt-4 text-sm text-destructive">Error fetching vendor data</p>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen overflow-auto p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <BackButton name="Vendors" className="text-indigo-600 hover:text-indigo-800 transition-colors" />
-        
-        {!vendor ? (
-          <CustomerDetailsSkeleton />
-        ) : (
-          <>
-            {/* Vendor Profile Card */}
-            <div className="bg-white/10 backdrop-blur-md rounded-xl shadow-2xl">
-              <div className="p-8">
-                <div className="flex items-center space-x-6">
-                  <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-3xl w-20 h-20 rounded-2xl flex items-center justify-center shadow-lg">
-                    {vendor.vendor.contact_name.charAt(0).toUpperCase()}
+    <div className="container mx-auto p-4 space-y-6">
+      <BackButton name="Vendors" className="text-indigo-600 hover:text-indigo-800 transition-colors mb-4" />
+      <Card className="border-none shadow-lg">
+        <CardHeader>
+          <CardTitle className="text-3xl font-bold">Vendor Details</CardTitle>
+          <CardDescription>Detailed information about {vendor?.vendor.company_name}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* Vendor Metrics */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
+                    <User className="h-6 w-6 text-blue-700 dark:text-blue-100" />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-indigo-900">
-                      {vendor.vendor.company_name}
-                    </h2>
-                    <p className="text-indigo-600 mt-1">{vendor.vendor.contact_email}</p>
+                    <p className="text-sm font-medium text-muted-foreground">Contact Name</p>
+                    <h3 className="text-lg font-bold">{vendor?.vendor.contact_name}</h3>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-green-100 p-3 dark:bg-green-900">
+                    <Phone className="h-6 w-6 text-green-700 dark:text-green-100" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                    <h3 className="text-lg font-bold">{vendor?.vendor.contact_phone_number}</h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-purple-100 p-3 dark:bg-purple-900">
+                    <Briefcase className="h-6 w-6 text-purple-700 dark:text-purple-100" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Business Type</p>
+                    <h3 className="text-lg font-bold">{vendor?.vendor.business_type}</h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="rounded-full bg-orange-100 p-3 dark:bg-orange-900">
+                    <CreditCardIcon className="h-6 w-6 text-orange-700 dark:text-orange-100" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Plan</p>
+                    <h3 className="text-lg font-bold capitalize">{vendor?.vendor.plan}</h3>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-                <div className="mt-8 flex flex-wrap divide-x divide-indigo-200">
-                  <div className="px-6 first:pl-0 mb-4">
-                    <p className="text-sm font-medium text-indigo-400">Contact Name</p>
-                    <p className="mt-1 text-indigo-900">{vendor.vendor.contact_name}</p>
-                  </div>
-                  <div className="px-6 mb-4">
-                    <p className="text-sm font-medium text-indigo-400">Phone</p>
-                    <p className="mt-1 text-indigo-900">{vendor.vendor.contact_phone_number}</p>
-                  </div>
-                  <div className="px-6 mb-4">
-                    <p className="text-sm font-medium text-indigo-400">Business Type</p>
-                    <p className="mt-1 text-indigo-900">{vendor.vendor.business_type}</p>
-                  </div>
-                  <div className="px-6 mb-4">
-                    <p className="text-sm font-medium text-indigo-400">Plan</p>
-                    <p className="mt-1 text-indigo-900 capitalize">{vendor.vendor.plan}</p>
-                  </div>
-                  <div className="px-6 mb-4">
-                    <p className="text-sm font-medium text-indigo-400">Registered</p>
-                    <p className="mt-1 text-indigo-900">
-                      {new Date(vendor.vendor.created_at).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </p>
+          {/* Address Information */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>Address Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6 relative">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Vendor Address</h3>
+                  <address className="not-italic">
+                    <p>{vendor?.vendorAddress.address_1}</p>
+                    {vendor?.vendorAddress.address_2 && <p>{vendor?.vendorAddress.address_2}</p>}
+                    <p>{vendor?.vendorAddress.city}, {vendor?.vendorAddress.province} {vendor?.vendorAddress.postal_code}</p>
+                    <p className="mt-2">Phone: {vendor?.vendorAddress.phone}</p>
+                  </address>
+                </div>
+                <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gray-200"></div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Registration Address</h3>
+                  <div className="not-italic text-sm">
+                    <p>{vendor?.registrationAddress.address_1}</p>
+                    {vendor?.registrationAddress.address_2 && <p>{vendor?.registrationAddress.address_2}</p>}
+                    <p>{vendor?.registrationAddress.city}, {vendor?.registrationAddress.province} {vendor?.registrationAddress.postal_code}</p>
+                    <p className="mt-2">Phone: {vendor?.registrationAddress.phone}</p>
                   </div>
                 </div>
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            {/* Address Information */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-              <Heading level="h2" className="text-2xl font-bold text-indigo-900 mb-4">Address Information</Heading>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-indigo-700 mb-2">Vendor Address</h3>
-                  <p>{vendor.vendorAddress.address_1}</p>
-                  <p>{vendor.vendorAddress.address_2}</p>
-                  <p>{vendor.vendorAddress.city}, {vendor.vendorAddress.province} {vendor.vendorAddress.postal_code}</p>
-                  <p>{vendor.vendorAddress.phone}</p>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-indigo-700 mb-2">Registration Address</h3>
-                  <p>{vendor.registrationAddress.address_1}</p>
-                  <p>{vendor.registrationAddress.address_2}</p>
-                  <p>{vendor.registrationAddress.city}, {vendor.registrationAddress.province} {vendor.registrationAddress.postal_code}</p>
-                  <p>{vendor.registrationAddress.phone}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Store Data Table */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-              <Heading level="h2" className="text-2xl font-bold text-indigo-900 mb-4">Store Information</Heading>
+          {/* Store Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Store Information</CardTitle>
+            </CardHeader>
+            <CardContent>
               {stores && stores.length > 0 ? (
                 <Table>
-                  <Table.Header>
-                    <Table.Row>
-                      <Table.HeaderCell>Name</Table.HeaderCell>
-                      <Table.HeaderCell>Created At</Table.HeaderCell>
-                      <Table.HeaderCell>Updated At</Table.HeaderCell>
-                      <Table.HeaderCell>Currency</Table.HeaderCell>
-                      <Table.HeaderCell>Store Type</Table.HeaderCell>
-                      <Table.HeaderCell>Store URL</Table.HeaderCell>
-                    </Table.Row>
-                  </Table.Header>
-                  <Table.Body>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead>Store Type</TableHead>
+                      <TableHead>Store URL</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
                     {stores.map((store) => (
-                      <Table.Row key={store.id}>
-                        <Table.Cell>{store.name}</Table.Cell>
-                        <Table.Cell>{formatDate(store.created_at)}</Table.Cell>
-                        <Table.Cell>{formatDate(store.updated_at)}</Table.Cell>
-                        <Table.Cell>{store.default_currency_code.toUpperCase()}</Table.Cell>
-                        <Table.Cell>{store.store_type}</Table.Cell>
-                        <Table.Cell>
-                          <a href={store.store_url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:text-indigo-800">
+                      <TableRow key={store.id}>
+                        <TableCell className="font-medium">{store.name}</TableCell>
+                        <TableCell>{new Date(store.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
+                        <TableCell>{store.store_type}</TableCell>
+                        <TableCell>
+                          <a href={store.store_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                             {store.store_url}
                           </a>
-                        </Table.Cell>
-                      </Table.Row>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </Table.Body>
+                  </TableBody>
                 </Table>
               ) : (
-                <Text>No store data available.</Text>
+                <p>No store data available.</p>
               )}
-            </div>
-          </> 
-        )}
-      </div>
+            </CardContent>
+          </Card>
+        </CardContent>
+      </Card>
     </div>
-  );
-};
-
-export default CustomerDetails;
-
-const CustomerDetailsSkeleton = () => (
-  <div className="space-y-6">
-    <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden p-8">
-      <div className="animate-pulse">
-        <div className="flex items-center space-x-6">
-          <div className="bg-indigo-200 rounded-2xl h-20 w-20"></div>
-          <div className="space-y-3">
-            <div className="h-6 bg-indigo-200 rounded w-48"></div>
-            <div className="h-4 bg-indigo-200 rounded w-64"></div>
-          </div>
-        </div>
-
-        <div className="mt-8 flex divide-x divide-indigo-200">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="px-6 first:pl-0 space-y-3">
-              <div className="h-4 bg-indigo-200 rounded w-20"></div>
-              <div className="h-4 bg-indigo-200 rounded w-24"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    <div className="bg-white rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
-      <div className="p-6 border-b border-indigo-100">
-        <div className="h-6 bg-indigo-200 rounded w-32"></div>
-        <div className="h-4 bg-indigo-200 rounded w-48 mt-2"></div>
-      </div>
-      <div className="p-6">
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex space-x-4">
-              <div className="h-8 bg-indigo-200 rounded w-full"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  </div>
-);
+  )
+}
 

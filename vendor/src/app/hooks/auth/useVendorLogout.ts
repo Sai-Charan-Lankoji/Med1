@@ -6,7 +6,7 @@ import { set } from 'lodash';
 export const useVendorLogout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setAuthEmail, setContactName, } = useAuth();
+  const { setAuthEmail, setContactName,setCompanyName } = useAuth();
   const router = useRouter();
 
   const logout = async () => {
@@ -28,6 +28,7 @@ export const useVendorLogout = () => {
        sessionStorage.clear();
        setAuthEmail(null);
         setContactName(null);
+        setCompanyName(null);
 
 
         router.push('/');

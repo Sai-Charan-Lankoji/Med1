@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from '@/app/context/AuthContext';
+import { set } from "lodash";
 
 export const useUserLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setAuthEmail, setContactName } = useAuth()!;
+  const { setAuthEmail, setContactName ,setCompanyName} = useAuth()!;
   const router = useRouter();
 
   const login = async (email: string, password: string) => {
@@ -29,6 +30,7 @@ export const useUserLogin = () => {
         sessionStorage.setItem('vendor_id',data.user.vendor_id)
         setAuthEmail(data.user.email);
         setContactName(data.user.first_name);
+        setCompanyName(data.user.company_name);
         router.push("/vendor/orders");
       }  
     } catch (err: any) {

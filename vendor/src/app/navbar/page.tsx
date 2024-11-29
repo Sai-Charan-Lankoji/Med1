@@ -20,6 +20,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();
+    sessionStorage.clear();
     
     router.push('/login');
   };
