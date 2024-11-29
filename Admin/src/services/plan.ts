@@ -34,6 +34,39 @@ class PlanService extends TransactionBaseService {
     return await planRepo.find(config);
   }
 
+  async update(id: string, data: any): Promise<Plan> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const PlanRepo = transactionManager.getRepository(Plan);
+      const plan = await PlanRepo.findOne({ where: { id } });
+      if (!plan) {
+        throw new MedusaError(MedusaError.Types.NOT_FOUND, "Plan not found");
+      }
+      Object.assign(plan, data);
+      const updated = await PlanRepo.save(plan);
+      return updated;
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const planRepo = transactionManager.getRepository(Plan);
+    
+      const result = await planRepo.createQueryBuilder()
+        .delete()
+        .from(Plan)
+        .where("id = :id", { id })
+        .execute();
+
+      if (result.affected === 0) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `Plan with id ${id} not found`
+        );
+      }
+    });
+  }
+
+
 }
 
 export default PlanService;

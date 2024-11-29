@@ -115,7 +115,7 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-[525px] overflow-y-scroll">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Add New Plan</DialogTitle>
           <DialogDescription>
@@ -139,7 +139,7 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
               >
                 <option value="">Select a Plan</option>
                 <option value="Basic">Basic</option>
-                <option value="Pro">Pro</option>
+                <option value="Pro">Professional</option>
                 <option value="Enterprise">Enterprise</option>
               </select>
               {errors.name && (

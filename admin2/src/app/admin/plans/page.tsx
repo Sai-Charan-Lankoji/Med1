@@ -14,6 +14,8 @@ import {
 import { AddPlanDialog } from "./add-plan-model"
 import { PlanCard } from "./plan-card"
 import { useGetPlans } from "../../hooks/plan/useGetPlans"
+import { useUpdatePlan } from "../../hooks/plan/useUpdatePlan"
+import { useDeletePlan } from "../../hooks/plan/useDeletePlan"
 
 interface Plan {
   id: string
@@ -31,25 +33,52 @@ interface Plan {
 export default function PlansPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const { data: Plans } = useGetPlans()
-  console.log("PLANS ", Plans) 
+  const { data: plans, isLoading } = useGetPlans()
+  const updatePlanMutation = useUpdatePlan()
+  const deletePlanMutation = useDeletePlan()
 
-  const filteredPlans = Plans?.filter((plan) =>
+  const filteredPlans = plans?.filter((plan) =>
     plan.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const activePlans = filteredPlans?.filter((plan) => plan.isActive)
+  const inactivePlans = filteredPlans?.filter((plan) => !plan.isActive)
+
   const handleAddPlan = (newPlan: Omit<Plan, "id" | "created_at" | "updated_at">) => {
-    // logic
+    // This should be handled in the AddPlanDialog component
     setIsAddDialogOpen(false)
   }
 
   const handleUpdatePlan = (updatedPlan: Plan) => {
-    // logic
+    updatePlanMutation.mutate({
+      id: updatedPlan.id,
+      isActive: !updatedPlan.isActive,
+    })
   }
 
   const handleDeletePlan = (planId: string) => {
-    // logic
+    deletePlanMutation.mutate(planId)
   }
+
+  const renderPlanSection = (title: string, plans: Plan[] | undefined) => (
+    <div className="mb-8">
+      <h2 className="text-2xl font-semibold mb-4">{title}</h2>
+      {plans && plans.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {plans.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              onUpdate={handleUpdatePlan}
+              onDelete={handleDeletePlan}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-muted-foreground">No plans in this section.</p>
+      )}
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 py-8">
@@ -76,16 +105,20 @@ export default function PlansPage() {
               </Button>
             </div>
 
-            {filteredPlans?.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <p>Loading plans...</p>
+              </div>
+            ) : filteredPlans?.length === 0 ? (
               <div className="text-center py-12">
                 <PackageSearch className="mx-auto h-12 w-12 text-muted-foreground" />
                 <h3 className="mt-4 text-lg font-semibold">No plans found</h3>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  {!Plans || Plans.length === 0
+                  {!plans || plans.length === 0
                     ? "Start by adding a new subscription plan."
                     : "Try adjusting your search term."}
                 </p>
-                {(!Plans || Plans.length === 0) && (
+                {(!plans || plans.length === 0) && (
                   <Button
                     onClick={() => setIsAddDialogOpen(true)}
                     variant="outline"
@@ -96,16 +129,10 @@ export default function PlansPage() {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredPlans?.map((plan) => (
-                  <PlanCard
-                    key={plan.id}
-                    plan={plan}
-                    onUpdate={handleUpdatePlan}
-                    onDelete={handleDeletePlan}
-                  />
-                ))}
-              </div>
+              <>
+                {renderPlanSection("Active Plans", activePlans)}
+                {renderPlanSection("Drafts", inactivePlans)}
+              </>
             )}
           </CardContent>
         </Card>
@@ -114,7 +141,9 @@ export default function PlansPage() {
       <AddPlanDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
+        onAdd={handleAddPlan}
       />
     </div>
   )
 }
+
