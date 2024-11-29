@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers"
+import { useGetCustomers } from "@/app/hooks/vendors/useGetVendors"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button" 
 import withAuth from "@/lib/withAuth"
-import { Search, Loader2, Building2 } from 'lucide-react'
+import { Search, Loader2, Building2 } from 'lucide-react' 
+import {useRouter} from "next/navigation"
 import {
   Table,
   TableBody,
@@ -33,9 +34,10 @@ interface Vendor {
   business_type: string
 }
 
-function VendorsPage() {
+function VendorsPage() { 
   const { data, error, isLoading } = useGetCustomers()
   const [searchTerm, setSearchTerm] = useState("")
+  const router = useRouter()
 
   const filteredVendors = data?.vendors?.filter((vendor: Vendor) =>
     vendor.company_name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -48,7 +50,13 @@ function VendorsPage() {
         <p className="mt-4 text-sm text-muted-foreground">Loading vendors...</p>
       </div>
     )
-  }
+  } 
+
+
+  const handleDetails = (id: number | string) => {  
+    router.push(`/admin/vendors/${id}`);  
+};  
+
 
   if (error) {
     return (
@@ -106,7 +114,7 @@ function VendorsPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredVendors.map((vendor: Vendor) => (
-                    <TableRow key={vendor.id} className="hover:bg-muted/50">
+                    <TableRow key={vendor.id} className="hover:bg-muted/50 cursor-pointer" onClick= {() => handleDetails(vendor.id)}>
                       <TableCell className="font-medium">{vendor.company_name}</TableCell>
                       <TableCell>{vendor.contact_name}</TableCell>
                       <TableCell className="font-mono text-sm">{vendor.contact_email}</TableCell>

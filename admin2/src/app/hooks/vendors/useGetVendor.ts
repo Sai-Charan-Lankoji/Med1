@@ -1,10 +1,9 @@
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useQuery } from '@tanstack/react-query';
 
-const fetchCustomer = async (id: string) => {
-
-  const url = `${baseUrl}/ven${id}`;
-
+const fetchVendor = async (id: string) => {
+  const url = `${baseUrl}/admin/vendors/${id}`;  
+  console.log("this is url :" , url)
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -40,8 +39,8 @@ const fetchCustomer = async (id: string) => {
 };
 
 
-export const useGetCustomer = (id: string) => {
-  return useQuery(['customer', id], () => fetchCustomer(id), {
+export const useGetVendor = (id: string) => {
+  return useQuery(['vendor', id], () => fetchVendor(id), {
     refetchOnWindowFocus: false,  
     refetchOnMount: false,        
     cacheTime: 0,                
@@ -50,7 +49,7 @@ export const useGetCustomer = (id: string) => {
 
     onError: (error: unknown) => {
       if (error instanceof Error) {
-        console.error('Error occurred while fetching customer:', error.message);
+        console.error('Error occurred while fetching vendor:', error.message);
       } else {
         console.error('An unknown error occurred:', error);
       }

@@ -31,9 +31,10 @@ const generatePortString = (start, end) => {
   return ports.join(',');
 };
 
-const ADMIN_CORS = process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:7001";
+const ADMIN_CORS = process.env.ADMIN_CORS || "http://localhost:7001";
 const STORE_CORS = process.env.STORE_CORS || generatePortString(8000, 80100);
-const VENDOR_CORS = process.env.VENDOR_CORS || "http://localhost:8009";
+const VENDOR_CORS = process.env.VENDOR_CORS || "http://localhost:8009,http://localhost:7000"; 
+// const tEST_CORS = process.env.tEST_CORS ||  "http://localhost:7000"
 const UPLOADS_CORS = process.env.UPLOADS_CORS || generatePortString(8000, 80100);
 const DATABASE_URL = process.env.DATABASE_URL 
 const POSTGRES_SCHEMA = process.env.POSTGRES_SCHEMA;
@@ -94,7 +95,8 @@ const modules = {};
 const projectConfig = {
   jwt_secret: process.env.JWT_SECRET,
   cookie_secret: process.env.COOKIE_SECRET,
-  store_cors: STORE_CORS,
+  store_cors: STORE_CORS, 
+  // tEST_cors: tEST_CORS,  // For testing purposes only. Remove in production.
   vendor_cors: VENDOR_CORS,
   uploads_cors: UPLOADS_CORS,
   schema: POSTGRES_SCHEMA,
