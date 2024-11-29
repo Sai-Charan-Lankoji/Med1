@@ -146,6 +146,14 @@ class VendorService extends TransactionBaseService {
       // Hash the password and create Vendor
       const hashedPassword = await bcrypt.hash(data.password, 10);
       data.password = hashedPassword;
+      const existingVendor = await vendorRepo.findOne({ where: { contact_email: data.contact_email }})
+      
+      if(existingVendor){
+        throw new MedusaError(
+          MedusaError.Types.DUPLICATE_ERROR,
+          "A Vendor with this email already exists"
+        );
+      }
       const vendor = await vendorRepo.createVendor(data);
 
       const vendorAddress1 = data.vendorAddressData.address_1 || "";

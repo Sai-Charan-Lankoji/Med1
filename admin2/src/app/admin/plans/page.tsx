@@ -141,7 +141,6 @@ export default function PlansPage() {
       <AddPlanDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
-        onAdd={handleAddPlan}
       />
     </div>
   )
