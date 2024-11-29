@@ -23,13 +23,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [admin_id, setAdminId] = useState<string | null>(() => sessionStorage.getItem('admin_id'));
 
   // Persist auth data to sessionStorage
-  useEffect(() => {
+  // useEffect(() => {
     if (email) sessionStorage.setItem('email', email);
     if (first_name) sessionStorage.setItem('first_name', first_name);
     if (last_name) sessionStorage.setItem('last_name', last_name);
     if (role) sessionStorage.setItem('role', role);
     if (admin_id) sessionStorage.setItem('admin_id', admin_id);
-  }, [email, first_name, last_name, role, admin_id]);
+  // }, [email, first_name, last_name, role, admin_id]);
 
   const contextValue: AuthContextType = {
     email,

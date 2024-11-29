@@ -2,12 +2,12 @@
   import { useQuery } from '@tanstack/react-query';
 
   const fetchCustomers = async () => {
-    const AdminId = sessionStorage.getItem('admin_id');
+    // const AdminId = sessionStorage.getItem('admin_id');
     
-    if (!AdminId) {
-      console.log('No vendor ID found in sessionStorage');
-      return []; 
-    }
+    // if (!AdminId) {
+    //   console.log('No vendor ID found in sessionStorage');
+    //   return []; 
+    // }
 
     const url = `${baseUrl}/admin/vendors`;
 

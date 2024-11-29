@@ -4,7 +4,7 @@ import { useState } from "react"
 import { DollarSign, Calendar, CreditCard, TrendingUp, Search, Loader2, AlertCircle } from 'lucide-react'
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import withAuth from "@/lib/withAuth"
+// import withAuth from "@/lib/withAuth"
 import {
   Table,
   TableBody,
@@ -257,5 +257,5 @@ function StatusBadge({ status }: { status: BillingRecord['status'] }) {
   )
 }
 
-export default withAuth(BillingServicesPage)
+export default BillingServicesPage
 
