@@ -37,6 +37,7 @@ interface PlanCardProps {
 
 export function PlanCard({ plan, onUpdate, onDelete, onEdit }: PlanCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
   const handleStatusChange = () => {
     setIsDialogOpen(true)
@@ -47,6 +48,15 @@ export function PlanCard({ plan, onUpdate, onDelete, onEdit }: PlanCardProps) {
     setIsDialogOpen(false)
   }
 
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleConfirmDelete = () => {
+    onDelete(plan.id)
+    setIsDeleteDialogOpen(false)
+  }
+  
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -90,11 +100,25 @@ export function PlanCard({ plan, onUpdate, onDelete, onEdit }: PlanCardProps) {
           <Pencil className="w-4 h-4 mr-2" />
           Edit
         </Button>
-        <Button variant="destructive" onClick={() => onDelete(plan.id)}>
+        <Button variant="destructive" onClick={handleDelete}>
           <Trash2 className="w-4 h-4 mr-2" />
           Delete
         </Button>
       </CardFooter>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Delete</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the plan {plan.name}?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete}>Confirm</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <AlertDialogContent>
