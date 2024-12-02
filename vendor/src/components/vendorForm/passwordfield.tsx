@@ -5,6 +5,7 @@ import { Eye, EyeOff, Check, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { toast } from '@medusajs/ui'
 
 interface PasswordRequirement {
   text: string
@@ -52,9 +53,16 @@ export function PasswordField({
     return requirement.regex.test(value)
   }
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    if (isConfirm) {
+      e.preventDefault()
+      toast.info('You cannot paste into confirm password field')
+     
+    }
+  }
+
   const isPasswordValid = !isConfirm && passwordRequirements.every(checkRequirement)
   const isConfirmValid = isConfirm && value === mainPassword && mainPassword !== ''
-//              {countryCode ? countryOptions.find(opt => opt.value === countryCode)?.label : "Select country"}
 
   return (
     <div className="space-y-2">
@@ -70,6 +78,7 @@ export function PasswordField({
           type={showPassword ? 'text' : 'password'}
           placeholder={placeholder}
           required={required}
+          onPaste={handlePaste}
           className={cn(
             'pr-10',
             (isPasswordValid || isConfirmValid) && 'border-green-500 focus-visible:ring-green-500',
@@ -143,4 +152,3 @@ export function PasswordField({
     </div>
   )
 }
-

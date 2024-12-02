@@ -73,8 +73,8 @@ export function PhoneInput({
           value={countryCode} 
           onValueChange={handleCountrySelect}
         >
-          <SelectTrigger className="w-[68px]">
-            <SelectValue placeholder="+91">
+          <SelectTrigger className="w-[79px]">
+            <SelectValue placeholder="☎︎">
               {countryCode ? countryOptions.find(opt => opt.value === countryCode)?.value : "+91"}
             </SelectValue>
           </SelectTrigger>
