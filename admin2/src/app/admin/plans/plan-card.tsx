@@ -57,7 +57,7 @@ export function PlanCard({ plan, onUpdate, onDelete, onEdit }: PlanCardProps) {
           </div>
           <Badge 
             variant={plan.isActive ? "default" : "secondary"}
-            className="cursor-pointer"
+            className={`text-xs font-semibold px-2 py-1  cursor-pointer  ${plan.isActive ? 'bg-green-100 text-green-800 hover:bg-green-300' : 'bg-yellow-100 hover:bg-yellow-300 text-yellow-800'}`}
             onClick={handleStatusChange}
           >
             {plan.isActive ? "Active" : "Draft"}
