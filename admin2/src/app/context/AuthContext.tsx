@@ -16,20 +16,33 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [email, setAuthEmail] = useState<string | null>(() => sessionStorage.getItem('email'));
-  const [first_name, setFirstName] = useState<string | null>(() => sessionStorage.getItem('first_name'));
-  const [last_name, setLastName] = useState<string | null>(() => sessionStorage.getItem('last_name'));
-  const [role, setRole] = useState<string | null>(() => sessionStorage.getItem('role'));
-  const [admin_id, setAdminId] = useState<string | null>(() => sessionStorage.getItem('admin_id'));
+  const [email, setAuthEmail] = useState<string | null>(null);
+  const [first_name, setFirstName] = useState<string | null>(null);
+  const [last_name, setLastName] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [admin_id, setAdminId] = useState<string | null>(null);
 
-  // Persist auth data to sessionStorage
-  // useEffect(() => {
-    if (email) sessionStorage.setItem('email', email);
-    if (first_name) sessionStorage.setItem('first_name', first_name);
-    if (last_name) sessionStorage.setItem('last_name', last_name);
-    if (role) sessionStorage.setItem('role', role);
-    if (admin_id) sessionStorage.setItem('admin_id', admin_id);
-  // }, [email, first_name, last_name, role, admin_id]);
+  // Check for localStorage availability on the client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setAuthEmail(localStorage.getItem('email'));
+      setFirstName(localStorage.getItem('first_name'));
+      setLastName(localStorage.getItem('last_name'));
+      setRole(localStorage.getItem('role'));
+      setAdminId(localStorage.getItem('admin_id'));
+    }
+  }, []);
+
+  // Persist data to localStorage when updated
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (email) localStorage.setItem('email', email);
+      if (first_name) localStorage.setItem('first_name', first_name);
+      if (last_name) localStorage.setItem('last_name', last_name);
+      if (role) localStorage.setItem('role', role);
+      if (admin_id) localStorage.setItem('admin_id', admin_id);
+    }
+  }, [email, first_name, last_name, role, admin_id]);
 
   const contextValue: AuthContextType = {
     email,
@@ -44,11 +57,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setAdminId,
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
@@ -58,4 +67,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
