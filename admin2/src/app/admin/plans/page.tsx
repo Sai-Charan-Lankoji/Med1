@@ -14,8 +14,9 @@ import {
 import { AddPlanDialog } from "./add-plan-model"
 import { PlanCard } from "./plan-card"
 import { useGetPlans } from "../../hooks/plan/useGetPlans"
-import { useUpdatePlan } from "../../hooks/plan/useUpdatePlan"
+import { useUpdatePlan, UpdatePlanData } from "../../hooks/plan/useUpdatePlan"
 import { useDeletePlan } from "../../hooks/plan/useDeletePlan"
+import { EditPlanDialog } from "./edit-plan-dialog"
 
 interface Plan {
   id: string
@@ -33,6 +34,8 @@ interface Plan {
 export default function PlansPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
   const { data: plans, isLoading } = useGetPlans()
   const updatePlanMutation = useUpdatePlan()
   const deletePlanMutation = useDeletePlan()
@@ -44,20 +47,17 @@ export default function PlansPage() {
   const activePlans = filteredPlans?.filter((plan) => plan.isActive)
   const inactivePlans = filteredPlans?.filter((plan) => !plan.isActive)
 
-  const handleAddPlan = (newPlan: Omit<Plan, "id" | "created_at" | "updated_at">) => {
-    // This should be handled in the AddPlanDialog component
-    setIsAddDialogOpen(false)
-  }
-
-  const handleUpdatePlan = (updatedPlan: Plan) => {
-    updatePlanMutation.mutate({
-      id: updatedPlan.id,
-      isActive: !updatedPlan.isActive,
-    })
+  const handleUpdatePlan = (id: string, updateData: UpdatePlanData) => {
+    updatePlanMutation.mutate({ id, ...updateData })
   }
 
   const handleDeletePlan = (planId: string) => {
     deletePlanMutation.mutate(planId)
+  }
+
+  const handleEditPlan = (plan: Plan) => {
+    setEditingPlan(plan)
+    setIsEditDialogOpen(true)
   }
 
   const renderPlanSection = (title: string, plans: Plan[] | undefined) => (
@@ -71,6 +71,7 @@ export default function PlansPage() {
               plan={plan}
               onUpdate={handleUpdatePlan}
               onDelete={handleDeletePlan}
+              onEdit={handleEditPlan}
             />
           ))}
         </div>
@@ -141,6 +142,13 @@ export default function PlansPage() {
       <AddPlanDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
+      />
+
+      <EditPlanDialog
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        plan={editingPlan}
+        onUpdate={handleUpdatePlan}
       />
     </div>
   )

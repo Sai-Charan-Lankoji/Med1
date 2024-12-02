@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-interface UpdatePlanData {
+export interface UpdatePlanData {
   name?: string
   description?: string
   price?: number
