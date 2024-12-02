@@ -17,16 +17,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [contactName, setContactName] = useState<string | null>(null);
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [companyName, setCompanyName] = useState<string | null>("Vendor Hub");
-
-  // Persist email, contact name, vendor ID, and company name in session storage
-  // useEffect(() => {
-  //   if (email) sessionStorage.setItem('email', email);
-  //   if (contactName) sessionStorage.setItem('contactName', contactName);
-  //   if (vendorId) sessionStorage.setItem('vendor_id', vendorId);
-  //   if (companyName) sessionStorage.setItem('company_name', companyName);
-  // }, [email, contactName, vendorId, companyName]);
-
-  // Restore session data on reload
+  
   useEffect(() => {
     const storedEmail = sessionStorage.getItem('email');
     const storedContactName = sessionStorage.getItem('contactName');

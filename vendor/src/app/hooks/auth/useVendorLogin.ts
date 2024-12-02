@@ -52,11 +52,9 @@ export const useVendorLogin = () => {
       if (data.token) {
         console.log('Login successful');
         if(data.vendor){
-          //sessionStorage.setItem('email',data.vendor.contact_email)
-          //sessionStorage.setItem('contactName', data.vendor.contact_name)
           sessionStorage.setItem('vendor_id', data.vendor.id); 
           sessionStorage.setItem('business_type', data.vendor.business_type);
-          //sessionStorage.setItem('company_name', data.vendor.company_name);
+          sessionStorage.setItem('company_name', data.vendor.company_name);
           sessionStorage.setItem('plan',data.vendor.plan)
           setAuthEmail(data.vendor.contact_email)
           setContactName(data.vendor.contact_name)
