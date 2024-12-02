@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { FaUserCircle, FaShoppingCart, FaSignOutAlt } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
+import {ShirtIcon} from 'lucide-react'
 import Link from "next/link";
 import Image from "next/image";
 //import { useCart } from "@/context/cartContext";
@@ -244,10 +245,13 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo/Title */}
           <Link href="/" className="flex-shrink-0">
-            <h1 className="sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-             {NEXT_STORE_NAME}
-            </h1>
-          </Link>
+  <div className="flex items-center">
+    <ShirtIcon className="h-8 w-8 text-indigo-600" />
+    <h1 className="ml-2 sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
+      {NEXT_STORE_NAME}
+    </h1>
+  </div>
+</Link>
 
           {/* Mobile menu button */}
           <div className="md:hidden">

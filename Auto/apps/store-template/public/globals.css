@@ -9,6 +9,8 @@
   --background-body-color: 252, 249, 244;
 }
 
+
+
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -245,4 +247,23 @@ body {
     left: 95px !important;  /* Increased from 220px */
     top: 110px !important;   /* Increased from 270px */
   }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 248 90% 66%;
+    --primary-foreground: 210 40% 98%;
+  }
+}
+
+
+
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 51, 234, 0.1) 0%,
+    rgba(79, 70, 229, 0.1) 100%
+  );
 }

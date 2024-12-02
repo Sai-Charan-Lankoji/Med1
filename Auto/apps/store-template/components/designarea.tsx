@@ -494,6 +494,8 @@ export default function DesignArea(): React.ReactElement {
   return (
     <div>
       <div className="flex justify-between mb-1">
+        {customerToken && (
+          <>
         <button
           type="button"
           onClick={downloadDesignJson}
@@ -521,11 +523,16 @@ export default function DesignArea(): React.ReactElement {
           </IconContext.Provider>
           <span className="ml-3">Download Zip</span>
         </button>
+        </>
+        )}
       </div>
 
       <div className="flex justify-between pt-2 bg-white p-2 pb-0 border border-b-0 border-zinc-300">
         <div>
+        {customerToken && (
+          <>
           <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
+          
             <button onClick={downloadSVG}>
               <IconContext.Provider
                 value={{
@@ -551,6 +558,8 @@ export default function DesignArea(): React.ReactElement {
               <p className="px-2 text-[10px]">PNG</p>
             </button>
           </div>
+          </>
+        )}
         </div>
 
         <div>
