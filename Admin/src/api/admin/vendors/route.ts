@@ -89,7 +89,7 @@ export const POST = async (
     }
     const existingVendor = await vendorService.findByEmail(newVendorData.contact_email)
     if(existingVendor){
-      res.status(500).json({message: "A vendor with this email already exists"})
+      res.status(404).json({message: "A vendor with this email already exists"})
     }
     // Call the vendor service's create method
     const newVendor = await vendorService.create(newVendorData);

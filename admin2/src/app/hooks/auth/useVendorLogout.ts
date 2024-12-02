@@ -22,7 +22,7 @@ export const useVendorLogout = () => {
       });
 
       if (response.ok) {
-        sessionStorage.clear();
+        localStorage.clear()
 
         router.push('/');
       } else {
