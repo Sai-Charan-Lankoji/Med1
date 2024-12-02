@@ -1,64 +1,64 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { PackageSearch, Plus, Search } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import { PackageSearch, Plus, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { AddPlanDialog } from "./add-plan-model"
-import { PlanCard } from "./plan-card"
-import { useGetPlans } from "../../hooks/plan/useGetPlans"
-import { useUpdatePlan, UpdatePlanData } from "../../hooks/plan/useUpdatePlan"
-import { useDeletePlan } from "../../hooks/plan/useDeletePlan"
-import { EditPlanDialog } from "./edit-plan-dialog"
+} from "@/components/ui/card";
+import { AddPlanDialog } from "./add-plan-model";
+import { PlanCard } from "./plan-card";
+import { useGetPlans } from "../../hooks/plan/useGetPlans";
+import { useUpdatePlan, UpdatePlanData } from "../../hooks/plan/useUpdatePlan";
+import { useDeletePlan } from "../../hooks/plan/useDeletePlan";
+import { EditPlanDialog } from "./edit-plan-dialog";
 
 interface Plan {
-  id: string
-  name: string
-  price: string
-  features: string[]
-  discount: number
-  isActive: boolean
-  created_at: string
-  updated_at: string
-  deleted_at: string | null
-  description?: string
+  id: string;
+  name: string;
+  price: string;
+  features: string[];
+  discount: number;
+  isActive: boolean;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  description?: string;
 }
 
 export default function PlansPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingPlan, setEditingPlan] = useState<Plan | null>(null)
-  const { data: plans, isLoading } = useGetPlans()
-  const updatePlanMutation = useUpdatePlan()
-  const deletePlanMutation = useDeletePlan()
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const { data: plans, refetch, isLoading } = useGetPlans();
+  const updatePlanMutation = useUpdatePlan();
+  const deletePlanMutation = useDeletePlan();
 
   const filteredPlans = plans?.filter((plan) =>
     plan.name.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  );
 
-  const activePlans = filteredPlans?.filter((plan) => plan.isActive)
-  const inactivePlans = filteredPlans?.filter((plan) => !plan.isActive)
+  const activePlans = filteredPlans?.filter((plan) => plan.isActive);
+  const inactivePlans = filteredPlans?.filter((plan) => !plan.isActive);
 
   const handleUpdatePlan = (id: string, updateData: UpdatePlanData) => {
-    updatePlanMutation.mutate({ id, ...updateData })
-  }
+    updatePlanMutation.mutate({ id, ...updateData }, { onSuccess: refetch });
+  };
 
   const handleDeletePlan = (planId: string) => {
-    deletePlanMutation.mutate(planId)
-  }
+    deletePlanMutation.mutate(planId, { onSuccess: refetch });
+  };
 
   const handleEditPlan = (plan: Plan) => {
-    setEditingPlan(plan)
-    setIsEditDialogOpen(true)
-  }
+    setEditingPlan(plan);
+    setIsEditDialogOpen(true);
+  };
 
   const renderPlanSection = (title: string, plans: Plan[] | undefined) => (
     <div className="mb-8">
@@ -79,7 +79,7 @@ export default function PlansPage() {
         <p className="text-muted-foreground">No plans in this section.</p>
       )}
     </div>
-  )
+  );
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 py-8">
@@ -138,10 +138,13 @@ export default function PlansPage() {
           </CardContent>
         </Card>
       </div>
-      
+
       <AddPlanDialog
         isOpen={isAddDialogOpen}
-        onClose={() => setIsAddDialogOpen(false)}
+        onClose={() => {
+          setIsAddDialogOpen(false);
+          refetch(); // Fetch the updated plans after closing dialog
+        }}
       />
 
       <EditPlanDialog
@@ -151,6 +154,5 @@ export default function PlansPage() {
         onUpdate={handleUpdatePlan}
       />
     </div>
-  )
+  );
 }
-
