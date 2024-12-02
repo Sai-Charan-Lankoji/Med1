@@ -114,7 +114,9 @@ const VendorForm = ({ plan }: { plan: string }) => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create vendor: ${response.status}`);
+        const errorData = await response.json();
+        console.log("errorData", errorData)
+        throw new Error( errorData.error ||`Failed to create vendor: ${response.status}`);
       }
 
       toast.success("Success", {
@@ -123,6 +125,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
       });
       router.push("/login");
     } catch (error: any) {
+      
       toast.error("Error", {
         description: "Error while creating vendor: " + error.message,
         duration: 1000,
