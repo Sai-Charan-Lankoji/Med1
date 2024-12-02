@@ -12,23 +12,14 @@ import { cn } from '@/lib/utils';
 import MenuItems from '../utils/menuItems';
 
 export default function Sidebar() {
-  const { email, contactName } = useAuth() ?? { email: '' };
+  const {  companyName } = useAuth();
   const { logout, loading } = useVendorLogout();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [ companyName, setCompanyName ] = useState("")
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      setIsCollapsed(window.innerWidth < 1024);
-    };
-    setCompanyName(sessionStorage.getItem('company_name'))
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+
+
 
   
   const toggleSidebar = () => {
@@ -75,9 +66,6 @@ export default function Sidebar() {
           </Button>
         )}
       </div>
-
-      {/* Profile Section */}
-      
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4">
