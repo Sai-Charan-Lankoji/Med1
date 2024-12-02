@@ -272,10 +272,10 @@ const Navbar: React.FC = () => {
             {!email && (
               <Link
                 href="./auth"
-                className="mx-3 px-4 py-2 text-sm font-medium text-gray-800 rounded-md text-left bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
+                className="mx-3 px-4 py-2 text-sm font-medium text-white rounded-md text-left bg-purple-700  hover:bg-purple-500 transition-colors duration-200 flex items-center space-x-2"
                 onClick={closeAllMenus}
               >
-                <FaUserCircle className="text-xl text-gray-800" />
+                <FaUserCircle className="text-xl text-white" />
                 <span>LogIn / SignUp</span>
               </Link>
             )}

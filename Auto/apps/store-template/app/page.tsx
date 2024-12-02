@@ -101,6 +101,13 @@ const testimonials = [
 
 export default function Home() {
   const router = useRouter();
+  const scrollToDesignShowcase = () => {
+    const section = document.getElementById('showcase');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <main>
       {/* Hero Section */}
@@ -141,7 +148,7 @@ export default function Home() {
                   Start Designing
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
-                <Button size="lg" variant="outline" className='bg-white text-gray-800'>
+                <Button size="lg" variant="outline" className='bg-white text-gray-800' onClick={scrollToDesignShowcase}>
                   View Gallery
                 </Button>
               </motion.div>
@@ -166,7 +173,7 @@ export default function Home() {
       </div>
 
       {/* Design Showcase Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-50" id='showcase'>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
@@ -310,7 +317,7 @@ export default function Home() {
                 Start Designing Now
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Button>
-              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10">
+              <Button size="lg" variant="outline" className="text-white border-white hover:bg-white/10" onClick={scrollToDesignShowcase}>
                 View Gallery
               </Button>
             </div>
