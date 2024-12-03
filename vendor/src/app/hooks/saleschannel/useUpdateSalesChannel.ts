@@ -6,11 +6,13 @@ interface SalesChannelEditFormData{
   channelId: string,
   name: string,
   description: string,
-  vendor_id: string
+  vendor_id: string,
+  default_sales_channel_id: string
 }
 
 const updateSalesChannel = async (saleschannelData: SalesChannelEditFormData) => {
-  const id = saleschannelData.channelId;
+  console.log("SALES CHANNEL ID: ", saleschannelData.default_sales_channel_id)
+  const id = saleschannelData.default_sales_channel_id;
   const response = await fetch(`${baseUrl}/vendor/saleschannel/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

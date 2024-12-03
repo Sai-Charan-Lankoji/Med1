@@ -4,9 +4,13 @@ import StoreRepository from "@medusajs/medusa/dist/repositories/store";
 import { DeepPartial, FindOptionsWhere } from "typeorm";
 import { UpdateStoreInput } from "@medusajs/medusa/dist/types/store";
 
- type Store = MedusaStore & {
+type Store = MedusaStore & {
   vendor_id?: string;
   default_sales_channel_id?: string;
+  storeName?: string;
+  swapLinkTemplate?: string;
+  paymentLinkTemplate?: string;
+  inviteLinkTemplate?: string;
 };
 
 interface StoreData {
@@ -15,6 +19,10 @@ interface StoreData {
   name: string; 
   store_type: string;
   publishableapikey: string;
+  storeName?: string;
+  swapLinkTemplate?: string;
+  paymentLinkTemplate?: string;
+  inviteLinkTemplate?: string;
 }
 
 class StoreService extends MedusaStoreService {
@@ -23,7 +31,7 @@ class StoreService extends MedusaStoreService {
 
   constructor(container) {
     super(container);
-     this.storeRepository_ = container.storeRepository;
+    this.storeRepository_ = container.storeRepository;
   }
 
   async createStore(storeData: StoreData): Promise<Store> {
@@ -38,17 +46,16 @@ class StoreService extends MedusaStoreService {
   }
 
   async retrieveByStoreId(storeId: string): Promise<Store> {
-     
     const store = await this.storeRepository_.findOne({ where: { id: storeId }});
     if (!store) {
-      throw new Error('Sales Channel not found.');
+      throw new Error('Store not found.');
     }
     return store;
   }
 
   async updateStore(storeId: string, updateData: DeepPartial<Store>): Promise<Store> {
     if (!storeId) {
-      throw new Error("Store ID is required to update a Sales Channel");
+      throw new Error("Store ID is required to update a Store");
     }
   
     const existingStore = await this.storeRepository_.findOne({ where: { id: storeId } });
@@ -63,7 +70,7 @@ class StoreService extends MedusaStoreService {
 
   async delete(storeId: string): Promise<void> {
     if (!storeId) {
-      throw new Error("Store ID is required to delete a product");
+      throw new Error("Store ID is required to delete a store");
     }
 
     const existingStore = await this.storeRepository_.findOne({ where: { id: storeId } });
@@ -78,22 +85,21 @@ class StoreService extends MedusaStoreService {
   async listStoresByVendor(vendorId: string | null): Promise<Store[]> {
     const whereClause: FindOptionsWhere<Store> = {};
 
-  if (vendorId !== null) {
-    whereClause.vendor_id = vendorId; // Set condition based on vendorId
+    if (vendorId !== null) {
+      whereClause.vendor_id = vendorId;
 
-    // Check if any store exists for the vendorId
-    const store = await this.storeRepository_.findOne({
-      where: whereClause,
-    });
-    
-    if (!store) {
-      throw new Error(`No Stores are found for vendor ID: ${vendorId}`);
+      const store = await this.storeRepository_.findOne({
+        where: whereClause,
+      });
+      
+      if (!store) {
+        throw new Error(`No Stores are found for vendor ID: ${vendorId}`);
+      }
     }
-  }
 
-  // Return stores matching the vendorId
-  return this.storeRepository_.find({ where: whereClause });
+    return this.storeRepository_.find({ where: whereClause });
   }
 }
 
 export default StoreService;
+

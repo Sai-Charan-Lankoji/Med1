@@ -1,19 +1,16 @@
-import type { MedusaRequest, MedusaResponse, 
-  
-} from "@medusajs/medusa";
+import type { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import StoreService from "../../../../services/store";
 import PublishableApiKeyService from "../../../../services/publishableapikey";
 import SalesChannelService from "../../../../services/salesChannel";
- 
+
 const getStoreService = (req: MedusaRequest): StoreService | null => {
   try {
-    // Use the correct casing when resolving the service
     return req.scope.resolve("storeService") as StoreService;
   } catch (error) {
     console.error("Failed to resolve storeService:", error);
     return null;
   }
-}
+};
 
 const getPublishableApiKeyService = (
   req: MedusaRequest
@@ -35,45 +32,68 @@ const getSalesChannelService = (
     return req.scope.resolve("salesChannelService") as SalesChannelService;
   } catch (error) {
     console.error("Failed to resolve salesChannelService:", error);
-    null;
+    return null;
   }
 };
-//Retrive a specific product
+
 export const GET = async (
- req: MedusaRequest,
- res: MedusaResponse
+  req: MedusaRequest,
+  res: MedusaResponse
 ): Promise<void> => {
- try {
-   const storeservice = getStoreService(req as any);
-   if (!storeservice) {
-     res.status(500).json({ error: "Store service could not be resolved." });
-     return;
-   }
+  try {
+    const storeService = getStoreService(req as any);
+    if (!storeService) {
+      res.status(500).json({ error: "Store service could not be resolved." });
+      return;
+    }
 
-   const storeId = req.params.id as string;
+    const storeId = req.params.id as string;
 
-   if (!storeId) {
-     res.status(400).json({ error: "Store ID is required.", message: "Store ID is required." });
-     return;
-   }
+    if (!storeId) {
+      res.status(400).json({
+        error: "Store ID is required.",
+        message: "Store ID is required.",
+      });
+      return;
+    }
 
-   const store = await storeservice.retrieveByStoreId(storeId);
+    const store = await storeService.retrieveByStoreId(storeId);
 
-   if (!store) {
-     res.status(404).json({ error: "Store not found." });
-   }else{
-     res.status(200).json({ message: "Store retrieve successfully.", store: store });
-   }
- } catch (error) {
-   console.error("Error in GET /store:", error);
-   res.status(500).json({ error: error.message || "An unknown error occurred." });
- }
+    if (!store) {
+      res.status(404).json({ error: "Store not found." });
+    } else {
+      res.status(200).json({ message: "Store retrieved successfully.", store: store });
+    }
+  } catch (error) {
+    console.error("Error in GET /store:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
 };
 
-// Update a specific product
+export const PUT = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+    const storeService = getStoreService(req as any);
+    if (!storeService) {
+      res.status(500).json({ error: "Store service could not be resolved." });
+      return;
+    }
 
+    const updateData = req.body;
+    const storeId = req.params.id;
+    const updatedStore = await storeService.updateStore(
+      storeId as string,
+      updateData
+    );
 
-
+    res.status(200).json({ message: "Store updated successfully.", store: updatedStore });
+  } catch (error) {
+    console.error("Error in PUT /vendor/store/id:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+};
 
 export const DELETE = async (
   req: MedusaRequest,
@@ -82,20 +102,14 @@ export const DELETE = async (
   try {
     const storeService = getStoreService(req as any);
     const salesChannelService = getSalesChannelService(req);
-    const publishableapikeyService = getPublishableApiKeyService(req);
-    if (!storeService) {
-      res.status(500).json({ error: "Store service could not be resolved." });
-      return;
-    }
-    if (!salesChannelService || !publishableapikeyService) {
-      console.error("Store service or publishableapikeyservice could not be resolved.");
-      res.status(500).json({ error: "Store service or publishableapikeyservice could not be resolved." });
+    const publishableApiKeyService = getPublishableApiKeyService(req);
+    if (!storeService || !salesChannelService || !publishableApiKeyService) {
+      res.status(500).json({ error: "Required services could not be resolved." });
       return;
     }
 
     const storeId = req.params.id;
-    
-    // First retrieve the store to check existence and get associated entities
+
     let store;
     try {
       store = await storeService.retrieveByStoreId(storeId);
@@ -104,29 +118,28 @@ export const DELETE = async (
       return;
     }
 
-    const deletedPublishableapikey = await publishableapikeyService.delete(store.publishableapikey)
-    // Delete the store and its associated entities
+    const deletedPublishableApiKey = await publishableApiKeyService.delete(
+      store.publishableapikey
+    );
     await storeService.delete(storeId);
-    const deletedSalesChannel = await salesChannelService.delete(store.default_sales_channel_id)
+    const deletedSalesChannel = await salesChannelService.delete(
+      store.default_sales_channel_id
+    );
 
-
-    // Return success response with details about what was deleted
-    res.status(200).json({ 
+    res.status(200).json({
       message: "Store and associated entities deleted successfully",
       details: {
         storeId: storeId,
         deletedEntities: {
           store: true,
           salesChannel: store.default_sales_channel_id ? true : false,
-          publishableApiKey: store.publishableapikey ? true : false
-        }
-      }
+          publishableApiKey: store.publishableapikey ? true : false,
+        },
+      },
     });
   } catch (error) {
     console.error("Error during store deletion:", error);
     res.status(500).json(error);
   }
-};;
-
-
+};
 
