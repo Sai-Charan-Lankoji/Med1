@@ -23,6 +23,7 @@
 body {
   color: rgb(var(--foreground-rgb));
   background-color: rgb(var(--background-body-color));
+  
 }
 
 @layer utilities {
@@ -255,6 +256,7 @@ body {
     --foreground: 222.2 84% 4.9%;
     --primary: 248 90% 66%;
     --primary-foreground: 210 40% 98%;
+    
   }
 }
 

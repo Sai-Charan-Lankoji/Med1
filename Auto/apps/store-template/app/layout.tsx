@@ -43,7 +43,7 @@ export default function RootLayout({
                 <SvgProvider>
                   <main className="min-h-screen">
                     <Navbar />
-                    <div className="pt-20 px-2 sm:px-6 lg:px-8 max-w-8xl mx-auto">
+                    <div className="pt-18 px-2 sm:px-6 lg:px-0 max-w-8xl mx-auto">
                       {children}
                     </div>
                   </main>

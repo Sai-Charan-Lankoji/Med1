@@ -260,7 +260,7 @@ const CartPage = () => {
     dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
 
     await new Promise((resolve) => setTimeout(resolve, 100));
-    router.push("/");
+    router.push("/dashboard");
 
     const canvasElement = document.querySelector(".canvas-container");
     if (canvasElement) {

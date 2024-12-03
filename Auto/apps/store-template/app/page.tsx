@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Palette, Truck, ShirtIcon, BadgeCheck, PencilRuler, ShoppingCart, PackageCheck, Star, Facebook, Twitter, Instagram } from 'lucide-react';
 import {Button} from '@/components/button';
 import { useRouter } from 'next/navigation';
-
+import { NEXT_STORE_NAME } from '@/constants/constants';
 // Custom Designs Data
 const customDesigns = [
   {
@@ -111,9 +111,9 @@ export default function Home() {
   return (
     <main>
       {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div className="absolute inset-0 gradient-bg" />
-        <div className="relative mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+      <div className="relative overflow-hidden ">
+        <div className="absolute inset-0 gradient-bg " />
+        <div className="relative mx-auto max-w-7xl  px-6 py-24 sm:py-32 lg:px-8 ">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -286,7 +286,7 @@ export default function Home() {
                     ))}
                   </div>
                   <p className="mt-4 text-lg leading-relaxed text-gray-600">
-                    "{testimonial.content}"
+                    {testimonial.content}
                   </p>
                 </div>
                 <div className="mt-8 border-t border-gray-200 pt-4">
@@ -339,7 +339,7 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="bg-white">
-        <div className="mx-auto max-w-7xl px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
+        <div className="mx-auto max-w-auto px-6 py-12 md:flex md:items-center md:justify-between lg:px-8">
           <div className="flex justify-center space-x-6 md:order-2">
             <a href="#" className="text-gray-400 hover:text-gray-500">
               <Facebook className="h-6 w-6" />
@@ -354,10 +354,10 @@ export default function Home() {
           <div className="mt-8 md:order-1 md:mt-0">
             <div className="flex items-center justify-center md:justify-start">
               <ShirtIcon className="h-8 w-8 text-indigo-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">CustomTee</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">{NEXT_STORE_NAME}</span>
             </div>
             <p className="mt-2 text-center text-xs leading-5 text-gray-500 md:text-left">
-              &copy; {new Date().getFullYear()} CustomTee. All rights reserved.
+              &copy; {new Date().getFullYear()} {NEXT_STORE_NAME}. All rights reserved.
             </p>
           </div>
         </div>
