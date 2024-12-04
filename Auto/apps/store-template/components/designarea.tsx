@@ -5,8 +5,8 @@ import { FaDownload, FaRedo, FaSync, FaUndo } from "react-icons/fa";
 import { VscBriefcase } from "react-icons/vsc";
 import { BiPurchaseTag } from "react-icons/bi";
 import { IconContext } from "react-icons/lib";
-// import { v4 as uuidv4 } from 'uuid'; 
-import {nanoid} from 'nanoid'
+//import { v4 as uuidv4 } from 'uuid'; 
+//import {nanoid} from 'nanoid'
 import { fabric } from "fabric";
 import { DesignContext, TextPropsContext } from "../context/designcontext"; 
 import { FiShoppingBag } from "react-icons/fi";
@@ -33,12 +33,12 @@ import { request } from "http";
 import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
 import { useUserContext } from "../context/userContext"; 
 import { useRouter } from "next/navigation";
-import { compressBase64Image } from "@/app/utils/imageCompression"; 
+//import { compressBase64Image } from "@/app/utils/imageCompression"; 
 import {useSvgContext} from "../context/svgcontext" 
 
 import { useNewCart } from "@/app/hooks/useNewCart";
 import { useEffect, useState } from "react"; 
-import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
+//import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
 
 
 
@@ -49,7 +49,7 @@ const clipartGal = /(group|path)/i;
 const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
-export default function DesignArea(): React.ReactElement {       
+export default function DesignArea({ isVendorMode = false }: { isVendorMode?: boolean }): React.ReactElement {      
   interface RootState {
     setReducer: {
       canvas: fabric.Canvas | undefined;
@@ -60,13 +60,15 @@ export default function DesignArea(): React.ReactElement {
       initialState: any;
     };
   }
-
+  
   // Get canvas state with proper type checking
   const canvasState = useSelector((state: RootState) => state.setReducer);
   const { addDesignToCart, loading: cartLoading } = useNewCart()
   const { updateCart } = useNewCart() 
 
   const { customerToken } = useUserContext(); 
+  //venodr or customer
+  const isAuthorized = isVendorMode || customerToken;
   const router = useRouter(); 
   const {svgUrl} = useSvgContext()
  console.log("SVG URL: ",svgUrl)
@@ -385,7 +387,10 @@ export default function DesignArea(): React.ReactElement {
 
 
 
+const addProduct = async () => {
 
+
+}
 
 
 
@@ -494,7 +499,7 @@ export default function DesignArea(): React.ReactElement {
   return (
     <div>
       <div className="flex justify-between mb-1">
-        {customerToken && (
+        {(isVendorMode || customerToken) && (
           <>
         <button
           type="button"
@@ -529,7 +534,7 @@ export default function DesignArea(): React.ReactElement {
 
       <div className="flex justify-between pt-2 bg-white p-2 pb-0 border border-b-0 border-zinc-300">
         <div>
-        {customerToken && (
+        {(isVendorMode || customerToken) && (
           <>
           <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
           
@@ -659,7 +664,7 @@ export default function DesignArea(): React.ReactElement {
         <div className="col-span-12 sm:col-span-12  md:col-span-12 lg:col-span-4 text-right">
           <button
             type="button"
-            onClick={() => cartId? handleUpdateCart() : handleAddToCart() }
+            onClick={() => isVendorMode? addProduct() :(cartId? handleUpdateCart() : handleAddToCart()) }
             className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
           >
             <IconContext.Provider
@@ -670,7 +675,7 @@ export default function DesignArea(): React.ReactElement {
             >
               <FiShoppingBag />
             </IconContext.Provider>
-            <span className="ml-3">{cartId ? `Update Cart` : `Add to Cart`}</span>
+            <span className="ml-3">{isVendorMode? "Add Product" : (cartId ? `Update Cart` : `Add to Cart`)}</span>
           </button>
         </div>
       </div>

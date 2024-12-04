@@ -9,13 +9,14 @@ import Image from "next/image";
 import { MdDeleteForever } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
-import { useRouter } from "next/navigation";
+import { useRouter,useParams } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
 import { IDesign, IProps } from "@/@types/models";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
-import { NEXT_STORE_NAME } from "@/constants/constants";
+import { NEXT_STORE_NAME, NEXT_PUBLIC_VENDOR_ID } from "@/constants/constants";
+
 
 const Navbar: React.FC = () => {
   const { cartItems, deleteCart } = useNewCart();
@@ -31,6 +32,10 @@ const Navbar: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<{
     [key: string]: boolean;
   }>({});
+
+  const params = useParams();
+  const vendorId = params.vendorId as string;
+  const isVendorMode = vendorId === NEXT_PUBLIC_VENDOR_ID;
 
   // Added: Effect to get username from sessionStorage
   useEffect(() => {
@@ -254,22 +259,24 @@ const Navbar: React.FC = () => {
 </Link>
 
           {/* Mobile menu button */}
+          {!isVendorMode && (
           <div className="md:hidden">
             <button
               onClick={handleMobileMenuToggle}
               className="mobile-menu-button p-2 text-gray-700 hover:bg-gray-100 rounded-md"
             >
-              {isMobileMenuOpen ? (
+              { isMobileMenuOpen ? (
                 <HiX className="h-6 w-6" />
               ) : (
                 <HiMenu className="h-6 w-6" />
               )}
             </button>
           </div>
+          )}
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            {!email && (
+            {!isVendorMode && !email && (
               <Link
                 href="./auth"
                 className="mx-3 px-4 py-2 text-sm font-medium text-white rounded-md text-left bg-purple-700  hover:bg-purple-500 transition-colors duration-200 flex items-center space-x-2"
@@ -280,7 +287,7 @@ const Navbar: React.FC = () => {
               </Link>
             )}
 
-            {email && (
+            {!isVendorMode && email && (
               <div className="relative profile-dropdown">
                 <button
                   onClick={handleDesktopProfileClick}
