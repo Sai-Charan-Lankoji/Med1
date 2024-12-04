@@ -16,7 +16,7 @@ export const config: MiddlewaresConfig = {
       matcher: "/vendor*",
       middlewares: [
         cors({
-          origin: ["http://localhost:8009" , "http://localhost:7000"], 
+          origin: ["http://localhost:7009" , "http://localhost:7000"], 
           credentials: true,
         }),
       ],

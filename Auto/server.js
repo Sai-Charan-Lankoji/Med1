@@ -81,41 +81,6 @@ module.exports = {
   };`;
 await fs.writeFile(portPath, portContent);
 
-  // Update next.config.mjs
-//     const nextConfigPath = path.join(targetPath, "next.config.mjs");
-//     const nextConfigContent = `
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {
-//   reactStrictMode: false,
-//   images: {
-//     remotePatterns: [
-//       {
-//         protocol: 'http',
-//         hostname: 'localhost',
-//         port: '${lastUsedPort}',
-//         pathname: '/uploads/**',
-//       },
-//       {
-//         protocol: 'https',
-//         hostname: 'ik.imagekit.io',
-//         port: '',
-//         pathname: '/zz7harqme/**',
-//       },
-//     ],
-//   },
-//   webpack: (config) => {
-//     config.externals.push({
-//       "utf-8-validate": "commonjs utf-8-validate",
-//       bufferutil: "commonjs bufferutil",
-//       canvas: "commonjs canvas",
-//     });
-//     return config;
-//   }
-// };
-
-// export default nextConfig;
-//     `;
-//     await fs.writeFile(nextConfigPath, nextConfigContent);
 
     return {
       directoryName: newStoreName,
@@ -247,20 +212,44 @@ async function checkAllStoresHealth() {
 
 async function findProcessId(port) {
   return new Promise((resolve, reject) => {
-    const command = process.platform === 'win32'
-      ? `netstat -ano | findstr :${port}`
-      : `lsof -i :${port} -t`;
+    const commands = {
+      win32: [
+        `netstat -ano | findstr :${port}`, // Fallback method
+        `powershell "Get-NetTCPConnection -LocalPort ${port} | Select-Object -ExpandProperty OwningProcess"`
+      ],
+      default: `lsof -i :${port} -t`
+    };
 
-    exec(command, (error, stdout, stderr) => {
-      if (error || !stdout.trim()) {
+    const platformCommands = process.platform === 'win32' ? commands.win32 : [commands.default];
+
+    const tryCommands = (cmdArray, index = 0) => {
+      if (index >= cmdArray.length) {
         resolve(null);
-      } else {
-        const pid = process.platform === 'win32'
-          ? stdout.split('\n')[0].split(/\s+/)[5]
-          : stdout.trim();
-        resolve(pid || null);
+        return;
       }
-    });
+
+      exec(cmdArray[index], (error, stdout, stderr) => {
+        if (error || !stdout.trim()) {
+          console.log(`Failed to find process with command: ${cmdArray[index]}. Error: ${error}`);
+          tryCommands(cmdArray, index + 1);
+          return;
+        }
+
+        // Extract PID based on platform
+        let pid;
+        if (process.platform === 'win32') {
+          // For netstat, split and take the last column
+          pid = stdout.trim().split('\n')[0]?.trim().split(/\s+/).pop();
+        } else {
+          pid = stdout.trim();
+        }
+
+        console.log(`Found process on port ${port}, PID: ${pid}`);
+        resolve(pid || null);
+      });
+    };
+
+    tryCommands(platformCommands);
   });
 }
 
@@ -290,32 +279,104 @@ async function retryOperation(operation, maxRetries = 10, delay = 2000) {
 }
 
 async function shutdownStore(directoryName, port) {
-  await retryOperation(async () => {
+  try {
     const pid = await findProcessId(port);
     if (pid) {
-      await killProcess(pid);
-      // Wait longer to ensure the process has been killed and all file handles are closed
+      console.log(`Attempting to kill process on port ${port}, PID: ${pid}`);
+      
+      // Multiple kill strategies
+      const killCommands = process.platform === 'win32'
+        ? [
+            `taskkill /F /T /PID ${pid}`,
+            `powershell "Stop-Process -Id ${pid} -Force"`
+          ]
+        : [
+            `kill -9 ${pid}`,
+            `pkill -f "node.*${port}"`
+          ];
+
+      for (const cmd of killCommands) {
+        try {
+          await new Promise((resolve, reject) => {
+            exec(cmd, (error, stdout, stderr) => {
+              if (error) {
+                console.warn(`Kill command failed: ${cmd}`, error);
+                reject(error);
+              } else {
+                resolve();
+              }
+            });
+          });
+          break; // Exit loop if a command succeeds
+        } catch (killError) {
+          console.warn('Kill attempt failed:', killError);
+        }
+      }
+
+      // Verify process is killed
       await new Promise(resolve => setTimeout(resolve, 5000));
-      // Check if the process is still running
       const pidAfterKill = await findProcessId(port);
       if (pidAfterKill) {
-        throw new Error(`Failed to kill process on port ${port}`);
+        console.warn(`Process on port ${port} still running after kill attempts`);
       }
     }
-    console.log(`${directoryName} has been shut down`);
-  });
+    console.log(`${directoryName} shutdown process completed`);
+  } catch (error) {
+    console.error(`Shutdown failed for ${directoryName}:`, error);
+    throw error;
+  }
 }
 
 async function forceDeleteDirectory(directoryPath) {
-  await retryOperation(async () => {
+  const maxAttempts = 10;
+  const delay = 2000;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      await fs.rm(directoryPath, { recursive: true, force: true });
+      // Use more aggressive deletion
+      await fs.rm(directoryPath, { 
+        recursive: true, 
+        force: true,
+        maxRetries: 3,
+        retryDelay: 1000
+      });
       console.log(`Successfully deleted directory: ${directoryPath}`);
+      return;
     } catch (error) {
-      console.error(`Error deleting directory ${directoryPath}:`, error);
-      throw error; // Rethrow the error to trigger a retry
+      console.error(`Attempt ${attempt} - Error deleting directory ${directoryPath}:`, error);
+
+      // Additional cleanup attempts
+      try {
+        // Kill all node processes associated with the directory
+        if (process.platform === 'win32') {
+          exec(`taskkill /F /IM node.exe`, (killError) => {
+            if (killError) console.warn('Error killing node processes:', killError);
+          });
+        } else {
+          exec(`pkill -f node`, (killError) => {
+            if (killError) console.warn('Error killing node processes:', killError);
+          });
+        }
+
+        // Additional Windows-specific cleanup
+        if (process.platform === 'win32') {
+          exec(`rmdir /s /q "${directoryPath}"`, (rmError) => {
+            if (rmError) console.warn('Error using rmdir:', rmError);
+          });
+        }
+      } catch (cleanupError) {
+        console.error('Cleanup attempt failed:', cleanupError);
+      }
+
+      // If it's the last attempt, throw the error
+      if (attempt === maxAttempts) {
+        throw error;
+      }
+
+      // Wait before retrying
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
-  });
+  }
 }
 
 app.delete("/delete-store/:storeId", async (req, res) => {
@@ -329,33 +390,97 @@ app.delete("/delete-store/:storeId", async (req, res) => {
 
     const store = storeRegistry[storeIndex];
 
-    console.log(`Attempting to shut down ${store.directoryName}...`);
-    await shutdownStore(store.directoryName, store.port);
-    console.log(`${store.directoryName} shutdown complete.`);
+    try {
+      await shutdownStore(store.directoryName, store.port);
+    } catch (shutdownError) {
+      console.warn(`Warning: Could not gracefully shut down ${store.directoryName}:`, shutdownError);
+    }
 
     const storePath = path.join(__dirname, "apps", store.directoryName);
     
-    console.log(`Waiting for directory to be safe for deletion...`);
-    await new Promise(resolve => setTimeout(resolve, 10000)); // Wait for 10 seconds
+    try {
+      await forceDeleteDirectory(storePath);
+    } catch (deleteError) {
+      console.error(`Persistent error deleting directory for ${store.directoryName}:`, deleteError);
+      // Consider additional manual cleanup or logging
+    }
 
-    console.log(`Attempting to forcefully delete directory...`);
-    await forceDeleteDirectory(storePath);
-    console.log(`Directory deletion complete.`);
-
-    storeRegistry.splice(storeIndex, 1);
+    // Remove from registry
+    storeRegistry = storeRegistry.filter(s => s.storeId !== storeId);
     await saveStoreRegistry();
 
     res.json({
       success: true,
-      message: "Store deleted successfully",
+      message: "Store deletion process completed",
       deletedStore: store,
     });
   } catch (error) {
-    console.error("Error deleting store:", error);
+    console.error("Unexpected error in store deletion:", error);
     res.status(500).json({
       success: false,
-      message: "Error deleting store",
+      message: "Error in store deletion process",
       error: error.message,
+    });
+  }
+});
+
+app.put("/update-store", async (req, res) => {
+  const { store_id, name } = req.body;
+
+  try {
+    // Find the store in the registry
+    const storeIndex = storeRegistry.findIndex(store => store.storeId === store_id);
+    
+    if (storeIndex === -1) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "Store not found" 
+      });
+    }
+
+    const store = storeRegistry[storeIndex];
+    const storePath = path.join(__dirname, "apps", store.directoryName);
+
+    // Update store registry
+    storeRegistry[storeIndex] = {
+      ...store,
+      storeName: name
+    };
+
+    // Save updated registry
+    await saveStoreRegistry();
+
+    // Update constants.ts file
+    const constantsPath = path.join(storePath, "constants", "constants.ts");
+    
+    try {
+      const constantsContent = await fs.readFile(constantsPath, "utf8");
+      const updatedConstantsContent = constantsContent.replace(
+        /export const NEXT_STORE_NAME = ".*"/,
+        `export const NEXT_STORE_NAME = "${name}"`
+      );
+      
+      await fs.writeFile(constantsPath, updatedConstantsContent);
+    } catch (fileError) {
+      console.error("Error updating constants file:", fileError);
+      // Non-fatal error, store registry is still updated
+    }
+
+    res.json({
+      success: true,
+      message: "Store updated successfully",
+      updatedStore: {
+        ...store,
+        storeName: name
+      }
+    });
+
+  } catch (error) {
+    console.error("Error updating store:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating store",
+      error: error.message
     });
   }
 });

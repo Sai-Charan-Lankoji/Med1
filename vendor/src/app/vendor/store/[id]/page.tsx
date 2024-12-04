@@ -15,12 +15,15 @@ import { useGetStore } from "@/app/hooks/store/useGetStore";
 import { BackButton } from "@/app/utils/backButton";
 import { useParams } from "next/navigation";
 import { Spinner } from "@medusajs/icons";
+import { useRouter } from "next/navigation";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const backendManagementUrl = "http://localhost:3000"; // Backend store management server
 
 const EditStore = () => {
   const { id } = useParams();
   const { data: storeData, error, isLoading, refetch } = useGetStore(id as string);
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     swap_link_template: "",
@@ -54,7 +57,8 @@ const EditStore = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${baseUrl}/vendor/store/${id}`, {
+      // First, update store details in the database
+      const storeUpdateResponse = await fetch(`${baseUrl}/vendor/store/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -63,17 +67,42 @@ const EditStore = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) {
+      if (!storeUpdateResponse.ok) {
         throw new Error("Failed to update Store Details");
       }
 
-      const result = await response.json();
+      const storeResult = await storeUpdateResponse.json();
+
+      
+      const backendUpdateResponse = await fetch(`${backendManagementUrl}/update-store`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          store_id: id,
+          name: formData.name
+        }),
+      });
+
+      if (!backendUpdateResponse.ok) {
+        // Loging the backend update error, 
+        console.error("Failed to update store in backend management system");
+        toast.warning("Warning", {
+          description: "Store updated, but there was an issue with backend store management",
+          duration: 5000,
+        });
+      }
+
       toast.success("Success", {
         description: "Store details updated successfully.",
         duration: 5000,
       });
+
       refetch();
-      return result;
+      router.push(`/vendor/store`);
+      return storeResult;
+      
     } catch (error: any) {
       toast.error("Error", {
         description: error.message || "Failed to update store details",

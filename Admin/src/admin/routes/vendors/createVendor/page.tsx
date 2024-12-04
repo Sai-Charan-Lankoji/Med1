@@ -104,7 +104,7 @@ const VendorNew: React.FC<VendorNewProps> = ({
         throw new Error(`Failed to create vendor: ${response.status}`);
       }
 
-      window.open("http://localhost:8009","_blank")
+      window.open("http://localhost:7009","_blank")
       toast.success("Success", {
         description: "Vendor Created Successfully",
         duration: 1000,

@@ -11,7 +11,7 @@ const generatePortArray = (start: number, end: number) => {
  
 // Configure CORS settings
 const vendorCorsOptions = {
-origin: ["http://localhost:8009","http://localhost:7000"], // Your frontend origin
+origin: ["http://localhost:7009","http://localhost:7000"], // Your frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
   credentials: true, // Allow credentials (if needed)
   optionsSuccessStatus: 200, // For older browsers
