@@ -18,6 +18,7 @@ class PlanService extends TransactionBaseService {
     this.manager_ = container.manager;
     this.PlanRepository_ = container.manager.getRepository(PlanRepository);
   }
+  
 
   async create(data: CreatePlanData): Promise<Plan> {
     return await this.atomicPhase_(async (transactionManager) => {

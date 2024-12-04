@@ -6,6 +6,8 @@ import { ArrowRight, Palette, Truck, ShirtIcon, BadgeCheck, PencilRuler, Shoppin
 import {Button} from '@/components/button';
 import { useRouter } from 'next/navigation';
 import { NEXT_STORE_NAME } from '@/constants/constants';
+import { useGetProducts } from './hooks/useGetProducts';
+import { log } from 'node:console';
 // Custom Designs Data
 const customDesigns = [
   {
@@ -107,7 +109,9 @@ export default function Home() {
       section.scrollIntoView({ behavior: 'smooth' });
     }
   };
-
+  const { data: products } = useGetProducts()
+  console.log("PRODUCTS: ", products);
+  
   return (
     <main>
       {/* Hero Section */}

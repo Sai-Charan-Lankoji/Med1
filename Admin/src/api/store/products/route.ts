@@ -17,44 +17,28 @@ export const GET = async (
   res: MedusaResponse
 ): Promise<void> => {
   try {
-    const productService = req.scope.resolve("productService") as ProductService;
+    const productService = getProductService(req as any);
+    if (!productService) {
+      console.error("Product service could not be resolved.");
+      res.status(500).json({ error: "Product service could not be resolved." });
+      return;
+    }
+    const storeId = req.query.storeId as string;
 
-    const vendorId = req.query.vendorId as string;
-
-    if (!vendorId) {
-      res.status(400).json({ error: "Vendor ID is required", message: "Vendor ID is required"});
+    if (!storeId) {
+      res.status(400).json({ error: "Store ID is required", message: "Store ID is required"});
       return;
     }
 
-    const products = await productService.retrieveByVendorId(vendorId);
+    const products = await productService.retrieveByStoreId(storeId);
 
     res.status(200).json({ products });
   } catch (error) {
-    console.error("Error in GET /store/vendor/products:", error);
+    console.error("Error in GET /store/products:", error);
     res.status(500).json({ error: error.message || "An unknown error occurred." });
   }
 };
 
-
-interface ProductData {
-  title: string;
-  subtitle: string;
-  handle: string;
-  material: string;
-  description: string;
-  discountable: boolean;
-  type: string;
-  tags: string;
-  width: string;
-  length: string;
-  height: string;
-  weight: string;
-  mid_code: string;
-  hs_code: string;
-  origin_country: string;
-  thumbnail: string;
-  vendor_id: string; // Ensure this matches the frontend
-}
 
 export const POST = async (
   req: MedusaRequest,

@@ -31,7 +31,7 @@ class ProductService extends MedusaProductService {
     }
   }
 
-  async create(productObject: CreateProductInput): Promise<Product> {
+  async create(productObject: any): Promise<Product> {
     if (!productObject.vendor_id) {
       throw new Error("Vendor ID is required to create a product.");
     }
@@ -93,7 +93,7 @@ class ProductService extends MedusaProductService {
     if (vendorId !== null) {
       query.where.vendor_id = vendorId;
 
-      const product = await this.productRepository.findOne({ where: { vendor_id: vendorId } });
+      const product = await this.productRepository.find({ where: { vendor_id: vendorId } });
       if (!product) {
         throw new Error(`No Products are found`);
       }
@@ -101,6 +101,21 @@ class ProductService extends MedusaProductService {
 
     return this.productRepository.find(query);
   }
+
+  async retrieveByStoreId(storeId: string | null): Promise<Product[]> {
+    const query: any = { where: {} };
+    if (storeId !== null) {
+      query.where.store_id = storeId;
+
+      const product = await this.productRepository.find({ where: { store_id: storeId } });
+      if (!product) {
+        throw new Error(`No Products are found for this storeId ${storeId}`);
+      }
+    }
+
+    return this.productRepository.find(query);
+  }
+
 
 
   async retrieveByNullVendor(): Promise<Product[]> {

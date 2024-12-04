@@ -5,6 +5,15 @@ import { Vendor } from "./vendor";
 
 @Entity()
 export class Product extends MedusaProduct {
+  @Column({ type: "jsonb", nullable: true })
+  designs: Record<string, any>;;  
+
+  @Column({ type: "jsonb", nullable: true  })
+  designstate: Record<string, any>;;  
+
+  @Column({ type: "jsonb", nullable: true })
+  propstate: Record<string, any>;;  
+  
   @Index("ProductStoreId")
   @Column({ nullable: true })
   store_id?: string;

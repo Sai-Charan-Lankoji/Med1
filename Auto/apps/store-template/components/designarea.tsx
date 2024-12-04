@@ -3,10 +3,7 @@
 
 import { FaDownload, FaRedo, FaSync, FaUndo } from "react-icons/fa";
 import { VscBriefcase } from "react-icons/vsc";
-import { BiPurchaseTag } from "react-icons/bi";
 import { IconContext } from "react-icons/lib";
-//import { v4 as uuidv4 } from 'uuid'; 
-//import {nanoid} from 'nanoid'
 import { fabric } from "fabric";
 import { DesignContext, TextPropsContext } from "../context/designcontext"; 
 import { FiShoppingBag } from "react-icons/fi";
@@ -26,22 +23,14 @@ import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
 import * as React from "react";
 import { GetTextStyles } from "../shared/draw";  
-//import { useCart } from "@/context/cartContext"; 
 import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
-//import { useUploadImage } from "@/app/hooks/useUploadImage";
-import { request } from "http"; 
 import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
 import { useUserContext } from "../context/userContext"; 
 import { useRouter } from "next/navigation";
-//import { compressBase64Image } from "@/app/utils/imageCompression"; 
 import {useSvgContext} from "../context/svgcontext" 
-
 import { useNewCart } from "@/app/hooks/useNewCart";
 import { useEffect, useState } from "react"; 
-//import { RouterContext } from "next/dist/shared/lib/router-context.shared-runtime";
-
-
-
+import { NEXT_PUBLIC_VENDOR_ID, NEXT_PUBLIC_STORE_ID } from "@/constants/constants";
 
 
 const shapesGal = /(rect|circle|triangle)/i;
@@ -65,32 +54,22 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
   const canvasState = useSelector((state: RootState) => state.setReducer);
   const { addDesignToCart, loading: cartLoading } = useNewCart()
   const { updateCart } = useNewCart() 
-
   const { customerToken } = useUserContext(); 
-  //venodr or customer
   const isAuthorized = isVendorMode || customerToken;
   const router = useRouter(); 
   const {svgUrl} = useSvgContext()
- console.log("SVG URL: ",svgUrl)
-  // const { mutate: createOrder, isLoading, isError } = useCreateOrder(); // Custom hook
-// const {mutate:uploadImage , isError , isLoading} = useUploadImage()
   const {mutate:CreateApparelDesign , isLoading, isError} = UseCreateApparelDesign() 
   const { mutate: createApparelUpload} = useCreateApparelUpload();
-  //const {addToCart} = useCart()
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
-  const { svgcolors, dispatchColorPicker } =
-    React.useContext(ColorPickerContext)!;
+  const { svgcolors, dispatchColorPicker } = React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
   const { designs, dispatchDesign, currentBgColor, updateColor } = React.useContext(DesignContext)!;
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
-
   const [canvas, setCanvas] = React.useState<fabric.Canvas>();
-  //const [currentBgColor, setBgColor] = React.useState('');
   const [apparels, setApparels] = React.useState<IApparel[]>(designApparels);
-  //const [colors, setColors] = React.useState<IBgcolor[]>(bgColours);
   let selectionCreated: fabric.Object[] | undefined;
   const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
   const [cartId, setCartId] = useState<any>();
@@ -108,7 +87,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
 
   }, []);
   canvas?.on("selection:created", function (options) {
-    //console.log(options);
     if (options.e) {
       options.e.preventDefault();
       options.e.stopPropagation();
@@ -121,19 +99,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       }
     }
   }); 
-
-
-
-  
-
-
-  // canvas?.on("object:modified", () => {
-  //   dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
-  // });
-
-  // canvas?.on("object:added", () => {
-  //   dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
-  // });
 
   canvas?.on("selection:updated", function (options) {
     //console.log(options);
@@ -387,14 +352,58 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
 
 
 
-const addProduct = async () => {
-
-
-}
-
-
-
-
+  const addProduct = async () => {
+    try {
+      const currentDesignState = designs.map(design => ({
+        ...design,
+        svgImage: design.id === design?.id ? svgUrl : design.svgImage
+      }));
+    
+      // Get the current text props state for saving
+      const currentPropsState = {
+        ...props,
+        designId: design?.id
+      };
+      // Prepare the request body
+      const requestBody = {
+        vendor_id: NEXT_PUBLIC_VENDOR_ID,
+        store_id: NEXT_PUBLIC_STORE_ID,
+        designs:designs,
+        designstate:currentDesignState,
+        propstate: currentPropsState,
+        customizable: true
+      };
+  
+      // Make the API call
+      const response = await fetch('http://localhost:9000/store/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create product');
+      }
+      const data = await response.json();
+      // Clear the design state after successful product creation
+      dispatchDesign({ type: "CLEAR_ALL" });
+      localStorage.removeItem('savedDesignState');
+      localStorage.removeItem('savedPropsState');
+      
+      // Refresh the page or show success message
+      router.refresh();
+      
+      return data;
+  
+    } catch (error) {
+      console.error('Error creating product:', error);
+      // Handle error appropriately - maybe show a toast or alert
+      throw error;
+    }
+  };
 
   const handleAddToCart = async () => {
     // Get the current design state for saving

@@ -61,7 +61,7 @@ export const useGetStores = (id : any ) => {
     staleTime: 1000 * 60 * 5,               
     retry: false,                
 
-    onError: (error: unknown) => {
+    onError: (error: unknown) => {  
       if (error instanceof Error) {
         console.error('Error occurred while fetching products:', error.message);
       } else {

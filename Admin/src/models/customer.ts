@@ -1,7 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 import { Customer as MedusaCustomer } from "@medusajs/medusa";
 import { Vendor } from "./vendor";
-import { Cart } from "./cart";
 
 @Entity()
 export class Customer extends MedusaCustomer {

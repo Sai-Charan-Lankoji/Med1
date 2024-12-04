@@ -68,75 +68,78 @@ const Product = () => {
 
   return (
     <>
-      <div className="flex items-center justify-end flex-wrap pb-4 p-8 space-x-0 sm:space-x-4 space-y-4 sm:space-y-0 mt-4 sm:mt-0">
-        <div className="justify-start mr-auto">
-        <Heading level="h1" className="text-[26px] ">Products</Heading>
-        </div>
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="text-[13px] pl-11 py-1 border bg-white/50 rounded-md shadow-sm sm:w-auto border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-          />
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-        </div>
-
-
-        <Button
-          variant="secondary"
-          onClick={() => router.push("/vendor/components/addProducts")}
-          className="flex items-center space-x-2 px-2 py-2 bg-transparent text-[13px] text-black font-semibold rounded-lg hover:bg-gray-200"
-        >
-          <FiPlus />
-          New Product
-        </Button>
-        <div className="flex items-center space-x-2 mt-4">
-          <button
-            onClick={() => setViewType("table")}
-            className={`text-[20px] ${
-              viewType === "table" ? "text-blue-500" : "text-gray-500"
-            }`}
-          >
-            <IoIosList />
-          </button>
-          <button
-            onClick={() => setViewType("grid")}
-            className={`text-[20px] ${
-              viewType === "grid" ? "text-blue-500" : "text-gray-500"
-            }`}
-          >
-            <CiGrid41 />
-          </button>
-        </div>
-      </div>
-      <hr className="mt-4" />
-      {isLoading ? (
-        <div className="flex items-center justify-center h-screen">
-          <Loader />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4 justify-center items-center">
-          {filteredData.length === 0 || currentProducts.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">
-              <p>No products created yet</p>
-            </div>
-          ) : viewType === "table" ? (
-            <ProductTableView currentProducts={currentProducts as Product[]} />
-          ) : (
-            <ProductGridView currentProducts={currentProducts as Product[]} />
-          )}
-        </div>
-      )}
-
-      <Pagination
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        totalItems={filteredData.length}
-        data={currentProducts}
-      />
+    <h1>Products</h1>
     </>
+    // <>
+    //   <div className="flex items-center justify-end flex-wrap pb-4 p-8 space-x-0 sm:space-x-4 space-y-4 sm:space-y-0 mt-4 sm:mt-0">
+    //     <div className="justify-start mr-auto">
+    //     <Heading level="h1" className="text-[26px] ">Products</Heading>
+    //     </div>
+    //     <div className="relative">
+    //       <input
+    //         type="text"
+    //         placeholder="Search"
+    //         value={searchQuery}
+    //         onChange={(e) => setSearchQuery(e.target.value)}
+    //         className="text-[13px] pl-11 py-1 border bg-white/50 rounded-md shadow-sm sm:w-auto border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+    //       />
+    //       <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+    //     </div>
+
+
+    //     <Button
+    //       variant="secondary"
+    //       onClick={() => router.push("/vendor/components/addProducts")}
+    //       className="flex items-center space-x-2 px-2 py-2 bg-transparent text-[13px] text-black font-semibold rounded-lg hover:bg-gray-200"
+    //     >
+    //       <FiPlus />
+    //       New Product
+    //     </Button>
+    //     <div className="flex items-center space-x-2 mt-4">
+    //       <button
+    //         onClick={() => setViewType("table")}
+    //         className={`text-[20px] ${
+    //           viewType === "table" ? "text-blue-500" : "text-gray-500"
+    //         }`}
+    //       >
+    //         <IoIosList />
+    //       </button>
+    //       <button
+    //         onClick={() => setViewType("grid")}
+    //         className={`text-[20px] ${
+    //           viewType === "grid" ? "text-blue-500" : "text-gray-500"
+    //         }`}
+    //       >
+    //         <CiGrid41 />
+    //       </button>
+    //     </div>
+    //   </div>
+    //   <hr className="mt-4" />
+    //   {isLoading ? (
+    //     <div className="flex items-center justify-center h-screen">
+    //       <Loader />
+    //     </div>
+    //   ) : (
+    //     <div className="flex flex-col gap-4 justify-center items-center">
+    //       {filteredData.length === 0 || currentProducts.length === 0 ? (
+    //         <div className="text-center text-gray-500 py-8">
+    //           <p>No products created yet</p>
+    //         </div>
+    //       ) : viewType === "table" ? (
+    //         <ProductTableView currentProducts={currentProducts as Product[]} />
+    //       ) : (
+    //         <ProductGridView currentProducts={currentProducts as Product[]} />
+    //       )}
+    //     </div>
+    //   )}
+
+    //   <Pagination
+    //     currentPage={currentPage}
+    //     setCurrentPage={setCurrentPage}
+    //     totalItems={filteredData.length}
+    //     data={currentProducts}
+    //   />
+    // </>
   );
 };
 
