@@ -1,11 +1,11 @@
-
 "use client"
+
 import React, { useMemo, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { format, parseISO } from "date-fns"
-import { Search, Plus, MoreHorizontal, PencilIcon, TrashIcon, XIcon, Loader2, CheckCircle } from 'lucide-react'
+import { Search, Plus, MoreHorizontal, PencilIcon, TrashIcon, Loader2, CheckCircle } from 'lucide-react'
 import withAuth from "@/lib/withAuth"
 import { useGetStores } from "@/app/hooks/store/useGetStores"
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels"
@@ -42,7 +42,8 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
-import { useToast } from "@/app/@types/use-toast"
+import { useToast } from "@/hooks/use-toast"
+
 
 const Store = () => {
   const router = useRouter()
@@ -68,7 +69,6 @@ const Store = () => {
   const [loadingStage, setLoadingStage] = useState("")
   const [isStoreCreated, setIsStoreCreated] = useState(false)
   const { mutate: updateStore } = useUpdateStore()
-  //added for confirm delete
   const [storeToDelete, setStoreToDelete] = useState(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeletingStore, setIsDeletingStore] = useState(false)
@@ -227,7 +227,8 @@ const Store = () => {
         )
       } 
       else {
-        setShowLoadingModal(true)
+        setIsModalOpen(false) // Close the store creation modal
+        setShowLoadingModal(true) // Open the loading modal
         setLoadingStage("Initializing store creation...")
 
         const storeData = {
@@ -270,7 +271,6 @@ const Store = () => {
                                     
                   setTimeout(() => {
                     setShowLoadingModal(false)
-                    setIsModalOpen(false)
                     setIsStoreCreated(false)
                     router.refresh()
                   }, 2000)
@@ -319,6 +319,7 @@ const Store = () => {
       }, 2000)
     }
   }
+
   const initiateDelete = (id, event) => {
     event.stopPropagation()
     setStoreToDelete(id)
@@ -366,29 +367,33 @@ const Store = () => {
     }
   }
 
-  
-
   const getRowIndex = (index: number) => {
     return (currentPage * PAGE_SIZE) + index + 1
   }
 
-  
-
   const LoadingModal = () => (
-    <Dialog open={showLoadingModal} onOpenChange={setShowLoadingModal}>
-      <DialogContent className="sm:max-w-[425px]">
+    <Dialog 
+      open={showLoadingModal} 
+      onOpenChange={setShowLoadingModal}
+      modal={true}
+    >
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        onCloseAutoFocus={(e) => {
+          if (!isStoreCreated) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{isStoreCreated ? "Success!" : "Please Wait"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="flex items-center justify-center">
             {!isStoreCreated ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              >
+              <div className="animate-spin">
                 <Loader2 className="h-8 w-8 text-blue-500" />
-              </motion.div>
+              </div>
             ) : (
               <motion.div
                 initial={{ scale: 0 }}
@@ -403,56 +408,52 @@ const Store = () => {
         </div>
       </DialogContent>
     </Dialog>
-  )
-  const DeleteConfirmationModal = ( 
-    
-  ) => 
-     (
-      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-slate-100">
-          <DialogHeader>
-            <DialogTitle className="text-blue-600">Confirm Delete</DialogTitle>
-          </DialogHeader>
-          
-          {isDeletingStore ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mb-4"></div>
-              <p className="text-lg text-gray-700 font-semibold">
-                Shutting down and deleting store...
+  );
+
+  const DeleteConfirmationModal = () => (
+    <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+      <DialogContent className="sm:max-w-[425px] bg-slate-100">
+        <DialogHeader>
+          <DialogTitle className="text-blue-600">Confirm Delete</DialogTitle>
+        </DialogHeader>
+        
+        {isDeletingStore ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent mb-4"></div>
+            <p className="text-lg text-gray-700 font-semibold">
+              Shutting down and deleting store...
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-4 py-4">
+              <p className="text-center text-md text-gray-700">
+                Are you sure you want to delete this store? This action cannot be undone.
               </p>
             </div>
-          ) : (
-            <>
-              <div className="grid gap-4 py-4">
-                <p className="text-center text-md text-gray-700">
-                  Are you sure you want to delete this store? This action cannot be undone.
-                </p>
-              </div>
-              <div className="flex justify-end mt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDeleteModalOpen(false)}
-                  className="mr-2 w-20"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={handleDelete}
-                  className="w-24"
-                >
-                  Delete
-                </Button>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
-    );
-  
-
+            <div className="flex justify-end mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="mr-2 w-20"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleDelete}
+                className="w-24"
+              >
+                Delete
+              </Button>
+            </div>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
 
   if (isLoading) {
     return <StoreSkeleton />
@@ -488,7 +489,6 @@ const Store = () => {
             className="w-full pl-10 pr-4 py-2 rounded-full border-indigo-200 focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           />
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" size={18} />
-
         </motion.div>
       </motion.div>
 
@@ -592,8 +592,8 @@ const Store = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogTrigger asChild>
-          <Button className=" right-8 shadow-lg mt-4 bg-blue-600 hover:bg-blue-900">
-            <Plus className="mr-2 h-4 w-4 " /> New Store
+          <Button className="right-8 shadow-lg mt-4 bg-blue-600 hover:bg-blue-900">
+            <Plus className="mr-2 h-4 w-4" /> New Store
           </Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-[425px]">
@@ -702,7 +702,7 @@ const Store = () => {
               <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)} className="mr-2 w-20">
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading} className="w-24 bg-blue-600 hover:bg-blue-950">
+              <Button type="submit" className="w-24 bg-blue-600 hover:bg-blue-950">
                 {loading ? (
                   <div className="flex items-center">
                     <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
@@ -763,3 +763,4 @@ const StoreSkeleton = () => {
 }
 
 export default withAuth(Store)
+
