@@ -8,6 +8,7 @@ import { SalesChannel } from "./salesChannel";
 import { Customer } from "./customer";
 import { Order } from "./order";
 import { VendorUser } from "./vendor-user";
+import { DesignedProduct } from "./designedproducts";
 
 export enum BusinessModel {
   ApparelDesign = "Apparel Design",
@@ -49,7 +50,9 @@ export class Vendor extends SoftDeletableEntity {
 
   @Column({ type: "enum", enum: BusinessModel, default: BusinessModel.ApparelDesign })
   business_type: BusinessModel;
-
+  
+  @OneToMany(() => DesignedProduct, (designedProduct) => designedProduct.vendor)
+  designedProducts: DesignedProduct[];
   // Establishing the one-to-many relationship with VendorUser
   @OneToMany(() => VendorUser, (vendorUser) => vendorUser.vendor)
   vendorUsers: VendorUser[];

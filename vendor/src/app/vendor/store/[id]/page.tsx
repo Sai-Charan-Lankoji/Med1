@@ -15,56 +15,54 @@ import { useGetStore } from "@/app/hooks/store/useGetStore";
 import { BackButton } from "@/app/utils/backButton";
 import { useParams } from "next/navigation";
 import { Spinner } from "@medusajs/icons";
+import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 const backendManagementUrl = "http://localhost:3000"; // Backend store management server
 
+interface StoreFormData {
+  name: string;
+  swap_link_template: string;
+  payment_link_template: string;
+  invite_link_template: string;
+}
+
 const EditStore = () => {
   const { id } = useParams();
   const { data: storeData, error, isLoading, refetch } = useGetStore(id as string);
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: "",
-    swap_link_template: "",
-    payment_link_template: "",
-    invite_link_template: "",
-  });
-
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<StoreFormData>();
 
   useEffect(() => {
     if (storeData) {
-      setFormData({
+      reset({
         name: storeData.name || "",
         swap_link_template: storeData.swap_link_template || "",
         payment_link_template: storeData.payment_link_template || "",
         invite_link_template: storeData.invite_link_template || "",
       });
     }
-  }, [storeData]);
+  }, [storeData, reset]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const onSubmit = async (data: StoreFormData) => {
     setLoading(true);
 
     try {
-      // First, update store details in the database
       const storeUpdateResponse = await fetch(`${baseUrl}/vendor/store/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(data),
       });
 
       if (!storeUpdateResponse.ok) {
@@ -72,7 +70,6 @@ const EditStore = () => {
       }
 
       const storeResult = await storeUpdateResponse.json();
-
       
       const backendUpdateResponse = await fetch(`${backendManagementUrl}/update-store`, {
         method: "PUT",
@@ -81,7 +78,7 @@ const EditStore = () => {
         },
         body: JSON.stringify({
           store_id: id,
-          name: formData.name
+          name: data.name
         }),
       });
 
@@ -93,16 +90,12 @@ const EditStore = () => {
           duration: 5000,
         });
       }
-
       toast.success("Success", {
         description: "Store details updated successfully.",
         duration: 5000,
       });
-
-      refetch();
       router.push(`/vendor/store`);
-      return storeResult;
-      
+      refetch();
     } catch (error: any) {
       toast.error("Error", {
         description: error.message || "Failed to update store details",
@@ -120,7 +113,6 @@ const EditStore = () => {
       </div>
     );
   }
- 
 
   return (
     <div>
@@ -138,7 +130,7 @@ const EditStore = () => {
         <Text className="text-sm text-gray-600 pt-2 font-semibold">
           Manage your business details
         </Text>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid grid-cols-1 gap-4 mb-4 mt-4">
             <div className="pt-2">
               <Label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -147,12 +139,13 @@ const EditStore = () => {
               <Input
                 type="text"
                 id="name"
-                name="name"
                 placeholder="Store name"
-                value={formData.name}
-                onChange={handleChange}
+                {...register("name", { required: "Store name is required" })}
                 className="mt-1 py-3 block w-full border border-gray-300 rounded-md shadow-sm"
               />
+              {errors.name && (
+                <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+              )}
             </div>
             <div className="pt-3">
               <Label htmlFor="swap_link_template" className="block text-sm font-medium text-gray-700">
@@ -161,10 +154,8 @@ const EditStore = () => {
               <Input
                 type="text"
                 id="swap_link_template"
-                name="swap_link_template"
                 placeholder="https://acme.inc/swap={swap_id}"
-                value={formData.swap_link_template}
-                onChange={handleChange}
+                {...register("swap_link_template")}
                 className="mt-1 py-3 block w-full border border-gray-300 rounded-md shadow-sm"
               />
             </div>
@@ -175,10 +166,8 @@ const EditStore = () => {
               <Input
                 type="text"
                 id="payment_link_template"
-                name="payment_link_template"
                 placeholder="https://acme.inc/payment={payment_id}"
-                value={formData.payment_link_template}
-                onChange={handleChange}
+                {...register("payment_link_template")}
                 className="mt-1 py-3 block w-full border border-gray-300 rounded-md shadow-sm"
               />
             </div>
@@ -189,10 +178,8 @@ const EditStore = () => {
               <Input
                 type="text"
                 id="invite_link_template"
-                name="invite_link_template"
                 placeholder="https://acme.inc/invite?token={invite_token}"
-                value={formData.invite_link_template}
-                onChange={handleChange}
+                {...register("invite_link_template")}
                 className="mt-1 py-3 block w-full border border-gray-300 rounded-md shadow-sm"
               />
             </div>  
