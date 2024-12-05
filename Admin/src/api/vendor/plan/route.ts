@@ -1,6 +1,5 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import PlanService from "../../../services/plan";
-import { CreatePlanData } from "../../../repositories/plan";
 
 const getPlanService = (req: MedusaRequest): PlanService | null => {
   try {
@@ -22,7 +21,8 @@ export const GET = async (
       res.status(500).json({ error: "Plan service could not be resolved." });
       return;
     }
-    res.status(501).json({ message: "GET method not implemented yet" });
+    const allPlans = await planService.list();
+    res.status(201).json(allPlans);
   } catch (error) {
     console.error("Error in GET /vendor/plan:", error);
     res
@@ -30,4 +30,3 @@ export const GET = async (
       .json({ error: error.message || "An unknown error occurred." });
   }
 };
-
