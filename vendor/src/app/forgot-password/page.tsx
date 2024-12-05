@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
     e.preventDefault();
     if (!email || !newPassword || !confirmPassword) {
       toast.info("Info", {
-        description: "Please enter details",
+        description: "Please enter all details",
         duration: 5000
       })
 
@@ -35,14 +35,28 @@ export default function ForgotPasswordPage() {
     if (newPassword !== confirmPassword) {
       toast.warning("Warning", {
         description: "Password doesn't match",
+        duration: 5000
       })
       return;
+    }
+    if(isSuccess){
+      toast.success("Success", {
+        description: "Password reset Successfully!",
+        duration: 5000
+      })
+    }
+    if(isError){
+      toast.error("Error", {
+        description: error?.message || "Failed to reset password",
+        duration: 5000
+      })
     }
     mutate({ email, newPassword });
   };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
+      <Toaster position="top-right" />
       <div className="relative flex justify-center items-center min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: -50 }}
@@ -85,7 +99,6 @@ export default function ForgotPasswordPage() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
                 placeholder={t("Enter your email")}
                 className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/70 focus:outline-none focus:ring-2 focus:ring-white focus:border-transparent transition duration-200"
               />
@@ -130,7 +143,7 @@ export default function ForgotPasswordPage() {
               {isLoading ? <Loader className="animate-spin mx-auto" /> : t("Reset Password")}
             </button>
             {isError && <p className="text-red-500 text-sm">{error?.message}</p>}
-            {isSuccess && <p className="text-green-500 text-sm">{t("Password reset successful!")}</p>}
+            
           </form>
           <p className="text-white text-sm mt-4 text-center">
             {t("Remembered your password?")}{" "}

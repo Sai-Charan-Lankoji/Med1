@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useState } from "react"
+import React, { useMemo, useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -44,7 +44,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
 import { useToast } from "@/hooks/use-toast"
 
-
 const Store = () => {
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -72,6 +71,24 @@ const Store = () => {
   const [storeToDelete, setStoreToDelete] = useState(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeletingStore, setIsDeletingStore] = useState(false)
+
+  const [isLoadingModalMounted, setIsLoadingModalMounted] = useState(false)
+
+  useEffect(() => {
+    if (showLoadingModal) {
+      setIsLoadingModalMounted(true)
+    }
+  }, [showLoadingModal])
+
+  useEffect(() => {
+    if (!showLoadingModal && isLoadingModalMounted) {
+      const timer = setTimeout(() => {
+        setIsLoadingModalMounted(false)
+      }, 300) // Adjust this value to match your exit animation duration
+
+      return () => clearTimeout(timer)
+    }
+  }, [showLoadingModal, isLoadingModalMounted])
 
   const storesWithMatchingSalesChannels = storesData?.map((store) => {
     const matchingSalesChannel = saleschannelsData?.find(
@@ -330,6 +347,8 @@ const Store = () => {
     if (!storeToDelete) return
 
     setIsDeletingStore(true)
+    setShowLoadingModal(true)
+    setLoadingStage("Deleting store...")
     try {
       // First, delete the store from your backend
       await deleteStore(storeToDelete)
@@ -345,6 +364,7 @@ const Store = () => {
 
       const data = await response.json()
       if (data.success) {
+        setLoadingStage("Store deleted successfully!")
         toast({
           title: "Success",
           description: "Store deleted successfully",
@@ -355,15 +375,19 @@ const Store = () => {
       }
     } catch (error) {
       console.error("Error deleting store:", error)
+      setLoadingStage("Error deleting store and its instance")
       toast({
         title: "Error",
         description: "Error deleting store and its instance",
         variant: "destructive",
       })
     } finally {
-      setIsDeletingStore(false)
-      setIsDeleteModalOpen(false)
-      setStoreToDelete(null)
+      setTimeout(() => {
+        setIsDeletingStore(false)
+        setIsDeleteModalOpen(false)
+        setShowLoadingModal(false)
+        setStoreToDelete(null)
+      }, 2000)
     }
   }
 
@@ -372,42 +396,53 @@ const Store = () => {
   }
 
   const LoadingModal = () => (
-    <Dialog 
-      open={showLoadingModal} 
-      onOpenChange={setShowLoadingModal}
-      modal={true}
-    >
-      <DialogContent 
-        className="sm:max-w-[425px]"
-        onCloseAutoFocus={(e) => {
-          if (!isStoreCreated) {
-            e.preventDefault();
-          }
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle>{isStoreCreated ? "Success!" : "Please Wait"}</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="flex items-center justify-center">
-            {!isStoreCreated ? (
-              <div className="animate-spin">
-                <Loader2 className="h-8 w-8 text-blue-500" />
+    <AnimatePresence>
+      {isLoadingModalMounted && (
+        <Dialog 
+          open={showLoadingModal} 
+          onOpenChange={setShowLoadingModal}
+          modal={true}
+        >
+          <DialogContent 
+            className="sm:max-w-[425px]"
+            onCloseAutoFocus={(e) => {
+              if (!isStoreCreated && !isDeletingStore) {
+                e.preventDefault();
+              }
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DialogHeader>
+                <DialogTitle>{isStoreCreated || isDeletingStore ? "Success!" : "Please Wait"}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="flex items-center justify-center">
+                  {!isStoreCreated && !isDeletingStore ? (
+                    <div className="animate-spin">
+                      <Loader2 className="h-8 w-8 text-blue-500" />
+                    </div>
+                  ) : (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                    >
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                    </motion.div>
+                  )}
+                </div>
+                <p className="text-center text-sm text-gray-500">{loadingStage}</p>
               </div>
-            ) : (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 260, damping: 20 }}
-              >
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </motion.div>
-            )}
-          </div>
-          <p className="text-center text-sm text-gray-500">{loadingStage}</p>
-        </div>
-      </DialogContent>
-    </Dialog>
+            </motion.div>
+          </DialogContent>
+        </Dialog>
+      )}
+    </AnimatePresence>
   );
 
   const DeleteConfirmationModal = () => (

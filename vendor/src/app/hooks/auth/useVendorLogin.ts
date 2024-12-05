@@ -4,7 +4,7 @@ import { useAuth } from '@/app/context/AuthContext';
 
 interface VendorLoginResponse {
   token: string;
-  vendor: {
+  vendor?: {
     id: string;
     contact_email: string;
     contact_name: string;
@@ -12,7 +12,7 @@ interface VendorLoginResponse {
     company_name: string;
     plan: string;
   };
-  vendorUser: {
+  vendorUser?: {
     email: string;
     first_name: string;
     vendor_id: string;
@@ -22,7 +22,7 @@ interface VendorLoginResponse {
 export const useVendorLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { setAuthEmail, setContactName,setCompanyName } = useAuth()!;
+  const { setAuthEmail, setContactName, setCompanyName } = useAuth()!;
   const router = useRouter();
 
   const login = async (email: string, password: string) => {
@@ -40,41 +40,38 @@ export const useVendorLogin = () => {
         body: JSON.stringify({ email, password }),
       });
   
+      const data = await response.json();
+
       if (!response.ok) {
-        console.log(`Response not OK: ${response.status}`); 
-        if (response.status === 401) {
-          throw new Error('Unauthorized: Invalid email or password');
-        }
-        throw new Error('Failed to authenticate vendor');
+        throw new Error(data.message || 'Failed to authenticate vendor');
       }
   
-      const data: VendorLoginResponse = await response.json();
-      if (data.token) {
-        console.log('Login successful');
-        if(data.vendor){
-          sessionStorage.setItem('vendor_id', data.vendor.id); 
-          sessionStorage.setItem('business_type', data.vendor.business_type);
-          sessionStorage.setItem('company_name', data.vendor.company_name);
-          sessionStorage.setItem('plan',data.vendor.plan) 
-          sessionStorage.setItem('email', data.vendor.contact_email) 
-          sessionStorage.setItem('contactName', data.vendor.contact_name)
+      const loginData: VendorLoginResponse = data;
+      if (loginData.token) {
+        if (loginData.vendor) {
+          sessionStorage.setItem('vendor_id', loginData.vendor.id); 
+          sessionStorage.setItem('business_type', loginData.vendor.business_type);
+          sessionStorage.setItem('company_name', loginData.vendor.company_name);
+          sessionStorage.setItem('plan', loginData.vendor.plan);
+          sessionStorage.setItem('email', loginData.vendor.contact_email);
+          sessionStorage.setItem('contactName', loginData.vendor.contact_name);
       
-          setAuthEmail(data.vendor.contact_email)
-          setContactName(data.vendor.contact_name)
-          setCompanyName(data.vendor.company_name)
+          setAuthEmail(loginData.vendor.contact_email);
+          setContactName(loginData.vendor.contact_name);
+          setCompanyName(loginData.vendor.company_name);
         } 
-        else{
-          sessionStorage.setItem('vendor_id', data.vendorUser.vendor_id)
-          sessionStorage.setItem('contactName', data.vendorUser.first_name)
-          sessionStorage.setItem('email',data.vendorUser.email)
-        setAuthEmail(data.vendorUser.email);
-        setContactName(data.vendorUser.first_name);
+        else if (loginData.vendorUser) {
+          sessionStorage.setItem('vendor_id', loginData.vendorUser.vendor_id);
+          sessionStorage.setItem('contactName', loginData.vendorUser.first_name);
+          sessionStorage.setItem('email', loginData.vendorUser.email);
+          setAuthEmail(loginData.vendorUser.email);
+          setContactName(loginData.vendorUser.first_name);
         }
-        router.push('/vendor/orders');
       }
     } catch (err: any) {
       console.error('Error during login:', err); 
       setError(err.message);
+      throw err; // Re-throw the error to be caught in the component
     } finally {
       setLoading(false);
     }
@@ -82,3 +79,4 @@ export const useVendorLogin = () => {
   
   return { login, loading, error };
 };
+
