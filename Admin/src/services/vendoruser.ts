@@ -95,6 +95,23 @@ class VendorUserService extends TransactionBaseService {
     });
   }
 
+  async updatePassword(id: string, newPassword: string): Promise<void> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const vendorUserRepo = transactionManager.getRepository(VendorUser);
+      const vendorUser = await vendorUserRepo.findOne({ where: { id } });
+  
+      if (!vendorUser) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `Vendor with id ${id} not found.`
+        );
+      }
+  
+      vendorUser.password = newPassword;
+      await vendorUserRepo.save(vendorUser);
+    });
+  }
+  
   async retrieve(id: string) {
     return await this.atomicPhase_(async (transactionManager) => {
       const vendorUserRepo = transactionManager.getRepository(VendorUser);

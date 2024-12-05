@@ -133,6 +133,7 @@ class VendorService extends TransactionBaseService {
       | "business_type"
       | "password"
       | "plan"
+      | "plan_id"
     > & {
       vendorAddressData?: Partial<Address>;
       registrationAddressData?: Partial<Address>;
@@ -322,6 +323,24 @@ class VendorService extends TransactionBaseService {
       return vendor;
     });
   }
+
+  async updatePassword(id: string, newPassword: string): Promise<void> {
+    return await this.runAtomicPhase(async (manager) => {
+      const vendorRepo = manager.withRepository(this.vendorRepository_);
+      const vendor = await vendorRepo.findOne({ where: { id } });
+  
+      if (!vendor) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `Vendor with id ${id} not found.`
+        );
+      }
+  
+      vendor.password = newPassword;
+      await vendorRepo.save(vendor);
+    });
+  }
+  
 
   async delete(id: string): Promise<void> {
     return await this.runAtomicPhase(async (manager) => {

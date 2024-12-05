@@ -76,6 +76,7 @@ export const POST = async (
       | "business_type"
       | "password"
       | "plan"
+      | "plan_id"
     > & {
       vendorAddressData?: Partial<Address>;
       registrationAddressData?: Partial<Address>;
