@@ -146,6 +146,11 @@ export default function Component() {
                   Join Us 
                 </Link>
               </p>
+              <p className="text-white text-sm">
+                <Link href="/forgot-password" className="text-white font-semibold hover:underline">
+                  Forgot Password?
+                </Link>
+              </p>
             </motion.div>
           </form>
         </motion.div>
