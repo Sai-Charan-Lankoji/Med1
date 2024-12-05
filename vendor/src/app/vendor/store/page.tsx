@@ -112,7 +112,7 @@ const Store = () => {
 
   const createStoreInstance = async (storeDetails) => {
     try {
-      setLoadingStage("Creating store instance...")
+      setLoadingStage("Creating store instance... Don't refresh the page...")
       const response = await fetch('http://localhost:3000/create-store', {
         method: 'POST',
         headers: {
@@ -246,7 +246,7 @@ const Store = () => {
       else {
         setIsModalOpen(false) // Close the store creation modal
         setShowLoadingModal(true) // Open the loading modal
-        setLoadingStage("Initializing store creation...")
+        //setLoadingStage("Initializing store creation...")
 
         const storeData = {
           name: formData.storeName,
@@ -262,7 +262,7 @@ const Store = () => {
         createStore(storeData, {
           onSuccess: async (response) => {
             try {
-              setLoadingStage("Creating store instance...")
+              // setLoadingStage("Creating store instance...")
               const storeInstance = await createStoreInstance({
                 ...response,
                 name: formData.storeName,
@@ -277,7 +277,7 @@ const Store = () => {
                 store_url: storeInstance.url
               }, {
                 onSuccess: (response) => {
-                  setLoadingStage("Store created and updated successfully!")
+                  // setLoadingStage("Store created and updated successfully!")
                   setLoading(false)
                   setIsStoreCreated(true)
                   refreshStores()
@@ -294,7 +294,7 @@ const Store = () => {
                 },
                 onError: (error) => {
                   console.error("Error updating store:", error)
-                  setLoadingStage("Error updating store URL")
+                  // setLoadingStage("Error updating store URL")
                   toast({
                     title: "Error",
                     description: "Error updating store URL",
@@ -303,7 +303,7 @@ const Store = () => {
                 }
               })
             } catch (error) {
-              setLoadingStage("Error creating store instance")
+              //setLoadingStage("Error creating store instance")
               toast({
                 title: "Error",
                 description: "Error creating store instance",
@@ -316,7 +316,7 @@ const Store = () => {
           },
           onError: (error) => {
             console.error("Error while creating store:", error)
-            setLoadingStage("Error creating store")
+            //setLoadingStage("Error creating store")
             toast({
               title: "Error",
               description: "Error while creating store",
@@ -364,7 +364,7 @@ const Store = () => {
 
       const data = await response.json()
       if (data.success) {
-        setLoadingStage("Store deleted successfully!")
+        //setLoadingStage("Store deleted successfully!")
         toast({
           title: "Success",
           description: "Store deleted successfully",
@@ -375,7 +375,7 @@ const Store = () => {
       }
     } catch (error) {
       console.error("Error deleting store:", error)
-      setLoadingStage("Error deleting store and its instance")
+      //setLoadingStage("Error deleting store and its instance")
       toast({
         title: "Error",
         description: "Error deleting store and its instance",

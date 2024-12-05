@@ -8,6 +8,7 @@ import { AlertCircle } from "lucide-react";
 import { useRouter } from 'next/navigation';
 import withAuth from "@/lib/withAuth";
 import { useGetStores } from '@/app/hooks/store/useGetStores';
+import ProductGallery from '../components/productgallery/page'
 
 const Product = () => {
   const [isStoreDialogOpen, setIsStoreDialogOpen] = useState(false);
@@ -80,6 +81,7 @@ const Product = () => {
           </DialogHeader>
         </DialogContent>
       </Dialog>
+      <ProductGallery />
     </div>
   );
 };
