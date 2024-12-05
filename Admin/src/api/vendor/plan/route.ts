@@ -11,32 +11,6 @@ const getPlanService = (req: MedusaRequest): PlanService | null => {
   }
 };
 
-export const POST = async (
-  req: MedusaRequest,
-  res: MedusaResponse
-): Promise<void> => {
-  try {
-    const planService = getPlanService(req);
-    if (!planService) {
-      res.status(500).json({ error: "Plan service could not be resolved." });
-      return;
-    }
-
-    // Extract the data from the request body
-    const newPlanData = req.body as any;
-
-    // Call the plan service's create method
-    const newPlan = await planService.create(newPlanData as any);
-
-    res.status(201).json({ plan: newPlan });
-  } catch (error) {
-    console.error("Error in POST /admin/plan:", error);
-    res
-      .status(500)
-      .json({ error: error.message || "An unknown error occurred." });
-  }
-};
-
 // Optionally, you can add a GET method to retrieve plans
 export const GET = async (
   req: MedusaRequest,
@@ -50,7 +24,7 @@ export const GET = async (
     }
     res.status(501).json({ message: "GET method not implemented yet" });
   } catch (error) {
-    console.error("Error in GET /admin/plan:", error);
+    console.error("Error in GET /vendor/plan:", error);
     res
       .status(500)
       .json({ error: error.message || "An unknown error occurred." });

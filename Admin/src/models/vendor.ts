@@ -1,4 +1,4 @@
-import { BeforeInsert, Column, Entity, Index, OneToMany } from "typeorm";
+import { BeforeInsert, Column, Entity, Index, JoinColumn, OneToMany, OneToOne } from "typeorm";
 import { SoftDeletableEntity } from "@medusajs/medusa";
 import { generateEntityId } from "@medusajs/medusa/dist/utils";
 import { Product } from "./product";
@@ -8,6 +8,7 @@ import { SalesChannel } from "./salesChannel";
 import { Customer } from "./customer";
 import { Order } from "./order";
 import { VendorUser } from "./vendor-user";
+import { Plan } from "./plan";
 
 export enum BusinessModel {
   ApparelDesign = "Apparel Design",
@@ -43,6 +44,9 @@ export class Vendor extends SoftDeletableEntity {
   @Column({ type: "varchar", length: 256, nullable: true })
   plan: string;
 
+  @Column({ type: "varchar", length: 120, nullable: true })
+  plan_id?: string;
+
   @Index("UserId")
   @Column({ type: "varchar", length: 120, nullable: true })
   user_id?: string;
@@ -73,6 +77,9 @@ export class Vendor extends SoftDeletableEntity {
 
   @OneToMany(() => Order, (order) => order.vendor)
   orders?: Order[];
+  
+  @OneToOne(() => Plan, (plan) => plan.vendor)
+  @JoinColumn({ name: "plan_id" })
 
   @BeforeInsert()
   private beforeInsert(): void {
