@@ -269,3 +269,14 @@ body {
     rgba(79, 70, 229, 0.1) 100%
   );
 }
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}

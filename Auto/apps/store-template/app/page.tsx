@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { NEXT_STORE_NAME } from '@/constants/constants';
 import { useGetProducts } from './hooks/useGetProducts';
 import { log } from 'node:console';
+import ProductGallery from './prod/page';
 // Custom Designs Data
 const customDesigns = [
   {
@@ -187,7 +188,7 @@ export default function Home() {
               Get inspired by these amazing custom designs
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {customDesigns.map((design, index) => (
               <motion.div
                 key={design.side}
@@ -211,7 +212,8 @@ export default function Home() {
                 
               </motion.div>
             ))}
-          </div>
+          </div> */}
+          <ProductGallery/>
         </div>
       </section>
 
