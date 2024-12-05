@@ -10,6 +10,29 @@ const getPlanService = (req: MedusaRequest): PlanService | null => {
   }
 };
 
+export const GET = async (
+  req: MedusaRequest,
+  res: MedusaResponse
+): Promise<void> => {
+  try {
+    const planService = getPlanService(req);
+    if (!planService) {
+      res.status(500).json({ error: "Plan service could not be resolved." });
+      return;
+    }
+
+    const plan = await planService.retrieve(req.params.id);
+    if (!plan) {
+      res.status(200).json({ message: "No plan found."});
+    } else {
+      res.status(200).json({ plan });
+    }
+  } catch (error) {
+    console.error("Error in GET /admin/plan/:id:", error);
+    res.status(500).json({ error: error.message || "An unknown error occurred." });
+  }
+};
+
 export const PUT = async (
   req: MedusaRequest,
   res: MedusaResponse

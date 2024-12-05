@@ -30,6 +30,23 @@ class PlanService extends TransactionBaseService {
     });
   }
 
+  async retrieve(id: string): Promise<Plan> {
+    return await this.atomicPhase_(async (transactionManager) => {
+      const PlanRepo = transactionManager.getRepository(Plan);
+      const plan = await PlanRepo.findOne({
+        where: { id },
+      });
+
+      if (!plan) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_FOUND,
+          `Vendor with id ${id} was not found.`
+        );
+      }
+      return plan;
+    });
+  }
+
   async list(config: FindConfig<Plan> = {}): Promise<Plan[]> {
     const planRepo = this.manager_.getRepository(Plan);
     return await planRepo.find(config);

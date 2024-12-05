@@ -9,6 +9,16 @@ export interface CreatePlanData {
   isActive?: boolean;
 }
 const PlanRepository = dataSource.getRepository(Plan).extend({
+
+  async findPlan(selector: Partial<Plan>): Promise<Plan | undefined> {
+    try {
+      return await this.findOne({ where: selector });
+    } catch (error) {
+      console.error("Error finding plan:", error);
+      throw new Error("Failed to find plan");
+    }
+  },
+
   async createplan(data: CreatePlanData): Promise<Plan> {
     try {
       const plan = this.create(data);
