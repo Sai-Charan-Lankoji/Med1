@@ -38,7 +38,7 @@ const Product = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Product Management</h1>
+      <h1 className="text-3xl font-bold mb-6 text-indigo-900">Product Management</h1>
       
       <Button onClick={handleAddProductClick} className="mb-6">
         Add Product

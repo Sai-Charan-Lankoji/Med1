@@ -165,7 +165,7 @@ const VendorForm =({ plan }: VendorFormProps) => {
             </Heading>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               You selected the{" "}
-              <span className="font-medium text-primary ">{plan.name}</span> plan.
+              <span className="font-medium text-primary ">{plan.name}</span>
             </p>
           </div>
 

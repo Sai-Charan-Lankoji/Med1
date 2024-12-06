@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreatePlan } from "@/app/hooks/plan/useCreatePlan";
 import { CreatePlanData } from "@/app/@types/plan";
 import { useQueryClient } from "@tanstack/react-query";
+import { string } from "zod";
 
 interface AddPlanDialogProps {
   isOpen: boolean;
@@ -30,7 +31,8 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
   const [newPlan, setNewPlan] = useState<CreatePlanData>({
     name: "",
     description: "A enterprise plan with additional features",
-    price: 0,
+    price: 0, 
+    no_stores : "",
     features: [""],
     isActive: true,
   });
@@ -79,6 +81,7 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
           name: "",
           description: "A enterprise plan with additional features",
           price: 0,
+          no_stores : "",
           features: [""],
           isActive: true,
         });
@@ -201,7 +204,35 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
             {errors.price && (
               <p className="text-sm text-destructive">{errors.price}</p>
             )}
-          </div>
+          </div> 
+
+          <div className="space-y-2">
+            <Label htmlFor="No of Stores" className="text-sm font-medium">
+              No of Stores
+            </Label>
+            <Input
+              id="stores"
+              type="string"
+              value={newPlan.no_stores}
+              onChange={(e) =>
+                setNewPlan({
+                  ...newPlan,
+                  no_stores: e.target.value,
+                })
+              }
+              className={cn(errors.price && "border-destructive")}
+              placeholder="0"
+              step="0.01"
+              min="0"
+            />
+            {errors.price && (
+              <p className="text-sm text-destructive">{errors.price}</p>
+            )}
+          </div> 
+
+
+
+       
   
           {/* Features */}
           <div className="space-y-2">

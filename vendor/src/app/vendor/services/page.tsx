@@ -11,19 +11,6 @@ import { useGetStores } from "@/app/hooks/store/useGetStores"
 import { useGetPlans } from "@/app/hooks/plan/useGetPlans"
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan"
 
-// Helper function to calculate store capacity from features
-const getStoreCapacity = (features) => {
-  for (const feature of features) {
-    const match = feature.match(/up to (\d+) stores/i);
-    if (match) {
-      return parseInt(match[1], 10);
-    }
-    if (/unlimited store management/i.test(feature)) {
-      return Infinity;
-    }
-  }
-  return 0;
-};
 
 export default function ServicesDashboard() {
   const { data: stores, isLoading: storesLoading } = useGetStores()
@@ -32,15 +19,11 @@ export default function ServicesDashboard() {
 
   const [activePlan, setActivePlan] = useState(null)
   const currentStores = stores?.length || 0
-console.log("this is atores : " , stores)
+  console.log("this is stores : " , stores)
   useEffect(() => {
     if (currentPlan && plans) {
-      const enrichedPlans = plans.map(plan => ({
-        ...plan,
-        maxStores: getStoreCapacity(plan.features),
-      }));
-
-      const foundPlan = enrichedPlans.find(plan => plan?.id === currentPlan?.plan?.id);
+     
+      const foundPlan = plans.find(plan => plan?.id === currentPlan?.plan?.id);
       if (foundPlan) {
         setActivePlan(foundPlan);
       }
@@ -71,7 +54,7 @@ console.log("this is atores : " , stores)
         transition={{ duration: 0.5 }}
         className="text-center"
       >
-        <h1 className="text-5xl font-bold text-indigo-600 mb-2">Service Plans</h1>
+        <h1 className="text-5xl font-bold text-indigo-700 mb-2">Service Plans</h1>
         <p className="text-xl text-purple-600">Your current plan: <span className="font-semibold">{activePlan?.name}</span></p>
       </motion.div>
 
@@ -91,7 +74,7 @@ console.log("this is atores : " , stores)
               <div className="text-center">
                 <h3 className="font-semibold text-xl text-indigo-700 mb-2">Store Usage</h3>
                 <p className="text-3xl font-bold text-purple-600">
-                  {currentStores}/{activePlan.maxStores === Infinity ? "∞" : activePlan.maxStores}
+                  {currentStores}/{activePlan.maxStores === "unlimited" ? "∞" : activePlan.no_stores}
                 </p>
                 <p className="text-sm text-gray-600">stores used</p>
               </div>
@@ -100,7 +83,7 @@ console.log("this is atores : " , stores)
                 <p className="text-3xl font-bold text-purple-600">
                   {activePlan.maxStores === Infinity
                     ? "∞"
-                    : Math.max(0, activePlan.maxStores - currentStores)}
+                    : Math.max(0, activePlan.no_stores - currentStores)}
                 </p>
                 <p className="text-sm text-gray-600">stores remaining</p>
               </div>

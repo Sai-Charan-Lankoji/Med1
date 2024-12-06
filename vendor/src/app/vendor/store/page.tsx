@@ -42,9 +42,28 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast" 
+import { useGetPlan } from "@/app/hooks/plan/useGetPlan" 
 
-const Store = () => {
+
+
+
+const getStoreLimitFromPlan = (plan) => {
+  if (!plan || !Array.isArray(plan.features)) return 0; // Ensure plan.features exists and is an array
+  const limitFeature = plan.features.find((feature) =>
+    feature.toLowerCase().includes("store")
+  );
+  if (!limitFeature) return 0;
+
+  if (limitFeature.toLowerCase().includes("Unlimited")) {
+    return Infinity;
+  }
+
+  const match = limitFeature.match(/\d+/);
+  return match ? parseInt(match[0]) : 0;
+};
+
+const Store = () => { 
   const router = useRouter()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -52,12 +71,15 @@ const Store = () => {
   const [loading, setLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState(0)
   const [storeUrls, setStoreUrls] = useState({})
+  const [showPlanLimitModal, setShowPlanLimitModal] = useState(false)
 
   const { toast } = useToast()
 
   const PAGE_SIZE = 6
   const vendorId = sessionStorage.getItem("vendor_id")
 
+  const {data : currentPlan} = useGetPlan() 
+  console.log(currentPlan)
   const { data: storesData, isLoading, refetch: refreshStores } = useGetStores()
   const { data: saleschannelsData } = useGetSalesChannels()
   const { mutate: createStore } = useCreateStore()
@@ -163,6 +185,22 @@ const Store = () => {
   const formatDate = (isoDate) => {
     const date = parseISO(isoDate)
     return format(date, "dd MMM yyyy")
+  } 
+
+
+   // Function to get store limit from plan features
+ 
+
+  const canCreateStore = () => {
+    if (!currentPlan ) return false
+    const storeLimit = currentPlan?.plan?.no_stores
+    console.log("Hello ", storeLimit) 
+
+    if (storeLimit === "unlimited") {
+      return true;
+    }
+    // return storesData.length < storeLimit
+    return storesData.length < parseInt(storeLimit, 10);
   }
 
   const handleChange = (e) => {
@@ -175,6 +213,10 @@ const Store = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!isSalesChannelCreated && !canCreateStore()) {
+      setShowPlanLimitModal(true)
+      return
+    }
     setLoading(true)
 
     try {
@@ -490,6 +532,43 @@ const Store = () => {
     </Dialog>
   );
 
+
+
+  const PlanLimitModal = () => (
+    <Dialog open={showPlanLimitModal} onOpenChange={setShowPlanLimitModal}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle className="text-blue-600">Store Limit Reached</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <p className="text-center text-gray-700">
+            You've reached the maximum number of stores allowed in your {currentPlan?.name} plan 
+            ({getStoreLimitFromPlan(currentPlan)} stores).
+          </p>
+          <p className="text-center text-gray-600">
+            Please upgrade your plan to create more stores.
+          </p>
+        </div>
+        <div className="flex justify-end mt-4">
+          <Button
+            type="button"
+            onClick={() => setShowPlanLimitModal(false)}
+            className="mr-2"
+          >
+            Close
+          </Button>
+          <Button
+            type="button"
+            onClick={() => router.push('/vendor/billing')}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Upgrade Plan
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+
   if (isLoading) {
     return <StoreSkeleton />
   }
@@ -627,7 +706,13 @@ const Store = () => {
 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogTrigger asChild>
-          <Button className="right-8 shadow-lg mt-4 bg-blue-600 hover:bg-blue-900">
+          <Button className="right-8 shadow-lg mt-4 bg-blue-600 hover:bg-blue-900" onClick={(e) => {
+              if (!canCreateStore()) {
+                e.preventDefault()
+                setShowPlanLimitModal(true)
+                return
+              }
+            }}>
             <Plus className="mr-2 h-4 w-4" /> New Store
           </Button>
         </DialogTrigger>
@@ -754,7 +839,8 @@ const Store = () => {
 
       <LoadingModal />
       <DeleteConfirmationModal />
-    </motion.div>
+      <PlanLimitModal />   
+       </motion.div>
   )
 }
 

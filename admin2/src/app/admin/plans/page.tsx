@@ -29,6 +29,7 @@ interface Plan {
   updated_at: string;
   deleted_at: string | null;
   description?: string;
+  no_stores : string;
 }
 
 export default function PlansPage() {

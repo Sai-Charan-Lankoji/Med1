@@ -32,7 +32,9 @@ export class Plan extends SoftDeletableEntity {
   features: Record<string, any>; // List of features included in the plan
 
   @Column({ type: "boolean", default: true })
-  isActive: boolean; // Status to determine if the plan is active
+  isActive: boolean; // Status to determine if the plan is active 
+  @Column({type: "text", nullable: true })
+  no_stores:string
 
   // One-to-one relation with Vendor model
   @OneToOne(() => Vendor, (vendor) => vendor.plan)

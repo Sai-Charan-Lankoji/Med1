@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 const id = sessionStorage.getItem('plan_id') 
 // Function to fetch plans
 const fetchPlan = async () => {
-  const url = `${baseUrl}/admin/plan/${id}`;
+  const url = `${baseUrl}/vendor/plan/${id}`;
 
   try {
     const response = await fetch(url, {

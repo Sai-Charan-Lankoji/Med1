@@ -25,7 +25,8 @@ interface Plan {
   created_at: string
   updated_at: string
   deleted_at: string | null
-  description?: string
+  description?: string 
+  no_stores : string |null
 }
 
 interface PlanCardProps {
@@ -64,6 +65,7 @@ export function PlanCard({ plan, onUpdate, onDelete, onEdit }: PlanCardProps) {
           <div>
             <CardTitle>{plan.name}</CardTitle>
             <CardDescription>{plan.description}</CardDescription>
+            <CardTitle>{plan.no_stores}</CardTitle>
           </div>
           <Badge 
             variant={plan.isActive ? "default" : "secondary"}

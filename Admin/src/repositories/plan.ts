@@ -6,7 +6,10 @@ export interface CreatePlanData {
   description?: string;
   price: number;
   features: string[];
-  isActive?: boolean;
+  isActive?: boolean; 
+  no_stores: string; 
+  
+
 }
 const PlanRepository = dataSource.getRepository(Plan).extend({
 

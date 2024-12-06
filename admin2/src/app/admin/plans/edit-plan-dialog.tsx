@@ -26,7 +26,8 @@ interface Plan {
   created_at: string
   updated_at: string
   deleted_at: string | null
-  description?: string
+  description?: string 
+  no_stores : string | null
 }
 
 interface EditPlanDialogProps {
@@ -188,7 +189,36 @@ export function EditPlanDialog({ isOpen, onClose, plan, onUpdate }: EditPlanDial
           {errors.price && (
             <p className="text-sm text-destructive">{errors.price}</p>
           )}
+        </div> 
+
+
+
+
+        <div className="space-y-2">
+          <Label htmlFor="NoOfStores" className="text-sm font-medium">
+           no of stores
+          </Label>
+          <Input
+            id="stores"
+            type="string"
+            value={editedPlan.no_stores}
+            onChange={(e) =>
+              setEditedPlan({
+                ...editedPlan,
+                no_stores: e.target.value,
+              })
+            }
+            className={cn(errors.no_stores && "border-destructive")}
+            step="0.01"
+            min="0"
+          />
+          {errors.price && (
+            <p className="text-sm text-destructive">{errors.no_stores}</p>
+          )}
         </div>
+
+
+
 
         <div className="space-y-2">
           <div className="flex justify-between items-center">
