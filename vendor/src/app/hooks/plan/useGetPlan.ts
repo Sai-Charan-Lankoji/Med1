@@ -1,8 +1,9 @@
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useQuery } from '@tanstack/react-query';
 
+const id = sessionStorage.getItem('plan_id') 
 // Function to fetch plans
-const fetchPlan = async (id: string) => {
+const fetchPlan = async () => {
   const url = `${baseUrl}/admin/plan/${id}`;
 
   try {
@@ -45,8 +46,8 @@ const fetchPlan = async (id: string) => {
 };
 
 // Custom React Query hook for fetching plans
-export const useGetPlan = (id: string) => {
-  return useQuery(['plan',id], () => fetchPlan(id), {
+export const useGetPlan = () => {
+  return useQuery(['plan',id], () => fetchPlan(), {
     refetchOnWindowFocus: false, // Avoid refetching when the window regains focus
     refetchOnMount: false,      // Avoid refetching when the component mounts
     cacheTime: 1000 * 60 * 10,  // Cache the response for 10 minutes

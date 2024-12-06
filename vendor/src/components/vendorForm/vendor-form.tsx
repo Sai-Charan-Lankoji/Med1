@@ -13,9 +13,17 @@ import { PhoneInput } from "./phoneinput";
 import { CountryCode } from "@/app/@types/phonevalidation";
 import { Label } from "../ui/label";
 import { Form } from "../ui/form";
-import { Input } from "../ui/input";
+import { Input } from "../ui/input"; 
 
-const VendorForm = ({ plan }: { plan: string }) => {
+
+interface VendorFormProps {
+  plan: {
+    name: string;
+    id: string;
+  };
+}
+
+const VendorForm =({ plan }: VendorFormProps) => {
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const router = useRouter();
   const [sameAsVendorAddress, setSameAsVendorAddress] = useState(false);
@@ -33,7 +41,8 @@ const VendorForm = ({ plan }: { plan: string }) => {
   } = useForm<VendorFormData>({
     resolver: zodResolver(VendorFormSchema),
     defaultValues: {
-      plan: plan,
+      plan: plan.name,
+      plan_id: plan.id, // Added this
       country_code: undefined,
       contact_phone_number: "",
     },
@@ -106,11 +115,16 @@ const VendorForm = ({ plan }: { plan: string }) => {
     }
 
     try {
+      const submissionData = {
+        ...data,
+        plan_id: plan.id
+      };
+
       const response = await fetch("http://localhost:9000/vendor/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(data),
+        body: JSON.stringify(submissionData),
       });
 
       if (!response.ok) {
@@ -151,7 +165,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
             </Heading>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               You selected the{" "}
-              <span className="font-medium text-primary ">{plan}</span> plan.
+              <span className="font-medium text-primary ">{plan.name}</span> plan.
             </p>
           </div>
 
@@ -244,7 +258,7 @@ const VendorForm = ({ plan }: { plan: string }) => {
                     label="Plan"
                     id="plan"
                     type="text"
-                    placeholder={plan}
+                    placeholder={plan.name}
                     register={register}
                     name="plan"
                     error={errors.plan?.message}
@@ -334,7 +348,13 @@ const VendorForm = ({ plan }: { plan: string }) => {
                 )}
               </Button>
             </div>
+            
           </form>
+          <input 
+            type="hidden" 
+            {...register("plan_id")} 
+            value={plan.id} 
+          />
         </div>
       </Container>
       <Toaster />

@@ -48,6 +48,8 @@ export const VendorFormSchema = z
     tax_number: z.string().optional(),
     business_type: z.string().nonempty("Business type is required"),
     plan: z.string().optional(),
+    plan_id : z.string().optional(), 
+    plan_name : z.string().optional(),
     vendorAddressData: VendorAddressSchema,
     registrationAddressData: AddressSchema,
   })
