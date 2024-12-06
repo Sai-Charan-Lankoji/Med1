@@ -9,6 +9,7 @@ type Product = MedusaProduct & {
   vendor?: Vendor;
   user?: User;
   vendor_id?: string;
+  customizable?: boolean;
 };
 
 type CreateProductInput = {

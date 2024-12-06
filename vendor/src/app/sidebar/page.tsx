@@ -19,9 +19,6 @@ export default function Sidebar() {
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-
-
-  
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
@@ -78,7 +75,7 @@ export default function Sidebar() {
         isCollapsed ? "text-center" : "text-left"
       )}>
         {!isCollapsed && (
-          <p>© 2024 Admin Dashboard</p>
+          <p>© 2024 Vendor Hub</p>
         )}
       </div>
     </aside>
