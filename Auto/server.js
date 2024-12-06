@@ -11,24 +11,20 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-
+const PortManager = require('./portAllocator');
 // Store state management
-let lastUsedPort = 8002;
-let lastStoreNumber = 0;
+
 const STORES_FILE = path.join(__dirname, "stores.json");
 let storeRegistry = [];
 
 async function initializeStoreRegistry() {
+  
   try {
+    // Initialize PortManager first
+    await PortManager.initialize();
+
     const data = await fs.readFile(STORES_FILE, "utf8");
     storeRegistry = JSON.parse(data);
-    storeRegistry.forEach((store) => {
-      lastStoreNumber = Math.max(
-        lastStoreNumber,
-        parseInt(store.directoryName.replace("store", ""))
-      );
-      lastUsedPort = Math.max(lastUsedPort, store.port);
-    });
     console.log("Store registry loaded:", storeRegistry);
   } catch (error) {
     console.log("No existing stores file found, starting fresh");
@@ -41,10 +37,10 @@ async function saveStoreRegistry() {
 }
 
 async function createStore(storeDetails) {
-  lastStoreNumber++;
-  lastUsedPort++;
-  const newStoreName = `store${lastStoreNumber}`;
+  const newPort = await PortManager.allocatePort();
+  
   const sourcePath = path.join(__dirname, "apps", "store-template");
+  const newStoreName = `store${storeRegistry.length + 1}`;
   const targetPath = path.join(__dirname, "apps", newStoreName);
 
   try {
@@ -55,7 +51,7 @@ async function createStore(storeDetails) {
     const packageJsonPath = path.join(targetPath, "package.json");
     const packageJson = JSON.parse(await fs.readFile(packageJsonPath, "utf8"));
     packageJson.name = newStoreName;
-    packageJson.scripts.dev = `next dev -p ${lastUsedPort}`;
+    packageJson.scripts.dev = `next dev -p ${newPort}`;
     await fs.writeFile(packageJsonPath, JSON.stringify(packageJson, null, 2));
 
     // Update constants.ts
@@ -68,19 +64,18 @@ export const NEXT_STORE_NAME = "${storeDetails.name}"
 export const NEXT_PUBLIC_STORE_ID = "${storeDetails.id}"
 export const NEXT_PUBLIC_SALES_CHANNEL_ID = "${storeDetails.default_sales_channel_id}"
 export const NEXT_PUBLIC_CURRENCY_CODE = "${storeDetails.default_currency_code}"
-export const NEXT_PORT = "${lastUsedPort}"
+export const NEXT_PORT = "${newPort}"
     `;
     await fs.writeFile(constantsPath, constantsContent);
 
-//update port.js
-const portPath = path.join(targetPath, "constants", "port.js");
-const portContent = `const NEXT_PORT = "${lastUsedPort}"
+    // Update port.js
+    const portPath = path.join(targetPath, "constants", "port.js");
+    const portContent = `const NEXT_PORT = "${newPort}"
 
 module.exports = {
     NEXT_PORT,
   };`;
-await fs.writeFile(portPath, portContent);
-
+    await fs.writeFile(portPath, portContent);
 
     return {
       directoryName: newStoreName,
@@ -89,11 +84,12 @@ await fs.writeFile(portPath, portContent);
       storeId: storeDetails.id,
       salesChannelId: storeDetails.default_sales_channel_id,
       currencyCode: storeDetails.default_currency_code,
-      port: lastUsedPort,
-      url: `http://localhost:${lastUsedPort}`,
-      
+      port: newPort,
+      url: `http://localhost:${newPort}`,
     };
   } catch (error) {
+    // If port allocation fails, release the port
+    await PortManager.releasePort(newPort);
     console.error("Error creating store:", error);
     throw error;
   }
@@ -392,6 +388,7 @@ app.delete("/delete-store/:storeId", async (req, res) => {
 
     try {
       await shutdownStore(store.directoryName, store.port);
+      await PortManager.releasePort(store.port); //release port
     } catch (shutdownError) {
       console.warn(`Warning: Could not gracefully shut down ${store.directoryName}:`, shutdownError);
     }
