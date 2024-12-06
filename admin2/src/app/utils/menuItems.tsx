@@ -1,4 +1,4 @@
-import { Store, CreditCard, Server  } from 'lucide-react'
+import { Store, CreditCard, Server, Settings  } from 'lucide-react'
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import {
@@ -28,6 +28,11 @@ export const menuItems = [
     title: "Billing Service",
     icon: Server,
     href: "/admin/billingservices",
+  },
+  {
+    title: "Settings",
+    icon: Settings,
+    href: "/admin/settings"
   }
 ]
 

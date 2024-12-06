@@ -1,11 +1,15 @@
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useQuery } from '@tanstack/react-query';
 
-const fetchStores = async () => {
-  
-  const id = sessionStorage.getItem('vendor_id');
+const fetchProducts = async () => {
+  const vendorId = sessionStorage.getItem('vendor_id');
 
-  const url = `${baseUrl}/vendor/store?vendor_id=${id}`;
+  if (!vendorId) {
+    console.log('No vendor ID found in sessionStorage');
+    return []; 
+  }
+
+  const url = `${baseUrl}/vendor/products?vendorId=${vendorId}`;
 
   try {
     const response = await fetch(url, {
@@ -23,19 +27,19 @@ const fetchStores = async () => {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
 
       if (response.status === 404 || response.status === 500) {
-        console.log('No stores found or server error. Returning empty array.');
+        console.log('No products found or server error. Returning empty array.');
         return []; 
       }
 
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
- 
-    if (!data || data.length === 0) {
-      console.log('No stores found for the given vendor.');
+
+    if (!data.products || data.products.length === 0) {
+      console.log('No products found for the given vendor.');
       return []; 
     }
 
-    return data;
+    return data.products;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching data:', error.message);
@@ -48,15 +52,15 @@ const fetchStores = async () => {
 };
 
 
-export const useGetStores = ( ) => {
-  return useQuery(['stores'],  () => fetchStores(), {
+export const useGetProducts = () => {
+  return useQuery(['products'], fetchProducts, {
     refetchOnWindowFocus: false,  
     refetchOnMount: false,        
     cacheTime: 0,                
     staleTime: 1000 * 60 * 5,               
-    retry: false,                
+    retry: false,            
 
-    onError: (error: unknown) => {  
+    onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching products:', error.message);
       } else {

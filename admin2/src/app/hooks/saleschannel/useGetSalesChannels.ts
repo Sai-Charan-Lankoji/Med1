@@ -1,14 +1,19 @@
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useQuery } from '@tanstack/react-query';
 
-const fetchStores = async () => {
+const fetchSalesChannels = async () => {
   
-  const id = sessionStorage.getItem('vendor_id');
+  const vendorId = sessionStorage.getItem('vendor_id');
 
-  const url = `${baseUrl}/vendor/store?vendor_id=${id}`;
+  if (!vendorId) {
+    console.log('No vendor ID found in sessionStorage');
+    return []; 
+  }
+
+  const url = `${baseUrl}/vendor/saleschannel?vendor_id=${vendorId}`;
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(url, { 
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -18,24 +23,22 @@ const fetchStores = async () => {
 
 
     const data = await response.json();
-
+ 
     if (!response.ok) {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
 
       if (response.status === 404 || response.status === 500) {
-        console.log('No stores found or server error. Returning empty array.');
+        console.log('No sales channels found or server error. Returning empty array.');
         return []; 
       }
 
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
- 
     if (!data || data.length === 0) {
-      console.log('No stores found for the given vendor.');
-      return []; 
-    }
-
-    return data;
+        console.log('No sales channels found for the given vendor.');
+        return []; 
+      }
+    return data; 
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching data:', error.message);
@@ -48,15 +51,15 @@ const fetchStores = async () => {
 };
 
 
-export const useGetStores = ( ) => {
-  return useQuery(['stores'],  () => fetchStores(), {
+export const useGetSalesChannels = () => {
+  return useQuery(['salesChannels'], fetchSalesChannels, {
     refetchOnWindowFocus: false,  
     refetchOnMount: false,        
     cacheTime: 0,                
     staleTime: 1000 * 60 * 5,               
-    retry: false,                
+    retry: false,               
 
-    onError: (error: unknown) => {  
+    onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching products:', error.message);
       } else {

@@ -129,7 +129,7 @@ export default function Sidebar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
             <DropdownMenuItem asChild>
-              <Link href="/vendor/settings" className="flex items-center cursor-pointer">
+              <Link href="/admin/settings" className="flex items-center cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Settings</span>
               </Link>

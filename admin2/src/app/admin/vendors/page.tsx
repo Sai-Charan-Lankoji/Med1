@@ -145,7 +145,7 @@ function PlanBadge({ plan }: { plan: string }) {
     basic: "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100 border-green-200 dark:border-green-800",
   } as const
 
-  const variant = variants[plan.toLowerCase() as keyof typeof variants] || 
+  const variant = variants[plan?.toLowerCase() as keyof typeof variants] || 
     "bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100 border-gray-200 dark:border-gray-800"
 
   return (

@@ -35,15 +35,15 @@ export const useAdminLogin = () => {
 
       // Save data to sessionStorage
       localStorage.setItem('email', email);
-      localStorage.setItem('first_name', 'Admin');
-      localStorage.setItem('last_name', 'User');
-      localStorage.setItem('role', 'admin');
-      localStorage.setItem('admin_id', '123');
+      localStorage.setItem('first_name', first_name);
+      localStorage.setItem('last_name', last_name);
+      localStorage.setItem('role', role);
+      localStorage.setItem('admin_id', adminId);
       setAuthEmail(email);
-      setFirstName('Admin');
-      setLastName('User');
-      setRole('admin');
-      setAdminId('123');
+      setFirstName(first_name);
+      setLastName(last_name);
+      setRole(role);
+      setAdminId(adminId);
     
 
       // Navigate to admin/vendors after successful login
