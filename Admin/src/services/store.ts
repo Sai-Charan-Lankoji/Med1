@@ -95,9 +95,12 @@ class StoreService extends MedusaStoreService {
       if (!store) {
         throw new Error(`No Stores are found for vendor ID: ${vendorId}`);
       }
+      return this.storeRepository_.find({ where: whereClause });
     }
-
-    return this.storeRepository_.find({ where: whereClause });
+    else{
+      const store = await this.storeRepository_.find();
+      return store
+    }
   }
 }
 
