@@ -12,18 +12,32 @@ const VendorRepository = dataSource.getRepository(Vendor).extend({
     }
   },
 
-  async updateVendor(id: string, data: Partial<Vendor>): Promise<Vendor> {
+  async updateVendorWithCustomQuery(id: string, data: Partial<any>): Promise<Vendor> {
     try {
-      const vendor = await this.findOneOrFail({ where: { id } });
-      //ensureIdentity(data)
-      Object.assign(vendor, data);
-      return await this.save(vendor);
+      console.log("Custom Repository: Updating vendor with data:", data);
+      
+      const updateResult = await this.createQueryBuilder()
+        .update(Vendor)
+        .set(data)
+        .where("id = :id", { id })
+        .returning("*")
+        .execute();
+      
+      console.log("Custom Repository: Update result:", updateResult);
+      
+      if (updateResult.affected === 0) {
+        throw new Error(`Vendor with id ${id} not found`);
+      }
+      
+      const updatedVendor = updateResult.raw[0];
+      console.log("Custom Repository: Updated vendor:", updatedVendor);
+      
+      return updatedVendor;
     } catch (error) {
       console.error("Error updating vendor:", error);
       throw new Error("Failed to update vendor");
     }
   },
-
   async deleteVendor(id: string): Promise<void> {
     try {
       const vendor = await this.findOneOrFail({ where: { id } });

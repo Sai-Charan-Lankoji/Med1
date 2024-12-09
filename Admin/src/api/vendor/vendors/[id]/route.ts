@@ -46,9 +46,12 @@ const getVendorService = (req: MedusaRequest): VendorService | null => {
       }
   
       const vendorId = req.params.id;
-      const updateData = req.body;
+      const updateData = req.body as any;
   
-      const updatedVendor = await vendorService.update(vendorId, updateData);
+      const updatedVendor = await vendorService.update(vendorId, {
+        plan: updateData.plan,
+        plan_id: updateData.plan_id
+      });
   
       res.status(200).json({ message: "Vendor updated successfully.", vendor: updatedVendor });
     } catch (error) {
@@ -80,4 +83,4 @@ const getVendorService = (req: MedusaRequest): VendorService | null => {
       console.error("Error in DELETE /vendors/:id:", error);
       res.status(500).json({ error: error.message || "An unknown error occurred." });
     }
-  };
+  };  

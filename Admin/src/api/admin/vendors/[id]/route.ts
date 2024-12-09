@@ -20,11 +20,11 @@ const getVendorService = (req: MedusaRequest): VendorService | null => {
         return;
       }
   
-      const { vendor, user, vendorAddress, registrationAddress  } = await vendorService.retrieve(req.params.id);
+      const { vendor,  vendorAddress, registrationAddress  } = await vendorService.retrieve(req.params.id);
       if (!vendor) {
         res.status(200).json({ message: "No vendor found."});
       } else {
-        res.status(200).json({ vendor, user, vendorAddress, registrationAddress });
+        res.status(200).json({ vendor,  vendorAddress, registrationAddress });
       }
     } catch (error) {
       console.error("Error in GET /vendors:", error);

@@ -203,30 +203,27 @@ class VendorService extends TransactionBaseService {
 
   async update(
     id: string,
-    data: Partial<Vendor> & {
-      vendorAddressData?: Partial<Address>;
-      registrationAddressData?: Partial<Address>;
-      userData?: Partial<User>;
-    }
+    data: Partial<any>
   ): Promise<Vendor> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
       let vendor = await vendorRepo.getVendor(id);
-
       if (!vendor) {
         throw new MedusaError(
           MedusaError.Types.NOT_FOUND,
           `Vendor with id ${id} was not found.`
         );
       }
-
-      vendor = await vendorRepo.updateVendor(id, data);
-      // Retrieve the updated vendor information
-      vendor = await vendorRepo.getVendor(id);
+      
+      console.log("Service: Updating vendor with data:", data);
+      
+      vendor = await vendorRepo.updateVendorWithCustomQuery(id, data);
+      
+      console.log("Service: Updated vendor:", vendor);
+      
       return vendor;
     });
   }
-
   async updatePassword(id: string, newPassword: string): Promise<void> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);

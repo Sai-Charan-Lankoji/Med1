@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import MenuItems from '../utils/menuItems';
 
 export default function Sidebar() {
-  const {  companyName } = useAuth();
+  const companyName = sessionStorage.getItem('company_name');
   const { logout, loading } = useVendorLogout();
   const router = useRouter();
   const pathname = usePathname();

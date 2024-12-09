@@ -44,6 +44,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
 import { useToast } from "@/hooks/use-toast" 
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan" 
+import { useGetVendor } from "@/app/hooks/vendor/useGetVendor"
 
 
 
@@ -51,7 +52,8 @@ import { useGetPlan } from "@/app/hooks/plan/useGetPlan"
 const getStoreLimitFromPlan = (plan) => {
   if (!plan || !Array.isArray(plan.features)) return 0; // Ensure plan.features exists and is an array
   const limitFeature = plan.features.find((feature) =>
-    feature.toLowerCase().includes("store")
+    feature.toLowerCase().includes("store") 
+
   );
   if (!limitFeature) return 0;
 
@@ -77,9 +79,10 @@ const Store = () => {
 
   const PAGE_SIZE = 6
   const vendorId = sessionStorage.getItem("vendor_id")
+  const { data: vendor, isLoading: vendorLoading } = useGetVendor();
 
-  const {data : currentPlan} = useGetPlan() 
-  console.log(currentPlan)
+  const {data : currentPlan} = useGetPlan(vendor?.vendor?.plan_id) 
+  // console.log("this is current plan : ",currentPlan)
   const { data: storesData, isLoading, refetch: refreshStores } = useGetStores()
   const { data: saleschannelsData } = useGetSalesChannels()
   const { mutate: createStore } = useCreateStore()
