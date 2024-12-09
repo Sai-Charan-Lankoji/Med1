@@ -1,13 +1,62 @@
 "use client"
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useAnimation } from "framer-motion";
 import { useGetProducts } from "../hooks/useGetProducts";
 import { useRouter } from "next/navigation";
 import { DesignContext } from "@/context/designcontext";
 import { IDesign, IProps } from "@/@types/models";
-import styles from "./ProductGallery.module.css";
+
+// Infinite Scroll Variant
+const InfiniteScrollContainer = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => {
+  const controls = useAnimation();
+  const [isHovering, setIsHovering] = useState(false);
+
+  useEffect(() => {
+    // Disable scroll animation if user prefers reduced motion
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const startAnimation = async () => {
+      if (!isHovering) {
+        await controls.start({
+          x: "-50%",
+          transition: {
+            duration: 30,
+            ease: "linear",
+            repeat: Infinity,
+          },
+        });
+      }
+    };
+
+    startAnimation();
+
+    return () => {
+      controls.stop();
+    };
+  }, [isHovering, controls]);
+
+  return (
+    <motion.div
+      className="flex items-center overflow-hidden"
+      onHoverStart={() => setIsHovering(true)}
+      onHoverEnd={() => setIsHovering(false)}
+    >
+      <motion.div
+        animate={controls}
+        className="flex gap-4 will-change-transform"
+      >
+        {children}
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+};
 
 const ProductGallery = () => {
   const { data: products, isLoading, error } = useGetProducts();
@@ -21,14 +70,15 @@ const ProductGallery = () => {
   const [currentImageIndices, setCurrentImageIndices] = useState<
     Record<string, number>
   >({});
-  const scrollerRef = useRef<HTMLDivElement>(null);
 
+  // Image cycling effect
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
     if (hoveredProduct) {
-      intervalId = setInterval(() => {
-        setCurrentImageIndices(prev => {
-          const product = products?.find((p: { id: string }) => p.id === hoveredProduct);
+      const intervalId = setInterval(() => {
+        setCurrentImageIndices((prev) => {
+          const product = products?.find(
+            (p: { id: string }) => p.id === hoveredProduct
+          );
           if (!product || !product.designs?.length) return prev;
 
           const currentIndex = prev[hoveredProduct] ?? 0;
@@ -36,21 +86,14 @@ const ProductGallery = () => {
 
           return {
             ...prev,
-            [hoveredProduct]: nextIndex
+            [hoveredProduct]: nextIndex,
           };
         });
       }, 1000);
-    }
-    return () => {
-      if (intervalId) clearInterval(intervalId);
-    };
-  }, [hoveredProduct, products]);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      addAnimation();
+      return () => clearInterval(intervalId);
     }
-  }, [products]);
+  }, [hoveredProduct, products]);
 
   const handleDesignClick = async (
     designstate: IDesign,
@@ -73,21 +116,6 @@ const ProductGallery = () => {
 
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
-  };
-
-  const addAnimation = () => {
-    if (scrollerRef.current) {
-      scrollerRef.current.setAttribute("data-animated", "true");
-      const scrollerInner = scrollerRef.current.querySelector(`.${styles.scrollerInner}`);
-      if (scrollerInner) {
-        const scrollerContent = Array.from(scrollerInner.children);
-        scrollerContent.forEach((item) => {
-          const duplicatedItem = item.cloneNode(true) as HTMLElement;
-          duplicatedItem.setAttribute("aria-hidden", "true");
-          scrollerInner.appendChild(duplicatedItem);
-        });
-      }
-    }
   };
 
   if (isLoading) {
@@ -130,49 +158,49 @@ const ProductGallery = () => {
   return (
     <section className="py-24 bg-gray-50" id="showcase">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        {/* <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Our Products
-          </h2>
-          <p className="mt-4 text-lg text-gray-600">
-            Explore our customizable designs
-          </p>
-        </div> */}
-        <div 
-          ref={scrollerRef}
-          className={`${styles.scroller}`}
-          data-speed="fast"
-        >
-          <div className={styles.scrollerInner}>
-            {products.map((product: { id: string; designs?: { apparel: { url: string; side: string; color?: string }; pngImage: string }[]; designstate: any; propstate: any }, index: number) => {
+        <InfiniteScrollContainer>
+          {products.map(
+            (
+              product: {
+                id: string;
+                designs?: {
+                  apparel: { url: string; side: string; color?: string };
+                  pngImage: string;
+                }[];
+                designstate: any;
+                propstate: any;
+              },
+              index: number
+            ) => {
               if (!product.designs?.length) return null;
 
-              const currentImageIndex = hoveredProduct === product.id 
-                ? (currentImageIndices[product.id] || 0)
-                : 0;
+              const currentImageIndex =
+                hoveredProduct === product.id
+                  ? currentImageIndices[product.id] || 0
+                  : 0;
 
               const currentDesign = product.designs[currentImageIndex];
 
               return (
                 <motion.div
                   key={product.id}
-                  className="flex-shrink-0 w-64 mx-2 snap-start"
-                  whileHover={{ scale: 1.05 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  onMouseEnter={() => {
-                    setHoveredProduct(product.id);
+                  className="flex-shrink-0 w-64 mx-2 snap-start cursor-pointer group"
+                  whileHover={{
+                    scale: 1.05,
+                    transition: { type: "spring", stiffness: 500, damping: 30 },
                   }}
-                  onMouseLeave={() => {
+                  onHoverStart={() => setHoveredProduct(product.id)}
+                  onHoverEnd={() => {
                     setHoveredProduct(null);
-                    setCurrentImageIndices(prev => ({
+                    setCurrentImageIndices((prev) => ({
                       ...prev,
-                      [product.id]: 0
+                      [product.id]: 0,
                     }));
                   }}
-                  onClick={() => 
+                  onClick={() =>
                     handleDesignClick(
-                      product.designstate, 
-                      product.propstate, 
+                      product.designstate,
+                      product.propstate,
                       product.id
                     )
                   }
@@ -188,31 +216,48 @@ const ProductGallery = () => {
                         backgroundColor: currentDesign.apparel?.color,
                       }}
                     />
-                    
+
                     {/* Design overlay */}
-                    <div 
+                    <div
                       className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
-                      opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-300"
                     >
                       <div className="absolute bottom-0 left-0 right-0 p-4">
                         <p className="text-white text-sm">
-                          Current Side: {capitalizeFirstLetter(currentDesign.apparel.side)}
+                          Current Side:{" "}
+                          {capitalizeFirstLetter(currentDesign.apparel.side)}
                         </p>
                       </div>
                     </div>
 
                     {/* Overlaid design image */}
-                    <div 
+                    <div
                       className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 group-hover:opacity-100 transition-opacity duration-300"
                       style={{
-                          top: currentDesign.apparel.side === "leftshoulder" ? "170px" : 
-                          currentDesign.apparel.side === "rightshoulder" ? "170px" : "initial", 
-                     left: currentDesign.apparel.side === "leftshoulder" ? "130px" : 
-                           currentDesign.apparel.side === "rightshoulder" ? "145px" : "initial", 
-                     width: currentDesign.apparel.side === "leftshoulder" || currentDesign.apparel.side === "rightshoulder" ? "30%" : "50%", 
-                     height: currentDesign.apparel.side === "leftshoulder" || currentDesign.apparel.side === "rightshoulder" ? "30%" : "50%", 
+                        top:
+                          currentDesign.apparel.side === "leftshoulder" ||
+                          currentDesign.apparel.side === "rightshoulder"
+                            ? "170px"
+                            : "initial",
+                        left:
+                          currentDesign.apparel.side === "leftshoulder"
+                            ? "130px"
+                            : currentDesign.apparel.side === "rightshoulder"
+                            ? "145px"
+                            : "initial",
+                        width:
+                          currentDesign.apparel.side === "leftshoulder" ||
+                          currentDesign.apparel.side === "rightshoulder"
+                            ? "30%"
+                            : "50%",
+                        height:
+                          currentDesign.apparel.side === "leftshoulder" ||
+                          currentDesign.apparel.side === "rightshoulder"
+                            ? "30%"
+                            : "50%",
                         transform: "translate(-50%, -50%)",
-                        transition: "opacity 0.3s ease-in-out, transform 0.3s ease-in-out"
+                        transition:
+                          "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
                       }}
                     >
                       <Image
@@ -227,13 +272,12 @@ const ProductGallery = () => {
                   </div>
                 </motion.div>
               );
-            })}
-          </div>
-        </div>
+            }
+          )}
+        </InfiniteScrollContainer>
       </div>
     </section>
   );
 };
 
 export default ProductGallery;
-
