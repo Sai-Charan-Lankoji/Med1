@@ -15,7 +15,8 @@ const Navbar = () => {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { email, contactName } = useAuth() ?? { email: '', contactName: '' };
+  const email = sessionStorage.getItem('email')
+  const contactName = sessionStorage.getItem('contactName')
   const { logout, loading } = useVendorLogout();
 
   const handleLogout = async () => {

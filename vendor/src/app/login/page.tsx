@@ -57,11 +57,11 @@ const LoginForm = () => {
       if (success) {
         toast.success("Success", {
           description: "Vendor login successful",
-          duration: 2000,
+          duration: 1000,
         });
         setTimeout(() => {
           router.push("/vendor/orders");
-        }, 2500);
+        }, 1200);
       }
     } catch (err: any) {
       toast.error("Error", {

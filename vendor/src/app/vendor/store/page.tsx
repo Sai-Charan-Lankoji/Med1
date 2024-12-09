@@ -542,7 +542,7 @@ const Store = () => {
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <p className="text-center text-gray-700">
-            You've reached the maximum number of stores allowed in your {currentPlan?.name} plan 
+            You&apos;ve reached the maximum number of stores allowed in your {currentPlan?.name} plan 
             ({getStoreLimitFromPlan(currentPlan)} stores).
           </p>
           <p className="text-center text-gray-600">
