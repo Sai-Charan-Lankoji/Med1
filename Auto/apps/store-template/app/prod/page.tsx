@@ -155,126 +155,127 @@ const ProductGallery = () => {
     );
   }
 
+  // Render products in a grid or infinite scroll based on the number of products
+  const renderProducts = () => {
+    const productElements = products
+      .filter((product: { designs?: IDesign[] }) => product.designs?.length)
+      .map((product: { id: string; designs: IDesign[]; designstate: IDesign; propstate: IProps }, index: number) => {
+        const currentImageIndex =
+          hoveredProduct === product.id
+            ? currentImageIndices[product.id] || 0
+            : 0;
+
+        const currentDesign = product.designs[currentImageIndex];
+
+        return (
+          <motion.div
+            key={product.id}
+            className="flex-shrink-0 w-64 mx-2 snap-start cursor-pointer group"
+            whileHover={{
+              scale: 1.05,
+              transition: { type: "spring", stiffness: 500, damping: 30 },
+            }}
+            onHoverStart={() => setHoveredProduct(product.id)}
+            onHoverEnd={() => {
+              setHoveredProduct(null);
+              setCurrentImageIndices((prev) => ({
+                ...prev,
+                [product.id]: 0,
+              }));
+            }}
+            onClick={() =>
+              handleDesignClick(
+                product.designstate,
+                product.propstate,
+                product.id
+              )
+            }
+          >
+            <div className="aspect-square bg-gray-100 relative overflow-hidden">
+              <Image
+                src={currentDesign.apparel.url}
+                alt={`Product ${product.id} ${currentDesign.apparel.side}`}
+                fill
+                sizes="100%"
+                className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
+                style={{
+                  backgroundColor: currentDesign.apparel?.color,
+                }}
+              />
+
+              {/* Design overlay */}
+              <div
+                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
+              opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              >
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <p className="text-white text-sm">
+                    Current Side:{" "}
+                    {capitalizeFirstLetter(currentDesign.apparel.side)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Overlaid design image */}
+              <div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 group-hover:opacity-100 transition-opacity duration-300"
+                style={{
+                  top:
+                    currentDesign.apparel.side === "leftshoulder" ||
+                    currentDesign.apparel.side === "rightshoulder"
+                      ? "170px"
+                      : "initial",
+                  left:
+                    currentDesign.apparel.side === "leftshoulder"
+                      ? "130px"
+                      : currentDesign.apparel.side === "rightshoulder"
+                      ? "145px"
+                      : "initial",
+                  width:
+                    currentDesign.apparel.side === "leftshoulder" ||
+                    currentDesign.apparel.side === "rightshoulder"
+                      ? "30%"
+                      : "50%",
+                  height:
+                    currentDesign.apparel.side === "leftshoulder" ||
+                    currentDesign.apparel.side === "rightshoulder"
+                      ? "30%"
+                      : "50%",
+                  transform: "translate(-50%, -50%)",
+                  transition:
+                    "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
+                }}
+              >
+                <Image
+                  src={currentDesign.pngImage}
+                  alt="Design"
+                  fill
+                  sizes="100%"
+                  className="rounded-md transition-opacity duration-300 ease-in-out"
+                  style={{ objectFit: "contain" }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        );
+      });
+
+    // If more than 4 products, use infinite scroll; otherwise, use grid
+    return products.length > 4 ? (
+      <InfiniteScrollContainer>
+        {productElements}
+      </InfiniteScrollContainer>
+    ) : (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+        {productElements}
+      </div>
+    );
+  };
+
   return (
     <section className="py-24 bg-gray-50" id="showcase">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <InfiniteScrollContainer>
-          {products.map(
-            (
-              product: {
-                id: string;
-                designs?: {
-                  apparel: { url: string; side: string; color?: string };
-                  pngImage: string;
-                }[];
-                designstate: any;
-                propstate: any;
-              },
-              index: number
-            ) => {
-              if (!product.designs?.length) return null;
-
-              const currentImageIndex =
-                hoveredProduct === product.id
-                  ? currentImageIndices[product.id] || 0
-                  : 0;
-
-              const currentDesign = product.designs[currentImageIndex];
-
-              return (
-                <motion.div
-                  key={product.id}
-                  className="flex-shrink-0 w-64 mx-2 snap-start cursor-pointer group"
-                  whileHover={{
-                    scale: 1.05,
-                    transition: { type: "spring", stiffness: 500, damping: 30 },
-                  }}
-                  onHoverStart={() => setHoveredProduct(product.id)}
-                  onHoverEnd={() => {
-                    setHoveredProduct(null);
-                    setCurrentImageIndices((prev) => ({
-                      ...prev,
-                      [product.id]: 0,
-                    }));
-                  }}
-                  onClick={() =>
-                    handleDesignClick(
-                      product.designstate,
-                      product.propstate,
-                      product.id
-                    )
-                  }
-                >
-                  <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                    <Image
-                      src={currentDesign.apparel.url}
-                      alt={`Product ${product.id} ${currentDesign.apparel.side}`}
-                      fill
-                      sizes="100%"
-                      className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
-                      style={{
-                        backgroundColor: currentDesign.apparel?.color,
-                      }}
-                    />
-
-                    {/* Design overlay */}
-                    <div
-                      className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
-                    opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    >
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <p className="text-white text-sm">
-                          Current Side:{" "}
-                          {capitalizeFirstLetter(currentDesign.apparel.side)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Overlaid design image */}
-                    <div
-                      className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 group-hover:opacity-100 transition-opacity duration-300"
-                      style={{
-                        top:
-                          currentDesign.apparel.side === "leftshoulder" ||
-                          currentDesign.apparel.side === "rightshoulder"
-                            ? "170px"
-                            : "initial",
-                        left:
-                          currentDesign.apparel.side === "leftshoulder"
-                            ? "130px"
-                            : currentDesign.apparel.side === "rightshoulder"
-                            ? "145px"
-                            : "initial",
-                        width:
-                          currentDesign.apparel.side === "leftshoulder" ||
-                          currentDesign.apparel.side === "rightshoulder"
-                            ? "30%"
-                            : "50%",
-                        height:
-                          currentDesign.apparel.side === "leftshoulder" ||
-                          currentDesign.apparel.side === "rightshoulder"
-                            ? "30%"
-                            : "50%",
-                        transform: "translate(-50%, -50%)",
-                        transition:
-                          "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
-                      }}
-                    >
-                      <Image
-                        src={currentDesign.pngImage}
-                        alt="Design"
-                        fill
-                        sizes="100%"
-                        className="rounded-md transition-opacity duration-300 ease-in-out"
-                        style={{ objectFit: "contain" }}
-                      />
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            }
-          )}
-        </InfiniteScrollContainer>
+        {renderProducts()}
       </div>
     </section>
   );
