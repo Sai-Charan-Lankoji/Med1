@@ -62,9 +62,7 @@ class VendorService extends TransactionBaseService {
     });
   }
 
-  async retrieve(
-    id: string
-  ): Promise<{
+  async retrieve(id: string): Promise<{
     vendor: Vendor;
     user: User;
     vendorAddress: Address;
@@ -147,9 +145,11 @@ class VendorService extends TransactionBaseService {
       // Hash the password and create Vendor
       const hashedPassword = await bcrypt.hash(data.password, 10);
       data.password = hashedPassword;
-      const existingVendor = await vendorRepo.findOne({ where: { contact_email: data.contact_email }})
-      
-      if(existingVendor){
+      const existingVendor = await vendorRepo.findOne({
+        where: { contact_email: data.contact_email },
+      });
+
+      if (existingVendor) {
         throw new MedusaError(
           MedusaError.Types.DUPLICATE_ERROR,
           "A Vendor with this email already exists"
@@ -228,9 +228,6 @@ class VendorService extends TransactionBaseService {
   ): Promise<Vendor> {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
-      // const userRepo = manager.withRepository(this.userRepository_);
-      const addressRepo = manager.withRepository(this.addressRepository_);
-
       let vendor = await vendorRepo.getVendor(id);
 
       if (!vendor) {
@@ -241,83 +238,6 @@ class VendorService extends TransactionBaseService {
       }
 
       vendor = await vendorRepo.updateVendor(id, data);
-
-      // Update user data if provided
-      // if (vendor.user_id) {
-      //   const user = await userRepo.findOne({ where: { id: vendor.user_id } });
-
-      //   if (!user) {
-      //     throw new MedusaError(
-      //       MedusaError.Types.NOT_FOUND,
-      //       `User with id ${vendor.user_id} not found.`
-      //     );
-      //   }
-
-      //   Object.assign(user, { ...data.userData, email: vendor.contact_email });
-      //   await userRepo.save(user);
-      // }
-
-      // Update address data if provided
-      if (vendor.id) {
-        const address = await addressRepo.findOne({
-          where: {
-            vendor_address_id: vendor.id,
-            registration_address_id: vendor.id,
-          },
-        });
-
-        if (!address) {
-          throw new MedusaError(
-            MedusaError.Types.NOT_FOUND,
-            `Address with vendor_address_id ${vendor.id} not found.`
-          );
-        }
-
-        const vendorAddress1 = data.vendorAddressData.address_1 || "";
-        const registrationAddress1 =
-          data.registrationAddressData.address_1 || "";
-        const combinedAddress1 = `${vendorAddress1} - ${registrationAddress1}`;
-
-        const vendorAddress2 = data.vendorAddressData.address_2 || "";
-        const registrationAddress2 =
-          data.registrationAddressData.address_2 || "";
-        const combinedAddress2 = `${vendorAddress2} - ${registrationAddress2}`;
-
-        const vendorCity = data.vendorAddressData?.city || "";
-        const registrationCity = data.registrationAddressData?.city || "";
-        const combinedCity = `${vendorCity} - ${registrationCity}`;
-
-        const vendorProvince = data.vendorAddressData?.province || "";
-        const registrationProvince =
-          data.registrationAddressData?.province || "";
-        const combinedProvince = `${vendorProvince} - ${registrationProvince}`;
-
-        const vendorPostalCode = data.vendorAddressData?.postal_code || "";
-        const registrationPostalCode =
-          data.registrationAddressData?.postal_code || "";
-        const combinedPostalCode = `${vendorPostalCode} - ${registrationPostalCode}`;
-
-        const vendorPhone = data.vendorAddressData?.phone || "";
-        const registrationPhone = data.registrationAddressData?.phone || "";
-        const combinedPhone = `${vendorPhone} - ${registrationPhone}`;
-
-        Object.assign(address, {
-          company: vendor.company_name,
-          first_name: data.vendorAddressData.first_name,
-          last_name: data.vendorAddressData.last_name,
-          address_1: combinedAddress1,
-          address_2: combinedAddress2,
-          city: combinedCity,
-          province: combinedProvince,
-          postal_code: combinedPostalCode,
-          phone: combinedPhone,
-          vendor_address_id: vendor.id,
-          registration_address_id: vendor.id,
-        });
-
-        await addressRepo.save(address);
-      }
-
       // Retrieve the updated vendor information
       vendor = await vendorRepo.getVendor(id);
       return vendor;
@@ -328,19 +248,18 @@ class VendorService extends TransactionBaseService {
     return await this.runAtomicPhase(async (manager) => {
       const vendorRepo = manager.withRepository(this.vendorRepository_);
       const vendor = await vendorRepo.findOne({ where: { id } });
-  
+
       if (!vendor) {
         throw new MedusaError(
           MedusaError.Types.NOT_FOUND,
           `Vendor with id ${id} not found.`
         );
       }
-  
+
       vendor.password = newPassword;
       await vendorRepo.save(vendor);
     });
   }
-  
 
   async delete(id: string): Promise<void> {
     return await this.runAtomicPhase(async (manager) => {

@@ -30,9 +30,7 @@ export const POST = async (
     const vendorUserService = getVendorUserService(req);
 
     if (!vendorService || !vendorUserService) {
-      res
-        .status(500)
-        .json({ error: "Services could not be resolved." });
+      res.status(500).json({ error: "Services could not be resolved." });
       return;
     }
 
@@ -42,17 +40,22 @@ export const POST = async (
     };
 
     if (!email || !newPassword) {
-      res
-        .status(400)
-        .json({ error: "Email and new password are required." });
+      res.status(400).json({ error: "Email and new password are required." });
       return;
     }
 
     // Check if email matches a Vendor
     const vendor = await vendorService.findByEmail(email);
     if (vendor) {
+      // Check if new password matches the existing password
+      const isPasswordSame = await bcrypt.compare(newPassword, vendor.password);
+      if (isPasswordSame) {
+        res.status(400).json({ error: "New password must be different from the current password." });
+        return;
+      }
+
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await vendorService.updatePassword(vendor.id, hashedPassword );
+      await vendorService.updatePassword(vendor.id, hashedPassword);
 
       res.status(200).json({ message: "Password reset successful for Vendor." });
       return;
@@ -61,12 +64,17 @@ export const POST = async (
     // Check if email matches a VendorUser
     const vendorUser = await vendorUserService.findByEmail(email);
     if (vendorUser) {
+      // Check if new password matches the existing password
+      const isPasswordSame = await bcrypt.compare(newPassword, vendorUser.password);
+      if (isPasswordSame) {
+        res.status(400).json({ error: "New password must be different from the current password." });
+        return;
+      }
+
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       await vendorUserService.updatePassword(vendorUser.id, hashedPassword);
 
-      res
-        .status(200)
-        .json({ message: "Password reset successful for Vendor User." });
+      res.status(200).json({ message: "Password reset successful for Vendor User." });
       return;
     }
 
@@ -77,3 +85,4 @@ export const POST = async (
 };
 
 export const CORS = false;
+

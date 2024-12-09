@@ -8,7 +8,8 @@ import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { useResetPassword } from "../hooks/auth/useResetPassword";
-import { Toaster, toast } from "@medusajs/ui"
+import { Toaster, toast } from "@medusajs/ui";
+
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -28,30 +29,33 @@ export default function ForgotPasswordPage() {
       toast.info("Info", {
         description: "Please enter all details",
         duration: 5000
-      })
-
+      });
       return;
     }
     if (newPassword !== confirmPassword) {
       toast.warning("Warning", {
-        description: "Password doesn't match",
+        description: "Passwords don't match",
         duration: 5000
-      })
+      });
       return;
     }
-    if(isSuccess){
-      toast.success("Success", {
-        description: "Password reset Successfully!",
-        duration: 5000
-      })
-    }
-    if(isError){
-      toast.error("Error", {
-        description: error?.message || "Failed to reset password",
-        duration: 5000
-      })
-    }
-    mutate({ email, newPassword });
+    mutate(
+      { email, newPassword },
+      {
+        onSuccess: () => {
+          toast.success("Success", {
+            description: "Password reset successfully!",
+            duration: 5000
+          });
+        },
+        onError: (error) => {
+          toast.error("Error", {
+            description: error.message || "Failed to reset password",
+            duration: 5000
+          });
+        }
+      }
+    );
   };
 
   return (
@@ -142,8 +146,6 @@ export default function ForgotPasswordPage() {
             >
               {isLoading ? <Loader className="animate-spin mx-auto" /> : t("Reset Password")}
             </button>
-            {isError && <p className="text-red-500 text-sm">{error?.message}</p>}
-            
           </form>
           <p className="text-white text-sm mt-4 text-center">
             {t("Remembered your password?")}{" "}
@@ -156,3 +158,4 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
+
