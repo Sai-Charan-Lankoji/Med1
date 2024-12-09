@@ -65,7 +65,6 @@ export function PlanCard({ plan, onUpdate, onDelete, onEdit }: PlanCardProps) {
           <div>
             <CardTitle>{plan.name}</CardTitle>
             <CardDescription>{plan.description}</CardDescription>
-            <CardTitle>{plan.no_stores}</CardTitle>
           </div>
           <Badge 
             variant={plan.isActive ? "default" : "secondary"}

@@ -158,7 +158,7 @@ export default function Sidebar() {
         isCollapsed ? "text-center" : "text-left"
       )}>
         {!isCollapsed && (
-          <p>© 2024 Admin Dashboard</p>
+          <p>© 2024 Vendor Hub</p>
         )}
       </div>
     </aside>

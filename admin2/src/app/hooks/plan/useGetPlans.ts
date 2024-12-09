@@ -47,11 +47,11 @@ const fetchPlans = async () => {
 // Custom React Query hook for fetching plans
 export const useGetPlans = () => {
   return useQuery(['plans'], fetchPlans, {
-    refetchOnWindowFocus: false, // Avoid refetching when the window regains focus
-    refetchOnMount: false,      // Avoid refetching when the component mounts
-    cacheTime: 1000 * 60 * 10,  // Cache the response for 10 minutes
-    staleTime: 1000 * 60 * 5,   // Mark data as fresh for 5 minutes
-    retry: false,               // Disable retries on error
+    // refetchOnWindowFocus: false, // Avoid refetching when the window regains focus
+    // refetchOnMount: false,      // Avoid refetching when the component mounts
+    // cacheTime: 1000 * 60 * 10,  // Cache the response for 10 minutes
+    // staleTime: 1000 * 60 * 5,   // Mark data as fresh for 5 minutes
+    // retry: false,               // Disable retries on error
 
     // Error handling
     onError: (error: unknown) => {
