@@ -1,8 +1,16 @@
 import { Lifetime } from "awilix";
 import { Vendor } from "../models/vendor";
 import { User } from "../models/user";
-import { ProductService as MedusaProductService, Product as MedusaProduct } from "@medusajs/medusa";
-import { FindProductConfig, CreateProductInput as MedusaCreateProductInput, ProductSelector, UpdateProductInput } from "@medusajs/medusa/dist/types/product";
+import {
+  ProductService as MedusaProductService,
+  Product as MedusaProduct,
+} from "@medusajs/medusa";
+import {
+  FindProductConfig,
+  CreateProductInput as MedusaCreateProductInput,
+  ProductSelector,
+  UpdateProductInput,
+} from "@medusajs/medusa/dist/types/product";
 import { FindManyOptions, IsNull } from "typeorm";
 
 type Product = MedusaProduct & {
@@ -41,18 +49,24 @@ class ProductService extends MedusaProductService {
     return await this.productRepository.save(newProduct);
   }
 
-  async update(productId: string, update: UpdateProductInput): Promise<Product> {
+  async update(productId: string, update: any): Promise<Product> {
     if (!productId) {
       throw new Error("Product ID is required to update a product");
     }
 
-    const existingProduct = await this.productRepository.findOne({ where: { id: productId } });
+    const existingProduct = await this.productRepository.findOne({
+      where: { id: productId },
+    });
 
     if (!existingProduct) {
       throw new Error(`Product with ID ${productId} not found`);
     }
 
-    const updatedProduct = this.productRepository.merge(existingProduct, update);
+    const updatedProduct = this.productRepository.merge(
+      existingProduct,
+      update
+    );
+
     return await this.productRepository.save(updatedProduct);
   }
 
@@ -61,7 +75,9 @@ class ProductService extends MedusaProductService {
       throw new Error("Product ID is required to delete a product");
     }
 
-    const existingProduct = await this.productRepository.findOne({ where: { id: productId } });
+    const existingProduct = await this.productRepository.findOne({
+      where: { id: productId },
+    });
 
     if (!existingProduct) {
       throw new Error(`Product with ID ${productId} not found`);
@@ -70,21 +86,36 @@ class ProductService extends MedusaProductService {
     await this.productRepository.delete({ id: productId });
   }
 
-  async list(selector: ProductSelector, config?: FindProductConfig): Promise<Product[]> {
+  async list(
+    selector: ProductSelector,
+    config?: FindProductConfig
+  ): Promise<Product[]> {
     config = config || {};
     return await this.productRepository.find({ where: selector, ...config });
   }
 
-  async listAndCount(selector: ProductSelector, config?: FindProductConfig): Promise<[Product[], number]> {
+  async listAndCount(
+    selector: ProductSelector,
+    config?: FindProductConfig
+  ): Promise<[Product[], number]> {
     config = config || {};
-    return await this.productRepository.findAndCount({ where: selector, ...config });
+    return await this.productRepository.findAndCount({
+      where: selector,
+      ...config,
+    });
   }
 
-  async retrieve(productId: string, config?: FindProductConfig): Promise<Product> {
+  async retrieve(
+    productId: string,
+    config?: FindProductConfig
+  ): Promise<Product> {
     config = config || {};
-    const product = await this.productRepository.findOne({ where: { id: productId }, ...config });
+    const product = await this.productRepository.findOne({
+      where: { id: productId },
+      ...config,
+    });
     if (!product) {
-      throw new Error('Product not found.');
+      throw new Error("Product not found.");
     }
     return product;
   }
@@ -94,7 +125,9 @@ class ProductService extends MedusaProductService {
     if (vendorId !== null) {
       query.where.vendor_id = vendorId;
 
-      const product = await this.productRepository.find({ where: { vendor_id: vendorId } });
+      const product = await this.productRepository.find({
+        where: { vendor_id: vendorId },
+      });
       if (!product) {
         throw new Error(`No Products are found`);
       }
@@ -108,7 +141,9 @@ class ProductService extends MedusaProductService {
     if (storeId !== null) {
       query.where.store_id = storeId;
 
-      const product = await this.productRepository.find({ where: { store_id: storeId } });
+      const product = await this.productRepository.find({
+        where: { store_id: storeId },
+      });
       if (!product) {
         throw new Error(`No Products are found for this storeId ${storeId}`);
       }
@@ -117,15 +152,12 @@ class ProductService extends MedusaProductService {
     return this.productRepository.find(query);
   }
 
-
-
   async retrieveByNullVendor(): Promise<Product[]> {
     const query: FindManyOptions<Product> = {
-      where: { vendor_id: IsNull() }, 
+      where: { vendor_id: IsNull() },
     };
     return await this.productRepository_.find(query);
   }
-
 }
 
 export default ProductService;

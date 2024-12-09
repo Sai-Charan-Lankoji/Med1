@@ -1,6 +1,6 @@
 import { MedusaRequest, MedusaResponse } from "@medusajs/medusa";
 import OrderService from "../../../services/order";
-import { vendorId } from "../../../services/mocks/saleschannelmock";
+import { vendorId } from "../../../mocks/saleschannelmock";
 
 interface OrderData {
   vendor_id?: string; // Make vendor_id optional

@@ -8,8 +8,6 @@ export interface CreatePlanData {
   features: string[];
   isActive?: boolean; 
   no_stores: string; 
-  
-
 }
 const PlanRepository = dataSource.getRepository(Plan).extend({
 
