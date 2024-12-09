@@ -1,6 +1,6 @@
 import CustomerService from '../customer';
 import { EntityManager } from 'typeorm';
-import customerRepositoryMock from '../mocks/customermock';
+import customerRepositoryMock from '../../mocks/customermock'
 
 describe('CustomerService', () => {
     let customerService;

@@ -1,4 +1,4 @@
-import orderRepositoryMock from '../mocks/ordermock';
+import orderRepositoryMock from '../../mocks/ordermock';
 import OrderService from '../order';
 
 describe('OrderService', () => {

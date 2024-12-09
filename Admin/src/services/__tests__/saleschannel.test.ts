@@ -4,7 +4,7 @@ import {
     updateData,
     vendorId,
     saleschannelId,
-  } from "../mocks/saleschannelmock";
+  } from "../../mocks/saleschannelmock";
   import SalesChannelService from "../salesChannel";
   
   describe("SalesChannelService", () => {
