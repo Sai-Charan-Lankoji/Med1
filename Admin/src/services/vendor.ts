@@ -64,7 +64,6 @@ class VendorService extends TransactionBaseService {
 
   async retrieve(id: string): Promise<{
     vendor: Vendor;
-    user: User;
     vendorAddress: Address;
     registrationAddress: Address;
   }> {
@@ -81,17 +80,6 @@ class VendorService extends TransactionBaseService {
         );
       }
 
-      const userRepo = manager.getRepository(User);
-      const user = await userRepo.findOne({
-        where: { id: vendor.user_id },
-      });
-
-      if (!user) {
-        throw new MedusaError(
-          MedusaError.Types.NOT_FOUND,
-          `User associated with vendor id ${id} was not found.`
-        );
-      }
       const addressRepo = manager.withRepository(this.addressRepository_);
       const vendorAddress = await addressRepo.findOne({
         where: { vendor_address_id: vendor.id },
@@ -100,14 +88,9 @@ class VendorService extends TransactionBaseService {
       const registrationAddress = await addressRepo.findOne({
         where: { registration_address_id: vendor.id },
       });
-      // if (address.vendor_address_id) {
-      //   address = await addressRepo.findOne({
-      //     where: { id: address.vendor_address_id },
-      //   });
-      // }
 
       // Return the vendor, user, and optionally the address
-      return { vendor, user, vendorAddress, registrationAddress };
+      return { vendor, vendorAddress, registrationAddress };
     });
   }
 
