@@ -15,6 +15,7 @@ import { useUploadImage } from "@/app/hooks/products/useUploadImage";
 import { useCreateProduct } from "@/app/hooks/products/useCreateProduct";
 import Image from "next/image";
 import { XMarkMini } from "@medusajs/icons";
+import { vendor_id } from "@/app/utils/constant";
 
 const AddProductForm = () => {
   const [isModalOpen, setIsModalOpen] = useState(true);
@@ -48,10 +49,8 @@ const AddProductForm = () => {
   };
 
   const handlePublishClick = () => {
-    const vendorId = sessionStorage.getItem("vendor_id");
-    console.log("Vendor ID:", vendorId);
 
-    if (!vendorId) {
+    if (!vendor_id) {
       toast.error("Vendor ID is missing");
       return;
     }
@@ -99,7 +98,7 @@ const AddProductForm = () => {
         (document.getElementById("origin_country") as HTMLSelectElement)
           ?.value || "",
       thumbnail: uploadedImages.join(","),
-      vendor_id: vendorId,
+      vendor_id: vendor_id,
     };
 
     console.log("Form Data:", formData);

@@ -1,11 +1,11 @@
+import { vendor_id } from '@/app/utils/constant';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
 const updateUser = async (userData: { id: string; [key: string]: any }) => {
-  const vendorId = sessionStorage.getItem('vendor_id')
 
-  if (!vendorId) {
+  if (!vendor_id) {
     console.warn('No vendor ID found in sessionStorage')
     throw new Error('Vendor ID not found')
   }
@@ -20,7 +20,7 @@ const updateUser = async (userData: { id: string; [key: string]: any }) => {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ ...updateData, vendor_id: vendorId }),
+      body: JSON.stringify({ ...updateData, vendor_id: vendor_id }),
     })
 
     if (!response.ok) {

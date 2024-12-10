@@ -1,5 +1,6 @@
 "use client";
 
+import { vendor_id } from "@/app/utils/constant";
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -13,7 +14,7 @@ const withAuth = <P extends object>(
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      const vendorId = sessionStorage.getItem("vendor_id");
+      const vendorId = typeof window !== "undefined" ? sessionStorage.getItem("vendor_id") : null;
        if (!vendorId) {
         router.replace("/");
       } 

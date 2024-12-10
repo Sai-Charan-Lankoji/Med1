@@ -1,4 +1,5 @@
 // hooks/useUpdateVendorPlan.ts
+import { vendor_id } from "@/app/utils/constant";
 import { useMutation, useQueryClient } from "@tanstack/react-query"; 
 import { useEffect } from "react";
 
@@ -10,14 +11,12 @@ interface UpdatePlanData {
 
 export const useUpdateVendorPlan = () => { 
  
-    const vendorId  = sessionStorage.getItem('vendor_id') 
-    console.log("this is vendor_id from HooK",vendorId)
 
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (updateData: UpdatePlanData) => {
-      const response = await fetch(`http://localhost:9000/vendor/vendors/${vendorId}`, {
+      const response = await fetch(`http://localhost:9000/vendor/vendors/${vendor_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

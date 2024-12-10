@@ -10,15 +10,15 @@ import { DropdownMenu, IconButton } from "@medusajs/ui"
 import { Button } from "@medusajs/ui";
 import { cn } from '@/lib/utils';
 import MenuItems from '../utils/menuItems';
+import { company_name } from '../utils/constant';
 
-export default function Sidebar() {
-  const companyName = sessionStorage.getItem('company_name');
+const Sidebar = () => {
   const { logout, loading } = useVendorLogout();
   const router = useRouter();
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-
+  const { companyName } = useAuth();
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed);
   };
@@ -82,3 +82,4 @@ export default function Sidebar() {
   );
 }
 
+export default Sidebar;

@@ -9,16 +9,16 @@ import { cn } from "@/lib/utils";
 import { Settings, LogOut } from "lucide-react";
 import { useVendorLogout } from "../hooks/auth/useVendorLogout";
 import Link from 'next/link';
+// const contact_name = typeof window !== "undefined" ? sessionStorage.getItem("contact_name") : null;
+// const vendor_email = typeof window !== "undefined" ? sessionStorage.getItem("email") : null;
 
 const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const email = sessionStorage.getItem('email')
-  const contactName = sessionStorage.getItem('contactName')
   const { logout, loading } = useVendorLogout();
-
+  const { email, contactName } = useAuth()
   const handleLogout = async () => {
     await logout();
     sessionStorage.clear();

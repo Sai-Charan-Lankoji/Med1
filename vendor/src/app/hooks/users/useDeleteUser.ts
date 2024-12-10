@@ -1,11 +1,11 @@
+import { vendor_id } from '@/app/utils/constant'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
 const deleteUser = async (userId: string) => {
-  const vendorId = sessionStorage.getItem('vendor_id')
 
-  if (!vendorId) {
+  if (!vendor_id) {
     console.warn('No vendor ID found in sessionStorage')
     throw new Error('Vendor ID not found')
   }

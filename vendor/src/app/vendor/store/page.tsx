@@ -45,6 +45,7 @@ import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
 import { useToast } from "@/hooks/use-toast" 
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan" 
 import { useGetVendor } from "@/app/hooks/vendor/useGetVendor"
+import { vendor_id } from "@/app/utils/constant"
 
 
 
@@ -78,7 +79,6 @@ const Store = () => {
   const { toast } = useToast()
 
   const PAGE_SIZE = 6
-  const vendorId = sessionStorage.getItem("vendor_id")
   const { data: vendor, isLoading: vendorLoading } = useGetVendor();
 
   const {data : currentPlan} = useGetPlan(vendor?.vendor?.plan_id) 
@@ -130,7 +130,7 @@ const Store = () => {
     swapLinkTemplate: "",
     paymentLinkTemplate: "",
     inviteLinkTemplate: "",
-    vendor_id: vendorId ?? "",
+    vendor_id: vendor_id ?? "",
     store_type: "",
     publishableapikey: ""
   })

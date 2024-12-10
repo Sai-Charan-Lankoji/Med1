@@ -27,19 +27,20 @@ import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesCh
 import { useUpdateSalesChannel } from "@/app/hooks/saleschannel/useUpdateSalesChannel"
 import SalesTable from "../../components/saleschannelTableView/salesTable"
 import DashboardComponent from "../../../../components/dashboard/page"
+import { contact_name, vendor_id } from "@/app/utils/constant"
 
 function SalesChannels() {
   const [selectedRegion, setSelectedRegion] = useState<string | null>("Default Sales Channel")
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    vendor_id: sessionStorage.getItem("vendor_id"),
+    vendor_id: vendor_id,
   })
   const { data: SalesChannels } = useGetSalesChannels()
   const channelId = SalesChannels?.find((channel) => channel.name === selectedRegion)?.id
   const { mutate: createSalesChannel } = useCreateSalesChannel()
   const { mutate: updateSalesChannel } = useUpdateSalesChannel(channelId)
-  const vendorName = sessionStorage.getItem("contactName")
+  const vendorName = contact_name
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
@@ -55,7 +56,7 @@ function SalesChannels() {
       setFormData({
         name: selectedChannel.name,
         description: selectedChannel.description,
-        vendor_id: sessionStorage.getItem("vendor_id") || "",
+        vendor_id: vendor_id || "",
       })
     }
   }

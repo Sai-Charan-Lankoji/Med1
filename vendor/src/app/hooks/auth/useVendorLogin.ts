@@ -1,5 +1,7 @@
-"use client"
-import { useEffect, useState } from 'react';
+'use client'
+
+import { useAuth } from '@/app/context/AuthContext';
+import { useState } from 'react';
 
 interface VendorLoginResponse {
   token: string | null;
@@ -22,10 +24,7 @@ interface VendorLoginResponse {
 const useVendorLogin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authEmail, setAuthEmail] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-
+  const { setAuthEmail, setContactName, setCompanyName, setVendorId, setBusinessType, setPlan } = useAuth();
 
   const login = async (email: string, password: string) => {
     setLoading(true);
@@ -64,23 +63,28 @@ const useVendorLogin = () => {
       if (data.token) {
         console.log('Login successful', data);
         if (data.vendor) {
-            sessionStorage.setItem('vendor_id', data.vendor.id);
-            sessionStorage.setItem('business_type', data.vendor.business_type);
-            sessionStorage.setItem('company_name', data.vendor.company_name);
-            sessionStorage.setItem('plan', data.vendor.plan);
-            sessionStorage.setItem('email', data.vendor.contact_email);
-            sessionStorage.setItem('contactName', data.vendor.contact_name);
-            sessionStorage.setItem("plan_id", data.vendor.plan_id);
+          sessionStorage.setItem('vendor_id', data.vendor.id);
+          sessionStorage.setItem('business_type', data.vendor.business_type);
+          sessionStorage.setItem('company_name', data.vendor.company_name);
+          sessionStorage.setItem('plan', data.vendor.plan);
+          sessionStorage.setItem('email', data.vendor.contact_email);
+          sessionStorage.setItem('contact_name', data.vendor.contact_name);
+          sessionStorage.setItem("plan_id", data.vendor.plan_id);
   
-            setAuthEmail(data.vendor.contact_email);
-            setContactName(data.vendor.contact_name);
-            setCompanyName(data.vendor.company_name);
+          setAuthEmail(data.vendor.contact_email);
+          setContactName(data.vendor.contact_name);
+          setCompanyName(data.vendor.company_name);
+          setVendorId(data.vendor.id);
+          setBusinessType(data.vendor.business_type);
+          setPlan(data.vendor.plan);
         } else if (data.vendorUser) {
           sessionStorage.setItem('vendor_id', data.vendorUser.vendor_id);
-          sessionStorage.setItem('contactName', data.vendorUser.first_name);
+          sessionStorage.setItem('contact_name', data.vendorUser.first_name);
           sessionStorage.setItem('email', data.vendorUser.email);
+          
           setAuthEmail(data.vendorUser.email);
           setContactName(data.vendorUser.first_name);
+          setVendorId(data.vendorUser.vendor_id);
         } else {
           throw new Error('Invalid response from server');
         }
@@ -97,7 +101,7 @@ const useVendorLogin = () => {
     }
   };
 
-  return { login, loading, error, authEmail, contactName, companyName };
+  return { login, loading, error };
 };
 
 export default useVendorLogin;

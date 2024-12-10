@@ -1,7 +1,7 @@
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+import { vendor_id } from '@/app/utils/constant';
 import { useQuery } from '@tanstack/react-query';
-const id = sessionStorage.getItem('vendor_id')
-
+const id = vendor_id
 const fetchVendor = async () => { 
   const url = `${baseUrl}/vendor/vendors/${id}`;
   try {

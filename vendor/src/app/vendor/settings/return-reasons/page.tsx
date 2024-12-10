@@ -16,7 +16,7 @@ import {
 import withAuth from "@/lib/withAuth"
 import DashboardComponent from "../../../../components/dashboard/page"
 
-function ReturnReasons() {
+const ReturnReasons = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const openModal = () => setIsModalOpen(true)

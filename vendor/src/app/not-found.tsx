@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { FiArrowRight } from 'react-icons/fi'
 
-export default function NotFound() {
+const NotFound = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-4">
       <div className="max-w-[600px] w-full space-y-6 text-center">
@@ -31,3 +31,5 @@ export default function NotFound() {
     </div>
   )
 }
+
+export default NotFound

@@ -10,7 +10,7 @@ import Link from "next/link";
 import { useResetPassword } from "../hooks/auth/useResetPassword";
 import { Toaster, toast } from "@medusajs/ui";
 
-export default function ForgotPasswordPage() {
+const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -159,3 +159,4 @@ export default function ForgotPasswordPage() {
   );
 }
 
+export default ForgotPasswordPage

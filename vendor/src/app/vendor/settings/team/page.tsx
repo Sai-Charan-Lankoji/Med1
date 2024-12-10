@@ -33,7 +33,7 @@ import withAuth from "@/lib/withAuth"
 import { useGetUsers } from "@/app/hooks/users/useGetUsers"
 import DashboardComponent from "../../../../components/dashboard/page"
 
-function TeamManagement() {
+const TeamManagement = () => {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const { data: users } = useGetUsers()

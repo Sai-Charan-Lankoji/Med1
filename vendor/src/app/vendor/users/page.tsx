@@ -28,6 +28,7 @@ import { useDeleteUser } from "@/app/hooks/users/useDeleteUser"
 import { useGetUsers } from "@/app/hooks/users/useGetUsers"
 import { useUpdateUser } from "@/app/hooks/users/useUpdateUser"
 import { UserFormData } from "@/app/@types/user"
+import { vendor_id } from "@/app/utils/constant"
 
 const permissions = [
   { value: "all", label: "All" },
@@ -61,7 +62,7 @@ const Users = () => {
   const createUser = useCreateUser()
   const updateUser = useUpdateUser()
   const deleteUser = useDeleteUser()
-  const vendor_id = sessionStorage.getItem('vendor_id')
+  const vendorId = vendor_id
 
   const openModal = (user = null) => {
     setEditingUser(user)
@@ -86,7 +87,7 @@ const Users = () => {
   const onSubmit = (data: UserFormData) => {
     const userData = {
       ...data,
-      vendor_id
+      vendorId
     }
     if (editingUser) {
       updateUser.mutate({ id: editingUser.id, ...userData }, {
