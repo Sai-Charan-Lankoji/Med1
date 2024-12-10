@@ -11,14 +11,14 @@ const generatePortArray = (start: number, end: number) => {
 
 // Configure CORS settings for different routes
 const vendorCorsOptions = {
-  origin: ["http://localhost:7009", "http://localhost:7000"], // Your frontend origins
+  origin: ["http://localhost:7009", "http://localhost:7000,http://localhost:3000"], // Your frontend origins
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
   credentials: true, // Allow credentials (if needed)
   optionsSuccessStatus: 200, // For older browsers
 };
 
 const planCorsOptions = {
-  origin: ["http://localhost:7009"], // Your frontend origin
+  origin: ["http://localhost:7009,http://localhost:3000"], // Your frontend origin
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"], // Allowed methods
   credentials: true, // Allow credentials (if needed)
   optionsSuccessStatus: 200, // For older browsers

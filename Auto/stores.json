@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "directoryName": "store2",
+    "storeName": "sam",
+    "vendorId": "vendor_01JEDY7QNB4YJV6G0V5QFVWGJ5",
+    "storeId": "store_01JEMXXFWD1MB7WBH53D6KNXJT",
+    "salesChannelId": "sc_01JEMXTT8RWQ8426JQABPMGQPX",
+    "currencyCode": "usd",
+    "port": 8011,
+    "url": "http://localhost:8011"
+  }
+]

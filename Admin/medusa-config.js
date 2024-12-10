@@ -31,9 +31,9 @@ const generatePortString = (start, end) => {
   return ports.join(',');
 };
 
-const ADMIN_CORS = process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:7009,http://localhost:7001";
+const ADMIN_CORS = process.env.ADMIN_CORS || "http://localhost:7000,http://localhost:7009,http://localhost:7001,http://localhost:3000";
 const STORE_CORS = process.env.STORE_CORS || generatePortString(8000, 80100);
-const VENDOR_CORS = process.env.VENDOR_CORS || "http://localhost:7009,http://localhost:7000"; 
+const VENDOR_CORS = process.env.VENDOR_CORS || "http://localhost:7009,http://localhost:7000,http://localhost:3000"; 
 // const tEST_CORS = process.env.tEST_CORS ||  "http://localhost:7000"
 const UPLOADS_CORS = process.env.UPLOADS_CORS || generatePortString(8000, 80100);
 const DATABASE_URL = process.env.DATABASE_URL 

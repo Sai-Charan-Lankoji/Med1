@@ -11,11 +11,18 @@ const app = express();
 // Middleware
 app.use(cors());
 app.use(express.json());
-const PortManager = require('./portAllocator');
-// Store state management
 
+//imports
+const PortManager = require('./portAllocator');
+const StoreSyncManager = require('./storeSync'); 
+
+
+// Store state management
 const STORES_FILE = path.join(__dirname, "stores.json");
 let storeRegistry = [];
+
+
+const storeSyncManager = new StoreSyncManager();
 
 async function initializeStoreRegistry() {
   
@@ -26,8 +33,18 @@ async function initializeStoreRegistry() {
     const data = await fs.readFile(STORES_FILE, "utf8");
     storeRegistry = JSON.parse(data);
     console.log("Store registry loaded:", storeRegistry);
+
+    // Synchronize stores after loading registry
+    const syncResults = await storeSyncManager.synchronizeStores(storeRegistry);
+    console.log("Store Synchronization Results:", syncResults);
+
+    // Update registry if any changes occurred during sync
+    if (syncResults.directoriesCreated.length > 0 || 
+        syncResults.directoriesRemoved.length > 0) {
+      await saveStoreRegistry();
+    }
   } catch (error) {
-    console.log("No existing stores file found, starting fresh");
+    console.log("No existing stores file found or error during initialization, starting fresh");
     storeRegistry = [];
   }
 }
@@ -99,6 +116,7 @@ async function startStore(directoryName, port) {
   return new Promise((resolve, reject) => {
     const terminal = exec(
       `cd apps/${directoryName} && npm install && npm run dev`,
+      //`cd apps/${directoryName} && npm install && npm run build && npm run start`,
       {
         cwd: __dirname,
       }
