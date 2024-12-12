@@ -9,7 +9,10 @@
     //   return []; 
     // }
 
-    const url = `${baseUrl}/admin/vendors`;
+
+     const url2 = "http://localhost:5000"
+    const url = `${baseUrl}/api/vendors`; 
+
 
     try {
       const response = await fetch(url, {

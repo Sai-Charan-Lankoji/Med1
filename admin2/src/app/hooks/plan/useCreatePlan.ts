@@ -1,7 +1,7 @@
 import { CreatePlanData, Plan } from '@/app/@types/plan';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const baseUrl = process.env.NEXT_PUBLIC_API_URL
 
 export const useCreatePlan = () => {
   const queryClient = useQueryClient()
@@ -9,7 +9,7 @@ export const useCreatePlan = () => {
   return useMutation({
     mutationFn: async (newPlan: CreatePlanData) => {
 
-      const response = await fetch(`${baseUrl}/admin/plan`, {
+      const response = await fetch(`${baseUrl}/api/plan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

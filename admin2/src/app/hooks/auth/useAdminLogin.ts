@@ -13,10 +13,11 @@ export const useAdminLogin = () => {
     setError(null);
 
     try {
-      const url = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${url}/admin/auth`, {
+      const url = process.env.NEXT_PUBLIC_API_URL; 
+
+      const response = await fetch(`${url}/api/auth/login`, {
         method: 'POST',
-        headers: {
+        headers: {  
           'Content-Type': 'application/json',
         },
         credentials: 'include',

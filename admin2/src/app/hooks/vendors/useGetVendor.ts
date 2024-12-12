@@ -2,7 +2,7 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useQuery } from '@tanstack/react-query';
 
 const fetchVendor = async (id: string) => {
-  const url = `${baseUrl}/admin/vendors/${id}`;  
+  const url = `${baseUrl}/api/vendors/${id}`;  
   console.log("this is url :" , url)
   try {
     const response = await fetch(url, {

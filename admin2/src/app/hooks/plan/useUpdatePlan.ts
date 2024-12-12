@@ -12,7 +12,7 @@ const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
 
 
 const updatePlan = async ({ id, ...updateData }: UpdatePlanData & { id: string }): Promise<any> => {
-  const response = await fetch(`${baseUrl}/admin/plan/${id}`, {
+  const response = await fetch(`${baseUrl}/api/plan/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
