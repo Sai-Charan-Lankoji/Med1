@@ -1,0 +1,282 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --background-body-color: 252, 249, 244;
+}
+
+
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+    --background-body-color: 252, 249, 244;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background-color: rgb(var(--background-body-color));
+  
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Canvas Section Base Styles */
+.canvas_section {
+  width: 100%;
+  display: block;
+  text-align: center;
+}
+
+.canvas_section > div {
+  display: inline-block;
+  position: relative;
+  padding: 8px;
+}
+
+/* Image Styles */
+.canvas_section img.img-fluid {
+  display: inline-block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Canvas Container Base Styles */
+.canvas-container {
+  position: relative !important;
+  width: 100%;
+}
+
+.canvas-container canvas {
+  border: 2px dashed #f99696;
+}
+
+.canvas-container .upper-canvas {
+  border: 2px dashed #f99696;
+}
+
+/* Canvas Div Base Styles */
+.canvas_div {
+  position: absolute;
+  pointer-events: none;
+  
+  top: 0;
+  left: 0;
+}
+
+.canvas_div canvas {
+  pointer-events: auto;
+}
+
+/* Upload Area Styles */
+.uploadOuter {
+  text-align: center;
+  padding: 10px;
+}
+
+.uploadOuter strong {
+  padding: 0 10px;
+}
+
+.dragBox {
+  width: 100%;
+  padding: 5px;
+  font-size: 12px;
+  height: 100px;
+  margin: 0 auto;
+  position: relative;
+  text-align: center;
+  font-weight: bold;
+  line-height: 95px;
+  color: #999;
+  border: 2px dashed #ccc;
+  display: inline-block;
+  transition: transform 0.3s;
+}
+
+.dragBox input[type="file"] {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  opacity: 0;
+  top: 0;
+  left: 0;
+}
+
+.draging {
+  transform: scale(1.1);
+}
+
+/* Button Hover States */
+.btn-download-design:hover,
+.btn-zip-design:hover,
+.btn-order-design:hover {
+  fill: white;
+}
+/* Previous CSS remains the same until the media queries */
+
+/* Responsive Styles - Desktop */
+
+@media (min-width: 1024px) {
+  .canvas_section img.img-fluid {
+    width: 90%; /* lg:w-3/4 */
+  }
+  
+  .canvas-style1 canvas {
+    position: absolute !important;
+    left: 145px !important;  
+    top: 85px !important;   
+  }
+  
+  .canvas-style2 canvas {
+    position: absolute !important;
+    left: 150px !important;  
+    top: 65px !important;    
+  }
+  
+  .canvas-style3 canvas {
+    position: absolute !important;
+    left: 145px !important;  
+    top: 200px !important;   
+  }
+  
+  .canvas-style4 canvas {
+    position: absolute !important;
+    left: 170px !important;  
+    top: 200px !important;   
+  }
+}
+
+@media (min-width: 1238px) {
+  .canvas_section img.img-fluid {
+    width: 75%; /* lg:w-3/4 */
+  }
+  
+  .canvas-style1 canvas {
+    position: absolute !important;
+    left: 220px !important;  
+    top: 110px !important;   
+  }
+  
+  .canvas-style2 canvas {
+    position: absolute !important;
+    left: 235px !important;  
+    top: 90px !important;    
+  }
+  
+  .canvas-style3 canvas {
+    position: absolute !important;
+    left: 230px !important;  
+    top: 220px !important;   
+  }
+  
+  .canvas-style4 canvas {
+    position: absolute !important;
+    left: 260px !important;  
+    top: 230px !important;   
+  }
+}
+
+/* Responsive Styles - Tablet */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .canvas_section img.img-fluid {
+    width: 80%; 
+  }
+  
+  .canvas-style1 canvas {
+    position: absolute !important;
+    left: 192px !important;  
+    top: 100px !important;    
+  }
+  
+  .canvas-style2 canvas {
+    position: absolute !important;
+    left: 204px !important;  
+    top: 90px !important;   
+  }
+  
+  .canvas-style3 canvas {
+    position: absolute !important;
+    left: 204px !important; 
+    top: 204px !important;   
+  }
+  
+  .canvas-style4 canvas {
+    position: absolute !important;
+    left: 240px !important;  
+    top: 204px !important;   
+  }
+}
+
+/* Responsive Styles - Mobile */
+@media (max-width: 639px) {
+  .canvas_section img.img-fluid {
+    width: 100%; 
+  }
+  
+  .canvas-style1 canvas {
+    position: absolute !important;
+    left: 80px !important;  
+    top: 50px !important;  
+  }
+  
+  .canvas-style2 canvas {
+    position: absolute !important;
+    left: 80px !important; 
+    top: 30px !important;   
+  }
+  
+  .canvas-style3 canvas {
+    position: absolute !important;
+    left: 95px !important;  
+    top: 110px !important;   
+  }
+  
+  .canvas-style4 canvas {
+    position: absolute !important;
+    left: 95px !important;  /* Increased from 220px */
+    top: 110px !important;   /* Increased from 270px */
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --primary: 248 90% 66%;
+    --primary-foreground: 210 40% 98%;
+    
+  }
+}
+
+
+
+.gradient-bg {
+  background: linear-gradient(
+    135deg,
+    rgba(147, 51, 234, 0.1) 0%,
+    rgba(79, 70, 229, 0.1) 100%
+  );
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
