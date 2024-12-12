@@ -4,7 +4,7 @@ export default (phase, { defaultConfig }) => {
    */
   const nextConfig = {
     publicRuntimeConfig: {
-      MEDUSA_BACKEND_URL: 'http://localhost:9000',  
+      MEDUSA_BACKEND_URL: 'http://localhost:5000',  
     },
     images: {
       remotePatterns: [

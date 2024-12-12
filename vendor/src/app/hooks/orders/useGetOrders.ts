@@ -8,7 +8,7 @@ const fetchOrders = async () => {
     return []; 
   }
 
-  const url = `${baseUrl}/vendor/orders?vendor_id=${vendor_id}`;
+  const url = `${baseUrl}/api/orders/vendor/${vendor_id}`;
 
   try {
     const response = await fetch(url, {

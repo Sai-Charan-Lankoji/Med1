@@ -9,7 +9,7 @@ const fetchProducts = async () => {
     return []; 
   }
 
-  const url = `${baseUrl}/vendor/products?vendorId=${vendor_id}`;
+  const url = `${baseUrl}/api/products/vendor/${vendor_id}`;
 
   try {
     const response = await fetch(url, {
@@ -34,12 +34,12 @@ const fetchProducts = async () => {
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    if (!data.products || data.products.length === 0) {
+    if (!data|| data.length === 0) {
       console.log('No products found for the given vendor.');
       return []; 
     }
 
-    return data.products;
+    return data;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching data:', error.message);

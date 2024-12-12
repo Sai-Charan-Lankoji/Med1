@@ -38,7 +38,7 @@ const useVendorLogin = () => {
 
     try {
       const url = process.env.NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${url}/vendor/login`, {
+      const response = await fetch(`${url}/api/vendor/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

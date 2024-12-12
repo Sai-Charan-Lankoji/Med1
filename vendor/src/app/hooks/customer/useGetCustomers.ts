@@ -9,7 +9,7 @@ const fetchCustomers = async () => {
     return []; 
   }
 
-  const url = `${baseUrl}/vendor/customers?vendor_id=${vendor_id}`;
+  const url = `${baseUrl}/api/customer/vendor/${vendor_id}`;
 
   try {
     const response = await fetch(url, {

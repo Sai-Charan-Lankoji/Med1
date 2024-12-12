@@ -10,7 +10,7 @@ const fetchSalesChannels = async () => {
     return []; 
   }
 
-  const url = `${baseUrl}/vendor/saleschannel?vendor_id=${vendor_id}`;
+  const url = `${baseUrl}/api/saleschannels/vendor/${vendor_id}`;
 
   try {
     const response = await fetch(url, { 

@@ -33,7 +33,7 @@ const Order = () => {
   const [selectedStore, setSelectedStore] = useState("all");
   const router = useRouter();
   const pageSize = 6;
-
+  console.log("ORDERS: ", OrdersData)
   const getCustomerFirstName = useCallback((customerId: any) => {
     const customer = customersData?.find(
       (customer: { id: any }) => customer.id === customerId
@@ -68,8 +68,8 @@ const Order = () => {
     const searchLower = searchQuery.toLowerCase();
     const searchDate = parseDateString(searchQuery);
 
-    return OrdersData.filter((order) => {
-      const orderDate = parseISO(order.created_at);
+    return OrdersData?.filter((order) => {
+      const orderDate = parseISO(order.createdAt);
       const matchesSearch = 
         getCustomerFirstName(order.customer_id).toLowerCase().includes(searchLower) ||
         order.payment_status.toLowerCase().includes(searchLower) ||
@@ -242,11 +242,11 @@ const Order = () => {
                       </Table.Cell>
                       <Table.Cell className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
                         <Tooltip
-                          content={formatTimestamp(order.created_at)}
+                          content={formatTimestamp(order.createdAt)}
                           className="bg-gradient-to-r from-blue-400 to-purple-300 text-white text-xs rounded-xl py-2 px-2"
                         >
                           <span className="cursor-help">
-                            {formatDate(order.created_at)}
+                            {formatDate(order.createdAt)}
                           </span>
                         </Tooltip>
                       </Table.Cell>
