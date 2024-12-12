@@ -62,6 +62,7 @@ const useVendorLogin = () => {
       const data: VendorLoginResponse = await response.json();
       if (data.token) {
         console.log('Login successful', data);
+        sessionStorage.setItem('auth_token',data.token)
         if (data.vendor) {
           sessionStorage.setItem('vendor_id', data.vendor.id);
           sessionStorage.setItem('business_type', data.vendor.business_type);

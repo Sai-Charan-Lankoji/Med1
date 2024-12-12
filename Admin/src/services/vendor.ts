@@ -118,7 +118,6 @@ class VendorService extends TransactionBaseService {
     > & {
       vendorAddressData?: Partial<Address>;
       registrationAddressData?: Partial<Address>;
-      // userData?: Partial<VendorUser>;
     }
   ): Promise<Vendor> {
     return await this.runAtomicPhase(async (manager) => {

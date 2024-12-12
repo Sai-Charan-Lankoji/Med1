@@ -45,7 +45,7 @@ import { useUpdateStore } from "@/app/hooks/store/useUpdateStore"
 import { useToast } from "@/hooks/use-toast" 
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan" 
 import { useGetVendor } from "@/app/hooks/vendor/useGetVendor"
-import { vendor_id } from "@/app/utils/constant"
+import { plan_id, vendor_id } from "@/app/utils/constant"
 
 
 
@@ -80,8 +80,7 @@ const Store = () => {
 
   const PAGE_SIZE = 6
   const { data: vendor, isLoading: vendorLoading } = useGetVendor();
-
-  const {data : currentPlan} = useGetPlan(vendor?.vendor?.plan_id) 
+  const {data : currentPlan} = useGetPlan(plan_id) 
   // console.log("this is current plan : ",currentPlan)
   const { data: storesData, isLoading, refetch: refreshStores } = useGetStores()
   const { data: saleschannelsData } = useGetSalesChannels()
@@ -641,7 +640,7 @@ const Store = () => {
                     #{getRowIndex(index)}
                   </TableCell>
                   <TableCell className="px-4 py-2 whitespace-nowrap text-sm text-indigo-600">
-                    {formatDate(store.created_at)}
+                    {formatDate(store.createdAt)}
                   </TableCell>
                   <TableCell className="px-4 py-2 whitespace-nowrap">
                     <div className="flex items-center">

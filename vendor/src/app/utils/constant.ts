@@ -4,3 +4,5 @@ export const business_type = typeof window !== "undefined" ? sessionStorage.getI
 export const company_name = typeof window !== "undefined" ? sessionStorage.getItem("company_name") : null;
 export const contact_name = typeof window !== "undefined" ? sessionStorage.getItem("contact_name") : null;
 export const plan_id = typeof window !== "undefined" ? sessionStorage.getItem("plan_id") : null;
+export const auth_token = typeof window !== "undefined" ? sessionStorage.getItem("auth_token") : null;
+

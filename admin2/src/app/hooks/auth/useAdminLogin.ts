@@ -35,6 +35,7 @@ export const useAdminLogin = () => {
       const { email: userEmail, first_name, last_name, role, id: adminId } = data.user;
 
       // Save data to sessionStorage
+      localStorage.setItem('auth_token', data.token)
       localStorage.setItem('email', email);
       localStorage.setItem('first_name', first_name);
       localStorage.setItem('last_name', last_name);

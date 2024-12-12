@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export const useVendorLogout = () => {
+export const useAdminLogout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -10,20 +10,19 @@ export const useVendorLogout = () => {
     setLoading(true);
     setError(null); 
     const url = process.env.NEXT_PUBLIC_API_URL 
-
-
+    const auth_token = localStorage.getItem('auth_token')
     try {
-      const response = await fetch(`${url}/vendor/logout`, {
+      const response = await fetch(`${url}/api/auth/logout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth_token}`
         },
         credentials: 'include',
       });
 
       if (response.ok) {
         localStorage.clear()
-
         router.push('/');
       } else {
         throw new Error('Failed to log out');

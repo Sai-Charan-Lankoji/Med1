@@ -71,7 +71,7 @@ function PublishableApiKeysTable() {
                         {apiKey.publishableapikey}
                       </TableCell>
                       <TableCell className="text-black">
-                        {new Date(apiKey.created_at).toLocaleDateString()}
+                        {new Date(apiKey.createdAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
                         <Badge

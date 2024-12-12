@@ -19,28 +19,22 @@ import { useGetPlan } from "@/app/hooks/plan/useGetPlan";
 import { useUpdateVendorPlan } from "@/app/hooks/vendor/useUpdateVendorPlan"; 
 import { useGetVendor } from "@/app/hooks/vendor/useGetVendor";
 import { useToast } from "@/hooks/use-toast"
-import { Toaster } from "@/components/ui/toaster"; // Added Toaster component
-
+import { plan_id } from "@/app/utils/constant";
+ 
 export default function ServicesDashboard() {
   const { toast } = useToast();
   const { data: stores, isLoading: storesLoading } = useGetStores();
   const { data: plans, isLoading: plansLoading } = useGetPlans();
   const { data: vendor, isLoading: vendorLoading } = useGetVendor();
-  const { data: currentPlan, isLoading: planLoading, refetch: refetchPlan } = useGetPlan(vendor?.vendor?.plan_id);
+  const { data: currentPlan, isLoading: planLoading, refetch: refetchPlan } = useGetPlan(plan_id);
 
   const updatePlanMutation = useUpdateVendorPlan();
   const [activePlan, setActivePlan] = useState(null);
   const currentStores = stores?.length || 0;
-
   useEffect(() => {
-    if (currentPlan && plans) {
-      const foundPlan = plans.find(
-        (plan) => plan?.id === currentPlan?.plan?.id
-      );
-      if (foundPlan) {
-        setActivePlan(foundPlan);
-      }
-    }
+     
+        setActivePlan(currentPlan);
+     
   }, [currentPlan, plans]);
 
   const handleUpgradePlan = async (plan) => {
@@ -70,7 +64,7 @@ export default function ServicesDashboard() {
     }
   };
 
-  if (storesLoading || plansLoading || planLoading || !activePlan) {
+  if (planLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <motion.div
@@ -113,7 +107,7 @@ export default function ServicesDashboard() {
           <Card className="shadow-lg rounded-lg bg-white border-2 border-indigo-200">
             <CardHeader className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
               <CardTitle className="text-3xl">Current Plan Overview</CardTitle>
-              <p className="text-indigo-100">{activePlan.description}</p>
+              <p className="text-indigo-100">{activePlan?.description}</p>
             </CardHeader>
             <CardContent className="p-6">
               <div className="flex justify-between items-center">
@@ -123,9 +117,9 @@ export default function ServicesDashboard() {
                   </h3>
                   <p className="text-3xl font-bold text-purple-600">
                     {currentStores}/
-                    {activePlan.maxStores === "unlimited"
+                    {activePlan?.maxStores === "unlimited"
                       ? "∞"
-                      : activePlan.no_stores}
+                      : activePlan?.no_stores}
                   </p>
                   <p className="text-sm text-gray-600">stores used</p>
                 </div>
@@ -134,9 +128,9 @@ export default function ServicesDashboard() {
                     Remaining Capacity
                   </h3>
                   <p className="text-3xl font-bold text-purple-600">
-                    {activePlan.no_stores === "unlimited"
+                    {activePlan?.no_stores === "unlimited"
                       ? "Unlimited"
-                      : Math.max(0, activePlan.no_stores - currentStores)}
+                      : Math.max(0, activePlan?.no_stores - currentStores)}
                   </p>
                   <p className="text-sm text-gray-600">stores remaining</p>
                 </div>
@@ -147,7 +141,7 @@ export default function ServicesDashboard() {
 
         {/* Plans */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {plans.map((plan, index) => (
+          {plans?.map((plan, index) => (
             <motion.div
               key={plan.id}
               initial={{ opacity: 0, y: 50 }}
@@ -157,7 +151,7 @@ export default function ServicesDashboard() {
               <Card
                 className={cn(
                   "shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-2",
-                  plan.id === activePlan.id
+                  plan.id === activePlan?.id
                     ? "bg-gradient-to-br from-indigo-100 to-purple-100 border-2 border-indigo-400"
                     : "bg-white"
                 )}
@@ -165,7 +159,7 @@ export default function ServicesDashboard() {
                 <CardHeader
                   className={cn(
                     "rounded-t-lg",
-                    plan.id === activePlan.id
+                    plan?.id === activePlan?.id
                       ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
                       : "bg-gray-100"
                   )}
@@ -174,18 +168,18 @@ export default function ServicesDashboard() {
                   <p
                     className={cn(
                       "text-2xl font-bold",
-                      plan.id === activePlan.id
+                      plan?.id === activePlan?.id
                         ? "text-indigo-100"
                         : "text-indigo-600"
                     )}
                   >
-                    ${plan.price}/month
+                    ${plan?.price}/month
                   </p>
                 </CardHeader>
                 <CardContent className="p-6">
                   <ScrollArea className="h-48">
                     <ul className="space-y-3">
-                      {plan.features.map((feature, index) => (
+                      {plan?.features?.map((feature, index) => (
                         <motion.li
                           key={index}
                           initial={{ opacity: 0, x: -20 }}
@@ -204,16 +198,16 @@ export default function ServicesDashboard() {
                   <Button
                     className={cn(
                       "w-full text-lg py-2 transition-colors duration-300",
-                      plan.id === activePlan.id
+                      plan?.id === activePlan?.id
                         ? "bg-gray-300 text-gray-700 cursor-not-allowed"
                         : "bg-indigo-600 hover:bg-indigo-700 text-white"
                     )}
                     onClick={() => handleUpgradePlan(plan)}
-                    disabled={plan.id === activePlan.id || updatePlanMutation.isLoading}
+                    disabled={plan?.id === activePlan?.id || updatePlanMutation.isLoading}
                   >
-                    {plan.id === activePlan.id
+                    {plan?.id === activePlan?.id
                       ? "Current Plan"
-                      : `Upgrade to ${plan.name}`}
+                      : `Upgrade to ${plan?.name}`}
                   </Button>
                 </CardFooter>
               </Card>

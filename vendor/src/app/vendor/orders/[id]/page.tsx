@@ -78,7 +78,7 @@ const OrderDetailsView = () => {
       },
     };
 
-    const config = statusConfig[status.toLowerCase()] || statusConfig.default;
+    const config = statusConfig[status?.toLowerCase()] || statusConfig.default;
 
     return (
       <span
@@ -120,7 +120,7 @@ const OrderDetailsView = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="lg:col-span-2 space-y-6"
             >
-              {order.line_items.map((item, itemIndex) => {
+              {order.line_items?.map((item, itemIndex) => {
                 const selectedDesignIndex = selectedDesigns[item.product_id] || 0;
                 const selectedDesign = item.designs[selectedDesignIndex];
                 const imageType = selectedImageType[item.product_id] || "apparel";

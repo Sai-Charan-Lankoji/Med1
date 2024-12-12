@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "../context/AuthContext"
-import { useVendorLogout } from "../hooks/auth/useVendorLogout"
+import { useAdminLogout } from "../hooks/auth/useAdminLogout"
 import Link from 'next/link'
 import { Settings, LogOut, ChevronDown, Menu } from 'lucide-react'
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ import MenuItems from '../utils/menuItems'
 
 export default function Sidebar() {
   const { email, first_name, role } = useAuth() ?? { email: '', first_name: '', role: '' }
-  const { logout, loading } = useVendorLogout()
+  const { logout, loading } = useAdminLogout()
   const router = useRouter()
   const pathname = usePathname()
   const [isMobile, setIsMobile] = useState(false)

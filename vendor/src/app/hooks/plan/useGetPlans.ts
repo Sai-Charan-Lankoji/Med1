@@ -3,8 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 
 // Function to fetch plans
 const fetchPlans = async () => {
-  const url = `${baseUrl}/vendor/plan`;
-// const url = "http://localhost:9000/admin/plan"
+  const url = `${baseUrl}/api/plan`;
   try {
     const response = await fetch(url, {
       method: 'GET',

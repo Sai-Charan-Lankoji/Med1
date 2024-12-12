@@ -24,13 +24,11 @@ import {
 } from "@/components/ui/select"
 import withAuth from "@/lib/withAuth"
 import { useAuth } from "@/app/context/AuthContext"
-import { useGetCustomerByEmail } from "@/app/hooks/customer/useGetCustomerByEmail"
 import { getColors } from "@/app/utils/dummyData"
 import DashboardComponent from "../../../../components/dashboard/page"
 
 function PersonalInformation() {
   const { email } = useAuth() ?? { email: "Default Email" }
-  const { data: customer } = useGetCustomerByEmail(email)
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",

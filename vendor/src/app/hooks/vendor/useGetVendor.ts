@@ -3,7 +3,7 @@ import { vendor_id } from '@/app/utils/constant';
 import { useQuery } from '@tanstack/react-query';
 const id = vendor_id
 const fetchVendor = async () => { 
-  const url = `${baseUrl}/vendor/vendors/${id}`;
+  const url = `${baseUrl}/api/vendors/${id}`;
   try {
     const response = await fetch(url, {
       method: 'GET',

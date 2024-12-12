@@ -125,7 +125,7 @@ const CustomerDetails = () => {
                             #{index + 1}
                           </Table.Cell>
                           <Table.Cell className="text-indigo-600">
-                            {new Date(order.created_at).toLocaleDateString("en-US", {
+                            {new Date(order.createdAt).toLocaleDateString("en-US", {
                               year: "numeric",
                               month: "short",
                               day: "numeric"

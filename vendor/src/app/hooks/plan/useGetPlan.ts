@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 
 // Function to fetch plans
 const fetchPlan = async (id : string) => {
-  const url = `${baseUrl}/vendor/plan/${id}`;
+  const url = `${baseUrl}/api/plan/${id}`;
 
   try {
     const response = await fetch(url, {
