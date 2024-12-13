@@ -1,4 +1,4 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = "https://med1-wyou.onrender.com";
 import { vendor_id } from '@/app/utils/constant';
 import { useQuery } from '@tanstack/react-query';
 

@@ -1,4 +1,4 @@
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = 'https://med1-wyou.onrender.com';
 import { useQuery } from '@tanstack/react-query';
 
 const fetchCustomer = async (id: string) => {

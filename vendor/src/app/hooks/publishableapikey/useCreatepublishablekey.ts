@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = "https://med1-wyou.onrender.com";
 
 // Function to create a publishable API key
 const createPublishableApiKey = async ({ salesChannelId, keyData }) => {

@@ -18,7 +18,7 @@ import { Spinner } from "@medusajs/icons";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = 'https://med1-wyou.onrender.com';
 const backendManagementUrl = "http://localhost:3000"; // Backend store management server
 
 interface StoreFormData {

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = "https://med1-wyou.onrender.com";
 
 const uploadImage = async (file: File) => {
   const formData = new FormData();
