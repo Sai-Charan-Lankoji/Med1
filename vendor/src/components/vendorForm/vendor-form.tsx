@@ -120,7 +120,7 @@ const VendorForm =({ plan }: VendorFormProps) => {
         plan_id: plan.id
       };
 
-      const response = await fetch("http://localhost:9000/vendor/signup", {
+      const response = await fetch("/vendor/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

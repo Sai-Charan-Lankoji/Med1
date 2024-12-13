@@ -1,0 +1,11 @@
+type: object
+properties:
+  id:
+    type: string
+    example: vendor_12345678
+  company_name:
+    type: string
+    example: TechWave Solutions IT
+  contact_name:
+    type: string
+    example: Alex Martinez

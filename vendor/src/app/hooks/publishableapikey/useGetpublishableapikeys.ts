@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = "https://med1-wyou.onrender.com";
 
 
 const fetchPublishableapikeys = async (id: string) => {

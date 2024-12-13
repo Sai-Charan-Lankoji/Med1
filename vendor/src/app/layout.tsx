@@ -27,7 +27,7 @@ export default function  RootLayout({
       <body className={`${inter.className} bg-gray-100`}>
         <MedusaProvider
           queryClientProviderProps={{ client: queryClient }}
-          baseUrl="http://localhost:9000"
+          baseUrl="https://med1-wyou.onrender.com"
         >
           <AuthProvider>
    

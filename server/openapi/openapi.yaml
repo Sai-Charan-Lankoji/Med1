@@ -1,0 +1,100 @@
+openapi: 3.0.3
+info:
+  title: Vendor API
+  version: 1.0.0
+paths:
+  /api/vendors:
+    get:
+      summary: Retrieve all vendors
+      tags:
+        - Vendors
+      responses:
+        '200':
+          description: List of all vendors
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vendor'
+  /api/vendors/{id}:
+    get:
+      summary: Get a vendor by ID
+      tags:
+        - Vendors
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            example: vendor_12345678
+      responses:
+        '200':
+          description: Vendor found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor'
+components:
+  schemas:
+    Vendor:
+      type: object
+      properties:
+        id:
+          type: string
+          example: vendor_12345678
+        company_name:
+          type: string
+          example: TechWave Solutions IT
+        contact_name:
+          type: string
+          example: Alex Martinez
+        registered_number:
+          type: string
+          example: REG789654321
+        contact_email:
+          type: string
+          example: praveenkumar123@gmail.com
+        contact_phone_number:
+          type: string
+          example: "+1-555-987-6543"
+        tax_number:
+          type: string
+          example: TAX123456789
+        business_type:
+          type: string
+          example: Software Development
+        plan:
+          type: string
+          example: Basic
+        plan_id:
+          type: string
+          example: plan_01JEDTQ0YY0XF2J6MCCW1JH4AS
+    Address:
+      type: object
+      properties:
+        first_name:
+          type: string
+          example: Samson
+        last_name:
+          type: string
+          example: K
+        address_1:
+          type: string
+          example: 456 Innovation Boulevard
+        address_2:
+          type: string
+          example: Suite 900
+        city:
+          type: string
+          example: Seattle
+        province:
+          type: string
+          example: WA
+        postal_code:
+          type: string
+          example: 98101
+        phone:
+          type: string
+          example: 2065556789

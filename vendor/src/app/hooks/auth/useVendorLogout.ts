@@ -13,7 +13,7 @@ export const useVendorLogout = () => {
   const logout = async () => {
     setLoading(true);
     setError(null); 
-    const url = process.env.NEXT_PUBLIC_API_URL 
+    const url = 'https://med1-wyou.onrender.com';
     try {
       const response = await fetch(`${url}/api/vendor/logout`, {
         method: 'POST',
