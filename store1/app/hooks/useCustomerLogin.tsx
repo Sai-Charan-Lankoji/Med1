@@ -63,8 +63,8 @@ export const useCustomerLogin = () => {
     setError(null);
 
     try {
-      const url = NEXT_PUBLIC_API_URL || "http://localhost:9000";
-      const response = await fetch(`${url}/store/login`, {
+      const url = NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${url}/api/customer/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

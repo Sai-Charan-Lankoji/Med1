@@ -32,7 +32,7 @@ const Navbar: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<{
     [key: string]: boolean;
   }>({});
-
+  console.log("CARTITEMS: ", cartItems)
   const params = useParams();
   const vendorId = params.vendorId as string;
   const isVendorMode = vendorId === NEXT_PUBLIC_VENDOR_ID;
