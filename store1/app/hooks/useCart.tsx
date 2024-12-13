@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {NEXT_PUBLIC_API_URL} from "../../constants/constants"
 const baseUrl = NEXT_PUBLIC_API_URL 
 const createCart = async (cartData : any) => {
-  const response = await fetch(`${baseUrl}/store/cart`, {
+  const response = await fetch(`${baseUrl}/api/carts`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

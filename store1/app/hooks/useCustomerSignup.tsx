@@ -49,7 +49,7 @@ export const useCustomerSignup = () => {
   
     try {
       const url = NEXT_PUBLIC_API_URL;
-      const response = await fetch(`${url}/store/signup`, {
+      const response = await fetch(`${url}/api/customer/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

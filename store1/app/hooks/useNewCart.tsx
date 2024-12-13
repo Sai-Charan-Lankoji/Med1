@@ -12,6 +12,9 @@ import {
 } from '../../reducer/cartReducer';
 import { IDesign, IProps } from '@/@types/models'; 
 import { useRouter } from 'next/navigation';
+import {NEXT_PUBLIC_API_URL} from "../../constants/constants"
+
+const baseUrl = NEXT_PUBLIC_API_URL 
 
 export const useNewCart = () => { 
   const router = useRouter();  // For navigation
@@ -30,7 +33,7 @@ export const useNewCart = () => {
       dispatch(setLoading(true));
 
       try {
-        const response = await fetch(`http://localhost:9000/store/cart?id=${customerId}`, {
+        const response = await fetch(`http://localhost:5000/api/carts/${customerId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -58,7 +61,7 @@ export const useNewCart = () => {
       // Optimistically remove item from Redux state
       dispatch(removeFromCart(cartId));
 
-      const response = await fetch(`http://localhost:9000/store/cart?cartId=${cartId}`, {
+      const response = await fetch(`http://localhost:5000/api/carts/${cartId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -188,7 +191,7 @@ export const useNewCart = () => {
       const basePrice = processedDesigns.length * 100;
 
       
-      const response = await fetch("http://localhost:9000/store/cart", {
+      const response = await fetch(`${baseUrl}/api/carts`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
