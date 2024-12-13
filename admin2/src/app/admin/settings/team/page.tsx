@@ -48,19 +48,12 @@ import withAuth from "@/lib/withAuth";
 import DashboardComponent from "../../../../components/dashboard/page";
 const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 import { useQuery } from "@tanstack/react-query";
-import { fetchUsers } from "@/app/hooks/users/useGetUsers";
+import { useGetUsers } from "@/app/hooks/users/useGetUsers";
 import { useGetInvites } from "@/app/hooks/invites/useGetInvites";
 import { useCreateInvite } from "@/app/hooks/invites/useCreateInvite";
 
 const TeamManagement = () => {
-  const { data: users = [] } = useQuery(["users"], fetchUsers, {
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    cacheTime: 0,
-    staleTime: 1000 * 60 * 5,
-    retry: false,
-  });
-
+  const { data: users } = useGetUsers()
   const { data: invites } = useGetInvites();
   const createInviteMutation = useCreateInvite();
 
@@ -156,7 +149,7 @@ const TeamManagement = () => {
             </TableHeader>
             <TableBody>
               {/* Loop through users */}
-              {combinedData.users.map((user) => {
+              {combinedData?.users?.map((user) => {
                 const status = user.deleted_at ? "Inactive" : "Active";
                 return (
                   <TableRow
@@ -172,7 +165,7 @@ const TeamManagement = () => {
                       {user.email}
                     </TableCell>
                     <TableCell className="text-black/80">
-                      {user.role[0].toUpperCase() + user.role.slice(1)}
+                      {user.role}
                     </TableCell>
                     <TableCell
                       className={`text-black ${
@@ -227,7 +220,7 @@ const TeamManagement = () => {
                       {invite.user_email}
                     </TableCell>
                     <TableCell className="text-black/80">
-                      {invite.role[0].toUpperCase() + invite.role.slice(1)}
+                      {invite.role}
                     </TableCell>
                     <TableCell
                       className={`text-black ${

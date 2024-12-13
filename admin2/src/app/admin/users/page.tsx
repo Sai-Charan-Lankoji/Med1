@@ -1,22 +1,3 @@
-
-
-
-
-// import React from 'react'
-
-//  const User = () => {
-//   return (
-//     <div>page</div>
-//   )
-// }
-
-// export default User
-
-
-
-
-
-
 'use client'
 
 import { useState, useEffect } from "react"

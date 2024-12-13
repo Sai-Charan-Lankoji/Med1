@@ -1,23 +1,67 @@
-import { User } from "@medusajs/medusa";
+const baseUrl = "https://med1-wyou.onrender.com";
+import { useQuery } from '@tanstack/react-query';
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL
+const fetchUsers = async () => {
 
-export const fetchUsers = async (): Promise<User[]> => { // Change return type to User[]
-  const response = await fetch(`${baseUrl}/admin/users`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-  });
+  try {
+    const response = await fetch(`${baseUrl}/api/auth/users`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    });
 
-  if (!response.ok) {
-    if (response.status === 401) {
-      throw new Error('Unauthorized: Invalid email or password');
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
+
+      if (response.status === 404 || response.status === 500) {
+        console.log('No Users found or server error. Returning empty array.');
+        return []; 
+      }
+
+      throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
-    throw new Error('Failed to fetch users');
-  }
+ 
+    if (!data || data.length === 0) {
+      console.log('No Users found for the given vendor.');
+      return []; 
+    }
 
-  const data = await response.json();
-  return data.users; // Ensure it returns the array of users
+    return data;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.log('Error fetching data:', error.message);
+      return []; 
+    } else {
+      console.error('An unknown error occurred:', error);
+      return [];
+    }
+  }
 };
+
+
+export const useGetUsers = () => {
+  return useQuery(['users'], fetchUsers, {
+    refetchOnWindowFocus: false,  
+    refetchOnMount: false,        
+    cacheTime: 0,                
+    staleTime: 1000 * 60 * 5,               
+    retry: false,                
+
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        console.error('Error occurred while fetching users:', error.message);
+      } else {
+        console.error('An unknown error occurred:', error);
+      }
+    },
+  });
+};
+
+
+
+  

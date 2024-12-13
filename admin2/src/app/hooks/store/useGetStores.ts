@@ -5,7 +5,7 @@ const fetchStores = async () => {
   
   const id = sessionStorage.getItem('vendor_id');
 
-  const url = `${baseUrl}/api/stores/${id}`;
+  const url = `${baseUrl}/api/stores?vendor_id=${id}`;
 
   try {
     const response = await fetch(url, {

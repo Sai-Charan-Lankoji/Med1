@@ -30,7 +30,7 @@ export default function VendorDetailsPage() {
   const params = useParams()
   const vendorId = params?.id as string
   const { data: vendor, isLoading, error } = useGetVendor(vendorId)
-  const { data: stores } = useGetStores(vendorId)
+  const { data: stores } = useGetStores()
 
   if (isLoading) {
     return (

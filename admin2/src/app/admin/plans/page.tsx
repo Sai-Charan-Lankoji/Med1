@@ -53,7 +53,7 @@ export default function PlansPage() {
   };
 
   const handleDeletePlan = (planId: string) => {
-    deletePlanMutation.mutate(planId, { onSuccess: refetch });
+    deletePlanMutation.mutate(planId);
   };
 
   const handleEditPlan = (plan: Plan) => {
