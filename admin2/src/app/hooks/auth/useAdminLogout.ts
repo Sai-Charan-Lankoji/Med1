@@ -9,7 +9,7 @@ export const useAdminLogout = () => {
   const logout = async () => {
     setLoading(true);
     setError(null); 
-    const url = process.env.NEXT_PUBLIC_API_URL 
+    const url = "https://med1-wyou.onrender.com" 
     const auth_token = localStorage.getItem('auth_token')
     try {
       const response = await fetch(`${url}/api/auth/logout`, {

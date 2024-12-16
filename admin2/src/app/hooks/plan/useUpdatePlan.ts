@@ -8,7 +8,7 @@ export interface UpdatePlanData {
   isActive?: boolean
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const baseUrl = "https://med1-wyou.onrender.com" || 'http://localhost:9000';
 
 
 const updatePlan = async ({ id, ...updateData }: UpdatePlanData & { id: string }): Promise<any> => {

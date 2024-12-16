@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL
+const baseUrl = "https://med1-wyou.onrender.com"
 
 const updateUser = async (userData: { id: string; [key: string]: any }) => {
   const vendorId = sessionStorage.getItem('vendor_id')

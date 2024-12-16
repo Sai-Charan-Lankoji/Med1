@@ -375,7 +375,18 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       };
   
       // Make the API call
-      const response = await fetch('http://localhost:9000/store/products', {
+
+
+
+
+
+
+
+
+
+
+
+      const response = await fetch('https://med1-wyou.onrender.com/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

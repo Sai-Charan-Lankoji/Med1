@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const baseUrl = "https://med1-wyou.onrender.com" || 'http://localhost:9000';
 
 const deletePlan = async (id: string): Promise<void> => {
   const response = await fetch(`${baseUrl}/api/plan/${id}`, {
