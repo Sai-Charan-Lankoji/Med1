@@ -60,6 +60,7 @@ const InfiniteScrollContainer = ({
 
 const ProductGallery = () => {
   const { data: products, isLoading, error } = useGetProducts();
+  console.log("Products:", products)
   const router = useRouter();
   const designContext = React.useContext(DesignContext);
   const { dispatchDesign } = designContext || {

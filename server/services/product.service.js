@@ -1,12 +1,19 @@
 const  Product  = require('../models/product.model');
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
+
+const generateEntityId = (prefix) => {
+  return `${prefix}_${crypto.randomBytes(8).toString("hex")}`;
+};
 
 class ProductService {
   async createProduct(productData) {
     if (!productData.vendor_id) {
       throw new Error("Vendor ID is required to create a product.");
     }
+    const productId = generateEntityId("product");
 
-    const newProduct = new Product(productData);
+    const newProduct = new Product({id: productId, ...productData});
     return await newProduct.save();
   }
 
@@ -36,7 +43,7 @@ class ProductService {
   }
 
   async listAllProducts() {
-    return await Product.find();
+    return await Product.findAll();
   }
 
   async retrieveByVendorId(vendorId) {
@@ -44,7 +51,7 @@ class ProductService {
   }
 
   async retrieveByStoreId(storeId) {
-    return await Product.find({ where: { store_id: storeId } });
+    return await Product.findAll({ where: { store_id: storeId } });
   }
 
 }

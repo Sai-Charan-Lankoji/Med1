@@ -51,7 +51,7 @@ const Product = sequelize.define(
     },
     title: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     subtitle: {
       type: DataTypes.STRING,

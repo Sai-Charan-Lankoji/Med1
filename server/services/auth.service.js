@@ -18,7 +18,7 @@ class AuthService {
     const password_hash = await bcrypt.hash(password, 10);
 
     // Create the user
-    const user = await User.create({ email, first_name, last_name, password_hash , role});
+    const user = await User.create({ email, first_name, last_name, password_hash,role });
 
     // Generate a JWT token
     const token = generateToken({ id: user.id, email: user.email });
@@ -62,6 +62,11 @@ class AuthService {
       console.error("Error blacklisting token: ", error);
       throw new Error("Failed to blacklist token.");
     }
+  }
+
+  async getUsers(){
+    const users = await User.findAll();
+    return users;
   }
 }
 

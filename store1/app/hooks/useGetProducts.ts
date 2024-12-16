@@ -2,14 +2,14 @@ import { NEXT_PUBLIC_STORE_ID } from '@/constants/constants';
 import { useQuery } from '@tanstack/react-query';
 
 const baseUrl = "https://med1-wyou.onrender.com";
-const storeId = NEXT_PUBLIC_STORE_ID
+const store_id = NEXT_PUBLIC_STORE_ID
 const fetchProducts = async () => {
-  if (!storeId) {
+  if (!store_id) {
     console.log('Store ID and Vendor ID are required');
     return [];
   }
 
-  const url = `${baseUrl}/store/products?storeId=${storeId}`;
+  const url = `${baseUrl}/api/products/store/${store_id}`;
 
   try {
     const response = await fetch(url, {
@@ -55,7 +55,7 @@ export const useGetProducts = () => {
       cacheTime: 0,
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: false,
-      enabled: Boolean(storeId),
+      enabled: Boolean(store_id),
 
       onError: (error: unknown) => {
         if (error instanceof Error) {

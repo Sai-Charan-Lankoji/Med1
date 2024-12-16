@@ -147,7 +147,7 @@ router.get("/vendor/:vendor_id", productController.retrieveByVendorId);
 
 /**
  * @swagger
- * /api/products/vendor/{store_id}:
+ * /api/products/store/{store_id}:
  *   get:
  *     summary: List products by store ID
  *     tags: [Products]
@@ -170,7 +170,6 @@ router.get("/vendor/:vendor_id", productController.retrieveByVendorId);
  *       404:
  *         description: No products found for this store ID
  */
-router.get("/vendor/:vendor_id", productController.retrieveByStoreId);
-
+router.get("/store/:store_id", productController.retrieveByStoreId);
 
 module.exports = router;

@@ -36,8 +36,17 @@ const logout = async (req, res) => {
   }
 };
 
+const getUsers = async (req, res) => {
+  try {
+    const users = await authService.getUsers();
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(404).json({ error: error.message });
+  }
+}
 module.exports = {
   signup,
   login,
-  logout
+  logout,
+  getUsers
 };

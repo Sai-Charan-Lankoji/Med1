@@ -13,7 +13,7 @@ class VendorService {
   }
 
   async getVendorById(id) {
-    const vendor = await Vendor.findByPk(id, { include: ["address"] });
+    const vendor = await Vendor.findByPk(id);
     if (!vendor) {
       throw new Error("Vendor not found.");
     }
@@ -96,28 +96,7 @@ class VendorService {
 
   async updateVendor(id, data) {
     const vendor = await this.getVendorById(id);
-
-    if (data.password) {
-      data.password = await bcrypt.hash(data.password, 10);
-    }
-
-    await vendor.update(data);
-
-    // Update or create vendor address
-    if (data.vendorAddressData) {
-      const vendorAddress = await Address.findOne({ where: { vendor_id: id } });
-      if (vendorAddress) {
-        await vendorAddress.update(data.vendorAddressData);
-      } else {
-        await Address.create({
-          id: generateEntityId("address"),
-          vendor_id: id,
-          ...data.vendorAddressData,
-        });
-      }
-    }
-
-    return this.getVendorById(id);
+   return await vendor.update(data);
   }
 
   async deleteVendor(id) {

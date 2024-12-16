@@ -1,5 +1,5 @@
 const express = require("express");
-const { signup, login, logout } = require("../controllers/auth.controller");
+const { signup, login, logout, getUsers } = require("../controllers/auth.controller");
 const validateRequest = require('../middleware/validateRequest');
 
 const router = express.Router();
@@ -87,5 +87,30 @@ router.post("/login", validateRequest(["email", "password"]), login);
  *         description: Server error
  */
 router.post("/logout", logout);
+
+
+/**
+ * @swagger
+ * /api/auth/users:
+ *   get:
+ *     summary: Fetch all users
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
+router.get("/users", getUsers);
 
 module.exports = router;

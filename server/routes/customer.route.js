@@ -219,7 +219,7 @@ router.get("/:email", getCustomerByEmail);
  * @swagger
  * /api/customer/logout:
  *   post:
- *     summary: Admin logout
+ *     summary: Customer logout
  *     tags: [Auth]
  *     security:
  *       - bearerAuth: []

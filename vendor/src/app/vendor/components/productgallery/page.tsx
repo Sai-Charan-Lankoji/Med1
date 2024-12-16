@@ -110,10 +110,10 @@ const ProductGallery = () => {
             Check back later for new products.
           </p>
           <Link
-            href="/"
+            href="/vendor/orders"
             className="inline-flex items-center justify-center bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-200"
           >
-            Back to Home
+            Back to Orders
           </Link>
         </div>
       </div>
