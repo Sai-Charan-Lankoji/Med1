@@ -16,11 +16,17 @@ const vendoruserRoutes = require("./routes/vendoruser.route.js");
 const storeRoutes = require('./routes/store.route.js');
 const cartRoutes = require("./routes/cart.route.js");
 const saleschannelRoutes = require("./routes/saleschannel.route.js");
+const tokenBlacklistRoutes = require("./routes/tokenBlacklist.route.js");
+const bodyParser = require("body-parser");
+
 const app = express();
+const directory = process.cwd()
+app.use(bodyParser.json({ limit: '50mb' })); // Adjust the limit as needed
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true })); 
 const cors = require('cors')
 app.use(
   cors({
-    origin: ["http://localhost:7009","http://localhost:7000"] ,// Adjust based on your frontend
+    origin: ["http://localhost:7009","http://localhost:7000","http://localhost:3000"] ,// Adjust based on your frontend
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization","credentials"],
     credentials: true,
@@ -54,4 +60,5 @@ app.use("/api/customer",CustomerRoutes)
 app.use('/api/stores', storeRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/saleschannels', saleschannelRoutes)
+app.use("/api/token-blacklist", tokenBlacklistRoutes);
 startServer();

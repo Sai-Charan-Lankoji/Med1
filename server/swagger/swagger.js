@@ -1,4 +1,3 @@
-// swagger.js
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
@@ -14,6 +13,20 @@ const swaggerOptions = {
     servers: [
       {
         url: "http://localhost:5000", // Base URL of your API
+      },
+    ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT", // Optional, helps with UI hints
+        },
+      },
+    },
+    security: [
+      {
+        BearerAuth: [], // Apply BearerAuth globally
       },
     ],
   },

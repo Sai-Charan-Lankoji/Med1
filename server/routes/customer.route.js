@@ -1,10 +1,15 @@
-const express = require('express');
+const express = require("express");
 
-const { getAllCustomers, 
-    createCustomer,
-    LoginCustomer,
-    getCustomerDetails,getCustomerByEmail,customerByVendorId } = require("../controllers/customer.controller");
-const router = express.Router(); 
+const {
+  getAllCustomers,
+  createCustomer,
+  LoginCustomer,
+  getCustomerDetails,
+  getCustomerByEmail,
+  customerByVendorId,
+  logout,
+} = require("../controllers/customer.controller");
+const router = express.Router();
 
 /**
  * @swagger
@@ -72,7 +77,7 @@ const router = express.Router();
  *       400:
  *         description: Invalid input data
  */
-router.post('/signup', createCustomer);
+router.post("/signup", createCustomer);
 
 /**
  * @swagger
@@ -90,7 +95,7 @@ router.post('/signup', createCustomer);
  *               items:
  *                 $ref: '#/components/schemas/Customer'
  */
-router.get('/', getAllCustomers);
+router.get("/", getAllCustomers);
 
 /**
  * @swagger
@@ -115,7 +120,7 @@ router.get('/', getAllCustomers);
  *       404:
  *         description: Customer not found
  */
-router.get('/:id', getCustomerDetails);
+router.get("/:id", getCustomerDetails);
 
 /**
  * @swagger
@@ -155,7 +160,7 @@ router.get('/:id', getCustomerDetails);
  *       401:
  *         description: Invalid email or password
  */
-router.post('/login', LoginCustomer); 
+router.post("/login", LoginCustomer);
 
 /**
  * @swagger
@@ -183,7 +188,7 @@ router.post('/login', LoginCustomer);
  *         description: No customers found for the given vendor ID
  */
 
-router.get('/vendor/:vendor_id',customerByVendorId )
+router.get("/vendor/:vendor_id", customerByVendorId);
 
 /**
  * @swagger
@@ -208,6 +213,24 @@ router.get('/vendor/:vendor_id',customerByVendorId )
  *       404:
  *         description: Customer not found
  */
-router.get('/:email', getCustomerByEmail);
+router.get("/:email", getCustomerByEmail);
+
+/**
+ * @swagger
+ * /api/customer/logout:
+ *   post:
+ *     summary: Admin logout
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *       400:
+ *         description: Token is required for logout
+ *       500:
+ *         description: Server error
+ */
+router.post("/logout", logout);
 
 module.exports = router;
