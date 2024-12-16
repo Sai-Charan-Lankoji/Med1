@@ -23,7 +23,7 @@ class CartService {
   }
 
   async getCartById(cartId) {
-    const cart = await Cart.findAll({ where: {customer_id: cartId}});
+    const cart = await Cart.findOne({ where: {id: cartId}});
     if (!cart) throw new Error(`Cart with ID ${cartId} not found.`);
     return cart;
   }
