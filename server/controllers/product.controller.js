@@ -68,7 +68,7 @@ class ProductController {
   async retrieveByStoreId(req, res) {
     try {
       const products = await productService.retrieveByStoreId(req.params.store_id);
-      res.status(200).json(products);
+      res.status(200).json({products: products});
     } catch (error) {
       res.status(404).json({ error: error.message });
     }
