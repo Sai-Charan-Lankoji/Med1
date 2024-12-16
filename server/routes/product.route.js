@@ -145,5 +145,32 @@ router.get("/", productController.listProducts);
  */
 router.get("/vendor/:vendor_id", productController.retrieveByVendorId);
 
+/**
+ * @swagger
+ * /api/products/vendor/{store_id}:
+ *   get:
+ *     summary: List products by store ID
+ *     tags: [Products]
+ *     parameters:
+ *       - name: store_id
+ *         in: path
+ *         required: true
+ *         description: The store ID to retrieve products associated with
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of products associated with the given store
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: No products found for this store ID
+ */
+router.get("/vendor/:vendor_id", productController.retrieveByStoreId);
+
 
 module.exports = router;

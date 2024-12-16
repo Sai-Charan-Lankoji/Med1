@@ -64,6 +64,15 @@ class ProductController {
       res.status(404).json({ error: error.message });
     }
   }
+
+  async retrieveByStoreId(req, res) {
+    try {
+      const products = await productService.retrieveByStoreId(req.params.store_id);
+      res.status(200).json(products);
+    } catch (error) {
+      res.status(404).json({ error: error.message });
+    }
+  }
 }
 
 module.exports = new ProductController();
