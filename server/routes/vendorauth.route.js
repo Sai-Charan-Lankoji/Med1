@@ -58,4 +58,22 @@ router.post("/login", vendorAuthController.login);
  */
 router.post("/reset-password", vendorAuthController.resetPassword);
 
+/**
+ * @swagger
+ * /api/vendor/logout:
+ *   post:
+ *     summary: Vendor logout
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *       400:
+ *         description: Token is required for logout
+ *       500:
+ *         description: Server error
+ */
+router.post("/logout", vendorAuthController.logout);
+
 module.exports = router;

@@ -1,6 +1,5 @@
-// models/tokenBlacklist.model.js
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
+const sequelize = require("../config/db"); // Ensure this is your sequelize instance
 
 const TokenBlacklist = sequelize.define("TokenBlacklist", {
   token: {

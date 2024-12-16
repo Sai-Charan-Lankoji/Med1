@@ -54,10 +54,14 @@ class AuthService {
       throw new Error("Token is required for logout.");
     }
 
-    // Add token to a blacklist (e.g., a database or in-memory store)
-    await TokenBlacklist.create({ token });
-
-    return { message: "Logout successful." };
+    try {
+      const blacklistedToken = await TokenBlacklist.create({ token });
+      console.log("Blacklisted Token: ", blacklistedToken);
+      return { message: "Logout successful." };
+    } catch (error) {
+      console.error("Error blacklisting token: ", error);
+      throw new Error("Failed to blacklist token.");
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 const Customer = require("../models/customer.model")
+const TokenBlacklist = require("../models/tokenBlacklist.model"); // Example blacklist model
 const { generateToken } = require("../utils/jwt");
 const bcrypt = require('bcrypt');
 
@@ -84,6 +85,21 @@ class CustomerService {
     async list(){
         return await Customer.findAll()
     }
+
+    async logout(token) {
+        if (!token) {
+          throw new Error("Token is required for logout.");
+        }
+    
+        try {
+          const blacklistedToken = await TokenBlacklist.create({ token });
+          console.log("Blacklisted Token: ", blacklistedToken);
+          return { message: "Logout successful." };
+        } catch (error) {
+          console.error("Error blacklisting token: ", error);
+          throw new Error("Failed to blacklist token.");
+        }
+      }
 } 
 
 

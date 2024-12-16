@@ -1,5 +1,10 @@
 const Order = require("../models/order.model");
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
+const generateEntityId = (prefix) => {
+  return `${prefix}_${crypto.randomBytes(8).toString("hex")}`;
+}
 class OrderService {
   /**
    * Retrieve an order by ID.
@@ -28,7 +33,9 @@ class OrderService {
       throw new Error("Store ID is required to create an order.");
     }
 
+    const orderId = generateEntityId("order");
     const newOrder = await Order.create({
+      id: orderId,
       ...orderData,
       status: orderData.status || "pending", // Default to pending
       line_items: orderData.line_items || [],

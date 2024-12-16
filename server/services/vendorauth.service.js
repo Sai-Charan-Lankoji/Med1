@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Vendor = require("../models/vendor.model");
 const VendorUser = require("../models/vendoruser.model")
+const TokenBlacklist = require("../models/tokenBlacklist.model");
 const { generateToken } = require("../utils/jwt");
 
 class VendorAuthService {
@@ -73,6 +74,20 @@ class VendorAuthService {
     }
 
     throw new Error("Email not found.");
+  }
+  async logout(token) {
+    if (!token) {
+      throw new Error("Token is required for logout.");
+    }
+
+    try {
+      const blacklistedToken = await TokenBlacklist.create({ token });
+      console.log("Blacklisted Token: ", blacklistedToken);
+      return { message: "Logout successful." };
+    } catch (error) {
+      console.error("Error blacklisting token: ", error);
+      throw new Error("Failed to blacklist token.");
+    }
   }
 }
 
