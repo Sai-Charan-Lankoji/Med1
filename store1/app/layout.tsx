@@ -35,7 +35,7 @@ export default function RootLayout({
         <QueryClientProvider client={queryClient}>
           <MedusaProvider
             queryClientProviderProps={{ client: queryClient }}
-            baseUrl={process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || "http://localhost:9000"}
+            baseUrl= "https://med1-wyou.onrender.com"
             publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
           >
             

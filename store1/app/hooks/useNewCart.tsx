@@ -33,7 +33,7 @@ export const useNewCart = () => {
       dispatch(setLoading(true));
 
       try {
-        const response = await fetch(`http://localhost:5000/api/carts/${customerId}`, {
+        const response = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -61,7 +61,7 @@ export const useNewCart = () => {
       // Optimistically remove item from Redux state
       dispatch(removeFromCart(cartId));
 
-      const response = await fetch(`http://localhost:5000/api/carts/${cartId}`, {
+      const response = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +70,7 @@ export const useNewCart = () => {
 
       if (!response.ok) {
         // If delete fails, fetch the cart again to restore correct state
-        const cartResponse = await fetch(`http://localhost:9000/store/cart?id=${customerId}`, {
+        const cartResponse = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -95,7 +95,7 @@ export const useNewCart = () => {
     try {
       dispatch(setLoading(true));
 
-      const response = await fetch(`http://localhost:9000/store/cart?cartId=${cartId}`, {
+      const response = await fetch(`https://med1-wyou.onrender.com/api/carts/${cartId}:`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -127,7 +127,7 @@ export const useNewCart = () => {
         propsState,
         designs,
       };
-      const response = await fetch(`http://localhost:9000/store/cart?cartId=${cartId}`, {
+      const response = await fetch(`https://med1-wyou.onrender.com/api/carts/${cartId}:`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -228,7 +228,7 @@ export const useNewCart = () => {
     try {
         dispatch(setLoading(true));
 
-        const response = await fetch(`http://localhost:9000/store/cart/${customerId}`, {
+        const response = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
