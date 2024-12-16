@@ -6,7 +6,7 @@ const TokenBlacklist = require("../models/tokenBlacklist.model"); // Example bla
 class AuthService {
   // Signup logic
   async signup(data) {
-    const { email, first_name, last_name, password } = data;
+    const { email, first_name, last_name, password,role } = data;
 
     // Check if the user already exists
     const existingUser = await User.findOne({ where: { email } });
@@ -18,7 +18,7 @@ class AuthService {
     const password_hash = await bcrypt.hash(password, 10);
 
     // Create the user
-    const user = await User.create({ email, first_name, last_name, password_hash });
+    const user = await User.create({ email, first_name, last_name, password_hash , role});
 
     // Generate a JWT token
     const token = generateToken({ id: user.id, email: user.email });
