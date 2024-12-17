@@ -54,6 +54,25 @@ class CartController {
       res.status(400).json({ error: error.message });
     }
   }
+
+  async updateCartQuantity(req, res) {
+    try {
+      const { id } = req.params;
+      const { quantity } = req.body;
+
+      if (!quantity || quantity <= 0) {
+        return res.status(400).json({ error: "Quantity must be a positive number." });
+      }
+
+      const updatedCart = await cartService.updateCartQuantity(id, quantity); 
+      const carts = await 
+      res.status(200).json([updatedCart]);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    } 
+
+  }
+  
 }
 
 module.exports = new CartController();

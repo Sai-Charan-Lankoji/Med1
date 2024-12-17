@@ -138,4 +138,41 @@ router.get('/customer/:customerId', cartController.getCartsByCustomer);
  */
 router.delete('/customer/:customerId', cartController.clearCustomerCart);
 
+
+/**
+ * @swagger
+ * /api/carts/{id}/quantity:
+ *   patch:
+ *     summary: Update the quantity of a cart
+ *     tags: [Carts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the cart
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               quantity:
+ *                 type: integer
+ *                 description: New quantity of items in the cart
+ *                 example: 3
+ *     responses:
+ *       200:
+ *         description: Cart quantity updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Cart'
+ *       400:
+ *         description: Invalid input or cart not found
+ */
+router.patch('/:id/quantity', cartController.updateCartQuantity);
+
 module.exports = router;

@@ -1,30 +1,31 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootState } from '../../reducer/rootReducer'; 
-import { useUserContext } from '@/context/userContext'; 
-import { 
-  addToCart, 
-  removeFromCart, 
-  clearCart, 
-  setLoading, 
-  setError, 
-  fetchCartSuccess
-} from '../../reducer/cartReducer';
-import { IDesign, IProps } from '@/@types/models'; 
-import { useRouter } from 'next/navigation';
-import {NEXT_PUBLIC_API_URL} from "../../constants/constants"
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState } from "../../reducer/rootReducer";
+import { useUserContext } from "@/context/userContext";
+import {
+  addToCart,
+  removeFromCart,
+  clearCart,
+  setLoading,
+  setError,
+  fetchCartSuccess,
+} from "../../reducer/cartReducer";
+import { IDesign, IProps } from "@/@types/models";
+import { useRouter } from "next/navigation";
+import { NEXT_PUBLIC_API_URL } from "../../constants/constants";
 
-const baseUrl = NEXT_PUBLIC_API_URL 
+const baseUrl = NEXT_PUBLIC_API_URL;
 
-export const useNewCart = () => { 
-  const router = useRouter();  // For navigation
+export const useNewCart = () => {
+  const router = useRouter(); // For navigation
   const { email } = useUserContext();
   const dispatch = useDispatch();
-  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const cartItems = useSelector((state: RootState) => state.cart.items || []);
   const loading = useSelector((state: RootState) => state.cart.loading);
   const error = useSelector((state: RootState) => state.cart.error);
 
-  const customerId = typeof window !== 'undefined' ? sessionStorage.getItem('customerId') : null;
+  const customerId =
+    typeof window !== "undefined" ? sessionStorage.getItem("customerId") : null;
 
   useEffect(() => {
     const fetchCartData = async () => {
@@ -33,12 +34,15 @@ export const useNewCart = () => {
       dispatch(setLoading(true));
 
       try {
-        const response = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (!response.ok) {
           throw new Error("Failed to fetch cart data");
@@ -54,29 +58,35 @@ export const useNewCart = () => {
     };
 
     fetchCartData();
-  }, [dispatch, customerId]);
+  }, [dispatch, customerId,]);
 
   const deleteCart = async (cartId: string) => {
     try {
       // Optimistically remove item from Redux state
       dispatch(removeFromCart(cartId));
 
-      const response = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        // If delete fails, fetch the cart again to restore correct state
-        const cartResponse = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
-          method: "GET",
+      const response = await fetch(
+        `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+        {
+          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
           },
-        });
-        
+        }
+      );
+
+      if (!response.ok) {
+        // If delete fails, fetch the cart again to restore correct state
+        const cartResponse = await fetch(
+          `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
         if (cartResponse.ok) {
           const data = await cartResponse.json();
           dispatch(fetchCartSuccess(data));
@@ -94,14 +104,14 @@ export const useNewCart = () => {
   const updateCartQuantity = async (cartId: string, quantity: number) => {
     try {
       dispatch(setLoading(true));
-
-      const response = await fetch(`https://med1-wyou.onrender.com/api/carts/${cartId}:`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ quantity }),
-      });
+      const response = await fetch(`http://localhost:5000/api/carts/${cartId}/quantity`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update cart quantity");
@@ -119,7 +129,12 @@ export const useNewCart = () => {
     }
   };
 
-  const updateCart = async (cartId: any, designState: IDesign[], propsState: IProps, designs: IDesign[]) => {
+  const updateCart = async (
+    cartId: any,
+    designState: IDesign[],
+    propsState: IProps,
+    designs: IDesign[]
+  ) => {
     try {
       dispatch(setLoading(true));
       const updatedData = {
@@ -127,22 +142,22 @@ export const useNewCart = () => {
         propsState,
         designs,
       };
-      const response = await fetch(`https://med1-wyou.onrender.com/api/carts/${cartId}:`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedData),
-      });
-  
+      const response = await fetch(`http://localhost:5000/api/carts/${cartId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to update cart");
       }
-      if(response.ok){
+      if (response.ok) {
         localStorage.removeItem("cart_id");
-        localStorage.removeItem('savedPropsState')
-        localStorage.removeItem('savedDesignState') 
-        
+        localStorage.removeItem("savedPropsState");
+        localStorage.removeItem("savedDesignState");
       }
       const data = await response.json();
       dispatch(fetchCartSuccess(data.updatedCartData));
@@ -156,20 +171,19 @@ export const useNewCart = () => {
     }
   };
 
-
   const addDesignToCart = async (
-    designs: IDesign[], 
-    customerToken: string, 
+    designs: IDesign[],
+    customerToken: string,
     svgUrl: string | null,
     designState: IDesign[],
-    propsState: IProps,
+    propsState: IProps
   ) => {
     if (!customerToken) return false;
 
     try {
       dispatch(setLoading(true));
-      
-      const validDesigns = designs.filter(design => design.pngImage);
+
+      const validDesigns = designs.filter((design) => design.pngImage);
       if (validDesigns.length === 0) {
         throw new Error("No valid designs to add to cart");
       }
@@ -190,7 +204,6 @@ export const useNewCart = () => {
 
       const basePrice = processedDesigns.length * 100;
 
-      
       const response = await fetch(`${baseUrl}/api/carts`, {
         method: "POST",
         headers: {
@@ -226,26 +239,29 @@ export const useNewCart = () => {
     if (!customerId) return false;
 
     try {
-        dispatch(setLoading(true));
+      dispatch(setLoading(true));
 
-        const response = await fetch(`https://med1-wyou.onrender.com/api/carts/customer/${customerId}`, {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error("Failed to clear cart");
+      const response = await fetch(
+        `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
+      );
 
-        dispatch(clearCart());
-        return true;
+      if (!response.ok) {
+        throw new Error("Failed to clear cart");
+      }
+
+      dispatch(clearCart());
+      return true;
     } catch (error: any) {
-        dispatch(setError(error.message));
-        return false;
+      dispatch(setError(error.message));
+      return false;
     } finally {
-        dispatch(setLoading(false));
+      dispatch(setLoading(false));
     }
   };
 
@@ -257,6 +273,6 @@ export const useNewCart = () => {
     updateCart,
     addDesignToCart,
     updateCartQuantity,
-    clearCart : clearAllCart
+    clearCart: clearAllCart,
   };
 };

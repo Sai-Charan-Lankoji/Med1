@@ -27,7 +27,7 @@ const cors = require('cors')
 app.use(
   cors({
     origin: ["http://localhost:7009","http://localhost:7000","http://localhost:3000","https://med1-4217.vercel.app","https://med1-five.vercel.app","https://med1-p6q2.vercel.app"] ,// Adjust based on your frontend
-    methods: ["GET", "POST", "PUT", "DELETE"],
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization","credentials"],
     credentials: true,
   })

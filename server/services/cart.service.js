@@ -48,6 +48,23 @@ class CartService {
       throw new Error(`No carts found for customer ${customerId}`);
     await Cart.destroy({ where: { customer_id: customerId } });
   }
+
+  async updateCartQuantity(cartId, newQuantity) {
+    const cart = await this.getCartById(cartId); // Fetch cart instance
+    if (!cart) throw new Error(`Cart with ID ${cartId} not found.`);
+
+    if (newQuantity <= 0) {
+      throw new Error("Quantity must be greater than zero.");
+    }
+
+    // Update total price based on the new quantity
+    const updatedTotalPrice = cart.price * newQuantity;
+
+    return await cart.update({
+      quantity: newQuantity,
+      total_price: updatedTotalPrice,
+    });
+  }
 }
 
 module.exports = new CartService();
