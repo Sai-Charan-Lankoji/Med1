@@ -9,6 +9,7 @@ import {
   setLoading,
   setError,
   fetchCartSuccess,
+  updateCartItemQuantity,
 } from "../../reducer/cartReducer";
 import { IDesign, IProps } from "@/@types/models";
 import { useRouter } from "next/navigation";
@@ -17,7 +18,7 @@ import { NEXT_PUBLIC_API_URL } from "../../constants/constants";
 const baseUrl = NEXT_PUBLIC_API_URL;
 
 export const useNewCart = () => {
-  const router = useRouter(); // For navigation
+  const router = useRouter();
   const { email } = useUserContext();
   const dispatch = useDispatch();
   const cartItems = useSelector((state: RootState) => state.cart.items || []);
@@ -58,11 +59,57 @@ export const useNewCart = () => {
     };
 
     fetchCartData();
-  }, [dispatch, customerId,]);
+  }, [dispatch, customerId]);
 
+  const updateCartQuantity = async (cartId: string, quantity: number) => {
+    try {
+      dispatch(setLoading(true));
+      
+      // First, optimistically update the local state
+      dispatch(updateCartItemQuantity({ cartId, quantity }));
+
+      const response = await fetch(
+        `https://med1-wyou.onrender.com/api/carts/${cartId}/quantity`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity }),
+        }
+      );
+
+      if (!response.ok) {
+        // If the API call fails, fetch the entire cart again to restore the correct state
+        const cartResponse = await fetch(
+          `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+
+        if (cartResponse.ok) {
+          const data = await cartResponse.json();
+          dispatch(fetchCartSuccess(data));
+        }
+        throw new Error("Failed to update cart quantity");
+      }
+
+      return true;
+    } catch (error: any) {
+      dispatch(setError(error.message));
+      return false;
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  // Rest of the code remains the same...
   const deleteCart = async (cartId: string) => {
     try {
-      // Optimistically remove item from Redux state
       dispatch(removeFromCart(cartId));
 
       const response = await fetch(
@@ -76,7 +123,6 @@ export const useNewCart = () => {
       );
 
       if (!response.ok) {
-        // If delete fails, fetch the cart again to restore correct state
         const cartResponse = await fetch(
           `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
           {
@@ -101,34 +147,6 @@ export const useNewCart = () => {
     }
   };
 
-  const updateCartQuantity = async (cartId: string, quantity: number) => {
-    try {
-      dispatch(setLoading(true));
-      const response = await fetch(`http://localhost:5000/api/carts/${cartId}/quantity`, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ quantity }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update cart quantity");
-      }
-
-      const data = await response.json();
-      dispatch(fetchCartSuccess(data));
-
-      return true;
-    } catch (error: any) {
-      dispatch(setError(error.message));
-      return false;
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
   const updateCart = async (
     cartId: any,
     designState: IDesign[],
@@ -142,7 +160,9 @@ export const useNewCart = () => {
         propsState,
         designs,
       };
-      const response = await fetch(`http://localhost:5000/api/carts/${cartId}`, {
+      const response = await fetch(
+        `https://med1-wyou.onrender.com/api/carts/${cartId}`,
+        {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -235,6 +255,7 @@ export const useNewCart = () => {
       dispatch(setLoading(false));
     }
   };
+
   const clearAllCart = async () => {
     if (!customerId) return false;
 

@@ -22,9 +22,16 @@ export const CLEAR_CART = 'CLEAR_CART';
 export const SET_LOADING = 'SET_LOADING';
 export const SET_ERROR = 'SET_ERROR';
 export const FETCH_CART_SUCCESS = 'FETCH_CART_SUCCESS';
-export const UPDATE_CART = 'UPDATE_CART';
+export const UPDATE_CART = 'UPDATE_CART'; 
+export const UPDATE_CART_ITEM_QUANTITY = 'UPDATE_CART_ITEM_QUANTITY'
 
-// Action creators
+// Action creators 
+
+
+export const updateCartItemQuantity = (payload: { cartId: string; quantity: number }) => ({
+  type: UPDATE_CART_ITEM_QUANTITY,
+  payload,
+});
 export const addToCart = (item: ICartItem) => ({
   type: ADD_TO_CART,
   payload: item,
@@ -98,6 +105,14 @@ export const cartReducer = (state = initialState, action: AnyAction): CartState 
         return {
          ...state,
           items: action.payload, // Update the items with updated cart data
+        }; 
+
+        case UPDATE_CART_ITEM_QUANTITY:
+        return {
+         ...state,
+          items: state.items.map(item =>
+            item.id === action.payload.cartId? {...item, quantity: action.payload.quantity } : item
+          ),
         };
     // Add other cases for other actions related to cart here...
     default:
