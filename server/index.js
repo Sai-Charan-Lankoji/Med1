@@ -17,6 +17,7 @@ const storeRoutes = require('./routes/store.route.js');
 const cartRoutes = require("./routes/cart.route.js");
 const saleschannelRoutes = require("./routes/saleschannel.route.js");
 const tokenBlacklistRoutes = require("./routes/tokenBlacklist.route.js");
+const publishableApiKeyRoutes = require("./routes/publishableapikey.route.js");
 const bodyParser = require("body-parser");
 
 const app = express();
@@ -61,4 +62,5 @@ app.use('/api/stores', storeRoutes);
 app.use('/api/carts', cartRoutes);
 app.use('/api/saleschannels', saleschannelRoutes)
 app.use("/api/token-blacklist", tokenBlacklistRoutes);
+app.use("/api/publishibleapikey", publishableApiKeyRoutes)
 startServer();
