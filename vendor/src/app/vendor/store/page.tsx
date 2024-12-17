@@ -243,11 +243,11 @@ const Store = () => {
               
               createPublishableApiKey(
                 {
-                  salesChannelId: response.id,
-                  keyData: {
+               
+        
                     title: response.name,
                     created_by: response.vendor_id
-                  }
+             
                 },
                 {
                   onSuccess: (apiKeyResponse) => {

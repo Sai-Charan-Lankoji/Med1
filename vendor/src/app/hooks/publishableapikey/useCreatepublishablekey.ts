@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 const baseUrl = "https://med1-wyou.onrender.com";
 
 // Function to create a publishable API key
-const createPublishableApiKey = async ({ salesChannelId, keyData }) => {
+const createPublishableApiKey = async ({ title,created_by }) => {
   const url = `${baseUrl}/api/publishibleapikey`;
 
   const response = await fetch(url, {
@@ -12,7 +12,7 @@ const createPublishableApiKey = async ({ salesChannelId, keyData }) => {
       'Content-Type': 'application/json',
     },
     credentials: 'include',
-    body: JSON.stringify({ salesChannelId, keyData }),
+    body: JSON.stringify({ title, created_by }),
   });
 
   if (!response.ok) {
