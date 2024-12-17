@@ -9,7 +9,8 @@ interface StoreUpdateFormData {
 
 const updateStore = async (storeData: StoreUpdateFormData) => {
   const { storeId, ...updateData } = storeData;
-  const response = await fetch(`${baseUrl}/vendor/store?id=${storeId}`, {
+  const id = storeId
+  const response = await fetch(`${baseUrl}/api/stores/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',

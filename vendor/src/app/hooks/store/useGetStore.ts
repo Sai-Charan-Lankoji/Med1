@@ -2,7 +2,7 @@ const baseUrl = "https://med1-wyou.onrender.com";
 import { useQuery } from '@tanstack/react-query';
 
 const fetchStore = async (id: string) => {
-  const url = `${baseUrl}/vendor/store/${id}`;
+  const url = `${baseUrl}/api/stores/${id}`;
   try {
     const response = await fetch(url, {
       method: 'GET',

@@ -22,7 +22,7 @@ const Store = sequelize.define(
     },
     default_currency_code: {
         type: DataTypes.STRING(250),
-        allowNull: false,
+        allowNull: true,
     },
     swap_link_template: {
         type: DataTypes.STRING(250),

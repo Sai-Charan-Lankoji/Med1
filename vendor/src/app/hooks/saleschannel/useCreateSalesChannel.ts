@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const baseUrl = "https://med1-wyou.onrender.com";
 const createSalesChannel = async (saleschannelData: SalesChannelFormData) => {
-  const response = await fetch(`${baseUrl}/vendor/saleschannel`, {
+  const response = await fetch(`${baseUrl}/api/saleschannels`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

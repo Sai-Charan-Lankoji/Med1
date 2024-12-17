@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const baseUrl = "https://med1-wyou.onrender.com";
 const createStore = async (storeData: StoreFormData) => {
-  const response = await fetch(`${baseUrl}/vendor/store`, {
+  const response = await fetch(`${baseUrl}/api/stores`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

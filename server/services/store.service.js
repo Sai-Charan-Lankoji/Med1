@@ -1,11 +1,18 @@
 const Store = require('../models/store.model');
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
+const generateEntityId = (prefix) => {
+  return `${prefix}_${crypto.randomBytes(8).toString("hex")}`;
+};
 class StoreService {
   async createStore(storeData) {
-    if (!storeData.vendorId) {
+    if (!storeData.vendor_id) {
       throw new Error('Vendor ID is required to create a store.');
     }
-    const store = await Store.create(storeData);
+
+    const storeId = generateEntityId("store");
+    const store = await Store.create({id: storeId, ...storeData});
     return store;
   }
 

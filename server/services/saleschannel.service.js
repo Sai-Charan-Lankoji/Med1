@@ -1,12 +1,18 @@
 const SalesChannel = require('../models/saleschannel.model');
+const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
+const generateEntityId = (prefix) => {
+  return `${prefix}_${crypto.randomBytes(8).toString("hex")}`;
+};
 class SalesChannelService {
   async createSalesChannel(data) {
     if (!data.vendor_id) {
       throw new Error('Vendor ID is required to create a Sales Channel.');
     }
+    const salesChannelId = generateEntityId("sc");
 
-    return await SalesChannel.create(data);
+    return await SalesChannel.create({id: salesChannelId, ...data});
   }
 
   async getSalesChannelById(salesChannelId) {
