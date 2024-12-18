@@ -1,44 +1,40 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import { DollarSign, Calendar, CreditCard, TrendingUp, Search, Loader2, AlertCircle, Store, User, Phone, Briefcase, CreditCardIcon } from 'lucide-react'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useParams, useRouter } from "next/navigation";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+  Loader2,
+  AlertCircle,
+  User,
+  Phone,
+  Briefcase,
+  CreditCardIcon,
+} from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { useGetVendor } from "@/app/hooks/vendors/useGetVendor"
-import { useGetStores } from "@/app/hooks/store/useGetStores"
-import { BackButton } from "@/app/utils/backButton"
+} from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { BackButton } from "@/app/utils/backButton";
+import { useGetVendor } from "@/app/hooks/vendors/useGetVendor";
+import { useGetStores } from "@/app/hooks/store/useGetStores";
 
 export default function VendorDetailsPage() {
-  const router = useRouter()
-  const params = useParams()
-  const vendorId = params?.id as string
-  const { data: vendor, isLoading, error } = useGetVendor(vendorId)
-  const { data: stores } = useGetStores()
-
+  const router = useRouter();
+  const params = useParams();
+  const vendorId = params?.id as string;
+  const { data: vendor, isLoading, error } = useGetVendor(vendorId);
+  const { data: stores } = useGetStores(vendorId);
+  console.log("Vendor: ", vendor)
   if (isLoading) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         <p className="mt-4 text-sm text-muted-foreground">Loading vendor data...</p>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -49,7 +45,7 @@ export default function VendorDetailsPage() {
         </div>
         <p className="mt-4 text-sm text-destructive">Error fetching vendor data</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -58,7 +54,7 @@ export default function VendorDetailsPage() {
       <Card className="border-none shadow-lg">
         <CardHeader>
           <CardTitle className="text-3xl font-bold">Vendor Details</CardTitle>
-          <CardDescription>Detailed information about {vendor?.vendor.company_name}</CardDescription>
+          <CardDescription>Detailed information about {vendor?.company_name}</CardDescription>
         </CardHeader>
         <CardContent>
           {/* Vendor Metrics */}
@@ -71,7 +67,7 @@ export default function VendorDetailsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Contact Name</p>
-                    <h3 className="text-lg font-bold">{vendor?.vendor.contact_name}</h3>
+                    <h3 className="text-lg font-bold">{vendor?.contact_name}</h3>
                   </div>
                 </div>
               </CardContent>
@@ -84,7 +80,7 @@ export default function VendorDetailsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Phone</p>
-                    <h3 className="text-lg font-bold">{vendor?.vendor.contact_phone_number}</h3>
+                    <h3 className="text-lg font-bold">{vendor?.contact_phone_number}</h3>
                   </div>
                 </div>
               </CardContent>
@@ -97,7 +93,7 @@ export default function VendorDetailsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Business Type</p>
-                    <h3 className="text-lg font-bold">{vendor?.vendor.business_type}</h3>
+                    <h3 className="text-lg font-bold">{vendor?.business_type}</h3>
                   </div>
                 </div>
               </CardContent>
@@ -110,7 +106,7 @@ export default function VendorDetailsPage() {
                   </div>
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Plan</p>
-                    <h3 className="text-lg font-bold capitalize">{vendor?.vendor.plan}</h3>
+                    <h3 className="text-lg font-bold capitalize">{vendor?.plan}</h3>
                   </div>
                 </div>
               </CardContent>
@@ -127,20 +123,28 @@ export default function VendorDetailsPage() {
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Vendor Address</h3>
                   <address className="not-italic">
-                    <p>{vendor?.vendorAddress.address_1}</p>
-                    {vendor?.vendorAddress.address_2 && <p>{vendor?.vendorAddress.address_2}</p>}
-                    <p>{vendor?.vendorAddress.city}, {vendor?.vendorAddress.province} {vendor?.vendorAddress.postal_code}</p>
-                    <p className="mt-2">Phone: {vendor?.vendorAddress.phone}</p>
+                    <p>{vendor?.vendorAddress?.address_1}</p>
+                    {vendor?.vendorAddress?.address_2 && <p>{vendor?.vendorAddress?.address_2}</p>}
+                    <p>
+                      {vendor?.vendorAddress?.city}, {vendor?.vendorAddress?.province}{" "}
+                      {vendor?.vendorAddress?.postal_code}
+                    </p>
+                    <p className="mt-2">Phone: {vendor?.vendorAddress?.phone}</p>
                   </address>
                 </div>
                 <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-gray-200"></div>
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Registration Address</h3>
                   <div className="not-italic text-sm">
-                    <p>{vendor?.registrationAddress.address_1}</p>
-                    {vendor?.registrationAddress.address_2 && <p>{vendor?.registrationAddress.address_2}</p>}
-                    <p>{vendor?.registrationAddress.city}, {vendor?.registrationAddress.province} {vendor?.registrationAddress.postal_code}</p>
-                    <p className="mt-2">Phone: {vendor?.registrationAddress.phone}</p>
+                    <p>{vendor?.registrationAddress?.address_1}</p>
+                    {vendor?.registrationAddress?.address_2 && (
+                      <p>{vendor?.registrationAddress?.address_2}</p>
+                    )}
+                    <p>
+                      {vendor?.registrationAddress?.city}, {vendor?.registrationAddress?.province}{" "}
+                      {vendor?.registrationAddress?.postal_code}
+                    </p>
+                    <p className="mt-2">Phone: {vendor?.registrationAddress?.phone}</p>
                   </div>
                 </div>
               </div>
@@ -167,10 +171,21 @@ export default function VendorDetailsPage() {
                     {stores.map((store) => (
                       <TableRow key={store.id}>
                         <TableCell className="font-medium">{store.name}</TableCell>
-                        <TableCell>{new Date(store.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
+                        <TableCell>
+                          {new Date(store.created_at).toLocaleDateString("en-GB", {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
+                        </TableCell>
                         <TableCell>{store.store_type}</TableCell>
                         <TableCell>
-                          <a href={store.store_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                          <a
+                            href={store.store_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
                             {store.store_url}
                           </a>
                         </TableCell>
@@ -186,6 +201,5 @@ export default function VendorDetailsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

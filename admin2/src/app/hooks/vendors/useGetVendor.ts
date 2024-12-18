@@ -26,7 +26,7 @@ const fetchVendor = async (id: string) => {
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    return data;
+    return data.vendor;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching data:', error.message);

@@ -1,11 +1,10 @@
 const baseUrl = "https://med1-wyou.onrender.com";
 import { useQuery } from '@tanstack/react-query';
 
-const fetchStores = async () => {
+const fetchStores = async (vendor_id: string) => {
   
-  const id = sessionStorage.getItem('vendor_id');
 
-  const url = `${baseUrl}/api/stores?vendor_id=${id}`;
+  const url = `${baseUrl}/api/stores?vendor_id=${vendor_id}`;
 
   try {
     const response = await fetch(url, {
@@ -48,8 +47,8 @@ const fetchStores = async () => {
 };
 
 
-export const useGetStores = ( ) => {
-  return useQuery(['stores'],  () => fetchStores(), {
+export const useGetStores = (vendor_id: string) => {
+  return useQuery(['stores', vendor_id],  () => fetchStores(vendor_id), {
     refetchOnWindowFocus: false,  
     refetchOnMount: false,        
     cacheTime: 0,                

@@ -13,12 +13,75 @@ class VendorService {
   }
 
   async getVendorById(id) {
-    const vendor = await Vendor.findByPk(id);
+    const vendor = await Vendor.findByPk(id, {
+      include: [
+        {
+          model: Address,
+          as: "address", // Ensure alias matches the association
+        },
+      ],
+    });
+  
     if (!vendor) {
       throw new Error("Vendor not found.");
     }
-    return vendor;
+  
+    // Format the data
+    return this.formatVendorData(vendor);
   }
+  
+  formatVendorData(vendor) {
+    // Helper function to split fields based on the "-" symbol
+    const splitField = (field) => {
+      if (!field || !field.includes("-")) return { vendorValue: field, registrationValue: field };
+      const [vendorValue, registrationValue] = field.split(" -").map((str) => str.trim());
+      return { vendorValue, registrationValue };
+    };
+  
+    // Extract and split address fields
+    const address_1 = splitField(vendor.address[0]?.address_1);
+    const address_2 = splitField(vendor.address[0]?.address_2);
+    const city = splitField(vendor.address[0]?.city);
+    const postal_code = splitField(vendor.address[0]?.postal_code);
+    const province = splitField(vendor.address[0]?.province);
+    const phone = splitField(vendor.address[0]?.phone);
+  
+    return {
+      vendor: {
+        company_name: vendor.company_name,
+        password: vendor.password, // Avoid sending hashed passwords in production
+        confirmPassword: vendor.password,
+        contact_name: vendor.contact_name,
+        contact_email: vendor.contact_email,
+        contact_phone_number: vendor.contact_phone_number,
+        registered_number: vendor.registered_number,
+        tax_number: vendor.tax_number || "",
+        business_type: vendor.business_type,
+        plan: vendor.plan,
+        plan_id: vendor.plan_id,
+        vendorAddress: {
+          address_1: address_1.vendorValue,
+          address_2: address_2.vendorValue,
+          city: city.vendorValue,
+          postal_code: postal_code.vendorValue,
+          province: province.vendorValue,
+          phone: phone.vendorValue,
+          first_name: vendor.address[0]?.first_name,
+          last_name: vendor.address[0]?.last_name,
+        },
+        registrationAddress: {
+          address_1: address_1.registrationValue,
+          address_2: address_2.registrationValue,
+          city: city.registrationValue,
+          postal_code: postal_code.registrationValue,
+          province: province.registrationValue,
+          phone: phone.registrationValue,
+        },
+      },
+    };
+  }
+  
+  
 
   async createVendor(data) {
     try {
