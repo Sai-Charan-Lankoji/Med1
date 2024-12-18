@@ -70,8 +70,7 @@ export const useCustomerLogout = () => {
       // Clear all user session data
       clearUserSession();
 
-      console.log("Customer logged out successfully");
-      
+       
       // Redirect to home page
       router.push('/');
     } catch (err: any) {

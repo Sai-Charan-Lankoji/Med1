@@ -16,8 +16,7 @@ const fetchOrderDetails = async (id: string) => {
   }
 
   const data = await response.json();
-  console.log("UseGetOrder Details Hook: ", data)
-  return data;
+   return data;
 };
 
 export const useGetOrder = (id: string) => {

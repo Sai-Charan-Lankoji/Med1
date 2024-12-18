@@ -129,8 +129,7 @@ const VendorForm =({ plan }: VendorFormProps) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.log("errorData", errorData)
-        throw new Error( errorData.error ||`Failed to create vendor: ${response.status}`);
+         throw new Error( errorData.error ||`Failed to create vendor: ${response.status}`);
       }
 
       toast.success("Success", {

@@ -27,8 +27,7 @@ export default function VendorDetailsPage() {
   const vendorId = params?.id as string;
   const { data: vendor, isLoading, error } = useGetVendor(vendorId);
   const { data: stores } = useGetStores(vendorId);
-  console.log("Vendor: ", vendor)
-  if (isLoading) {
+   if (isLoading) {
     return (
       <div className="flex min-h-[400px] flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

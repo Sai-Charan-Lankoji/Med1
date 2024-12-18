@@ -24,8 +24,7 @@ export const useUpdateVendorPlan = () => {
         body: JSON.stringify(updateData), 
 
       }); 
-      console.log("updated Data : " , updateData)
-
+ 
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Failed to update plan');

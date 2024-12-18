@@ -2,8 +2,7 @@
 import { IProps } from "@/@types/models";
 import { fabric } from "fabric";
 export function AddRectFunc(canvas: any, stroke: string, fillcolor: string) {
-  console.log(fillcolor);
-
+ 
   let rect = new fabric.Rect({
     left: 50,
     top: 100,
@@ -21,8 +20,7 @@ export function AddRectFunc(canvas: any, stroke: string, fillcolor: string) {
 
 
 export function AddTriangle(canvas: any, stroke: string, fillcolor: string) {
-  console.log(fillcolor);
-
+ 
   let rect = new fabric.Triangle({
     left: 50,
     top: 100,

@@ -32,8 +32,7 @@ const Navbar: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<{
     [key: string]: boolean;
   }>({});
-  console.log("CARTITEMS: ", cartItems)
-  const params = useParams();
+   const params = useParams();
   const vendorId = params.vendorId as string;
   const isVendorMode = vendorId === NEXT_PUBLIC_VENDOR_ID;
 
@@ -89,8 +88,7 @@ const Navbar: React.FC = () => {
     propsState: IProps,
     id: any
   ) => {
-    console.log("Design clicked", designState);
-    localStorage.setItem("savedDesignState", JSON.stringify(designState));
+     localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
     localStorage.setItem("cart_id", id);
     dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
@@ -132,8 +130,7 @@ const Navbar: React.FC = () => {
       localStorage.removeItem("savedDesignState");
       localStorage.removeItem("cart_id");
       router.refresh();
-      console.log("Cart item deleted successfully");
-    } else {
+     } else {
       console.log("Failed to delete cart item");
     }
   };
@@ -147,8 +144,7 @@ const Navbar: React.FC = () => {
       closeAllMenus();
     } else {
       setIsCartOpen((prev) => !prev);
-      console.log("cartItems", cartItems);
-
+ 
       setIsProfileOpen(false);
     }
   };

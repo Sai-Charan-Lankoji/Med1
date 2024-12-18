@@ -101,8 +101,7 @@ const AddProductForm = () => {
       vendor_id: vendor_id,
     };
 
-    console.log("Form Data:", formData);
-
+ 
     createProduct(formData, {
       onSuccess: () => {
         toast.success("Success", {

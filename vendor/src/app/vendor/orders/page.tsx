@@ -33,8 +33,7 @@ const Order = () => {
   const [selectedStore, setSelectedStore] = useState("all");
   const router = useRouter();
   const pageSize = 6;
-  console.log("ORDERS: ", OrdersData)
-  const getCustomerFirstName = useCallback((customerId: any) => {
+   const getCustomerFirstName = useCallback((customerId: any) => {
     const customer = customersData?.find(
       (customer: { id: any }) => customer.id === customerId
     );

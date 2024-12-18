@@ -79,8 +79,7 @@ function SalesChannels() {
       },
       {
         onSuccess: (response) => {
-          console.log("Successfully Created Sales Channel ", response)
-          closeModal()
+           closeModal()
         },
         onError: (error) => {
           console.error("Error while creating sales channel:", error)
@@ -100,8 +99,7 @@ function SalesChannels() {
         },
         {
           onSuccess: (response) => {
-            console.log("Successfully Updated Sales Channel", response)
-            closeEditModal()
+             closeEditModal()
           },
           onError: (error) => {
             console.error("Error while updating sales channel:", error)

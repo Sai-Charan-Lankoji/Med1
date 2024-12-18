@@ -4,8 +4,7 @@ export const designReducer = (
   designs: IDesign[],
   action: DesignAction
 ): IDesign[] => {
-  //console.log(action);
-
+ 
   switch (action.type) {
    case "ADD_DESIGN": {
   designs = designs.map((a) =>

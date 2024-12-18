@@ -111,8 +111,7 @@ export default function Home() {
     }
   };
   const { data: products } = useGetProducts()
-  console.log("PRODUCTS: ", products);
-  
+   
   return (
     <main>
       {/* Hero Section */}

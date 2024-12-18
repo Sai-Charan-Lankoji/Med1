@@ -10,8 +10,7 @@ const ExistingDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
   };
 
   const { data: productsData, error, isLoading } = useGetProducts();
-  console.log("Products Data: ", productsData);
-  return (
+   return (
     <div
       className={`absolute top-20 rounded-lg right-0 h-[578px] w-[670px] bg-white shadow-lg z-50 transform ${
         isOpen ? "-translate-x-[468px]" : "translate-x-full"

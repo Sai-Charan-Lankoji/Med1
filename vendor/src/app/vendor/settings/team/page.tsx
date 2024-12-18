@@ -46,8 +46,7 @@ const TeamManagement = () => {
 
   const handleInviteUser = () => {
     // Implement user invitation logic here
-    console.log("Inviting user:", newUserEmail, "with role:", newUserRole)
-    closeModal()
+     closeModal()
   }
 
   const filteredUsers = users?.filter(user =>

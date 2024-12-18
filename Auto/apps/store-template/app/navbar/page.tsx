@@ -89,7 +89,6 @@ const Navbar: React.FC = () => {
     propsState: IProps,
     id: any
   ) => {
-    console.log("Design clicked", designState);
     localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
     localStorage.setItem("cart_id", id);
@@ -132,8 +131,7 @@ const Navbar: React.FC = () => {
       localStorage.removeItem("savedDesignState");
       localStorage.removeItem("cart_id");
       router.refresh();
-      console.log("Cart item deleted successfully");
-    } else {
+     } else {
       console.log("Failed to delete cart item");
     }
   };
@@ -147,8 +145,6 @@ const Navbar: React.FC = () => {
       closeAllMenus();
     } else {
       setIsCartOpen((prev) => !prev);
-      console.log("cartItems", cartItems);
-
       setIsProfileOpen(false);
     }
   };

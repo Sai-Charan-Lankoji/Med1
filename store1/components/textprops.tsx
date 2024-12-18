@@ -17,7 +17,7 @@ import { TextPropsContext } from "../context/designcontext";
 export function TextProps(): React.ReactElement {
     const dispatchForCanvas = useDispatch();
     const { props, dispatchProps } = React.useContext(TextPropsContext)!;
-    console.log(props);
+ 
     
     let [fontWeight, setFontWeight] = React.useState(props.fontWeight ?? "200");
     let [fontStyle, setFontStyle] = React.useState(props.fontStyle ?? "normal");
@@ -41,8 +41,7 @@ export function TextProps(): React.ReactElement {
   };
 
   const handleFontSize = (e: any) => {
-    console.log(e);
-    console.log(e.target.value);
+ 
     setFontSize(e.target.value);
     dispatchForCanvas({
       type: "PROPS",

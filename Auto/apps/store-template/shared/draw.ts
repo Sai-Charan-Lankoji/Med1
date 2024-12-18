@@ -2,8 +2,6 @@
 import { IProps } from "@/@types/models";
 import { fabric } from "fabric";
 export function AddRectFunc(canvas: any, stroke: string, fillcolor: string) {
-  console.log(fillcolor);
-
   let rect = new fabric.Rect({
     left: 50,
     top: 100,
@@ -19,10 +17,7 @@ export function AddRectFunc(canvas: any, stroke: string, fillcolor: string) {
   canvas.setActiveObject(rect);
 }
 
-
 export function AddTriangle(canvas: any, stroke: string, fillcolor: string) {
-  console.log(fillcolor);
-
   let rect = new fabric.Triangle({
     left: 50,
     top: 100,
@@ -46,8 +41,8 @@ export function AddCircle(canvas: any, stroke: string, fillcolor: string) {
     fill: fillcolor,
     stroke: stroke,
     strokeWidth: 3,
-    originX: 'center',
-    originY: 'center'
+    originX: "center",
+    originY: "center",
   });
 
   canvas.add(rect);
@@ -70,54 +65,44 @@ export function AddCircle(canvas: any, stroke: string, fillcolor: string) {
 //   }));
 // }
 
-
-
-
-  // Set default values to the props
+// Set default values to the props
 export function AddText(
-    canvas: any,
-    text: string,
-    color: string,
-    props: IProps | undefined
-  ) {
-    if (!props) {
-      console.error("Invalid props object");
-      return;
-    }
-
-    const fontFamily = props.fontFamily || "Arial";
-    const fillcolor = props.fillcolor || "black";
-    const fontSize = props.fontSize || 24;
-    const fontStyle = props.fontStyle || "normal";
-    const fontWeight = props.fontWeight || "normal";
-    const charSpacing = props.charSpacing || 0;
-    const lineHeight = props.lineHeight || 1;
-    const textAlign = props.textAlign || "left";
-    const bgColor = props.bgColor || "transparent";
-
-    canvas.add(
-      new fabric.IText(text, {
-        left: 50,
-        top: 80,
-        fontFamily,
-        fill: fillcolor,
-        fontSize,
-        fontStyle,
-        fontWeight,
-        charSpacing,
-        lineHeight,
-        textBackgroundColor: bgColor,
-        textAlign,
-      })
-    );
+  canvas: any,
+  text: string,
+  color: string,
+  props: IProps | undefined
+) {
+  if (!props) {
+    console.error("Invalid props object");
+    return;
   }
 
+  const fontFamily = props.fontFamily || "Arial";
+  const fillcolor = props.fillcolor || "black";
+  const fontSize = props.fontSize || 24;
+  const fontStyle = props.fontStyle || "normal";
+  const fontWeight = props.fontWeight || "normal";
+  const charSpacing = props.charSpacing || 0;
+  const lineHeight = props.lineHeight || 1;
+  const textAlign = props.textAlign || "left";
+  const bgColor = props.bgColor || "transparent";
 
-
-
-
-
-
+  canvas.add(
+    new fabric.IText(text, {
+      left: 50,
+      top: 80,
+      fontFamily,
+      fill: fillcolor,
+      fontSize,
+      fontStyle,
+      fontWeight,
+      charSpacing,
+      lineHeight,
+      textBackgroundColor: bgColor,
+      textAlign,
+    })
+  );
+}
 
 // left: 200,
 // 			top: 100,
@@ -148,18 +133,17 @@ export function AddSvg(canvas: any, svgurl: string, designId: string) {
         scaleY: scaleY,
         rotatingPointOffset: 10,
       });
-      fabric.util.object.extend(designItem, { svgUid: designId })
+      fabric.util.object.extend(designItem, { svgUid: designId });
 
       canvas.add(designItem);
       canvas.centerObject(designItem);
-      canvas.setActiveObject(designItem)
+      canvas.setActiveObject(designItem);
       canvas.renderAll();
     });
-
   }
 }
 
-export function GetTextStyles(object: fabric.Object | undefined):IProps {
+export function GetTextStyles(object: fabric.Object | undefined): IProps {
   if (!object) return {};
 
   return {

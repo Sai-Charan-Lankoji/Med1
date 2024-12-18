@@ -18,8 +18,7 @@ export function ClipartGallery(): React.ReactElement {
 
   const handleSvgUrl = async (e: React.MouseEvent, svgurl: string) => {
     e.stopPropagation();
-    console.log(svgurl);
-
+ 
     const response = await fetch(svgurl);
     const blob = await response.blob();
     const formData = new FormData();
@@ -31,8 +30,7 @@ export function ClipartGallery(): React.ReactElement {
     });
     const data = await res.json();
     if (data?.fileUrl) {
-      console.log("this is the data : ", data?.fileUrl);
-      // add the svg item to the canvas
+       // add the svg item to the canvas
       setSvgUrl(data?.fileUrl);
     } else {
       console.log("Error in uploading image");

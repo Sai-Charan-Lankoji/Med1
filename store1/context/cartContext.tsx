@@ -77,14 +77,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     // createCart(newCartItem, {
     //   onSuccess: (response) => {
-    //     console.log("Created cart data ", response);
-    //   },
+     //   },
     //   onError: (err) => {
     //     console.error("Error creating apparel design:", err);
     //   },
     // });
-    console.log("Praveen Added: ", newCartItem)
-    setCart(prevCart => [...prevCart, newCartItem]);
+     setCart(prevCart => [...prevCart, newCartItem]);
   };
 
   const removeFromCart = (id: string) => {

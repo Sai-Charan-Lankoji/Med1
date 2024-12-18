@@ -9,8 +9,7 @@ import { Francois_One } from "next/font/google";
 
 const StoreDetails = () => {
   const { data: stores } = useGetStores();
-  console.log("Stores: ", stores);
-  const [formData, setFormData] = useState({
+   const [formData, setFormData] = useState({
     storeName: "",
     swapLinkTemplate: "",
     paymentLinkTemplate: "",

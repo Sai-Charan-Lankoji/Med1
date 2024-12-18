@@ -21,8 +21,7 @@ const fetchOrders = async () => {
 
 
     const data = await response.json();
-    console.log("API HOOK Orders Data: ", data)
-    if (!response.ok) {
+     if (!response.ok) {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
 
       if (response.status === 404 || response.status === 500) {
@@ -33,10 +32,7 @@ const fetchOrders = async () => {
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    // if (!data.products || data.products.length === 0) {
-    //   console.log('No orders found for the given vendor.');
-    //   return []; 
-    // }
+     
 
     return data;
   } catch (error: unknown) {

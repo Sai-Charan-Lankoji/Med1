@@ -10,8 +10,7 @@ export function ColorPicker(): React.ReactElement {
     React.useContext(ColorPickerContext)!;
 
   const setColor = (e: any, c: IsvgColor) => {
-    //console.log(e.target.value);
-    dispatchForCanvas({
+     dispatchForCanvas({
       type: "UPDATE_SVG_COLOR",
       payload: {
         oldColor: c.value,

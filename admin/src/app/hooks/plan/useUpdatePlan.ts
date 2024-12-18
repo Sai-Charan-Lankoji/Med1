@@ -8,7 +8,7 @@ export interface UpdatePlanData {
   isActive?: boolean
 }
 
-const baseUrl = "https://med1-wyou.onrender.com" || 'http://localhost:9000';
+const baseUrl = "https://med1-wyou.onrender.com";
 
 
 const updatePlan = async ({ id, ...updateData }: UpdatePlanData & { id: string }): Promise<any> => {

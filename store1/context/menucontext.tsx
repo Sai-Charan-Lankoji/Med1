@@ -21,8 +21,7 @@ export const MenuProvider: React.FC<{ children: React.ReactNode }> = ({
     uploadDesign: false,
     clipartColorPanel: false,
   });
-  console.log(menus);
-
+ 
   return (
     <MenuContext.Provider value={{ menus, dispatchMenu }}>
       {children}

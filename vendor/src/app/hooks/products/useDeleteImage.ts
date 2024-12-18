@@ -15,8 +15,7 @@ const deleteImage = async (productId: any): Promise<void> => {
     throw new Error(`Failed to delete image: ${response.status} - ${errorDetails.error}`);
   }
 
-  console.log('Thumbnail deleted and updated successfully');
-};
+ };
 
 
 export const useDeleteImage = () => {

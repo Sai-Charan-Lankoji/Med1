@@ -71,8 +71,7 @@ const TeamManagement = () => {
       { email, role },
       {
         onSuccess: () => {
-          console.log("Invite created successfully");
-        },
+         },
         onError: (err) => {
           console.error("Failed to create invite:", err);
         },
@@ -95,8 +94,7 @@ const TeamManagement = () => {
     })),
   };
 
-  console.log("COMBINED DATA: ", combinedData);
-  // const filteredData = combinedData?.filter(
+   // const filteredData = combinedData?.filter(
   //   (item) =>
   //     item?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
   //     (item?.type === "admin" &&

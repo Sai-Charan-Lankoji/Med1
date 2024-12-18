@@ -9,7 +9,6 @@ import {
   randomId,
 } from "../shared/draw";
 
-
 interface CanvasState {
   canvas: fabric.Canvas | undefined;
   color: string;
@@ -25,20 +24,22 @@ const initialState: CanvasState = {
   undoStack: [],
   redoStack: [],
   pauseSaving: false,
-  initialState: null
+  initialState: null,
 };
 
 function setReducer(state: CanvasState = initialState, action: any) {
-    
-
-  //console.log(action);
-
   switch (action.type) {
     case "INIT": {
       //if (!state.pauseSaving) state.undoStack.push(action.canvas?.toJSON());
       //return { ...state, canvas: action.canvas };
       const initialState = action.canvas?.toJSON();
-      return { ...state, canvas: action.canvas,initialState, undoStack: [initialState],redoStack: [] };
+      return {
+        ...state,
+        canvas: action.canvas,
+        initialState,
+        undoStack: [initialState],
+        redoStack: [],
+      };
     }
     case "REINIT": {
       return { ...state, canvas: action.canvas };
@@ -365,11 +366,11 @@ function setReducer(state: CanvasState = initialState, action: any) {
     }
     case "RESET": {
       if (!state.canvas || !state.initialState) return state;
-      
+
       state.canvas.loadFromJSON(state.initialState, () => {
         state.canvas?.renderAll();
       });
-      
+
       return {
         ...state,
         undoStack: [state.initialState],
@@ -377,32 +378,32 @@ function setReducer(state: CanvasState = initialState, action: any) {
       };
     }
     case "UNDO":
-  {
-    state.pauseSaving = true;
-    if (state.undoStack.length <= 1) return state; 
-    const currentState = state.canvas?.toJSON(); 
-    state.redoStack.push(currentState); 
-    const previousState = state.undoStack.pop(); 
-    state.canvas?.loadFromJSON(previousState, () => {
-      state.canvas?.renderAll();
-    });
-    state.pauseSaving = false;
-  }
-  return { ...state };
+      {
+        state.pauseSaving = true;
+        if (state.undoStack.length <= 1) return state;
+        const currentState = state.canvas?.toJSON();
+        state.redoStack.push(currentState);
+        const previousState = state.undoStack.pop();
+        state.canvas?.loadFromJSON(previousState, () => {
+          state.canvas?.renderAll();
+        });
+        state.pauseSaving = false;
+      }
+      return { ...state };
 
-case "REDO":
-  {
-    state.pauseSaving = true;
-    if (state.redoStack.length === 0) return state; 
-    const currentState = state.canvas?.toJSON();
-    state.undoStack.push(currentState); 
-    const nextState = state.redoStack.pop();
-    state.canvas?.loadFromJSON(nextState, () => {
-      state.canvas?.renderAll();
-    });
-    state.pauseSaving = false;
-  }
-  return { ...state };
+    case "REDO":
+      {
+        state.pauseSaving = true;
+        if (state.redoStack.length === 0) return state;
+        const currentState = state.canvas?.toJSON();
+        state.undoStack.push(currentState);
+        const nextState = state.redoStack.pop();
+        state.canvas?.loadFromJSON(nextState, () => {
+          state.canvas?.renderAll();
+        });
+        state.pauseSaving = false;
+      }
+      return { ...state };
     default:
       return state;
   }

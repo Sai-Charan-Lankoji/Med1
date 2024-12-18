@@ -16,14 +16,12 @@ const VendorDesignCanvas = () => {
     const params = useParams();
     const router = useRouter();
     const vendorId = params.vendorId as string;
-   //console.log("vendor",vendorId);
-
+ 
     React.useEffect(() => {
         // Verify vendor ID
         if (vendorId !== NEXT_PUBLIC_VENDOR_ID) {
           // Redirect to unauthorized or home page if vendor ID is invalid
-          console.log("vendor id is invalid");
-          router.push('/');
+           router.push('/');
         }
       }, [vendorId, router]);
     

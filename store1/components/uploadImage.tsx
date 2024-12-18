@@ -45,8 +45,7 @@ export function UploadImage(): React.ReactElement {
         throw new Error(data.error || 'Upload failed');
       }
   
-      console.log('Upload image Url: ' + data.fileUrl);
-      dispatchDesign({ type: "UPLOADED_IMAGE", payload: data.fileUrl });
+       dispatchDesign({ type: "UPLOADED_IMAGE", payload: data.fileUrl });
   
       const imageItem: Item = {
         uploadImageUrl: data.fileUrl,

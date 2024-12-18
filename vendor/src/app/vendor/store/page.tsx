@@ -81,8 +81,7 @@ const Store = () => {
   const PAGE_SIZE = 6
   const { data: vendor, isLoading: vendorLoading } = useGetVendor();
   const {data : currentPlan} = useGetPlan(plan_id) 
-  console.log("this is current plan : ",currentPlan)
-  const { data: storesData, isLoading, refetch: refreshStores } = useGetStores()
+   const { data: storesData, isLoading, refetch: refreshStores } = useGetStores()
   const { data: saleschannelsData } = useGetSalesChannels()
   const { mutate: createStore } = useCreateStore()
   const { mutate: createSalesChannel } = useCreateSalesChannel()
@@ -196,8 +195,7 @@ const Store = () => {
   const canCreateStore = () => {
     if (!currentPlan ) return false
     const storeLimit = currentPlan?.no_stores
-    // console.log("Hello ", storeLimit) 
-
+ 
     if (storeLimit === "unlimited") {
       return true;
     }
@@ -255,8 +253,7 @@ const Store = () => {
                       title: "Success",
                       description: "Publishable API Key Created Successfully",
                     })
-                    console.log("API Key Created Successfully: ", apiKeyResponse.id)
-                    setFormData(prev => ({
+                     setFormData(prev => ({
                       ...prev,
                       publishableapikey: apiKeyResponse.id
                     }))

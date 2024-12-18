@@ -1,40 +1,38 @@
-import { IDesign, DesignAction,IProps,PropsAction } from "../@types/models";
+import { IDesign, DesignAction, IProps, PropsAction } from "../@types/models";
 
 export const designReducer = (
   designs: IDesign[],
   action: DesignAction
 ): IDesign[] => {
-  //console.log(action);
-
   switch (action.type) {
-   case "ADD_DESIGN": {
-  designs = designs.map((a) =>
-    a.apparel.url === action.payload.url
-      ? { ...a, isactive: true }
-      : { ...a, isactive: false }
-  );
-  const design = designs.find((d) => d.apparel.url === action.payload.url);
-  if (!design) {
-    designs = [
-      ...designs,
+    case "ADD_DESIGN": {
+      designs = designs.map((a) =>
+        a.apparel.url === action.payload.url
+          ? { ...a, isactive: true }
+          : { ...a, isactive: false }
+      );
+      const design = designs.find((d) => d.apparel.url === action.payload.url);
+      if (!design) {
+        designs = [
+          ...designs,
 
-      {
-        apparel: {
-          ...action.payload,
-          side: action.payload.side || ' ', // Ensure side is present
-        },
-        id: designs.length + 1,
-        items: [],
-        jsonDesign: null,
-        isactive: true,
-        pngImage: null,
-        svgImage: null,
-      },
-    ];
-  } else design.isactive = true;
+          {
+            apparel: {
+              ...action.payload,
+              side: action.payload.side || " ", // Ensure side is present
+            },
+            id: designs.length + 1,
+            items: [],
+            jsonDesign: null,
+            isactive: true,
+            pngImage: null,
+            svgImage: null,
+          },
+        ];
+      } else design.isactive = true;
 
-  return designs;
-}
+      return designs;
+    }
 
     case "UPDATE_DESIGN":
       designs = designs.map((a) =>
@@ -44,28 +42,28 @@ export const designReducer = (
       );
       return designs;
 
-      case "CLEAR_ALL": {
-        return designs.map(design => ({
-          apparel: {
-            ...design.apparel,
-            color: "#fff", 
-          },
-          id: design.id,
-          items: [],
-          jsonDesign: null,
-          isactive: design.isactive,
-          pngImage: null,
-          svgImage: null,
-          uploadedImages: [],
-        }));
-      }
+    case "CLEAR_ALL": {
+      return designs.map((design) => ({
+        apparel: {
+          ...design.apparel,
+          color: "#fff",
+        },
+        id: design.id,
+        items: [],
+        jsonDesign: null,
+        isactive: design.isactive,
+        pngImage: null,
+        svgImage: null,
+        uploadedImages: [],
+      }));
+    }
     case "UPDATE_SELECTED_SVG_COLORS":
       designs = designs.map((a) =>
         a.isactive ? { ...a, selectedSvgColors: action.payload } : { ...a }
       );
       return designs;
     case "UPDATE_APPAREL_COLOR":
-      designs.forEach((design) => design.apparel.color = action.payload);
+      designs.forEach((design) => (design.apparel.color = action.payload));
       //d?.apparel?.color = action.payload;
 
       return designs;
@@ -116,7 +114,6 @@ export const designReducer = (
             pngImage: null,
             svgImage: null,
             uploadedImages: [],
-           
           },
         ];
       }
@@ -127,7 +124,7 @@ export const designReducer = (
       );
       return designs;
     }
-  case "SWITCH_DESIGN": {
+    case "SWITCH_DESIGN": {
       designs = designs.map((a) =>
         a.id === action.currentDesign?.id
           ? { ...a, isactive: true }
@@ -146,8 +143,10 @@ export const designReducer = (
       return designs;
     }
 
-    case "TEXT_PROPS":{
-      return designs.map((d) => d.isactive ? {...d, textProps: action.payload} : d);
+    case "TEXT_PROPS": {
+      return designs.map((d) =>
+        d.isactive ? { ...d, textProps: action.payload } : d
+      );
     }
     case "UPDATE_DESIGN_FROM_CART_ITEM": {
       designs = designs.map((a) =>
@@ -162,17 +161,10 @@ export const designReducer = (
   }
 };
 
-
-
-export const propsReducer = (
-  props: IProps,
-  action: PropsAction
-): IProps => {
-
+export const propsReducer = (props: IProps, action: PropsAction): IProps => {
   switch (action.type) {
-    case "SELECTED_PROPS" :{
+    case "SELECTED_PROPS": {
       return action.payload;
-     
     }
   }
-}
+};

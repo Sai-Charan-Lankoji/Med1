@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUserContext } from '@/context/userContext';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useUserContext } from "@/context/userContext";
 //import { useCart } from '@/context/cartContext';
-import {NEXT_PUBLIC_API_URL} from "../../constants/constants"
+import { NEXT_PUBLIC_API_URL } from "../../constants/constants";
 
 interface StoreSignupResponse {
   token: string;
@@ -43,60 +43,73 @@ export const useCustomerSignup = () => {
   //   }
   // };
 
-  const signup = async (email: string, password: string, first_name: string, last_name: string, phone: string, has_account: boolean, vendor_id: string | null) => {
+  const signup = async (
+    email: string,
+    password: string,
+    first_name: string,
+    last_name: string,
+    phone: string,
+    has_account: boolean,
+    vendor_id: string | null
+  ) => {
     setLoading(true);
     setError(null);
-  
+
     try {
       const url = NEXT_PUBLIC_API_URL;
       const response = await fetch(`${url}/api/customer/signup`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
-        body: JSON.stringify({ email, password, first_name, last_name, phone, has_account, vendor_id }),
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+          password,
+          first_name,
+          last_name,
+          phone,
+          has_account,
+          vendor_id,
+        }),
       });
-  
+
       if (!response.ok) {
         console.log(`Response not OK: ${response.status}`);
         if (response.status === 401) {
-          throw new Error('Unauthorized: Invalid email or password');
+          throw new Error("Unauthorized: Invalid email or password");
         }
-        throw new Error('Failed to authenticate customer');
+        throw new Error("Failed to authenticate customer");
       }
-  
-      const data: StoreSignupResponse = await response.json();
-      
-      if (data.token) {
-        console.log('Signup successful:', JSON.stringify(data, null, 2)); 
-        console.log( "signup Data : ",data)
-        sessionStorage.setItem('customerId', data.customer.id) 
-        sessionStorage.setItem('customerEmail', data.customer.email);
 
-        
+      const data: StoreSignupResponse = await response.json();
+
+      if (data.token) {
+        sessionStorage.setItem("customerId", data.customer.id);
+        sessionStorage.setItem("customerEmail", data.customer.email);
+
         // Store authentication data in context
         setUser(first_name, email, data.token); // Pass the token here
-        
+
         // Handle cart transition
         //handleCartTransition(data.customer.id);
-        
+
         // Handle redirect
-        const redirectAfterSignup = localStorage.getItem('redirectAfterSignup');
+        const redirectAfterSignup = localStorage.getItem("redirectAfterSignup");
         if (redirectAfterSignup) {
           router.push(redirectAfterSignup);
-          localStorage.removeItem('redirectAfterSignup');
+          localStorage.removeItem("redirectAfterSignup");
         } else {
-          router.push('/dashboard');
+          router.push("/dashboard");
         }
       }
     } catch (error) {
-      console.error('Error during Signup:', error);
+      console.error("Error during Signup:", error);
       setError((error as Error).message);
     } finally {
       setLoading(false);
     }
   };
-  
+
   return { signup, loading, error };
 };

@@ -23,8 +23,7 @@ export function UploadDesign(): React.ReactElement {
 
   const changeHandler = (e:any) => {
     const file = e.target.files[0];
-    console.log(file.type);
-    
+     
     if (!file.type.match(imageMimeType)) {
       alert("Image mime type is not valid");
       return;
@@ -39,7 +38,6 @@ export function UploadDesign(): React.ReactElement {
       fileReader.onload = (e:any) => {
         const { result } = e.target;
         if (result && !isCancel) {
-          console.log(JSON.parse(result));
           
           setJSON(JSON.parse(result))
           dispatchDesign({type:"UPLOADED_DESIGNS",payload:JSON.parse(result)})
@@ -75,47 +73,16 @@ export function UploadDesign(): React.ReactElement {
 
     
 
-    // let reader = new FileReader();
-    // reader.onload = function(event) {
-    //   const { result } = event.target;
-      
-    //   let designs = JSON.parse(result);
-
-    // // The file's text will be printed here
-    //   console.log(event.target.result)
-    // };
-
-    // reader.readAsText(file);
+     
 
     const formData = new FormData();
     formData.append("file", file);
 
 
 
-    // try {
-    //   const res = await fetch("/api/upload", {
-    //     method: "POST",
-    //     body: formData,
-    //   });
+     
 
-    //   if (!res.ok) {
-    //     console.error("something went wrong, check your console.");
-    //     return;
-    //   }
-
-    //   const data: { fileUrl: string } = await res.json();
-
-    //   setImageUrl(data.fileUrl);
-    // } catch (error) {
-    //   console.error("something went wrong, check your console.");
-    // }
-
-    /** Reset file input */
-    // e.target.type = "text";
-    // e.target.type = "file";
-
-    console.log(imageUrl);
-  };
+   };
 
   return hideMainMenu && menus.uploadDesign && (
     <div className="border-r items-center text-black bg-white p-3 mt-1 min-h-full">

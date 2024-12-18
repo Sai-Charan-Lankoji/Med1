@@ -110,8 +110,7 @@ const CartPage = () => {
     const success = await clearCart();
     if (success) {
       setSelectedItems(new Set());
-      console.log("Cart cleared successfully");
-    } else {
+     } else {
       setError("Failed to clear cart");
     }
   };

@@ -16,8 +16,7 @@ const fetchCustomerByEmail = async (email: string) => {
   }
 
   const data = await response.json();
-  console.log("useGetCustomerByEmail Details Hook: ", data)
-  return data;
+   return data;
 };
 
 export const useGetCustomerByEmail = (email: string) => {

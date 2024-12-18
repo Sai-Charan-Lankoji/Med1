@@ -31,8 +31,7 @@ const initialState: CanvasState = {
 function setReducer(state: CanvasState = initialState, action: any) {
     
 
-  //console.log(action);
-
+ 
   switch (action.type) {
     case "INIT": {
       //if (!state.pauseSaving) state.undoStack.push(action.canvas?.toJSON());

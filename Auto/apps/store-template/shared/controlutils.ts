@@ -209,7 +209,6 @@ export function extractFillColorsSelectedObject(obj: fabric.Object | null): Isvg
 //   eventData: MouseEvent,
 //   transform: fabric.Transform & ICanvasImage
 // ) {
-//   console.log(eventData);
 //   const element = (transform.target as any)._element;
 //   let canvasObj = transform.target.canvas;
 //   let activeObj = canvasObj?.getActiveObject() as any;

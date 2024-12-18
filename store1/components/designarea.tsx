@@ -101,8 +101,7 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
   }); 
 
   canvas?.on("selection:updated", function (options) {
-    //console.log(options);
-    if (options.e) {
+     if (options.e) {
       options.e.preventDefault();
       options.e.stopPropagation();
     }
@@ -123,14 +122,12 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     }
   });
   canvas?.on("object:removed", function (options) {
-    console.log(options);
-    console.log(options.target?.type);
+ 
     dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
   });
 
   canvas?.on("mouse:up", function (options) {
-    console.log(options.target?.type);
-    switchMenu(options.target?.type, options.target);
+     switchMenu(options.target?.type, options.target);
   });
 
   canvas?.on("object:moving", (e) => {
@@ -217,8 +214,7 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     updateColor(value);
     //dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
   };
-  // console.log("Json Design:", designs)
-  const downloadDesignJson = (e: any) => {
+   const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
 
@@ -340,8 +336,7 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       designs
     );
     
-    console.log("Success", success);
-    if (success) {
+     if (success) {
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
