@@ -1,10 +1,9 @@
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 import { useQuery } from '@tanstack/react-query';
 
 const fetchVendor = async (id: string) => {
   const url = `${baseUrl}/api/vendors/${id}`;  
-  console.log("this is url :" , url)
-  try {
+   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {

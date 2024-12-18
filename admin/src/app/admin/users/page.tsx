@@ -45,7 +45,6 @@ const statuses = [
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("")
-  const { data: stores } = useGetStores()
   const { data: users } = useGetUsers()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState(null)
