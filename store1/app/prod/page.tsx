@@ -191,71 +191,101 @@ const ProductGallery = () => {
               )
             }
           >
-            <div className="aspect-square bg-gray-100 relative overflow-hidden">
-              <Image
-                src={currentDesign.apparel.url}
-                alt={`Product ${product.id} ${currentDesign.apparel.side}`}
-                fill
-                sizes="100%"
-                className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
-                style={{
-                  backgroundColor: currentDesign.apparel?.color,
-                }}
-              />
-
-              {/* Design overlay */}
-              <div
-                className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
-              opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              >
-                <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <p className="text-white text-sm">
-                    Current Side:{" "}
-                    {capitalizeFirstLetter(currentDesign.apparel.side)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Overlaid design image */}
-              <div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 group-hover:opacity-100 transition-opacity duration-300"
-                style={{
-                  top:
-                    currentDesign.apparel.side === "leftshoulder" ||
-                    currentDesign.apparel.side === "rightshoulder"
-                      ? "170px"
-                      : "initial",
-                  left:
-                    currentDesign.apparel.side === "leftshoulder"
-                      ? "130px"
-                      : currentDesign.apparel.side === "rightshoulder"
-                      ? "145px"
-                      : "initial",
-                  width:
-                    currentDesign.apparel.side === "leftshoulder" ||
-                    currentDesign.apparel.side === "rightshoulder"
-                      ? "30%"
-                      : "50%",
-                  height:
-                    currentDesign.apparel.side === "leftshoulder" ||
-                    currentDesign.apparel.side === "rightshoulder"
-                      ? "30%"
-                      : "50%",
-                  transform: "translate(-50%, -50%)",
-                  transition:
-                    "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
-                }}
-              >
-                <Image
-                  src={currentDesign.pngImage}
-                  alt="Design"
-                  fill
-                  sizes="100%"
-                  className="rounded-md transition-opacity duration-300 ease-in-out"
-                  style={{ objectFit: "contain" }}
-                />
-              </div>
-            </div>
+           <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                        <Image
+                          src={currentDesign.apparel.url}
+                          alt={`Product ${product.id} ${currentDesign.apparel.side}`}
+                          fill
+                          sizes="100%"
+                          className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
+                          style={{
+                            backgroundColor: currentDesign.apparel?.color,
+                          }}
+                        />
+                        <div
+                          className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        >
+                          <div className="absolute bottom-0 left-0 right-0 p-4">
+                            <p className="text-white text-sm sm:text-base">
+                              Current Side:{" "}
+                              {capitalizeFirstLetter(
+                                currentDesign.apparel.side
+                              )}
+                            </p>
+                            <p className="text-white text-xs mt-1">
+                              Product ID: {product.id.slice(-8)}
+                            </p>
+                          </div>
+                        </div>
+                        <div
+                          className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{
+                            top:
+                              currentDesign.apparel.side === "leftshoulder"
+                                ? "170px"
+                                : currentDesign.apparel.side === "rightshoulder"
+                                ? "170px"
+                                : "initial",
+                            left:
+                              currentDesign.apparel.side === "leftshoulder"
+                                ? "130px"
+                                : currentDesign.apparel.side === "rightshoulder"
+                                ? "145px"
+                                : "initial",
+                            width:
+                              currentDesign.apparel.side === "leftshoulder" ||
+                              currentDesign.apparel.side === "rightshoulder"
+                                ? "30%"
+                                : "50%",
+                            height:
+                              currentDesign.apparel.side === "leftshoulder" ||
+                              currentDesign.apparel.side === "rightshoulder"
+                                ? "30%"
+                                : "50%",
+                            transform: "translate(-50%, -50%)",
+                            transition:
+                              "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
+                          }}
+                        >
+                          {currentDesign.pngImage ? (
+                            // If pngImage is available, display it
+                            <Image
+                              src={currentDesign.pngImage}
+                              alt="Design"
+                              fill
+                              sizes="100%"
+                              className="rounded-md transition-opacity duration-300 ease-in-out"
+                              style={{ objectFit: "contain" }}
+                            />
+                          ) : currentDesign.uploadedImages?.length > 1 ? (
+                            // If multiple uploadedImages, display them as thumbnails or carousel
+                            <div className="flex overflow-x-auto space-x-2">
+                              {currentDesign.uploadedImages.map(
+                                (imageUrl, idx) => (
+                                  <Image
+                                    key={idx}
+                                    src={imageUrl}
+                                    alt={`Uploaded Image ${idx + 1}`}
+                                    width={100} // Adjust thumbnail width
+                                    height={100} // Adjust thumbnail height
+                                    className="object-cover rounded-md"
+                                  />
+                                )
+                              )}
+                            </div>
+                          ) : (
+                            // If only one uploadedImage, display it
+                            <Image
+                              src={currentDesign.uploadedImages[0]}
+                              alt="Uploaded Image"
+                              fill
+                              className="rounded-md transition-opacity duration-300 ease-in-out w-4 h-4"
+                              style={{ objectFit: "scale-down" }}
+                            />
+                          )}
+                        </div>
+                      </div>
           </motion.div>
         );
       });

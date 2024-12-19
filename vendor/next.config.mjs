@@ -16,6 +16,13 @@ export default (phase, { defaultConfig }) => {
         },
         {
           protocol: 'https',
+          hostname: 'med1-wyou.onrender.com',
+          port: '',  
+          pathname: '/uploads/**',  
+
+        },
+        {
+          protocol: 'https',
           hostname: 'ik.imagekit.io',
           port: '',  
           pathname: '/zz7harqme/**',  

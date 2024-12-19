@@ -71,7 +71,7 @@ export interface IDesign {
   isactive: boolean;
   jsonDesign: any;
   svgImage: any;
-  uploadedImages?: string[];
+  uploadedImages: string[];
   textProps?: IProps;
 }
 
