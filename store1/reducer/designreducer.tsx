@@ -28,6 +28,8 @@ export const designReducer = (
         isactive: true,
         pngImage: null,
         svgImage: null,
+        uploadedImages: []
+
       },
     ];
   } else design.isactive = true;
