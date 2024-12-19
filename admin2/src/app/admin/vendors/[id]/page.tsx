@@ -171,13 +171,13 @@ export default function VendorDetailsPage() {
                       <TableRow key={store.id}>
                         <TableCell className="font-medium">{store.name}</TableCell>
                         <TableCell>
-                          {new Date(store.created_at).toLocaleDateString("en-GB", {
+                          {new Date(store?.createdAt).toLocaleDateString("en-GB", {
                             day: "2-digit",
                             month: "2-digit",
                             year: "numeric",
                           })}
                         </TableCell>
-                        <TableCell>{store.store_type}</TableCell>
+                        <TableCell>{store?.store_type}</TableCell>
                         <TableCell>
                           <a
                             href={store.store_url}
