@@ -102,7 +102,7 @@ const OrderDetailsView = () => {
           >
             <BackButton name="Orders" className="mb-4 text-black hover:text-black transition-colors" />
             <h1 className="text-3xl md:text-4xl font-bold text-black">
-              Order Details
+              Ordered Details
             </h1>
             <p className="text-sm text-black text-start">
               Order ID: {order.id}
@@ -346,7 +346,7 @@ const OrderDetailsView = () => {
               {/* Order Summary */}
               <Container className="p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl">
                 <h2 className="text-xl font-bold text-black border-b border-white/20 mb-4 pb-4">
-                  Order Summary
+                  Ordered Summary
                 </h2>
                 <div className="space-y-4">
                   <div className="space-y-3">
@@ -378,7 +378,7 @@ const OrderDetailsView = () => {
               <Container className="p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-bold text-black">
-                    Raw Order Data
+                    Raw Ordered Data
                   </h2>
                   <button
                     onClick={() => setShowRawOrderData(!showRawOrderData)}
