@@ -34,7 +34,7 @@ export function UploadImage(): React.ReactElement {
     formData.append("file", selectedFile);
   
     try {
-      const res = await fetch("http://localhost:5000/api/files", {
+      const res = await fetch("https://med1-wyou.onrender.com/api/files", {
         method: "POST",
         body: formData,
       });

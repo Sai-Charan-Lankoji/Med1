@@ -10,6 +10,12 @@ const nextConfig = {
         port: '5000',
         pathname: '/uploads/**',
       },
+
+      {
+        protocol: 'https',
+        hostname: 'med1-wyou.onrender.com',
+        pathname: '/uploads/**',
+      },
       {
         protocol: 'https',
         hostname: 'ik.imagekit.io',
