@@ -1,7 +1,7 @@
-# Designer UI
+# Design UI
 
 ## Overview
-Designer UI is a modular project with five main folders, each designed for specific functionality. The project uses **Next.js** for the frontend and **Node.js with Express** for the backend. Follow the steps below to set up and run the project efficiently.
+Design UI is a modular project with five main folders, each designed for specific functionality. The project uses **Next.js** for the frontend and **Node.js with Express** for the backend. Follow the steps below to set up and run the project efficiently.
 
 ## Folder Structure and Usage
 

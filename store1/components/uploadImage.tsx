@@ -34,7 +34,7 @@ export function UploadImage(): React.ReactElement {
     formData.append("file", selectedFile);
   
     try {
-      const res = await fetch("/api/upload", {
+      const res = await fetch("http://localhost:5000/api/files", {
         method: "POST",
         body: formData,
       });
@@ -88,7 +88,7 @@ export function UploadImage(): React.ReactElement {
     dispatchDesign({ type: "ADD_UPLOAD_DESIGN", payload: imageItem });
     dispatchForCanvas({ type: "IMAGE", payload: imageUrl });
   };
-
+  
   return (
     (hideMainMenu && menus.uploadImage && (
       <div className="border-r items-center text-black bg-white p-3 mt-1 min-h-full">
