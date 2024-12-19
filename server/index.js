@@ -48,7 +48,7 @@ app.use(
 
 // Serve /uploads with proper headers
 app.use('/uploads', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+  res.setHeader('Access-Control-Allow-Origin', 'https://med1-p6q2.vercel.app', 'http://localhost:3000');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
