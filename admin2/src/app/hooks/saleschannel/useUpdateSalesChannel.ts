@@ -1,6 +1,7 @@
-import { SalesChannelFormData } from '@/app/@types/saleschannel';
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-const baseUrl = "https://med1-wyou.onrender.com";
+import { NEXT_URL } from '@/constants';
+const baseUrl = NEXT_URL;
 
 interface SalesChannelEditFormData{
   channelId: string,

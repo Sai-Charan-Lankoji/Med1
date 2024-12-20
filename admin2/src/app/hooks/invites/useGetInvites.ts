@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
+import { NEXT_URL } from '@/constants';
 
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = NEXT_URL;
 
 export const useGetInvites = () => {
   return useQuery(['invites'], async () => {
@@ -16,7 +17,7 @@ export const useGetInvites = () => {
       throw new Error('Failed to fetch invites');
     }
 
-    const data = await response.json(); // Assuming the response is an array of invites
+    const data = await response.json(); 
     return data.invites;
   },{
     refetchOnWindowFocus: false,

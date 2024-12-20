@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { NEXT_URL } from '@/constants';
 
 export const useAdminLogout = () => {
   const [loading, setLoading] = useState(false);
@@ -9,7 +10,7 @@ export const useAdminLogout = () => {
   const logout = async () => {
     setLoading(true);
     setError(null); 
-    const url = "https://med1-wyou.onrender.com" 
+    const url = NEXT_URL; 
     const auth_token = localStorage.getItem('auth_token')
     try {
       const response = await fetch(`${url}/api/auth/logout`, {

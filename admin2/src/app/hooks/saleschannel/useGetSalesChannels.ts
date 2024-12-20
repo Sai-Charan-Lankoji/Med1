@@ -1,4 +1,5 @@
-const baseUrl = "https://med1-wyou.onrender.com";
+import { NEXT_URL } from '@/constants';
+const baseUrl = NEXT_URL;
 import { useQuery } from '@tanstack/react-query';
 
 const fetchSalesChannels = async () => {

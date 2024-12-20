@@ -1,0 +1,1 @@
+export const  NEXT_URL = "https://med1-wyou.onrender.com";

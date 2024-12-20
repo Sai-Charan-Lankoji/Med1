@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { DollarSign, Calendar, CreditCard, TrendingUp, Search, Loader2, AlertCircle } from 'lucide-react'
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-// import withAuth from "@/lib/withAuth"
+
 import {
   Table,
   TableBody,
@@ -73,8 +72,7 @@ const mockBillingData: BillingRecord[] = [
 function BillingServicesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMonth, setSelectedMonth] = useState("february")
-  
-  // In real app, replace with actual API call
+ 
   const isLoading = false
   const error = null
   const data = mockBillingData

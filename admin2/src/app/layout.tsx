@@ -8,6 +8,7 @@ import NavBar from './navbar/page';
 import Sidebar from "./sidebar/page";
 import { usePathname } from "next/navigation";
 import { AuthProvider } from "./context/AuthContext"; 
+import { NEXT_URL } from "@/constants";
 
 
 const inter = Inter({ subsets: ["latin"] });
@@ -27,7 +28,7 @@ export default function  RootLayout({
       <body className={`${inter.className} bg-gradient-to-br from-gray-400 via-gray-200 to-gray-600`}>
         <MedusaProvider
           queryClientProviderProps={{ client: queryClient }}
-          baseUrl="https://med1-wyou.onrender.com"
+          baseUrl= {NEXT_URL}
         >
           <AuthProvider>
    

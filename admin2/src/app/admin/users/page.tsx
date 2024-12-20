@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import {
   DropdownMenu,
   IconButton,
@@ -22,7 +22,7 @@ import {
 } from "@medusajs/icons"
 import { useForm } from "react-hook-form"
 import withAuth from "@/lib/withAuth"
-import { useGetStores } from "@/app/hooks/store/useGetStores"
+
 import { useCreateUser } from "@/app/hooks/users/useCreateUser"
 import { useDeleteUser } from "@/app/hooks/users/useDeleteUser"
 import { useGetUsers } from "@/app/hooks/users/useGetUsers"

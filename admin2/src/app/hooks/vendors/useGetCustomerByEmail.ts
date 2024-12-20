@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-const baseUrl = "https://med1-wyou.onrender.com";
+import { NEXT_URL } from '@/constants';
+const baseUrl = NEXT_URL;
 
 
 const fetchCustomerByEmail = async (email: string) => {

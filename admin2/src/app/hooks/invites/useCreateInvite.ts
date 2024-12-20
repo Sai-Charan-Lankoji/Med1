@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
+import { NEXT_URL } from '@/constants';
 
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = NEXT_URL;
 
 export const useCreateInvite = () => {
   return useMutation(async ({ email, role }: { email: string; role: string }) => {
@@ -17,6 +18,6 @@ export const useCreateInvite = () => {
       throw new Error('Failed to create invite');
     }
 
-    return await response.text(); // Assuming response is "OK"
+    return await response.text(); 
   });
 };

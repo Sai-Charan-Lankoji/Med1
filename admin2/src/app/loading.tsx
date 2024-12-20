@@ -10,7 +10,7 @@ const LoadingScreen: FC<LoadingScreenProps> = ({
   message = "Please wait while we prepare your content",
   theme = "minimal"
 }) => {
-  // Theme-based background classes
+  // Theme-background 
   const themeClasses = {
     default: "bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500",
     pulse: "bg-gradient-to-br from-purple-600 via-pink-500 to-red-500",
@@ -21,7 +21,7 @@ const LoadingScreen: FC<LoadingScreenProps> = ({
   return (
     <div className={`min-h-screen overflow-hidden ${themeClasses[theme]}`}>
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        {/* Static circles for background effect */}
+        {/*  background effect */}
         <div className="absolute inset-0 overflow-hidden">
           {[300, 600, 900].map((size, index) => (
             <div
@@ -39,7 +39,7 @@ const LoadingScreen: FC<LoadingScreenProps> = ({
           ))}
         </div>
 
-        {/* Main content */}
+      
         <div className="relative z-10 flex flex-col items-center space-y-8">
           {/* Spinning loader */}
           {/* <div className="relative w-16 h-16">

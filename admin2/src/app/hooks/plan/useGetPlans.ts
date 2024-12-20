@@ -1,4 +1,5 @@
-const baseUrl = "https://med1-wyou.onrender.com";
+import { NEXT_URL } from '@/constants';
+const baseUrl = NEXT_URL;
 import { useQuery } from '@tanstack/react-query';
 
 // Function to fetch plans
@@ -11,7 +12,7 @@ const fetchPlans = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include', // Include cookies in the request
+      credentials: 'include', 
     });
 
     const data = await response.json();
@@ -21,7 +22,7 @@ const fetchPlans = async () => {
 
       if (response.status === 404 || response.status === 500) {
         console.log('No plans found or server error. Returning empty array.');
-        return []; // Return an empty array if no plans found or server error occurs
+        return []; 
       }
 
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
@@ -29,14 +30,14 @@ const fetchPlans = async () => {
 
     if (!data || data.length === 0) {
       console.log('No plans found.');
-      return []; // Return an empty array if the plans list is empty
+      return []; 
     }
 
     return data;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching plans:', error.message);
-      return []; // Return an empty array in case of error
+      return []; 
     } else {
       console.error('An unknown error occurred:', error);
       return [];
@@ -44,14 +45,10 @@ const fetchPlans = async () => {
   }
 };
 
-// Custom React Query hook for fetching plans
+
 export const useGetPlans = () => {
   return useQuery(['plans'], fetchPlans, {
-    // refetchOnWindowFocus: false, // Avoid refetching when the window regains focus
-    // refetchOnMount: false,      // Avoid refetching when the component mounts
-    // cacheTime: 1000 * 60 * 10,  // Cache the response for 10 minutes
-    // staleTime: 1000 * 60 * 5,   // Mark data as fresh for 5 minutes
-    // retry: false,               // Disable retries on error
+    
 
     // Error handling
     onError: (error: unknown) => {

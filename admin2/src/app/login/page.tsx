@@ -5,16 +5,16 @@ import { EyeMini, EyeSlashMini, Loader } from "@medusajs/icons"
 import medusaIcon from "../../../public/medusaIcon.jpeg"
 import Image from "next/image"
 import { useAdminLogin } from "../hooks/auth/useAdminLogin"
-import { useRouter } from "next/navigation"
+
 import { motion } from "framer-motion"
-import Link from "next/link"
+
 
 export default function Component() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const { login, loading, error } = useAdminLogin()
-  const router = useRouter()
+
 
   const togglePasswordVisibility = () => {
     setShowPassword((prevState) => !prevState)
@@ -31,18 +31,7 @@ export default function Component() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-gray-600 via-gray-400 to-gray-800">
-      {/* Animated Wave Background */}
-      {/* <div className="absolute inset-0 z-0">
-        <div className="wave"></div>
-        <div className="wave"></div>
-        <div className="wave"></div>
-      </div> */}
       
-      {/* Subtle Animated Gradient Orbs */}
-      {/* <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
-      <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
-      <div className="absolute bottom-1/4 left-1/2 w-72 h-72 bg-gradient-to-r from-indigo-300 to-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
-       */}
       <div className="relative flex justify-center items-center min-h-screen">
         <motion.div
           initial={{ opacity: 0, y: -50 }}

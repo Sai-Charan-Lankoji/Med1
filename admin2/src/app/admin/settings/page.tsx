@@ -2,21 +2,17 @@
 
 import React from "react"
 import {
-  ArrowUturnLeft,
-  BuildingTax,
+  
   Channels,
   ChevronRight,
   CurrencyDollar,
-  FaceSmile,
-  Key,
-  Lifebuoy,
-  MapPin,
+  
   Users,
 } from "@medusajs/icons"
 import { Container } from "@medusajs/ui"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import withAuth from "@/lib/withAuth"
+
 
 const Settings = () => {
   const settings = [

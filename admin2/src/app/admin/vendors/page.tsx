@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { useGetVendors } from "@/app/hooks/vendors/useGetVendors"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button" 
-// import withAuth from "@/lib/withAuth"
+
 import { Search, Loader2, Building2 } from 'lucide-react' 
 import {useRouter} from "next/navigation"
 import {

@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [role, setRole] = useState<string | null>(null);
   const [admin_id, setAdminId] = useState<string | null>(null);
 
-  // Check for localStorage availability on the client side
+  
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setAuthEmail(localStorage.getItem('email'));
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Persist data to localStorage when updated
+  // Persist data to localStorage on update
   useEffect(() => {
     if (typeof window !== 'undefined') {
       if (email) localStorage.setItem('email', email);

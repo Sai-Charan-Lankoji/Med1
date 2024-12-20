@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { useRouter } from "next/navigation";
-import { BellAlert, QuestionMarkCircle } from "@medusajs/icons";
-import { Button, Drawer, Input } from "@medusajs/ui";
-import { useAuth } from "../context/AuthContext";
+//import { useRouter } from "next/navigation";
+import { BellAlert } from "@medusajs/icons";
+import {  Drawer } from "@medusajs/ui";
+//import { useAuth } from "../context/AuthContext";
 
 const Navbar = () => {
   // const { contactName } = useAuth() || { contactName: "" };

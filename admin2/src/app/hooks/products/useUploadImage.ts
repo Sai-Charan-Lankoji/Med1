@@ -1,5 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-const baseUrl = "https://med1-wyou.onrender.com";
+import { useMutation } from '@tanstack/react-query';
+import { NEXT_URL } from '@/constants';
+const baseUrl = NEXT_URL;
 
 const uploadImage = async (file: File) => {
   const formData = new FormData();

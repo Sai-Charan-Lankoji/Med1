@@ -144,7 +144,7 @@ export default function PlansPage() {
         isOpen={isAddDialogOpen}
         onClose={() => {
           setIsAddDialogOpen(false);
-          refetch(); // Fetch the updated plans after closing dialog
+          refetch(); 
         }}
       />
 

@@ -1,7 +1,8 @@
 import { CreatePlanData, Plan } from '@/app/@types/plan';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { NEXT_URL } from '@/constants';
 
-const baseUrl = "https://med1-wyou.onrender.com"
+const baseUrl = NEXT_URL;
 
 export const useCreatePlan = () => {
   const queryClient = useQueryClient()
@@ -13,9 +14,9 @@ export const useCreatePlan = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'credentials': 'include', // Added to handle credentials
+          'credentials': 'include', 
         },
-        credentials: "include", // Added to ensure cookies are sent
+        credentials: "include", 
         body: JSON.stringify(newPlan),
       })
 

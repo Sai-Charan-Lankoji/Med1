@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { NEXT_URL } from '@/constants';
 
 export interface UpdatePlanData {
   name?: string
@@ -8,7 +9,7 @@ export interface UpdatePlanData {
   isActive?: boolean
 }
 
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = NEXT_URL;
 
 
 const updatePlan = async ({ id, ...updateData }: UpdatePlanData & { id: string }): Promise<any> => {

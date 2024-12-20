@@ -44,10 +44,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import withAuth from "@/lib/withAuth";
+
 import DashboardComponent from "../../../../components/dashboard/page";
-const baseUrl = "https://med1-wyou.onrender.com";
-import { useQuery } from "@tanstack/react-query";
+
 import { useGetUsers } from "@/app/hooks/users/useGetUsers";
 import { useGetInvites } from "@/app/hooks/invites/useGetInvites";
 import { useCreateInvite } from "@/app/hooks/invites/useCreateInvite";

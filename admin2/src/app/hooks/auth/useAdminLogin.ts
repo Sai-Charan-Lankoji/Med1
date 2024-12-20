@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
+import { NEXT_URL } from '@/constants';
 
 export const useAdminLogin = () => {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export const useAdminLogin = () => {
     setError(null);
 
     try {
-      const url = "https://med1-wyou.onrender.com"; 
+      const url = NEXT_URL; 
 
       const response = await fetch(`${url}/api/auth/login`, {
         method: 'POST',
@@ -32,9 +33,9 @@ export const useAdminLogin = () => {
       }
 
       const data = await response.json();
-      const { email: userEmail, first_name, last_name, role, id: adminId } = data.user;
+      const { first_name, last_name, role, id: adminId } = data.user;
 
-      // Save data to sessionStorage
+      
       localStorage.setItem('auth_token', data.token)
       localStorage.setItem('email', email);
       localStorage.setItem('first_name', first_name);
@@ -48,7 +49,7 @@ export const useAdminLogin = () => {
       setAdminId(adminId);
     
 
-      // Navigate to admin/vendors after successful login
+      
       router.push('/admin/vendors');
     } catch (err: any) {
       console.error('Error during login:', err);

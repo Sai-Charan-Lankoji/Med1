@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { NEXT_URL } from '@/constants'
 
-const baseUrl = "https://med1-wyou.onrender.com" 
+const baseUrl = NEXT_URL;
 const createProduct = async (productData: ProductFormData) => {
   const response = await fetch(`${baseUrl}/vendor/products`, {
     method: "POST",

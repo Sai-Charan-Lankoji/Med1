@@ -1,7 +1,7 @@
 "use client"
 import { PlusMini } from '@medusajs/icons';
 import { Badge, IconButton } from '@medusajs/ui';
-import React, { useState } from 'react';
+import React from 'react';
 
 interface FilterProps {
   count: number;

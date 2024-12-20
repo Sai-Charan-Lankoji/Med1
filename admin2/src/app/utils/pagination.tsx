@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Button } from "@medusajs/ui"
+
 import { ArrowRightMini, ArrowLeftMini } from "@medusajs/icons"
 interface PaginationProps<T> {
   currentPage: number;

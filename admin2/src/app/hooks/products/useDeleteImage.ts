@@ -1,4 +1,5 @@
-const baseUrl = "https://med1-wyou.onrender.com";
+import { NEXT_URL } from '@/constants';
+const baseUrl = NEXT_URL;
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const deleteImage = async (productId: any): Promise<void> => {
