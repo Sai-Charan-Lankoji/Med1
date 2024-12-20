@@ -1,10 +1,28 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const storeController = require('../controllers/store.controller');
+const storeController = require("../controllers/store.controller");
 
 /**
  * @swagger
  * /api/stores:
+ *   get:
+ *     summary: List stores
+ *     tags: [Stores]
+ *     responses:
+ *       200:
+ *         description: List of stores
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Store'
+ */
+router.get("/", storeController.listStores);
+
+/**
+ * @swagger
+ * /api/stores/add-domain:
  *   post:
  *     summary: Create a new store
  *     tags: [Stores]
@@ -15,24 +33,52 @@ const storeController = require('../controllers/store.controller');
  *           schema:
  *             type: object
  *             required:
- *               - store_type
- *               - vendor_id
+ *               -storeName
  *             properties:
- *               store_type:
- *                 type: string
- *               publishableapikey:
- *                 type: string
- *               store_url:
- *                 type: string
- *               vendor_id:
+ *               storeName:
  *                 type: string
  *     responses:
  *       201:
- *         description: Store created successfully
+ *         description: Vercel domain created successfully
  *       400:
  *         description: Invalid input
  */
-router.post('/', storeController.createStore); // Create a store
+
+router.post("/add-domain", storeController.addDomain);
+
+/**
+ * @swagger
+ * /api/stores/url/{store_url}:
+ *   get:
+ *     summary: Fetch a store by its store_url
+ *     tags: [Stores]
+ *     parameters:
+ *       - in: path
+ *         name: store_url
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The URL of the store
+ *     responses:
+ *       200:
+ *         description: The store details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 name:
+ *                   type: string
+ *                 store_url:
+ *                   type: string
+ *       400:
+ *         description: Missing or invalid parameters
+ *       500:
+ *         description: Server error
+ */
+router.get("/url/:store_url", storeController.getStoreByUrl);
 
 /**
  * @swagger
@@ -56,7 +102,7 @@ router.post('/', storeController.createStore); // Create a store
  *       404:
  *         description: Store not found
  */
-router.get('/:id', storeController.getStore); // Get a store by ID
+router.get("/:id", storeController.getStore); // Get a store by ID
 
 /**
  * @swagger
@@ -90,7 +136,7 @@ router.get('/:id', storeController.getStore); // Get a store by ID
  *       404:
  *         description: Store not found
  */
-router.put('/:id', storeController.updateStore); // Update a store by ID
+router.put("/:id", storeController.updateStore); // Update a store by ID
 
 /**
  * @swagger
@@ -110,11 +156,11 @@ router.put('/:id', storeController.updateStore); // Update a store by ID
  *       404:
  *         description: Store not found
  */
-router.delete('/:id', storeController.deleteStore); // Delete a store by ID
+router.delete("/:id", storeController.deleteStore); // Delete a store by ID
 
 /**
  * @swagger
- * /api/stores:
+ * /api/stores/vendor:
  *   get:
  *     summary: List stores by vendor
  *     tags: [Stores]
@@ -135,25 +181,37 @@ router.delete('/:id', storeController.deleteStore); // Delete a store by ID
  *               items:
  *                 $ref: '#/components/schemas/Store'
  */
-router.get('/', storeController.listStoresByVendor); // List stores by vendor (optional query param)
+router.get("/vendor", storeController.listStoresByVendor);
 
 /**
  * @swagger
  * /api/stores:
- *   get:
- *     summary: List stores
+ *   post:
+ *     summary: Create a new store
  *     tags: [Stores]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - store_type
+ *               - vendor_id
+ *             properties:
+ *               store_type:
+ *                 type: string
+ *               publishableapikey:
+ *                 type: string
+ *               store_url:
+ *                 type: string
+ *               vendor_id:
+ *                 type: string
  *     responses:
- *       200:
- *         description: List of stores
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Store'
+ *       201:
+ *         description: Store created successfully
+ *       400:
+ *         description: Invalid input
  */
-router.get('/', storeController.listStores); // List stores by vendor (optional query param)
-
-
+router.post("/", storeController.createStore); // Create a store
 module.exports = router;

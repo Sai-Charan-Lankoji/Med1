@@ -28,7 +28,7 @@ class SalesChannelService {
 
   async deleteSalesChannel(salesChannelId) {
     const salesChannel = await this.getSalesChannelById(salesChannelId);
-    await salesChannel.destroy(); // Permanently deletes the record
+    await salesChannel.destroy({force: true}); // Permanently deletes the record
   }
 
   async listSalesChannelsByVendor(vendorId) {

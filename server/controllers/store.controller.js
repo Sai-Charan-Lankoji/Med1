@@ -19,6 +19,21 @@ class StoreController {
     }
   }
 
+  async getStoreByUrl(req, res) {
+    try {
+        const storeUrl = req.params.store_url;
+        if (!storeUrl) {
+            return res.status(400).json({ message: "Store URL parameter is required" });
+        }
+
+        const store = await storeService.getStoreByURL(storeUrl);
+        return res.status(200).json(store);
+    } catch (error) {
+        console.error('Error in getStoreByUrl:', error);
+        return res.status(500).json({ message: error.message });
+    }
+}
+
   async updateStore(req, res) {
     try {
       const store = await storeService.updateStore(req.params.id, req.body);
@@ -52,6 +67,21 @@ class StoreController {
       res.status(200).json(stores);
     } catch (error) {
       res.status(400).json({ error: error.message });
+    }
+  }
+
+  async addDomain(req, res) {
+    const { storeName } = req.body;
+
+    if (!storeName) {
+      return res.status(400).json({ error: 'storeName is required' });
+    }
+
+    try {
+      const domain = await storeService.addDomainToVercel(storeName);
+      res.status(200).json({ domain });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   }
 }

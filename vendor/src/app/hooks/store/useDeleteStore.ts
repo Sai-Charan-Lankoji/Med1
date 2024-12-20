@@ -14,6 +14,7 @@ const deleteStore = async (id: string) => {
     const errorDetails = await response.json();
     throw new Error(`Failed to delete store: ${response.status} - ${errorDetails.error}`);
   }
+  return response
 };
 
 export const useDeleteStore = () => {

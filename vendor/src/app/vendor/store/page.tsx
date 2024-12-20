@@ -91,7 +91,7 @@ const Store = () => {
   const [loadingStage, setLoadingStage] = useState("")
   const [isStoreCreated, setIsStoreCreated] = useState(false)
   const { mutate: updateStore } = useUpdateStore()
-  const [storeToDelete, setStoreToDelete] = useState(null)
+  const [storeToDelete, setStoreToDelete] = useState("")
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isDeletingStore, setIsDeletingStore] = useState(false)
 
@@ -133,37 +133,7 @@ const Store = () => {
     publishableapikey: ""
   })
 
-  const createStoreInstance = async (storeDetails) => {
-    try {
-      setLoadingStage("Creating store instance... Don't refresh the page...")
-      const response = await fetch('http://localhost:3000/create-store', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(storeDetails),
-      })
 
-      if (!response.ok) {
-        throw new Error('Failed to create store instance')
-      }
-
-      const data = await response.json()
-      if (data.success) {
-        setStoreUrls(prev => ({
-          ...prev,
-          [storeDetails.name]: data.storeInfo.url
-        }))
-        setLoadingStage("Store is running and ready!")
-        return data.storeInfo
-      }
-      throw new Error(data.message || 'Failed to create store instance')
-    } catch (error) {
-      console.error('Error creating store instance:', error)
-      setLoadingStage("Error creating store")
-      throw error
-    }
-  }
 
   const filteredStores = useMemo(() => {
     if (!storesWithMatchingSalesChannels) return []
@@ -212,13 +182,15 @@ const Store = () => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+  
     if (!isSalesChannelCreated && !canCreateStore()) {
-      setShowPlanLimitModal(true)
-      return
+      setShowPlanLimitModal(true);
+      return;
     }
-    setLoading(true)
-
+  
+    setLoading(true);
+  
     try {
       if (!isSalesChannelCreated) {
         createSalesChannel(
@@ -232,152 +204,147 @@ const Store = () => {
               toast({
                 title: "Success",
                 description: "Sales Channel Created Successfully",
-              })
-
-              setFormData(prev => ({
+              });
+  
+              setFormData((prev) => ({
                 ...prev,
                 salesChannelId: response.id,
-              }))
-              
+              }));
+  
               createPublishableApiKey(
                 {
-               
-        
-                    title: response.name,
-                    created_by: response.vendor_id
-             
+                  title: response.name,
+                  created_by: response.vendor_id,
                 },
                 {
                   onSuccess: (apiKeyResponse) => {
                     toast({
                       title: "Success",
                       description: "Publishable API Key Created Successfully",
-                    })
-                     setFormData(prev => ({
+                    });
+  
+                    setFormData((prev) => ({
                       ...prev,
-                      publishableapikey: apiKeyResponse.id
-                    }))
-                    
-                    setIsSalesChannelCreated(true)
-                    setLoading(false)
+                      publishableapikey: apiKeyResponse.id,
+                    }));
+  
+                    setIsSalesChannelCreated(true);
+                    setLoading(false);
                   },
                   onError: (error) => {
-                    console.error("Error creating publishable API key:", error)
+                    console.error("Error creating publishable API key:", error);
                     toast({
                       title: "Error",
                       description: "Error creating publishable API key",
                       variant: "destructive",
-                    })
-                    setLoading(false)
-                  }
-                })
+                    });
+                    setLoading(false);
+                  },
+                }
+              );
             },
             onError: (error) => {
-              console.error("Error while creating sales channel:", error)
+              console.error("Error while creating sales channel:", error);
               toast({
                 title: "Error",
                 description: "Error while creating sales channel",
                 variant: "destructive",
-              })
-              setLoading(false)
+              });
+              setLoading(false);
             },
           }
-        )
-      } 
-      else {
-        setIsModalOpen(false) // Close the store creation modal
-        setShowLoadingModal(true) // Open the loading modal
-        //setLoadingStage("Initializing store creation...")
-
+        );
+      } else {
+        setIsModalOpen(false); // Close the store creation modal
+         setLoadingStage("Initializing domain creation...");
+  
+        const storeName = formData.storeName;
+        const addDomainUrl = "http://localhost:5000/api/stores/add-domain"; // Replace with your actual API endpoint
+  
+        // Check if store name already exists and create domain
+        let domain = null;
+        try {
+          const domainResponse = await fetch(addDomainUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ storeName }),
+          });
+  
+          if (!domainResponse.ok) {
+            const errorData = await domainResponse.json();
+            throw new Error(errorData.message || "Error creating domain");
+          }
+  
+          const domainData = await domainResponse.json();
+          domain = domainData.domain; // Assuming the domain is returned as { domain: 'example.vercel.app' }
+          if(!domain.includes("https://")){
+            domain = `https://${domain}`;
+          }
+        } catch (error) {
+          console.error("Error during domain creation:", error);
+          setLoadingStage("Error creating domain");
+          toast({
+            title: "Error",
+            description:  "Failed to create domain",
+            variant: "destructive",
+          });
+          setLoading(false);
+          setShowLoadingModal(false);
+          return;
+        }
+  
+        setLoadingStage("Creating store...");
+  
         const storeData = {
-          name: formData.storeName,
+          name: storeName,
+          store_url: domain,
           default_sales_channel_id: formData.salesChannelId,
           swap_link_template: formData.swapLinkTemplate,
           payment_link_template: formData.paymentLinkTemplate,
           invite_link_template: formData.inviteLinkTemplate,
           vendor_id: formData.vendor_id,
           store_type: formData.store_type,
-          publishableapikey: formData.publishableapikey  
-        }
-
+          publishableapikey: formData.publishableapikey,
+        };
+  
+        // Create the store
         createStore(storeData, {
           onSuccess: async (response) => {
-            try {
-              // setLoadingStage("Creating store instance...")
-              const storeInstance = await createStoreInstance({
-                ...response,
-                name: formData.storeName,
-                vendor_id: formData.vendor_id,
-                default_sales_channel_id: formData.salesChannelId,
-                publishableapikey: formData.publishableapikey
-              })
-              
-              // Update the store with the new URL
-              updateStore({
-                storeId: storeInstance.storeId,
-                store_url: storeInstance.url
-              }, {
-                onSuccess: (response) => {
-                  // setLoadingStage("Store created and updated successfully!")
-                  setLoading(false)
-                  setIsStoreCreated(true)
-                  refreshStores()
-                  toast({
-                    title: "Success",
-                    description: "Store Created and Updated Successfully",
-                  })
-                                    
-                  setTimeout(() => {
-                    setShowLoadingModal(false)
-                    setIsStoreCreated(false)
-                    router.refresh()
-                  }, 2000)
-                },
-                onError: (error) => {
-                  console.error("Error updating store:", error)
-                  // setLoadingStage("Error updating store URL")
-                  toast({
-                    title: "Error",
-                    description: "Error updating store URL",
-                    variant: "destructive",
-                  })
-                }
-              })
-            } catch (error) {
-              //setLoadingStage("Error creating store instance")
-              toast({
-                title: "Error",
-                description: "Error creating store instance",
-                variant: "destructive",
-              })
-              setTimeout(() => {
-                setShowLoadingModal(false)
-              }, 2000)
-            }
+            if(response.ok){
+            toast({
+              title: "Success",
+              description: "Store Created Successfully",
+            });
+          }
+            setIsStoreCreated(true);
+            setLoading(false);
+            setShowLoadingModal(false);
           },
           onError: (error) => {
-            console.error("Error while creating store:", error)
-            //setLoadingStage("Error creating store")
+            console.error("Error while creating store:", error);
+            setLoadingStage("Error creating store");
             toast({
               title: "Error",
               description: "Error while creating store",
               variant: "destructive",
-            })
+            });
             setTimeout(() => {
-              setShowLoadingModal(false)
-            }, 2000)
+              setShowLoadingModal(false);
+            }, 2000);
           },
-        })
+        });
       }
     } catch (error) {
-      console.error("Error during submission:", error)
-      setLoadingStage("Error occurred")
+      console.error("Error during submission:", error);
+      setLoadingStage("Error occurred");
       setTimeout(() => {
-        setShowLoadingModal(false)
-      }, 2000)
+        setShowLoadingModal(false);
+      }, 2000);
     }
-  }
-
+  };
+  
   const initiateDelete = (id, event) => {
     event.stopPropagation()
     setStoreToDelete(id)
@@ -386,34 +353,9 @@ const Store = () => {
 
   const handleDelete = async () => {
     if (!storeToDelete) return
-
-    setIsDeletingStore(true)
-    setShowLoadingModal(true)
-    setLoadingStage("Deleting store...")
     try {
       // First, delete the store from your backend
       await deleteStore(storeToDelete)
-
-      // Then, delete the store instance
-      const response = await fetch(`http://localhost:3000/delete-store/${storeToDelete}`, {
-        method: 'DELETE',
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to delete store instance')
-      }
-
-      const data = await response.json()
-      if (data.success) {
-        //setLoadingStage("Store deleted successfully!")
-        toast({
-          title: "Success",
-          description: "Store deleted successfully",
-        })
-        refreshStores()
-      } else {
-        throw new Error(data.message || 'Failed to delete store instance')
-      }
     } catch (error) {
       console.error("Error deleting store:", error)
       //setLoadingStage("Error deleting store and its instance")
@@ -424,9 +366,7 @@ const Store = () => {
       })
     } finally {
       setTimeout(() => {
-        setIsDeletingStore(false)
         setIsDeleteModalOpen(false)
-        setShowLoadingModal(false)
         setStoreToDelete(null)
       }, 2000)
     }
@@ -651,7 +591,7 @@ const Store = () => {
                       </motion.div>
                       <div className="ml-4">
                         <div className="text-sm font-medium text-indigo-900">
-                          <Link href={store?.store_url || "#"} target="_blank" className="hover:underline">
+                          <Link href={store?.store_url} target="_blank" className="hover:underline">
                             {store.name}
                           </Link>
                         </div>

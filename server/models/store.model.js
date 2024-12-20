@@ -46,7 +46,8 @@ const Store = sequelize.define(
     },
     store_url: {
       type: DataTypes.STRING(452),
-      allowNull: true,
+      allowNull: false,
+      unique: true,
     },
     vendor_id: {
       type: DataTypes.STRING(250),
@@ -65,7 +66,6 @@ const Store = sequelize.define(
     tableName: "store", // Use existing table name
     timestamps: true, // Enable created_at and updated_at
     underscored: true, // Use snake_case for column names
-    paranoid: true, // Enable deleted_at for soft deletes
     hooks: {
       // Generate the ID before creating a record
       beforeCreate: (store) => {
