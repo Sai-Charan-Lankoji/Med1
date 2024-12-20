@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../reducer/rootReducer";
 import { useUserContext } from "@/context/userContext";
 import {
-  addToCart,
+  
   removeFromCart,
   clearCart,
   setLoading,
