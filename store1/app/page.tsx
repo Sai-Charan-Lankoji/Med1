@@ -187,31 +187,6 @@ export default function Home() {
               Get inspired by these amazing customisable designs
             </p>
           </div>
-          {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {customDesigns.map((design, index) => (
-              <motion.div
-                key={design.side}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="group bg-white rounded-xl shadow-lg overflow-hidden"
-              >
-                <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                  <img
-                    src={design.image}
-                    alt={`T-shirt ${design.side} design example`}
-                    className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <p className="text-white text-sm">{design.description}</p>
-                    </div>
-                  </div>
-                </div>
-                
-              </motion.div>
-            ))}
-          </div> */}
           <ProductGallery/>
         </div>
       </section>

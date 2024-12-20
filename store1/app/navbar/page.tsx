@@ -5,7 +5,6 @@ import { HiMenu, HiX } from "react-icons/hi";
 import {ShirtIcon} from 'lucide-react'
 import Link from "next/link";
 import Image from "next/image";
-//import { useCart } from "@/context/cartContext";
 import { MdDeleteForever } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
@@ -36,7 +35,6 @@ const Navbar: React.FC = () => {
   const vendorId = params.vendorId as string;
   const isVendorMode = vendorId === NEXT_PUBLIC_VENDOR_ID;
 
-  // Added: Effect to get username from sessionStorage
   useEffect(() => {
     if (email) {
       const storedUsername = sessionStorage.getItem("username");
@@ -48,7 +46,6 @@ const Navbar: React.FC = () => {
 
   useEffect(() => {
     if (customerToken && Array.isArray(cartItems)) {
-      // Check if cartItems is an array
       try {
         const totalItems = cartItems.length;
         setCartItemsCount(totalItems);
@@ -56,7 +53,6 @@ const Navbar: React.FC = () => {
         const total = cartItems.reduce((sum, item) => {
           if (!item) return sum; // Skip if item is undefined
 
-          // Calculate price based on number of sides
           const numberOfSides = item.designs?.length || 1;
           return sum + 100 * numberOfSides * (item.quantity || 1);
         }, 0);
@@ -64,12 +60,10 @@ const Navbar: React.FC = () => {
         setCartTotal(total);
       } catch (error) {
         console.error("Error calculating cart totals:", error);
-        // Set safe defaults if calculation fails
         setCartItemsCount(0);
         setCartTotal(0);
       }
     } else {
-      // Reset values if no customer token or invalid cartItems
       setCartItemsCount(0);
       setCartTotal(0);
     }
@@ -99,9 +93,7 @@ const Navbar: React.FC = () => {
 
     if (success) {
       setIsCartOpen(false);
-      // Force a small delay to ensure state updates are processed
       await new Promise((resolve) => setTimeout(resolve, 100));
-      // Optionally scroll to the canvas area
       const canvasElement = document.querySelector(".canvas-container");
       if (canvasElement) {
         canvasElement.scrollIntoView({ behavior: "smooth" });
@@ -109,7 +101,6 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // Toggle item expansion
   const toggleItemExpansion = (itemId: string) => {
     setExpandedItems((prev) => ({
       ...prev,
@@ -126,7 +117,6 @@ const Navbar: React.FC = () => {
   const handleDeleteCart = async (cartId: string) => {
     const success = await deleteCart(cartId);
     if (success) {
-      // Clear local cart state after successful API call
       localStorage.removeItem("savedDesignState");
       localStorage.removeItem("cart_id");
       router.refresh();
@@ -135,7 +125,6 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // Desktop handlers
   const handleDesktopCartClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -168,7 +157,6 @@ const Navbar: React.FC = () => {
     }
   };
 
-  // Mobile handlers
   const handleMobileMenuToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -244,7 +232,6 @@ const Navbar: React.FC = () => {
     <nav className="bg-white fixed w-full top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo/Title */}
           <Link href="/" className="flex-shrink-0">
   <div className="flex items-center">
     <ShirtIcon className="h-8 w-8 text-indigo-600" />
@@ -254,7 +241,6 @@ const Navbar: React.FC = () => {
   </div>
 </Link>
 
-          {/* Mobile menu button */}
           {!isVendorMode && (
           <div className="md:hidden">
             <button
@@ -290,14 +276,9 @@ const Navbar: React.FC = () => {
                   className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                 >
                   <FaUserCircle className="text-2xl text-gray-700" />
-                  {/* Original email display */}
-                  {/* <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
-                    {email}
-                  </span> */}
-                  {/* Modified to show username */}
+
                   <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
                     {username || email}{" "}
-                    {/* Fallback to email if username is not available */}
                   </span>
                 </button>
 
@@ -354,9 +335,7 @@ const Navbar: React.FC = () => {
                                 <div className="p-3 hover:bg-gray-50">
                                   <div className="flex justify-between items-start mb-2">
                                     <div>
-                                      {/* <p className="text-sm font-medium text-gray-900 truncate">
-                              {item.title}
-                            </p> */}
+                                     
                                       <p className="text-sm text-gray-600">
                                         Qty: {item.quantity}
                                       </p>
@@ -533,7 +512,6 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
@@ -551,9 +529,6 @@ const Navbar: React.FC = () => {
                   <>
                     <div className="flex items-center space-x-2 mx-3 px-4 py-2 text-sm text-gray-700">
                       <FaUserCircle className="text-xl text-gray-700" />
-                      {/* Original email display in mobile menu */}
-                      {/* <span className="truncate">{email}</span> */}
-                      {/* Modified to show username in mobile menu */}
                       <span className="truncate">{username || email}</span>
                     </div>
 

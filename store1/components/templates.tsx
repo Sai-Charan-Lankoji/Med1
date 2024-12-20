@@ -31,14 +31,7 @@ export function Template() {
         .map((design) => (
           <>
             <div className="relative w-10 h-20 " key={design.id}>
-              {/* <Image
-                src={design.apparel.url}
-                alt="Apparel`"
-                layout="fill"
-                objectFit="cover"
-                className="rounded-md"
-                style={{ backgroundColor: bgColor }}
-              /> */}
+              
 
               <Image
                 src={design.pngImage}

@@ -1,4 +1,4 @@
-"use client"; // next.js app router
+"use client"; 
 
 import React, { useState, useEffect } from "react";
 import { fabric } from "fabric";
@@ -13,8 +13,7 @@ const App = () => {
       backgroundColor: "black",
     });
 
-    // settings for all canvas in the app
-    // ...
+  
     fabric.Object.prototype.transparentCorners = false;
     fabric.Object.prototype.cornerColor = "#2BEBC8";
     fabric.Object.prototype.cornerStyle = "rect";
@@ -24,7 +23,7 @@ const App = () => {
     setCanvas(c);
 
     return () => {
-      // ...
+      
       c.dispose();
     };
   }, []);

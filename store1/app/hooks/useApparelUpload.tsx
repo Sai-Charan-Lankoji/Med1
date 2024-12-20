@@ -8,7 +8,6 @@ type CreateApparelUploadInput = {
   apparelDesign_id?: string;
 };
 
-// Function to make the API POST request
 const createApparelUpload = async (uploadData: CreateApparelUploadInput) => {
   const response = await fetch(`${baseUrl}/store/apparelUpload`, {
     method: "POST",
@@ -24,18 +23,17 @@ const createApparelUpload = async (uploadData: CreateApparelUploadInput) => {
     throw new Error(`Failed to create apparel upload: ${response.status} - ${errorText}`);
   }
 
-  return response.json(); // Return the response JSON
+  return response.json(); 
 };
 
-// Custom hook to create an apparel upload
+
 export const useCreateApparelUpload = () => {
-  const queryClient = useQueryClient(); // For cache invalidation or refreshing data
+  const queryClient = useQueryClient(); 
 
   return useMutation({
-    mutationFn: createApparelUpload, // Function to call for mutation
+    mutationFn: createApparelUpload, 
     onSuccess: () => {
-      // Invalidate or refresh queries that depend on apparel uploads
-      queryClient.invalidateQueries(['apparelUploads']); // Optional: adjust query key as per your needs
+      queryClient.invalidateQueries(['apparelUploads']);
     },
     onError: (error: any) => {
       console.error('Error creating apparel upload:', error);

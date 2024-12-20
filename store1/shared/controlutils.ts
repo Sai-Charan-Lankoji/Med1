@@ -1,5 +1,4 @@
 import { fabric } from "fabric";
-import rgb2hex from 'rgb2hex';
 import { deleteIcon, cloneIcon, rotateIcon, imgCursor, resizeIcon, IsvgColor } from "@/@types/models";
 
 let NOT_ALLOWED_CURSOR = ''
@@ -200,33 +199,4 @@ export function extractFillColorsSelectedObject(obj: fabric.Object | null): Isvg
 
   return fillColors;
 }
-
-
-
-
-
-//   function switchImage(
-//   eventData: MouseEvent,
-//   transform: fabric.Transform & ICanvasImage
-// ) {
-//   const element = (transform.target as any)._element;
-//   let canvasObj = transform.target.canvas;
-//   let activeObj = canvasObj?.getActiveObject() as any;
-//   const listImage = (transform.target as any).list;
-//   const currentImageUrl = element.currentSrc;
-//   const listImageSize = listImage.length;
-//   const currentImageIndex = listImage?.findIndex((image: ISingleImage) => {
-//     return image.url === currentImageUrl;
-//   });
-
-//   if (currentImageIndex !== -1) {
-//     let newIndex = 0;
-//     if (currentImageIndex < listImageSize - 1) newIndex = currentImageIndex + 1;
-//     activeObj.setSrc(listImage[newIndex].url, () => {
-//       canvasObj?.renderAll();
-//     });
-//   }
-
-//   return true;
-// }
 

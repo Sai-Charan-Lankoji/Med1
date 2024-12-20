@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import { DesignContext } from "@/context/designcontext";
 import { IDesign, IApparel } from "@/@types/models";
 
-// Helper to restore design state
 const restoreDesignState = (design: IDesign): IDesign => {
   if (!design) return {} as IDesign;
   
@@ -13,12 +12,10 @@ const restoreDesignState = (design: IDesign): IDesign => {
     pngImage: design.pngImage || null,
     svgImage: design.svgImage || null,
     uploadedImages: design.uploadedImages || [],
-    // textProps: design.textProps || null,
-    isactive: true // Ensure this design is marked as active
+    isactive: true 
   };
 };
 
-// Custom hook for design switching
 export const useDesignSwitcher = () => {
   const designContext = useContext(DesignContext);
   const { designs, dispatchDesign } = designContext || { designs: [], dispatchDesign: () => {} };
@@ -27,7 +24,6 @@ export const useDesignSwitcher = () => {
     if (!dispatchDesign) return false;
 
     try {
-      // First update the apparel color
       if (design.apparel?.color) {
         dispatchDesign({
           type: "UPDATE_APPAREL_COLOR",
@@ -35,13 +31,11 @@ export const useDesignSwitcher = () => {
         });
       }
 
-      // Switch to the selected design first
       dispatchDesign({
         type: "UPDATE_DESIGN",
         payload: design.apparel
       });
 
-      // If there's a stored design, restore it
       if (design.jsonDesign) {
         dispatchDesign({
           type: "STORE_DESIGN",
@@ -53,7 +47,6 @@ export const useDesignSwitcher = () => {
         });
       }
 
-      // Add any uploaded images
       if (design.uploadedImages && design.uploadedImages.length > 0) {
         design.uploadedImages.forEach(image => {
           dispatchDesign({
@@ -63,7 +56,6 @@ export const useDesignSwitcher = () => {
         });
       }
 
-      // Add any SVG items
       if (design.items && design.items.length > 0) {
         design.items.forEach(item => {
           dispatchDesign({
@@ -73,7 +65,6 @@ export const useDesignSwitcher = () => {
         });
       }
 
-      // If there are text properties, restore them
       if (design.textProps) {
         dispatchDesign({
           type: "TEXT_PROPS",
@@ -81,7 +72,6 @@ export const useDesignSwitcher = () => {
         });
       }
 
-      // Finally, switch to make this design active
       dispatchDesign({
         type: "SWITCH_DESIGN",
         currentDesign: design

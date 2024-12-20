@@ -67,14 +67,12 @@ export const designReducer = (
       return designs;
     case "UPDATE_APPAREL_COLOR":
       designs.forEach((design) => design.apparel.color = action.payload);
-      //d?.apparel?.color = action.payload;
 
       return designs;
     case "ADD_SVG":
       designs.map((a) => (a.isactive ? a.items.push(action.payload) : a));
       return designs;
     case "ADD_UPLOAD_DESIGN": {
-      // designs.map((a) => (a.isactive ? a.items.push(action.payload) : a));
       return designs;
     }
     case "UPLOADED_IMAGE": {

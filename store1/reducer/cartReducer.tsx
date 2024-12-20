@@ -67,7 +67,7 @@ export const fetchCartSuccess = (cartData: ICartItem[]) => ({
   payload: cartData,
 });
 
-// Reducer
+
 export const cartReducer = (state = initialState, action: AnyAction): CartState => {
   switch (action.type) {
     case ADD_TO_CART:
@@ -99,12 +99,12 @@ export const cartReducer = (state = initialState, action: AnyAction): CartState 
       case FETCH_CART_SUCCESS:
       return {
         ...state,
-        items: action.payload, // Update the items with fetched cart data
+        items: action.payload,
       };
       case UPDATE_CART:
         return {
          ...state,
-          items: action.payload, // Update the items with updated cart data
+          items: action.payload, 
         }; 
 
         case UPDATE_CART_ITEM_QUANTITY:

@@ -1,4 +1,4 @@
-"use client"; // next.js app router
+"use client"; 
 
 import * as React from "react";
 import { SideNavBar } from "@/components/sidenavbar";

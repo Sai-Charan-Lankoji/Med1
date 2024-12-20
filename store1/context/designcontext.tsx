@@ -64,7 +64,6 @@ export const DesignProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [designs, dispatchDesign] = React.useReducer(designReducer, defaultDesignState);
   const [currentBgColor, setCurrentBgColor] = React.useState<string>(defaultDesignState[0].apparel.color);
   
-  // Handle hydration by waiting for client-side render
   React.useEffect(() => {
     setIsClient(true);
     

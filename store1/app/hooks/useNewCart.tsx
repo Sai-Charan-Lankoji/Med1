@@ -65,7 +65,6 @@ export const useNewCart = () => {
     try {
       dispatch(setLoading(true));
       
-      // First, optimistically update the local state
       dispatch(updateCartItemQuantity({ cartId, quantity }));
 
       const response = await fetch(
@@ -80,7 +79,6 @@ export const useNewCart = () => {
       );
 
       if (!response.ok) {
-        // If the API call fails, fetch the entire cart again to restore the correct state
         const cartResponse = await fetch(
           `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
           {
@@ -107,7 +105,6 @@ export const useNewCart = () => {
     }
   };
 
-  // Rest of the code remains the same...
   const deleteCart = async (cartId: string) => {
     try {
       dispatch(removeFromCart(cartId));

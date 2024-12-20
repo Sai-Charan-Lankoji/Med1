@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUserContext } from "@/context/userContext";
-//import { useCart } from '@/context/cartContext';
 import { NEXT_PUBLIC_API_URL } from "../../constants/constants";
 
 interface StoreSignupResponse {
@@ -24,24 +23,11 @@ interface CartItem {
 
 export const useCustomerSignup = () => {
   const { setUser, setIsLogin } = useUserContext();
-  //const { mergeLocalCart } = useCart();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // const handleCartTransition = (customerId: string) => {
-  //   const guestCart = localStorage.getItem('guest_cart');
-  //   if (guestCart) {
-  //     try {
-  //       const guestCartItems: CartItem[] = JSON.parse(guestCart);
-  //       localStorage.setItem(`cart_${customerId}`, JSON.stringify(guestCartItems));
-  //       localStorage.removeItem('guest_cart');
-  //       mergeLocalCart();
-  //     } catch (error) {
-  //       console.error('Error transferring cart:', error);
-  //     }
-  //   }
-  // };
+  
 
   const signup = async (
     email: string,
@@ -88,13 +74,10 @@ export const useCustomerSignup = () => {
         sessionStorage.setItem("customerId", data.customer.id);
         sessionStorage.setItem("customerEmail", data.customer.email);
 
-        // Store authentication data in context
-        setUser(first_name, email, data.token); // Pass the token here
+        setUser(first_name, email, data.token);
 
-        // Handle cart transition
-        //handleCartTransition(data.customer.id);
+       
 
-        // Handle redirect
         const redirectAfterSignup = localStorage.getItem("redirectAfterSignup");
         if (redirectAfterSignup) {
           router.push(redirectAfterSignup);

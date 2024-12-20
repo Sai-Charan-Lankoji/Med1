@@ -37,7 +37,6 @@ export function TextProps(): React.ReactElement {
     let fw = fontWeight == "200" ? "800" : "200";
     dispatchForCanvas({ type: "PROPS", props: "fontWeight", value: fw });
     setFontWeight(fw);
-    //textProps.fontWeight = fontWeight;
   };
 
   const handleFontSize = (e: any) => {
@@ -48,7 +47,6 @@ export function TextProps(): React.ReactElement {
       props: "fontSize",
       value: e.target.value,
     });
-    //textProps.fontSize = fontSize;
   };
 
   const handleFontFamily = (e: any) => {
@@ -58,14 +56,12 @@ export function TextProps(): React.ReactElement {
       props: "fontFamily",
       value: e.target.value,
     });
-    //textProps.fontFamily = fontFamily;
   };
 
   const handleFontStyle = (e: any) => {
     let fs = fontStyle == 'normal' ? 'italic' : 'normal';
     dispatchForCanvas({ type: "PROPS", props: "fontStyle", value: fs });
     setFontStyle(fs as 'normal' | 'italic' | '');
-    //textProps.fontStyle = fs;
   };
 
   const handleUnderline = (e: any) => {

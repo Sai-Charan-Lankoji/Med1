@@ -8,7 +8,6 @@ import { useRouter } from "next/navigation";
 import { DesignContext } from "@/context/designcontext";
 import { IDesign, IProps } from "@/@types/models";
 
-// Infinite Scroll Variant
 const InfiniteScrollContainer = ({
   children,
 }: {
@@ -18,7 +17,6 @@ const InfiniteScrollContainer = ({
   const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
-    // Disable scroll animation if user prefers reduced motion
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const startAnimation = async () => {
@@ -71,7 +69,6 @@ const ProductGallery = () => {
     Record<string, number>
   >({});
 
-  // Image cycling effect
   useEffect(() => {
     if (hoveredProduct) {
       const intervalId = setInterval(() => {
@@ -155,7 +152,6 @@ const ProductGallery = () => {
     );
   }
 
-  // Render products in a grid or infinite scroll based on the number of products
   const renderProducts = () => {
     const productElements = products
       .filter((product: { designs?: IDesign[] }) => product.designs?.length)
@@ -249,7 +245,6 @@ const ProductGallery = () => {
                           }}
                         >
                           {currentDesign.pngImage ? (
-                            // If pngImage is available, display it
                             <Image
                               src={currentDesign.pngImage}
                               alt="Design"
@@ -259,7 +254,6 @@ const ProductGallery = () => {
                               style={{ objectFit: "contain" }}
                             />
                           ) : currentDesign.uploadedImages?.length > 1 ? (
-                            // If multiple uploadedImages, display them as thumbnails or carousel
                             <div className="flex overflow-x-auto space-x-2">
                               {currentDesign.uploadedImages.map(
                                 (imageUrl, idx) => (
@@ -267,15 +261,14 @@ const ProductGallery = () => {
                                     key={idx}
                                     src={imageUrl}
                                     alt={`Uploaded Image ${idx + 1}`}
-                                    width={100} // Adjust thumbnail width
-                                    height={100} // Adjust thumbnail height
+                                    width={100} 
+                                    height={100}
                                     className="object-cover rounded-md"
                                   />
                                 )
                               )}
                             </div>
                           ) : (
-                            // If only one uploadedImage, display it
                             <Image
                               src={currentDesign.uploadedImages[0]}
                               alt="Uploaded Image"
@@ -290,7 +283,6 @@ const ProductGallery = () => {
         );
       });
 
-    // If more than 4 products, use infinite scroll; otherwise, use grid
     return products.length > 4 ? (
       <InfiniteScrollContainer>
         {productElements}

@@ -30,7 +30,7 @@ export function ClipartGallery(): React.ReactElement {
     });
     const data = await res.json();
     if (data?.fileUrl) {
-       // add the svg item to the canvas
+      
       setSvgUrl(data?.fileUrl);
     } else {
       console.log("Error in uploading image");

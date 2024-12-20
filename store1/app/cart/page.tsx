@@ -373,7 +373,6 @@ const CartPage = () => {
                     return (
                       <div key={item.id} className="p-6 ">
                         <div className="flex items-start space-x-4">
-                          {/* Checkbox */}
                           <div className="pt-2">
                             <input
                               type="checkbox"
@@ -384,7 +383,6 @@ const CartPage = () => {
                           </div>
 
                           <div className="flex flex-col md:flex-row gap-4  flex-1">
-                            {/* Product image and thumbnails */}
                             <div className="md:w-1/2">
                               <div
                                 className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100"
@@ -678,7 +676,7 @@ const CartPage = () => {
             </div>
           </div>
 
-          {/* Order Summary - Now positioned on the right */}
+          {/* Order Summary  */}
           {cartItems.length > 0 && (
             <div className="lg:w-[380px] flex-shrink-0">
               <div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-8">

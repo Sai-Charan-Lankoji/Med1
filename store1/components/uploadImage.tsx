@@ -74,7 +74,7 @@ export function UploadImage(): React.ReactElement {
       setIsUploading(false);
     }
   
-    e.target.value = ""; // Reset file input
+    e.target.value = ""; 
   };
   
 

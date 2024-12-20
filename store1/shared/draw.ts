@@ -52,26 +52,11 @@ export function AddCircle(canvas: any, stroke: string, fillcolor: string) {
   canvas.setActiveObject(rect);
 }
 
-// export function AddText(canvas: any, text: string, color: string,props:IProps) {
-//   canvas.add(new fabric.IText(text, {
-//     left: 50,
-//     top: 80,
-//     fontFamily: props.fontFamily,
-//     fill: props.fillcolor,
-//     fontSize: props.fontSize,
-//     fontStyle: props.fontStyle,
-//     fontWeight: props.fontWeight,
-//     charSpacing: props.charSpacing,
-//     lineHeight: props.lineHeight,
-//     textBackgroundColor: props.bgColor,
-//     textAlign: props.textAlign,
-//   }));
-// }
 
 
 
 
-  // Set default values to the props
+
 export function AddText(
     canvas: any,
     text: string,
@@ -111,21 +96,6 @@ export function AddText(
   }
 
 
-
-
-
-
-
-
-// left: 200,
-// 			top: 100,
-// 			textAlign: 'center',
-// 			fill: '#FF0000',
-// 			radius: 100,
-// 			fontSize: 30,
-// 			spacing: 7,
-// 			effect:'STRAIGHT',
-//       fontFamily: 'Arial'
 export function AddSvg(canvas: any, svgurl: string, designId: string) {
   if (svgurl) {
     fabric.loadSVGFromURL(svgurl, (results, options) => {

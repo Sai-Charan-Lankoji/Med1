@@ -1,4 +1,4 @@
-"use client"; // next.js app router
+"use client";
 
 import * as React from "react";
 import { SideNavBar } from "@/components/sidenavbar";
@@ -20,12 +20,10 @@ const VendorDesignCanvas = () => {
     React.useEffect(() => {
         // Verify vendor ID
         if (vendorId !== NEXT_PUBLIC_VENDOR_ID) {
-          // Redirect to unauthorized or home page if vendor ID is invalid
            router.push('/');
         }
       }, [vendorId, router]);
     
-      // If vendor ID is invalid, return null to prevent rendering
       if (vendorId !== NEXT_PUBLIC_VENDOR_ID) {
         return null;
       }

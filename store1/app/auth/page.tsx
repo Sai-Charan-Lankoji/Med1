@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import medusaIcon from "../../public/medusaIcon.jpeg";
 import Image from "next/image";
-// import { EyeMini, EyeSlashMini } from "@medusajs/icons";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { useCustomerLogin } from "../hooks/useCustomerLogin";
 import { useCustomerSignup } from "../hooks/useCustomerSignup";
@@ -70,12 +69,10 @@ export default function SignIn() {
     return newErrors;
   };
 
-  // Toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
-  // Handle form submit
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const { email, password, firstName, lastName, phone, has_account, vendor_id } = formData;
@@ -163,7 +160,6 @@ export default function SignIn() {
           />
           {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
 
-          {/* Password field with eye icon */}
           <div className="relative">
             <input
               type={showPassword ? "text" : "password"}
@@ -197,7 +193,6 @@ export default function SignIn() {
             {isLoading ? "Loading..." : isSignup ? "Sign Up" : "Log In"}
           </button>
 
-          {/* Show error message if there's any */}
           {(loginError || signupError) && (
             <div className="text-red-500 text-center text-sm mt-2">
               {loginError || signupError}
@@ -205,7 +200,6 @@ export default function SignIn() {
           )}
         </form>
 
-        {/* Toggle between login and signup */}
         <div className="mt-4 text-center">
           <p className="text-[12px] text-gray-600">
             {isSignup ? "Already have an account?" : " Don't have an account?"}

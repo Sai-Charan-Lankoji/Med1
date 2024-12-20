@@ -1,7 +1,6 @@
 const baseUrl = "https://med1-wyou.onrender.com";
 import { useQuery } from '@tanstack/react-query';
 
-// Function to fetch plans
 const fetchPlan = async (id: string) => {
   const url = `${baseUrl}/admin/plan/${id}`;
 
@@ -11,7 +10,7 @@ const fetchPlan = async (id: string) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include', // Include cookies in the request
+      credentials: 'include', 
     });
 
     const data = await response.json();
@@ -21,7 +20,7 @@ const fetchPlan = async (id: string) => {
 
       if (response.status === 404 || response.status === 500) {
         console.log('No plans found or server error. Returning empty array.');
-        return []; // Return an empty array if no plans found or server error occurs
+        return [];
       }
 
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
@@ -29,14 +28,14 @@ const fetchPlan = async (id: string) => {
 
     if (!data || data.length === 0) {
       console.log('No plans found.');
-      return []; // Return an empty array if the plans list is empty
+      return []; 
     }
 
     return data;
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching plan:', error.message);
-      return []; // Return an empty array in case of error
+      return []; 
     } else {
       console.error('An unknown error occurred:', error);
       return [];
@@ -44,16 +43,14 @@ const fetchPlan = async (id: string) => {
   }
 };
 
-// Custom React Query hook for fetching plans
 export const useGetPlan = (id: string) => {
   return useQuery(['plan',id], () => fetchPlan(id), {
-    refetchOnWindowFocus: false, // Avoid refetching when the window regains focus
-    refetchOnMount: false,      // Avoid refetching when the component mounts
-    cacheTime: 1000 * 60 * 10,  // Cache the response for 10 minutes
-    staleTime: 1000 * 60 * 5,   // Mark data as fresh for 5 minutes
-    retry: false,               // Disable retries on error
+    refetchOnWindowFocus: false, 
+    refetchOnMount: false,    
+    cacheTime: 1000 * 60 * 10,  
+    staleTime: 1000 * 60 * 5,   
+    retry: false,            
 
-    // Error handling
     onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching plan:', error.message);

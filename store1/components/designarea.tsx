@@ -23,8 +23,7 @@ import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
 import * as React from "react";
 import { GetTextStyles } from "../shared/draw";  
-import { UseCreateApparelDesign } from "@/app/hooks/useCreateApparealDesign";
-import { useCreateApparelUpload } from "@/app/hooks/useApparelUpload";
+
 import { useUserContext } from "../context/userContext"; 
 import { useRouter } from "next/navigation";
 import {useSvgContext} from "../context/svgcontext" 
@@ -50,7 +49,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     };
   }
   
-  // Get canvas state with proper type checking
   const canvasState = useSelector((state: RootState) => state.setReducer);
   const { addDesignToCart, loading: cartLoading } = useNewCart()
   const { updateCart } = useNewCart() 
@@ -58,8 +56,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
   const isAuthorized = isVendorMode || customerToken;
   const router = useRouter(); 
   const {svgUrl} = useSvgContext()
-  const {mutate:CreateApparelDesign , isLoading, isError} = UseCreateApparelDesign() 
-  const { mutate: createApparelUpload} = useCreateApparelUpload();
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
   const { svgcolors, dispatchColorPicker } = React.useContext(ColorPickerContext)!;
@@ -212,7 +208,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       )
     );
     updateColor(value);
-    //dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: value });
   };
    const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
@@ -221,7 +216,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    // Setting filename received in response
     link.setAttribute("download", "design");
     document.body.appendChild(link);
     link.click();
@@ -237,7 +231,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     const link = document.createElement("a");
     link.href = url;
 
-    // Setting filename received in response
     link.setAttribute("download", design?.apparel.side ?? "design");
     document.body.appendChild(link);
     link.click();
@@ -252,7 +245,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     const link = document.createElement("a");
     link.href = pngImage;
 
-    // Setting filename received in response
     link.setAttribute("download", design?.apparel.side ?? "design" + ".png");
     document.body.appendChild(link);
     link.click();
@@ -313,15 +305,14 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
   
     const currentDesignState = designs.map(design => ({
       ...design,
-      svgImage: design.id === design?.id ? svgUrl : design.svgImage // Update SVG for current design 
+      svgImage: design.id === design?.id ? svgUrl : design.svgImage 
      
     }), 
     
   );
-    // Get the current text props state for saving
     const currentPropsState = {
       ...props,
-      designId: design?.id // Ensure we associate props with current design
+      designId: design?.id 
     };
     if (!customerToken) {
       saveStateToLocalStorage();
@@ -349,25 +340,21 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
 
   const addProduct = async () => {
     try {
-      // Capture both PNG and SVG data
       const pngImage = canvas?.toDataURL({ multiplier: 4 });
       
       const currentDesignState = designs.map(design => ({
         ...design,
         svgImage: design.id === design?.id ? svgUrl : design.svgImage,
         pngImage: design.id === design?.id ? (
-          // Only include PNG if there are objects on the canvas
           canvas?.toJSON().objects.length ? pngImage : null
         ) : design.pngImage
       }));
     
-      // Get the current text props state for saving
       const currentPropsState = {
         ...props,
         designId: design?.id
       };
   
-      // Prepare the request body
       const requestBody = {
         vendor_id: NEXT_PUBLIC_VENDOR_ID,
         store_id: NEXT_PUBLIC_STORE_ID,
@@ -395,12 +382,10 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       const data = await response.json();
       console.log("this is product request : " , data)
       
-      // Clear the design state after successful product creation
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
       
-      // Refresh the page
       router.refresh();
       
       return data;
@@ -455,18 +440,16 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     }
   };
   
-  // Add this effect in your component
   useEffect(() => {
     const checkPendingCartAdd = async () => {
       const hasPendingAdd = localStorage.getItem('pendingCartAdd');
       
-      // Check if there's a pending cart addition after login
       if (customerToken && hasPendingAdd === 'true') {
         const pendingDesignStateStr = localStorage.getItem('pendingDesignState');
         const pendingPropsStateStr = localStorage.getItem('pendingPropsState');
         
         if (!pendingDesignStateStr || !pendingPropsStateStr) {
-          return; // Exit if either state is missing
+          return;
         }
   
         try {
@@ -493,7 +476,6 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
           }
         } catch (error) {
           console.error('Error processing pending cart addition:', error);
-          // Clean up invalid stored data
           localStorage.removeItem('pendingCartAdd');
           localStorage.removeItem('pendingDesignState');
           localStorage.removeItem('pendingPropsState');

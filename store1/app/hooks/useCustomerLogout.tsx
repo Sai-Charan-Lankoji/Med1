@@ -11,15 +11,11 @@ export const useCustomerLogout = () => {
 
   const handleCartTransition = () => {
     try {
-      // Get current customer ID
       const customerId = sessionStorage.getItem('customerId');
       if (customerId) {
-        // Save current cart state before logout
         const currentCart = localStorage.getItem(`cart_${customerId}`);
         if (currentCart) {
-          // Transfer authenticated user's cart to guest cart
           localStorage.setItem('guest_cart', currentCart);
-          // Remove the user-specific cart
           localStorage.removeItem(`cart_${customerId}`);
         }
       }
@@ -29,19 +25,14 @@ export const useCustomerLogout = () => {
   };
 
   const clearUserSession = () => {
-    // Clear authentication tokens
     localStorage.removeItem('customerToken');
     
-    // Clear session storage
     sessionStorage.removeItem('customerId');
     sessionStorage.removeItem('customerEmail');
     
-    // Clear user context
     setUser(null, null);
     setIsLogin(false);
     
-    // Clear cart context
-    // clearCart();
   };
 
   const logout = async () => {
@@ -64,20 +55,16 @@ export const useCustomerLogout = () => {
         throw new Error(errorData.message || 'Failed to log out');
       }
 
-      // Handle cart transition before clearing session
       handleCartTransition();
 
-      // Clear all user session data
       clearUserSession();
 
        
-      // Redirect to home page
       router.push('/');
     } catch (err: any) {
       console.error('Logout error:', err);
       setError(err.message || 'An error occurred during logout');
       
-      // Even if the API call fails, we should still clear local session
       clearUserSession();
     } finally {
       setLoading(false);

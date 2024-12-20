@@ -53,7 +53,7 @@ export const useGetProducts = () => {
       refetchOnWindowFocus: false,
       refetchOnMount: false,
       cacheTime: 0,
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5, 
       retry: false,
       enabled: Boolean(store_id),
 

@@ -295,14 +295,7 @@ function setReducer(state: CanvasState = initialState, action: any) {
       }
       state.canvas.isDrawingMode = false;
       var selection = state.canvas.getActiveObject();
-      // if (selection?.type === 'activeSelection') {
-      //     selection.forEachObject(function(element) {
-      //         state.canvas.remove(element);
-      //     });
-      // }
-      // else{
-      //     state.canvas.remove(selection);
-      // }
+    
       state.canvas.discardActiveObject();
       state.canvas.requestRenderAll();
       return { ...state };
