@@ -11,7 +11,7 @@ export default (phase, { defaultConfig }) => {
         {
           protocol: 'http',
           hostname: 'localhost',
-          port: '9000',  
+          port: '5000',  
           pathname: '/uploads/**',  
         },
         {

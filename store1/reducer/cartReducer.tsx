@@ -114,7 +114,6 @@ export const cartReducer = (state = initialState, action: AnyAction): CartState 
             item.id === action.payload.cartId? {...item, quantity: action.payload.quantity } : item
           ),
         };
-    // Add other cases for other actions related to cart here...
     default:
       return state;
   }

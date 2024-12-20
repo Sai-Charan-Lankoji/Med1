@@ -31,7 +31,7 @@ import {useSvgContext} from "../context/svgcontext"
 import { useNewCart } from "@/app/hooks/useNewCart";
 import { useEffect, useState } from "react"; 
 import { NEXT_PUBLIC_VENDOR_ID, NEXT_PUBLIC_STORE_ID } from "@/constants/constants";
-
+ 
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
@@ -349,9 +349,16 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
 
   const addProduct = async () => {
     try {
+      // Capture both PNG and SVG data
+      const pngImage = canvas?.toDataURL({ multiplier: 4 });
+      
       const currentDesignState = designs.map(design => ({
         ...design,
-        svgImage: design.id === design?.id ? svgUrl : design.svgImage
+        svgImage: design.id === design?.id ? svgUrl : design.svgImage,
+        pngImage: design.id === design?.id ? (
+          // Only include PNG if there are objects on the canvas
+          canvas?.toJSON().objects.length ? pngImage : null
+        ) : design.pngImage
       }));
     
       // Get the current text props state for saving
@@ -359,28 +366,19 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
         ...props,
         designId: design?.id
       };
+  
       // Prepare the request body
       const requestBody = {
         vendor_id: NEXT_PUBLIC_VENDOR_ID,
         store_id: NEXT_PUBLIC_STORE_ID,
-        designs:designs,
-        designstate:currentDesignState,
+        designs: designs,
+        designstate: currentDesignState,
         propstate: currentPropsState,
         customizable: true
-      };
+      }; 
+
+      console.log("this is product request Body : ", requestBody);
   
-      // Make the API call
-
-
-
-
-
-
-
-
-
-
-
       const response = await fetch('https://med1-wyou.onrender.com/api/products', {
         method: 'POST',
         headers: {
@@ -393,20 +391,22 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to create product');
       }
+      
       const data = await response.json();
+      console.log("this is product request : " , data)
+      
       // Clear the design state after successful product creation
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem('savedDesignState');
       localStorage.removeItem('savedPropsState');
       
-      // Refresh the page or show success message
+      // Refresh the page
       router.refresh();
       
       return data;
   
     } catch (error) {
       console.error('Error creating product:', error);
-      // Handle error appropriately - maybe show a toast or alert
       throw error;
     }
   };

@@ -20,7 +20,7 @@ export const designReducer = (
       {
         apparel: {
           ...action.payload,
-          side: action.payload.side || ' ', // Ensure side is present
+          side: action.payload.side || ' ', 
         },
         id: designs.length + 1,
         items: [],
