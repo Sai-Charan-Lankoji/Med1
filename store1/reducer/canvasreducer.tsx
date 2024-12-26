@@ -312,25 +312,29 @@ function setReducer(state: CanvasState = initialState, action: any) {
       return { ...state };
     }
     case "UPDATE_SVG_COLOR": {
-      if (state.canvas?._objects) {
-        const activeobj = state.canvas?.getActiveObject();
-        if (activeobj?.type == "group") {
-          // @ts-ignore
-          state.canvas
-            ?.getActiveObject()
-            // @ts-ignore
-            ?._objects[action.payload.colorIndex].set({
-              fill: action.payload.newColor,
-            });
-        } else {
-          // @ts-ignore
-          state.canvas?.getActiveObject().set("fill", action.payload.newColor);
+      if (state.canvas) {
+        const activeObj = state.canvas.getActiveObject();
+    
+        if (activeObj) {
+          if (activeObj.type === "group" && "getObjects" in activeObj) {
+            const groupObjects = (activeObj as fabric.Group).getObjects();
+            if (groupObjects[action.payload.colorIndex]) {
+              groupObjects[action.payload.colorIndex].set("fill", action.payload.newColor);
+            }
+          } else {
+            activeObj.set("fill", action.payload.newColor);
+          }
+    
+          // Trigger canvas rendering and save design state
+          state.canvas.renderAll();
+  
         }
       }
-      state.canvas?.renderAll();
-      if (!state.pauseSaving) state.undoStack.push(state.canvas?.toJSON());
       return state;
     }
+    
+    
+    
     case "UPDATE_SHAPE_STROKE_COLOR": {
       state.canvas
         ?.getActiveObject()

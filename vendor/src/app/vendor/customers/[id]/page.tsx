@@ -183,36 +183,7 @@ const CustomerDetails = () => {
                   <p className="text-indigo-600 mt-1">This customer hasn&apos;t placed any orders.</p>
                 </div>
               )}
-            </div>
-
-            {/* Raw Data Section */}
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl shadow-lg border border-indigo-100 overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-indigo-900">
-                    Raw Customer Data
-                  </h2>
-                  <Button
-                    variant="transparent"
-                    onClick={() => setShowRawData(!showRawData)}
-                    className="flex items-center space-x-2 text-indigo-600 hover:text-indigo-800"
-                  >
-                    <span className="text-sm">
-                      {showRawData ? "Hide" : "Show"} Details
-                    </span>
-                    {showRawData ? <ChevronUpMini /> : <ChevronDownMini />}
-                  </Button>
-                </div>
-                
-                {showRawData && (
-                  <div className="mt-4 p-4 bg-indigo-50 rounded-xl overflow-auto">
-                    <pre className="text-sm font-mono text-indigo-900">
-                      {JSON.stringify(customer, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </div>
-            </div>
+            </div>            
           </>
         )}
       </div>

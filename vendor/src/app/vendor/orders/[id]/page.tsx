@@ -373,33 +373,6 @@ const OrderDetailsView = () => {
                   </div>
                 </div>
               </Container>
-
-              {/* Raw Order Data */}
-              <Container className="p-6 bg-white/10 backdrop-blur-md border-0 border-white/20 rounded-xl shadow-2xl">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-black">
-                    Raw Ordered Data
-                  </h2>
-                  <button
-                    onClick={() => setShowRawOrderData(!showRawOrderData)}
-                    className="flex items-center space-x-2 text-sm text-black/80 hover:text-black transition-colors"
-                  >
-                    <span>{showRawOrderData ? "Hide" : "Show"} Details</span>
-                    {showRawOrderData ? (
-                      <ChevronUpMini className="w-4 h-4" />
-                    ) : (
-                      <ChevronDownMini className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {showRawOrderData && (
-                  <div className="mt-4 p-4 bg-blue-600 rounded-lg overflow-auto">
-                    <pre className="text-xs text-black font-mono">
-                      {JSON.stringify(order, null, 2)}
-                    </pre>
-                  </div>
-                )}
-              </Container>
             </motion.div>
           </div>
         </div>

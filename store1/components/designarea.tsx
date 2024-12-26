@@ -1,11 +1,10 @@
-
 "use client";
 
 import { FaDownload, FaRedo, FaSync, FaUndo } from "react-icons/fa";
 import { VscBriefcase } from "react-icons/vsc";
 import { IconContext } from "react-icons/lib";
 import { fabric } from "fabric";
-import { DesignContext, TextPropsContext } from "../context/designcontext"; 
+import { DesignContext, TextPropsContext } from "../context/designcontext";
 import { FiShoppingBag } from "react-icons/fi";
 import {
   initControls,
@@ -22,22 +21,28 @@ import { ColorPickerContext } from "../context/colorpickercontext";
 import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
 import * as React from "react";
-import { GetTextStyles } from "../shared/draw";  
+import { GetTextStyles } from "../shared/draw";
 
-import { useUserContext } from "../context/userContext"; 
+import { useUserContext } from "../context/userContext";
 import { useRouter } from "next/navigation";
-import {useSvgContext} from "../context/svgcontext" 
+import { useSvgContext } from "../context/svgcontext";
 import { useNewCart } from "@/app/hooks/useNewCart";
-import { useEffect, useState } from "react"; 
-import { NEXT_PUBLIC_VENDOR_ID, NEXT_PUBLIC_STORE_ID } from "@/constants/constants";
- 
+import { useEffect, useState } from "react";
+import {
+  NEXT_PUBLIC_VENDOR_ID,
+  NEXT_PUBLIC_STORE_ID,
+} from "@/constants/constants";
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
 const imageGal = /(image)/i;
 const itextGal = /(i-text)/i;
 
-export default function DesignArea({ isVendorMode = false }: { isVendorMode?: boolean }): React.ReactElement {      
+export default function DesignArea({
+  isVendorMode = false,
+}: {
+  isVendorMode?: boolean;
+}): React.ReactElement {
   interface RootState {
     setReducer: {
       canvas: fabric.Canvas | undefined;
@@ -48,19 +53,24 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       initialState: any;
     };
   }
-  
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
+  const [lastSavedDesign, setLastSavedDesign] = useState<string | null>(null);
   const canvasState = useSelector((state: RootState) => state.setReducer);
-  const { addDesignToCart, loading: cartLoading } = useNewCart()
-  const { updateCart } = useNewCart() 
-  const { customerToken } = useUserContext(); 
+  const { addDesignToCart, loading: cartLoading } = useNewCart();
+  const { updateCart } = useNewCart();
+  const { customerToken } = useUserContext();
   const isAuthorized = isVendorMode || customerToken;
-  const router = useRouter(); 
-  const {svgUrl} = useSvgContext()
+  const router = useRouter();
+  const { svgUrl } = useSvgContext();
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
-  const { svgcolors, dispatchColorPicker } = React.useContext(ColorPickerContext)!;
+  const { svgcolors, dispatchColorPicker } =
+    React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
-  const { designs, dispatchDesign, currentBgColor, updateColor } = React.useContext(DesignContext)!;
+  const { designs, dispatchDesign, currentBgColor, updateColor } =
+    React.useContext(DesignContext)!;
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
@@ -70,17 +80,124 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
   const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
   const [cartId, setCartId] = useState<any>();
   const [colors, setColors] = React.useState<IBgcolor[]>(
-    bgColours.map(color => ({
+    bgColours.map((color) => ({
       ...color,
-      selected: color.value === currentBgColor
+      selected: color.value === currentBgColor,
     }))
   );
+
+  const autoSaveDesign = React.useCallback(() => {
+    if (!canvas || !design) return;
+
+    if (autoSaveTimeout) {
+      clearTimeout(autoSaveTimeout); // Clear any existing timeout
+    }
+
+    const timeout = setTimeout(() => {
+      const currentCanvasJSON = JSON.stringify(canvas.toJSON());
+
+      // Only save if the design state has changed
+      if (currentCanvasJSON !== lastSavedDesign) {
+        const pngImage = canvas.toDataURL({ multiplier: 4 });
+        const svgImage = canvas.toSVG();
+
+        dispatchDesign({
+          type: "STORE_DESIGN",
+          currentDesign: design,
+          selectedApparal: design.apparel,
+          jsonDesign: canvas.toJSON(),
+          pngImage: canvas.toJSON().objects.length ? pngImage : null,
+          svgImage: svgImage,
+        });
+
+        setLastSavedDesign(currentCanvasJSON); // Update the last saved state
+      }
+    }, 1000); // Save after 1 second of inactivity
+
+    setAutoSaveTimeout(timeout); // Set new timeout
+  }, [canvas, design, lastSavedDesign, autoSaveTimeout]);
+
+  useEffect(() => {
+    if (!canvas) return;
+
+    const events = [
+      "object:modified",
+      "object:added",
+      "object:removed",
+      "object:moving",
+      "object:scaling",
+      "object:rotating",
+      "text:changed",
+    ];
+
+    events.forEach((eventName) => {
+      canvas.on(eventName, autoSaveDesign);
+    });
+
+    return () => {
+      events.forEach((eventName) => {
+        canvas?.off(eventName, autoSaveDesign);
+      });
+    };
+  }, [canvas, autoSaveDesign]);
+
+  useEffect(() => {
+    const handleSVGColorChange = () => {
+      if (canvas) {
+        autoSaveDesign();
+      }
+    };
+  
+    // Listen for changes on the canvas (if custom event logic is used)
+    canvas?.on("object:modified", handleSVGColorChange);
+  
+    return () => {
+      canvas?.off("object:modified", handleSVGColorChange);
+    };
+  }, [canvas, autoSaveDesign]);
+
+  
+  const handleImageClick = async (e: any, apparel: IApparel) => {
+    e.preventDefault();
+
+    // Auto-save current design before switching
+    if (canvas && design) {
+      const currentCanvasJSON = JSON.stringify(canvas.toJSON());
+      if (currentCanvasJSON !== lastSavedDesign) {
+        await autoSaveDesign();
+      }
+    }
+
+    setApparels(
+      apparels.map((product) =>
+        product.url === apparel.url
+          ? { ...product, selected: true }
+          : { ...product, selected: false }
+      )
+    );
+
+    dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
+
+    if (design) {
+      dispatchDesign({
+        type: "STORE_DESIGN",
+        currentDesign: design,
+        selectedApparal: { ...apparel, color: currentBgColor },
+        jsonDesign: canvas?.toJSON(),
+        pngImage: canvas?.toJSON().objects.length
+          ? canvas?.toDataURL({ multiplier: 4 })
+          : null,
+        svgImage: canvas?.toSVG(),
+      });
+    }
+
+    dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: currentBgColor });
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setCartId(localStorage.getItem("cart_id"));
-    } 
-
+    }
   }, []);
   canvas?.on("selection:created", function (options) {
     if (options.e) {
@@ -94,10 +211,10 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
         dispatchColorPicker({ type: "SVG_COLORS", payload: colors });
       }
     }
-  }); 
+  });
 
   canvas?.on("selection:updated", function (options) {
-     if (options.e) {
+    if (options.e) {
       options.e.preventDefault();
       options.e.stopPropagation();
     }
@@ -118,12 +235,11 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     }
   });
   canvas?.on("object:removed", function (options) {
- 
     dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
   });
 
   canvas?.on("mouse:up", function (options) {
-     switchMenu(options.target?.type, options.target);
+    switchMenu(options.target?.type, options.target);
   });
 
   canvas?.on("object:moving", (e) => {
@@ -145,9 +261,9 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     setCanvas(canvas);
     dispatchForCanvas({ type: "INIT", canvas: canvas });
     if (design?.jsonDesign) {
-      dispatchForCanvas({ 
-        type: "RESTORE_DESIGN", 
-        payload: design.jsonDesign 
+      dispatchForCanvas({
+        type: "RESTORE_DESIGN",
+        payload: design.jsonDesign,
       });
     }
     return () => {
@@ -156,9 +272,7 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
   }, [design]);
 
   const getCanvasClass = () => {
-
     if (design?.apparel.url === designApparels[0].url) {
-      
       return "canvas-style1";
     } else if (design?.apparel.url === designApparels[1].url) {
       return "canvas-style2";
@@ -166,38 +280,37 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       return "canvas-style3";
     } else if (design?.apparel.url === designApparels[3].url) {
       return "canvas-style4";
-    } 
+    }
 
-   
     return "";
   };
 
-  const handleImageClick = (e: any, apparel: IApparel) => {
-    e.preventDefault();
-    setApparels(
-      apparels.map((product) =>
-        product.url === apparel.url
-          ? { ...product, selected: true }
-          : { ...product, selected: false }
-      )
-    );
-    dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
-  
-    if (design) {
-      dispatchDesign({
-        type: "STORE_DESIGN",
-        currentDesign: design,
-        selectedApparal:  { ...apparel, color: currentBgColor },
-        jsonDesign: canvas?.toJSON(),
-        pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
-        svgImage: canvas?.toSVG(),
-      });
-    } else {
-      console.error("Design is undefined");
-    }
-  
-    dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: currentBgColor });
-  };
+  // const handleImageClick = (e: any, apparel: IApparel) => {
+  //   e.preventDefault();
+  //   setApparels(
+  //     apparels.map((product) =>
+  //       product.url === apparel.url
+  //         ? { ...product, selected: true }
+  //         : { ...product, selected: false }
+  //     )
+  //   );
+  //   dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
+
+  //   if (design) {
+  //     dispatchDesign({
+  //       type: "STORE_DESIGN",
+  //       currentDesign: design,
+  //       selectedApparal:  { ...apparel, color: currentBgColor },
+  //       jsonDesign: canvas?.toJSON(),
+  //       pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
+  //       svgImage: canvas?.toSVG(),
+  //     });
+  //   } else {
+  //     console.error("Design is undefined");
+  //   }
+
+  //   dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: currentBgColor });
+  // };
 
   const handleColorClick = (value: string) => {
     setColors(
@@ -209,7 +322,7 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     );
     updateColor(value);
   };
-   const downloadDesignJson = (e: any) => {
+  const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
 
@@ -255,13 +368,12 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     handleZip(designs);
   };
 
-
   const reset = () => {
     dispatchDesign({ type: "CLEAR_ALL" });
-    localStorage.removeItem('savedDesignState');
-    localStorage.removeItem('savedPropsState');
-    localStorage.removeItem('cart_id')
-  router.refresh();
+    localStorage.removeItem("savedDesignState");
+    localStorage.removeItem("savedPropsState");
+    localStorage.removeItem("cart_id");
+    router.refresh();
   };
 
   const undo = (e: any) => {
@@ -285,7 +397,7 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       dispatchMenu({ type: "SWITCH_TO_TEXT", payload: true, props: textProps });
       dispatchProps({ type: "SELECTED_PROPS", payload: textProps });
     }
-  }; 
+  };
 
   const saveStateToLocalStorage = () => {
     const stateToSave = {
@@ -299,20 +411,16 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
     localStorage.setItem("designState", JSON.stringify(stateToSave));
   };
 
-  const clearDesignObject = () => {};   
+  const clearDesignObject = () => {};
 
   const handleUpdateCart = async () => {
-  
-    const currentDesignState = designs.map(design => ({
+    const currentDesignState = designs.map((design) => ({
       ...design,
-      svgImage: design.id === design?.id ? svgUrl : design.svgImage 
-     
-    }), 
-    
-  );
+      svgImage: design.id === design?.id ? svgUrl : design.svgImage,
+    }));
     const currentPropsState = {
       ...props,
-      designId: design?.id 
+      designId: design?.id,
     };
     if (!customerToken) {
       saveStateToLocalStorage();
@@ -326,136 +434,145 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
       currentPropsState,
       designs
     );
-    
-     if (success) {
+
+    if (success) {
       dispatchDesign({ type: "CLEAR_ALL" });
-      localStorage.removeItem('savedDesignState');
-      localStorage.removeItem('savedPropsState');
+      localStorage.removeItem("savedDesignState");
+      localStorage.removeItem("savedPropsState");
       router.refresh();
-    
     }
-  }
-
-
+  };
 
   const addProduct = async () => {
     try {
       const pngImage = canvas?.toDataURL({ multiplier: 4 });
-      
-      const currentDesignState = designs.map(design => ({
+
+      const currentDesignState = designs.map((design) => ({
         ...design,
         svgImage: design.id === design?.id ? svgUrl : design.svgImage,
-        pngImage: design.id === design?.id ? (
-          canvas?.toJSON().objects.length ? pngImage : null
-        ) : design.pngImage
+        pngImage:
+          design.id === design?.id
+            ? canvas?.toJSON().objects.length
+              ? pngImage
+              : null
+            : design.pngImage,
       }));
-    
+
       const currentPropsState = {
         ...props,
-        designId: design?.id
+        designId: design?.id,
       };
-  
+
       const requestBody = {
         vendor_id: NEXT_PUBLIC_VENDOR_ID,
         store_id: NEXT_PUBLIC_STORE_ID,
         designs: designs,
         designstate: currentDesignState,
         propstate: currentPropsState,
-        customizable: true
-      }; 
+        customizable: true,
+      };
 
       console.log("this is product request Body : ", requestBody);
-  
-      const response = await fetch('https://med1-wyou.onrender.com/api/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody)
-      });
-  
+
+      const response = await fetch(
+        "https://med1-wyou.onrender.com/api/products",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create product');
+        throw new Error(errorData.message || "Failed to create product");
       }
-      
+
       const data = await response.json();
-      console.log("this is product request : " , data)
-      
+      console.log("this is product request : ", data);
+
       dispatchDesign({ type: "CLEAR_ALL" });
-      localStorage.removeItem('savedDesignState');
-      localStorage.removeItem('savedPropsState');
-      
+      localStorage.removeItem("savedDesignState");
+      localStorage.removeItem("savedPropsState");
+
       router.refresh();
-      
+
       return data;
-  
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error("Error creating product:", error);
       throw error;
     }
   };
 
   const handleAddToCart = async () => {
     // Get the current design state for saving
-    const currentDesignState = designs.map(design => ({
+    const currentDesignState = designs.map((design) => ({
       ...design,
-      svgImage: design.id === design?.id ? svgUrl : design.svgImage
+      svgImage: design.id === design?.id ? svgUrl : design.svgImage,
     }));
-  
+
     // Get the current text props state for saving
     const currentPropsState = {
       ...props,
-      designId: design?.id
+      designId: design?.id,
     };
-  
+
     // If user is not logged in, save states and redirect
     if (!customerToken) {
       // Save design states to localStorage
-      localStorage.setItem('pendingCartAdd', 'true');
-      localStorage.setItem('pendingDesignState', JSON.stringify(currentDesignState));
-      localStorage.setItem('pendingPropsState', JSON.stringify(currentPropsState));
+      localStorage.setItem("pendingCartAdd", "true");
+      localStorage.setItem(
+        "pendingDesignState",
+        JSON.stringify(currentDesignState)
+      );
+      localStorage.setItem(
+        "pendingPropsState",
+        JSON.stringify(currentPropsState)
+      );
       saveStateToLocalStorage();
       router.push("/auth");
       return;
     }
-    
+
     const success = await addDesignToCart(
       designs,
       customerToken,
       svgUrl,
       currentDesignState,
-      currentPropsState,
+      currentPropsState
     );
-    
+
     if (success) {
       dispatchDesign({ type: "CLEAR_ALL" });
-      localStorage.removeItem('savedDesignState');
-      localStorage.removeItem('savedPropsState');
-      localStorage.removeItem('pendingCartAdd');
-      localStorage.removeItem('pendingDesignState');
-      localStorage.removeItem('pendingPropsState');
+      localStorage.removeItem("savedDesignState");
+      localStorage.removeItem("savedPropsState");
+      localStorage.removeItem("pendingCartAdd");
+      localStorage.removeItem("pendingDesignState");
+      localStorage.removeItem("pendingPropsState");
       updateColor("#fff");
       dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: "#fff" });
     }
   };
-  
+
   useEffect(() => {
     const checkPendingCartAdd = async () => {
-      const hasPendingAdd = localStorage.getItem('pendingCartAdd');
-      
-      if (customerToken && hasPendingAdd === 'true') {
-        const pendingDesignStateStr = localStorage.getItem('pendingDesignState');
-        const pendingPropsStateStr = localStorage.getItem('pendingPropsState');
-        
+      const hasPendingAdd = localStorage.getItem("pendingCartAdd");
+
+      if (customerToken && hasPendingAdd === "true") {
+        const pendingDesignStateStr =
+          localStorage.getItem("pendingDesignState");
+        const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
+
         if (!pendingDesignStateStr || !pendingPropsStateStr) {
           return;
         }
-  
+
         try {
           const pendingDesignState = JSON.parse(pendingDesignStateStr);
           const pendingPropsState = JSON.parse(pendingPropsStateStr);
-          
+
           const success = await addDesignToCart(
             pendingDesignState,
             customerToken,
@@ -463,105 +580,100 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
             pendingDesignState,
             pendingPropsState
           );
-          
+
           if (success) {
             dispatchDesign({ type: "CLEAR_ALL" });
-            localStorage.removeItem('savedDesignState');
-            localStorage.removeItem('savedPropsState');
-            localStorage.removeItem('pendingCartAdd');
-            localStorage.removeItem('pendingDesignState');
-            localStorage.removeItem('pendingPropsState');
+            localStorage.removeItem("savedDesignState");
+            localStorage.removeItem("savedPropsState");
+            localStorage.removeItem("pendingCartAdd");
+            localStorage.removeItem("pendingDesignState");
+            localStorage.removeItem("pendingPropsState");
             updateColor("#fff");
             dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: "#fff" });
           }
         } catch (error) {
-          console.error('Error processing pending cart addition:', error);
-          localStorage.removeItem('pendingCartAdd');
-          localStorage.removeItem('pendingDesignState');
-          localStorage.removeItem('pendingPropsState');
+          console.error("Error processing pending cart addition:", error);
+          localStorage.removeItem("pendingCartAdd");
+          localStorage.removeItem("pendingDesignState");
+          localStorage.removeItem("pendingPropsState");
         }
       }
     };
-  
+
     checkPendingCartAdd();
-  }, [customerToken]); 
-
-
-
- 
-
-
-  
+  }, [customerToken]);
 
   return (
     <div>
       <div className="flex justify-between mb-1">
         {(isVendorMode || customerToken) && (
           <>
-        <button
-          type="button"
-          onClick={downloadDesignJson}
-          className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800"
-        >
-          <IconContext.Provider
-            value={{
-              size: "18px",
-              className: "btn-download-design inline-block",
-            }}
-          >
-            <FaDownload />
-          </IconContext.Provider>
-          <span className="ml-3">Download Json</span>
-        </button>
-        <button
-          type="button"
-          onClick={downloadZip}
-          className="text-purple-700 hover:text-white border-purple-700  hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
-        >
-          <IconContext.Provider
-            value={{ size: "24px", className: "btn-zip-design inline-block" }}
-          >
-            <VscBriefcase />
-          </IconContext.Provider>
-          <span className="ml-3">Download Zip</span>
-        </button>
-        </>
+            <button
+              type="button"
+              onClick={downloadDesignJson}
+              className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800"
+            >
+              <IconContext.Provider
+                value={{
+                  size: "18px",
+                  className: "btn-download-design inline-block",
+                }}
+              >
+                <FaDownload />
+              </IconContext.Provider>
+              <span className="ml-3">Download Json</span>
+            </button>
+            <button
+              type="button"
+              onClick={downloadZip}
+              className="text-purple-700 hover:text-white border-purple-700  hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
+            >
+              <IconContext.Provider
+                value={{
+                  size: "24px",
+                  className: "btn-zip-design inline-block",
+                }}
+              >
+                <VscBriefcase />
+              </IconContext.Provider>
+              <span className="ml-3">Download Zip</span>
+            </button>
+          </>
         )}
       </div>
 
       <div className="flex justify-between pt-2 bg-white p-2 pb-0 border border-b-0 border-zinc-300">
         <div>
-        {(isVendorMode || customerToken) && (
-          <>
-          <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
-          
-            <button onClick={downloadSVG}>
-              <IconContext.Provider
-                value={{
-                  size: "10px",
-                  className: "btn-download-design inline-block",
-                }}
-              >
-                <FaDownload />
-              </IconContext.Provider>
-              <p className="px-2 text-[10px]">SVG</p>
-            </button>
-          </div>
-          <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={() => downloadPNG()}>
-              <IconContext.Provider
-                value={{
-                  size: "10px",
-                  className: "btn-download-design inline-block",
-                }}
-              >
-                <FaDownload />
-              </IconContext.Provider>
-              <p className="px-2 text-[10px]">PNG</p>
-            </button>
-          </div>
-          </>
-        )}
+          {(isVendorMode || customerToken) && (
+            <>
+              <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
+                <button onClick={downloadSVG}>
+                  <IconContext.Provider
+                    value={{
+                      size: "10px",
+                      className: "btn-download-design inline-block",
+                    }}
+                  >
+                    <FaDownload />
+                  </IconContext.Provider>
+                  <p className="px-2 text-[10px]">SVG</p>
+                </button>
+              </div>
+              <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
+                <button onClick={() => downloadPNG()}>
+                  <IconContext.Provider
+                    value={{
+                      size: "10px",
+                      className: "btn-download-design inline-block",
+                    }}
+                  >
+                    <FaDownload />
+                  </IconContext.Provider>
+                  <p className="px-2 text-[10px]">PNG</p>
+                </button>
+              </div>
+            </>
+          )}
         </div>
 
         <div>
@@ -661,7 +773,13 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
         <div className="col-span-12 sm:col-span-12  md:col-span-12 lg:col-span-4 text-right">
           <button
             type="button"
-            onClick={() => isVendorMode? addProduct() :(cartId? handleUpdateCart() : handleAddToCart()) }
+            onClick={() =>
+              isVendorMode
+                ? addProduct()
+                : cartId
+                ? handleUpdateCart()
+                : handleAddToCart()
+            }
             className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
           >
             <IconContext.Provider
@@ -672,10 +790,17 @@ export default function DesignArea({ isVendorMode = false }: { isVendorMode?: bo
             >
               <FiShoppingBag />
             </IconContext.Provider>
-            <span className="ml-3">{isVendorMode? "Add Product" : (cartId ? `Update Cart` : `Add to Cart`)}</span>
+            <span className="ml-3">
+              {isVendorMode
+                ? "Add Product"
+                : cartId
+                ? `Update Cart`
+                : `Add to Cart`}
+            </span>
           </button>
         </div>
       </div>
     </div>
   );
+
 }

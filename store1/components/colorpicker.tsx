@@ -9,19 +9,27 @@ export function ColorPicker(): React.ReactElement {
   let { svgcolors, dispatchColorPicker } =
     React.useContext(ColorPickerContext)!;
 
-  const setColor = (e: any, c: IsvgColor) => {
-     dispatchForCanvas({
-      type: "UPDATE_SVG_COLOR",
-      payload: {
-        oldColor: c.value,
-        newColor: e.target.value,
-        colorIndex: c.id,
-      },
-    });
-    c.value = e.target.value;
-    svgcolors = svgcolors.map((thiscolor) => thiscolor.id == c.id ? {...thiscolor, value:e.target.value} : thiscolor);
-    dispatchColorPicker({ type: "SVG_COLORS", payload: svgcolors });
-  };
+    const setColor = (e: any, c: IsvgColor) => {
+      dispatchForCanvas({
+        type: "UPDATE_SVG_COLOR",
+        payload: {
+          oldColor: c.value,
+          newColor: e.target.value,
+          colorIndex: c.id,
+        },
+      });
+    
+    
+      // Update color locally
+      c.value = e.target.value;
+      svgcolors = svgcolors.map((thiscolor) =>
+        thiscolor.id === c.id
+          ? { ...thiscolor, value: e.target.value }
+          : thiscolor
+      );
+      dispatchColorPicker({ type: "SVG_COLORS", payload: svgcolors });
+    };
+    
   return (
     <div className="border border-zinc-200">
       {svgcolors.length > 0 && (
