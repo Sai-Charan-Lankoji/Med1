@@ -85,37 +85,30 @@ export default function DesignArea({
       selected: color.value === currentBgColor,
     }))
   );
+  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const autoSaveDesign = React.useCallback(() => {
     if (!canvas || !design) return;
 
-    if (autoSaveTimeout) {
-      clearTimeout(autoSaveTimeout); // Clear any existing timeout
+    const currentCanvasJSON = JSON.stringify(canvas.toJSON());
+
+    // Only save if the design state has changed
+    if (currentCanvasJSON !== lastSavedDesign) {
+      const pngImage = canvas.toDataURL({ multiplier: 4 });
+      const svgImage = canvas.toSVG();
+
+      dispatchDesign({
+        type: "STORE_DESIGN",
+        currentDesign: design,
+        selectedApparal: design.apparel,
+        jsonDesign: canvas.toJSON(),
+        pngImage: canvas.toJSON().objects.length ? pngImage : null,
+        svgImage: svgImage,
+      });
+
+      setLastSavedDesign(currentCanvasJSON); // Update the last saved state
     }
-
-    const timeout = setTimeout(() => {
-      const currentCanvasJSON = JSON.stringify(canvas.toJSON());
-
-      // Only save if the design state has changed
-      if (currentCanvasJSON !== lastSavedDesign) {
-        const pngImage = canvas.toDataURL({ multiplier: 4 });
-        const svgImage = canvas.toSVG();
-
-        dispatchDesign({
-          type: "STORE_DESIGN",
-          currentDesign: design,
-          selectedApparal: design.apparel,
-          jsonDesign: canvas.toJSON(),
-          pngImage: canvas.toJSON().objects.length ? pngImage : null,
-          svgImage: svgImage,
-        });
-
-        setLastSavedDesign(currentCanvasJSON); // Update the last saved state
-      }
-    }, 1000); // Save after 1 second of inactivity
-
-    setAutoSaveTimeout(timeout); // Set new timeout
-  }, [canvas, design, lastSavedDesign, autoSaveTimeout]);
+  }, [canvas, design, dispatchDesign, lastSavedDesign]);
 
   useEffect(() => {
     if (!canvas) return;
@@ -124,49 +117,70 @@ export default function DesignArea({
       "object:modified",
       "object:added",
       "object:removed",
-      "object:moving",
-      "object:scaling",
-      "object:rotating",
+      "object:skewing",
+      "object:resizing",
+      "object:flipping",
+      "object:aligning",
+      "object:layering",
+      "object:grouping",
+      "object:ungrouping",
+      "path:created",
+      "selection:updated",
+      "selection:created",
+      "selection:cleared",
       "text:changed",
+      "text:editing:entered",
+      "text:editing:exited",
     ];
 
-    events.forEach((eventName) => {
-      canvas.on(eventName, autoSaveDesign);
+    const mouseEvents = ["object:moving", "object:scaling", "object:rotating"];
+
+    // Only trigger save on mouse:up to avoid excessive saves during interactions
+    const handleMouseUp = () => {
+      autoSaveDesign();
+    };
+
+    // Add mouse:up event listener
+    canvas.on("mouse:up", handleMouseUp);
+
+    // Add other event listeners but don't trigger save
+    const handleEvent = () => {
+      // Update state but don't save
+      canvas.renderAll();
+    };
+
+    // Add event listeners for both regular and mouse events
+    [...events, ...mouseEvents].forEach((eventName) => {
+      canvas.on(eventName, handleEvent);
     });
 
     return () => {
-      events.forEach((eventName) => {
-        canvas?.off(eventName, autoSaveDesign);
+      // Remove all event listeners on cleanup
+      canvas.off("mouse:up", handleMouseUp);
+      [...events, ...mouseEvents].forEach((eventName) => {
+        canvas?.off(eventName, handleEvent);
       });
     };
   }, [canvas, autoSaveDesign]);
 
   useEffect(() => {
-    const handleSVGColorChange = () => {
-      if (canvas) {
-        autoSaveDesign();
-      }
-    };
-  
-    // Listen for changes on the canvas (if custom event logic is used)
-    canvas?.on("object:modified", handleSVGColorChange);
-  
-    return () => {
-      canvas?.off("object:modified", handleSVGColorChange);
-    };
-  }, [canvas, autoSaveDesign]);
+    if (canvas) {
+      // Directly set individual properties on the canvas
+      canvas.renderOnAddRemove = true;
+      canvas.preserveObjectStacking = true;
+      canvas.enableRetinaScaling = true;
 
-  
+      canvas.selection = true;
+      canvas.hoverCursor = "pointer";
+      canvas.defaultCursor = "default";
+    }
+  }, [canvas]);
+
   const handleImageClick = async (e: any, apparel: IApparel) => {
     e.preventDefault();
 
     // Auto-save current design before switching
-    if (canvas && design) {
-      const currentCanvasJSON = JSON.stringify(canvas.toJSON());
-      if (currentCanvasJSON !== lastSavedDesign) {
-        await autoSaveDesign();
-      }
-    }
+    autoSaveDesign();
 
     setApparels(
       apparels.map((product) =>
@@ -199,6 +213,7 @@ export default function DesignArea({
       setCartId(localStorage.getItem("cart_id"));
     }
   }, []);
+
   canvas?.on("selection:created", function (options) {
     if (options.e) {
       options.e.preventDefault();
@@ -269,7 +284,7 @@ export default function DesignArea({
     return () => {
       canvas.dispose();
     };
-  }, [design]);
+  }, [design, dispatchForCanvas]);
 
   const getCanvasClass = () => {
     if (design?.apparel.url === designApparels[0].url) {
@@ -284,34 +299,6 @@ export default function DesignArea({
 
     return "";
   };
-
-  // const handleImageClick = (e: any, apparel: IApparel) => {
-  //   e.preventDefault();
-  //   setApparels(
-  //     apparels.map((product) =>
-  //       product.url === apparel.url
-  //         ? { ...product, selected: true }
-  //         : { ...product, selected: false }
-  //     )
-  //   );
-  //   dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
-
-  //   if (design) {
-  //     dispatchDesign({
-  //       type: "STORE_DESIGN",
-  //       currentDesign: design,
-  //       selectedApparal:  { ...apparel, color: currentBgColor },
-  //       jsonDesign: canvas?.toJSON(),
-  //       pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
-  //       svgImage: canvas?.toSVG(),
-  //     });
-  //   } else {
-  //     console.error("Design is undefined");
-  //   }
-
-  //   dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: currentBgColor });
-  // };
-
   const handleColorClick = (value: string) => {
     setColors(
       colors.map((color) =>
@@ -601,7 +588,7 @@ export default function DesignArea({
     };
 
     checkPendingCartAdd();
-  }, [customerToken]);
+  }, [customerToken, addDesignToCart, svgUrl, dispatchDesign, updateColor]);
 
   return (
     <div>
@@ -802,5 +789,4 @@ export default function DesignArea({
       </div>
     </div>
   );
-
 }

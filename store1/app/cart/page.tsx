@@ -334,7 +334,7 @@ const CartPage = () => {
                 )}
               </div>
 
-              {cartItems.length === 0 ? (
+              {cartItems?.length === 0 ? (
                 <div className="p-12 text-center">
                   <div className="w-24 h-24 mx-auto mb-6 text-gray-300">
                     {/* Cart icon SVG can go here */}
@@ -354,7 +354,7 @@ const CartPage = () => {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100 ">
-                  {cartItems.map((item) => {
+                  {cartItems?.map((item) => {
                     if (!item.designs?.length) return null;
 
                     const pricePerItem = item.designs
