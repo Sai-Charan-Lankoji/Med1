@@ -1,3 +1,5 @@
+
+
 export const initIndexedDB = () => {
     const request = indexedDB.open("CanvasAppDB", 1);
 

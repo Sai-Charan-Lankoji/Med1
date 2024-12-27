@@ -1,5 +1,5 @@
-import { AnyAction } from 'redux';
-import { ICartItem } from '@/@types/models';
+import { AnyAction } from "redux";
+import { ICartItem } from "@/@types/models";
 
 // Define cart state interface
 interface CartState {
@@ -16,19 +16,21 @@ const initialState: CartState = {
 };
 
 // Action types
-export const ADD_TO_CART = 'ADD_TO_CART';
-export const REMOVE_FROM_CART = 'REMOVE_FROM_CART';
-export const CLEAR_CART = 'CLEAR_CART';
-export const SET_LOADING = 'SET_LOADING';
-export const SET_ERROR = 'SET_ERROR';
-export const FETCH_CART_SUCCESS = 'FETCH_CART_SUCCESS';
-export const UPDATE_CART = 'UPDATE_CART'; 
-export const UPDATE_CART_ITEM_QUANTITY = 'UPDATE_CART_ITEM_QUANTITY'
+export const ADD_TO_CART = "ADD_TO_CART";
+export const REMOVE_FROM_CART = "REMOVE_FROM_CART";
+export const CLEAR_CART = "CLEAR_CART";
+export const SET_LOADING = "SET_LOADING";
+export const SET_ERROR = "SET_ERROR";
+export const FETCH_CART_SUCCESS = "FETCH_CART_SUCCESS";
+export const UPDATE_CART = "UPDATE_CART";
+export const UPDATE_CART_ITEM_QUANTITY = "UPDATE_CART_ITEM_QUANTITY";
 
-// Action creators 
+// Action creators
 
-
-export const updateCartItemQuantity = (payload: { cartId: string; quantity: number }) => ({
+export const updateCartItemQuantity = (payload: {
+  cartId: string;
+  quantity: number;
+}) => ({
   type: UPDATE_CART_ITEM_QUANTITY,
   payload,
 });
@@ -59,16 +61,17 @@ export const setLoading = (loading: boolean) => ({
 export const setError = (error: string | null) => ({
   type: SET_ERROR,
   payload: error,
-}); 
-
+});
 
 export const fetchCartSuccess = (cartData: ICartItem[]) => ({
   type: FETCH_CART_SUCCESS,
   payload: cartData,
 });
 
-
-export const cartReducer = (state = initialState, action: AnyAction): CartState => {
+export const cartReducer = (
+  state = initialState,
+  action: AnyAction
+): CartState => {
   switch (action.type) {
     case ADD_TO_CART:
       return {
@@ -78,8 +81,9 @@ export const cartReducer = (state = initialState, action: AnyAction): CartState 
     case REMOVE_FROM_CART:
       return {
         ...state,
-        items: state.items.filter(item => item.id !== action.payload),
+        items: state.items.filter((item) => item.id !== action.payload),
       };
+
     case CLEAR_CART:
       return {
         ...state,
@@ -94,28 +98,29 @@ export const cartReducer = (state = initialState, action: AnyAction): CartState 
       return {
         ...state,
         error: action.payload,
-      }; 
+      };
 
-      case FETCH_CART_SUCCESS:
+    case FETCH_CART_SUCCESS:
       return {
         ...state,
         items: action.payload,
       };
-      case UPDATE_CART:
-        return {
-         ...state,
-          items: action.payload, 
-        }; 
+    case UPDATE_CART:
+      return {
+        ...state,
+        items: action.payload,
+      };
 
-        case UPDATE_CART_ITEM_QUANTITY:
-        return {
-         ...state,
-          items: state.items.map(item =>
-            item.id === action.payload.cartId? {...item, quantity: action.payload.quantity } : item
-          ),
-        };
+    case UPDATE_CART_ITEM_QUANTITY:
+      return {
+        ...state,
+        items: state.items.map((item) =>
+          item.id === action.payload.cartId
+            ? { ...item, quantity: action.payload.quantity }
+            : item
+        ),
+      };
     default:
       return state;
   }
 };
-

@@ -24,7 +24,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const storedUsername = sessionStorage.getItem('username');
     const storedEmail = sessionStorage.getItem('email');
-    const storedToken = localStorage.getItem('customerToken');
+    const storedToken = sessionStorage.getItem('auth_token');
 
     if (storedUsername && storedEmail) {
       setUsername(storedUsername);
@@ -52,10 +52,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setEmail(email);
     if (token) {
       setCustomerToken(token); 
-      localStorage.setItem('customerToken', token);
+      sessionStorage.setItem('auth_token', token);
     } else {
       setCustomerToken(null); 
-      localStorage.removeItem('customerToken'); 
+      sessionStorage.removeItem('auth_token'); 
     }
 
     if (username && email) {

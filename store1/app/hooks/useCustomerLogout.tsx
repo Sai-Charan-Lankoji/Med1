@@ -38,7 +38,7 @@ export const useCustomerLogout = () => {
   const logout = async () => {
     setLoading(true);
     setError(null);
-    const auth_token = localStorage.getItem('customerToken')
+    const auth_token = sessionStorage.getItem('auth_token')
     try {
       const url = NEXT_PUBLIC_API_URL;
       const response = await fetch(`${url}/api/customer/logout`, {

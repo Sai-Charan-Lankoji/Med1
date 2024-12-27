@@ -27,6 +27,48 @@ const initialState: CanvasState = {
   pauseSaving: false,
   initialState: null,
 };
+// Helper function to save canvas state
+const saveCanvasState = (state: CanvasState) => {
+  if (!state.canvas || state.pauseSaving) return;
+
+  const currentState = state.canvas.toJSON();
+  state.undoStack.push(currentState);
+  state.redoStack = []; // Clear redo stack when new action is performed
+
+  // Save to IndexedDB
+  saveStackToDB("undoStack", state.undoStack);
+  saveStackToDB("redoStack", state.redoStack);
+};
+
+// Setup canvas event listeners
+const setupCanvasListeners = (canvas: fabric.Canvas, state: CanvasState) => {
+  // Track object modifications
+  canvas.on("object:modified", () => {
+    if (!state.pauseSaving) {
+      saveCanvasState(state);
+    }
+  });
+
+  // Track object movement
+  canvas.on("object:moved", () => {
+    if (!state.pauseSaving) {
+      saveCanvasState(state);
+    }
+  });
+
+  // Track object scaling and rotation
+  canvas.on("object:scaled", () => {
+    if (!state.pauseSaving) {
+      saveCanvasState(state);
+    }
+  });
+
+  canvas.on("object:rotated", () => {
+    if (!state.pauseSaving) {
+      saveCanvasState(state);
+    }
+  });
+};
 
 function setReducer(state: CanvasState = initialState, action: any) {
   switch (action.type) {
@@ -355,11 +397,65 @@ function setReducer(state: CanvasState = initialState, action: any) {
       return state;
     }
     case "UPDATE_CANVAS_ACTIONS": {
-      if (!state.pauseSaving) {
-        state.undoStack.push(state.canvas?.toJSON());
+      if (!state.pauseSaving && state.canvas) {
+        const currentState = state.canvas.toJSON();
+
+        // Avoid saving duplicate states
+        const lastState = state.undoStack[state.undoStack.length - 1];
+        if (JSON.stringify(lastState) !== JSON.stringify(currentState)) {
+          state.undoStack.push(currentState);
+          state.redoStack = []; // Clear redo stack when new action is performed
+
+          // Save to IndexedDB
+          saveStackToDB("undoStack", state.undoStack);
+          saveStackToDB("redoStack", state.redoStack);
+        }
       }
       return state;
     }
+
+    case "UNDO": {
+      if (state.undoStack.length > 1) {
+        state.pauseSaving = true;
+
+        const currentState = state.canvas?.toJSON();
+        if (currentState) state.redoStack.push(currentState);
+
+        const previousState = state.undoStack.pop();
+        state.canvas?.loadFromJSON(previousState, () => {
+          state.canvas?.renderAll();
+        });
+
+        // Save updated stacks to IndexedDB
+        saveStackToDB("undoStack", state.undoStack);
+        saveStackToDB("redoStack", state.redoStack);
+
+        state.pauseSaving = false;
+      }
+      return { ...state };
+    }
+
+    case "REDO": {
+      if (state.redoStack.length > 0) {
+        state.pauseSaving = true;
+
+        const currentState = state.canvas?.toJSON();
+        if (currentState) state.undoStack.push(currentState);
+
+        const nextState = state.redoStack.pop();
+        state.canvas?.loadFromJSON(nextState, () => {
+          state.canvas?.renderAll();
+        });
+
+        // Save updated stacks to IndexedDB
+        saveStackToDB("undoStack", state.undoStack);
+        saveStackToDB("redoStack", state.redoStack);
+
+        state.pauseSaving = false;
+      }
+      return { ...state };
+    }
+
     case "RESET": {
       if (!state.canvas || !state.initialState) return state;
 
@@ -378,50 +474,6 @@ function setReducer(state: CanvasState = initialState, action: any) {
       };
     }
 
-    case "UNDO": {
-      console.log("Undo Stack:", state.undoStack);
-      console.log("Redo Stack:", state.redoStack);
-
-      state.pauseSaving = true;
-      if (state.undoStack.length < 1) return state;
-
-      const currentState = state.canvas?.toJSON();
-      state.redoStack.push(currentState);
-
-      const previousState = state.undoStack.pop();
-      console.log("Restoring state:", previousState);
-
-      state.canvas?.loadFromJSON(previousState, () => {
-        state.canvas?.renderAll();
-        console.log("Canvas restored after UNDO");
-      });
-
-      saveStackToDB("undoStack", state.undoStack);
-      saveStackToDB("redoStack", state.redoStack);
-
-      state.pauseSaving = false;
-      return { ...state };
-    }
-
-    case "REDO": {
-      state.pauseSaving = true;
-      if (state.redoStack.length === 0) return state;
-
-      const currentState = state.canvas?.toJSON();
-      state.undoStack.push(currentState);
-
-      const nextState = state.redoStack.pop();
-      state.canvas?.loadFromJSON(nextState, () => {
-        state.canvas?.renderAll();
-      });
-
-      // Save stacks to IndexedDB
-      saveStackToDB("undoStack", state.undoStack);
-      saveStackToDB("redoStack", state.redoStack);
-
-      state.pauseSaving = false;
-      return { ...state };
-    }
     case "SET_UNDO_STACK": {
       return { ...state, undoStack: action.payload };
     }

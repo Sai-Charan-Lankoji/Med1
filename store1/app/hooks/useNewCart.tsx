@@ -28,38 +28,37 @@ export const useNewCart = () => {
   const customerId =
     typeof window !== "undefined" ? sessionStorage.getItem("customerId") : null;
 
-  useEffect(() => {
-    const fetchCartData = async () => {
-      if (!customerId) return;
-
-      dispatch(setLoading(true));
-
-      try {
-        const response = await fetch(
-          `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
+      const fetchCartData = async () => {
+        if (!customerId) return;
+  
+        dispatch(setLoading(true));
+  
+        try {
+          const response = await fetch(
+            `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+  
+          if (!response.ok) {
+            throw new Error("Failed to fetch cart data");
           }
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch cart data");
+  
+          const data = await response.json();
+          dispatch(fetchCartSuccess(data));
+        } catch (error: any) {
+          dispatch(setError(error.message));
+        } finally {
+          dispatch(setLoading(false));
         }
-
-        const data = await response.json();
-        dispatch(fetchCartSuccess(data));
-      } catch (error: any) {
-        dispatch(setError(error.message));
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    fetchCartData();
-  }, [dispatch, customerId]);
+      };
+  
+      
+  
 
   const updateCartQuantity = async (cartId: string, quantity: number) => {
     try {
@@ -242,6 +241,7 @@ export const useNewCart = () => {
       }
 
       const data = await response.json();
+      fetchCartData();
       dispatch(fetchCartSuccess(data));
 
       return true;

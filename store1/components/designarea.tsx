@@ -105,7 +105,7 @@ export default function DesignArea({
         jsonDesign: canvas.toJSON(),
         pngImage: canvas.toJSON().objects.length ? pngImage : null,
         svgImage: svgImage,
-      });
+      }); 
 
       setLastSavedDesign(currentCanvasJSON); // Update the last saved state
     }
@@ -114,53 +114,51 @@ export default function DesignArea({
   useEffect(() => {
     if (!canvas) return;
 
+    let autoSaveTimeout: NodeJS.Timeout | null = null;
+
+    const debouncedAutoSave = () => {
+      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+
+      autoSaveTimeout = setTimeout(() => {
+        autoSaveDesign();
+      }, 500); // Auto-save triggered after 500ms of inactivity
+    };
+
+    const handleObjectModified = () => {
+      debouncedAutoSave();
+    };
+
+    const handleObjectMoving = () => {
+      debouncedAutoSave();
+    };
+
+    const handleObjectScaling = () => {
+      debouncedAutoSave();
+    };
+
+    const handleObjectRotating = () => {
+      debouncedAutoSave();
+    };
+
     const events = [
-      "object:modified",
-      "object:added",
-      "object:removed",
-      "object:skewing",
-      "object:resizing",
-      "object:flipping",
-      "object:aligning",
-      "object:layering",
-      "object:grouping",
-      "object:ungrouping",
-      "path:created",
-      "selection:updated",
-      "selection:created",
-      "selection:cleared",
-      "text:changed",
-      "text:editing:entered",
-      "text:editing:exited",
+      { name: "object:modified", handler: handleObjectModified },
+      { name: "object:moving", handler: handleObjectMoving },
+      { name: "object:scaling", handler: handleObjectScaling },
+      { name: "object:rotating", handler: handleObjectRotating },
     ];
 
-    const mouseEvents = ["object:moving", "object:scaling", "object:rotating"];
-
-    // Only trigger save on mouse:up to avoid excessive saves during interactions
-    const handleMouseUp = () => {
-      autoSaveDesign();
-    };
-
-    // Add mouse:up event listener
-    canvas.on("mouse:up", handleMouseUp);
-
-    // Add other event listeners but don't trigger save
-    const handleEvent = () => {
-      // Update state but don't save
-      canvas.renderAll();
-    };
-
-    // Add event listeners for both regular and mouse events
-    [...events, ...mouseEvents].forEach((eventName) => {
-      canvas.on(eventName, handleEvent);
+    // Add event listeners
+    events.forEach(({ name, handler }) => {
+      canvas.on(name, handler);
     });
 
     return () => {
-      // Remove all event listeners on cleanup
-      canvas.off("mouse:up", handleMouseUp);
-      [...events, ...mouseEvents].forEach((eventName) => {
-        canvas?.off(eventName, handleEvent);
+      // Cleanup event listeners
+      events.forEach(({ name, handler }) => {
+        canvas.off(name, handler);
       });
+
+      if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
     };
   }, [canvas, autoSaveDesign]);
 
@@ -284,12 +282,10 @@ export default function DesignArea({
       });
     }
     getStackFromDB("undoStack", (storedUndoStack) => {
-      console.log("Dispatching undoStack:", storedUndoStack); // Debugging log
       dispatchForCanvas({ type: "SET_UNDO_STACK", payload: storedUndoStack });
     });
 
     getStackFromDB("redoStack", (storedRedoStack) => {
-      console.log("Dispatching redoStack:", storedRedoStack); // Debugging log
       dispatchForCanvas({ type: "SET_REDO_STACK", payload: storedRedoStack });
     });
     return () => {
@@ -368,7 +364,7 @@ export default function DesignArea({
 
   const reset = () => {
     dispatchForCanvas({ type: "RESET" });
-    // dispatchDesign({ type: "CLEAR_ALL" });
+    dispatchDesign({ type: "CLEAR_ALL" });
     localStorage.removeItem("savedDesignState");
     localStorage.removeItem("savedPropsState");
     localStorage.removeItem("cart_id");
