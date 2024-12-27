@@ -8,7 +8,7 @@ import {
   AddSvg,
   randomId,
 } from "../shared/draw";
-
+import { clearStackFromDB, saveStackToDB } from "@/utils/indexedDButils";
 
 interface CanvasState {
   canvas: fabric.Canvas | undefined;
@@ -25,19 +25,20 @@ const initialState: CanvasState = {
   undoStack: [],
   redoStack: [],
   pauseSaving: false,
-  initialState: null
+  initialState: null,
 };
 
 function setReducer(state: CanvasState = initialState, action: any) {
-    
-
- 
   switch (action.type) {
     case "INIT": {
-      //if (!state.pauseSaving) state.undoStack.push(action.canvas?.toJSON());
-      //return { ...state, canvas: action.canvas };
       const initialState = action.canvas?.toJSON();
-      return { ...state, canvas: action.canvas,initialState, undoStack: [initialState],redoStack: [] };
+      return {
+        ...state,
+        canvas: action.canvas,
+        initialState,
+        undoStack: [initialState],
+        redoStack: [],
+      };
     }
     case "REINIT": {
       return { ...state, canvas: action.canvas };
@@ -295,7 +296,7 @@ function setReducer(state: CanvasState = initialState, action: any) {
       }
       state.canvas.isDrawingMode = false;
       var selection = state.canvas.getActiveObject();
-    
+
       state.canvas.discardActiveObject();
       state.canvas.requestRenderAll();
       return { ...state };
@@ -314,27 +315,27 @@ function setReducer(state: CanvasState = initialState, action: any) {
     case "UPDATE_SVG_COLOR": {
       if (state.canvas) {
         const activeObj = state.canvas.getActiveObject();
-    
+
         if (activeObj) {
           if (activeObj.type === "group" && "getObjects" in activeObj) {
             const groupObjects = (activeObj as fabric.Group).getObjects();
             if (groupObjects[action.payload.colorIndex]) {
-              groupObjects[action.payload.colorIndex].set("fill", action.payload.newColor);
+              groupObjects[action.payload.colorIndex].set(
+                "fill",
+                action.payload.newColor
+              );
             }
           } else {
             activeObj.set("fill", action.payload.newColor);
           }
-    
+
           // Trigger canvas rendering and save design state
           state.canvas.renderAll();
-  
         }
       }
       return state;
     }
-    
-    
-    
+
     case "UPDATE_SHAPE_STROKE_COLOR": {
       state.canvas
         ?.getActiveObject()
@@ -361,44 +362,73 @@ function setReducer(state: CanvasState = initialState, action: any) {
     }
     case "RESET": {
       if (!state.canvas || !state.initialState) return state;
-      
+
       state.canvas.loadFromJSON(state.initialState, () => {
         state.canvas?.renderAll();
       });
-      
+
+      // Clear undo and redo stacks in IndexedDB
+      clearStackFromDB("undoStack");
+      clearStackFromDB("redoStack");
+
       return {
         ...state,
         undoStack: [state.initialState],
         redoStack: [],
       };
     }
-    case "UNDO":
-  {
-    state.pauseSaving = true;
-    if (state.undoStack.length <= 1) return state; 
-    const currentState = state.canvas?.toJSON(); 
-    state.redoStack.push(currentState); 
-    const previousState = state.undoStack.pop(); 
-    state.canvas?.loadFromJSON(previousState, () => {
-      state.canvas?.renderAll();
-    });
-    state.pauseSaving = false;
-  }
-  return { ...state };
 
-case "REDO":
-  {
-    state.pauseSaving = true;
-    if (state.redoStack.length === 0) return state; 
-    const currentState = state.canvas?.toJSON();
-    state.undoStack.push(currentState); 
-    const nextState = state.redoStack.pop();
-    state.canvas?.loadFromJSON(nextState, () => {
-      state.canvas?.renderAll();
-    });
-    state.pauseSaving = false;
-  }
-  return { ...state };
+    case "UNDO": {
+      console.log("Undo Stack:", state.undoStack);
+      console.log("Redo Stack:", state.redoStack);
+
+      state.pauseSaving = true;
+      if (state.undoStack.length < 1) return state;
+
+      const currentState = state.canvas?.toJSON();
+      state.redoStack.push(currentState);
+
+      const previousState = state.undoStack.pop();
+      console.log("Restoring state:", previousState);
+
+      state.canvas?.loadFromJSON(previousState, () => {
+        state.canvas?.renderAll();
+        console.log("Canvas restored after UNDO");
+      });
+
+      saveStackToDB("undoStack", state.undoStack);
+      saveStackToDB("redoStack", state.redoStack);
+
+      state.pauseSaving = false;
+      return { ...state };
+    }
+
+    case "REDO": {
+      state.pauseSaving = true;
+      if (state.redoStack.length === 0) return state;
+
+      const currentState = state.canvas?.toJSON();
+      state.undoStack.push(currentState);
+
+      const nextState = state.redoStack.pop();
+      state.canvas?.loadFromJSON(nextState, () => {
+        state.canvas?.renderAll();
+      });
+
+      // Save stacks to IndexedDB
+      saveStackToDB("undoStack", state.undoStack);
+      saveStackToDB("redoStack", state.redoStack);
+
+      state.pauseSaving = false;
+      return { ...state };
+    }
+    case "SET_UNDO_STACK": {
+      return { ...state, undoStack: action.payload };
+    }
+
+    case "SET_REDO_STACK": {
+      return { ...state, redoStack: action.payload };
+    }
     default:
       return state;
   }

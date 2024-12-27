@@ -32,6 +32,7 @@ import {
   NEXT_PUBLIC_VENDOR_ID,
   NEXT_PUBLIC_STORE_ID,
 } from "@/constants/constants";
+import { getStackFromDB } from "@/utils/indexedDButils";
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
@@ -257,7 +258,8 @@ export default function DesignArea({
     switchMenu(options.target?.type, options.target);
   });
 
-  canvas?.on("object:moving", (e) => {
+  canvas?.on("object:moving", () => {
+    console.log("Object moving");
     dispatchForCanvas({ type: "UPDATE_CANVAS_ACTIONS" });
   });
   canvas?.on("object:scaling", (e) => {
@@ -281,6 +283,15 @@ export default function DesignArea({
         payload: design.jsonDesign,
       });
     }
+    getStackFromDB("undoStack", (storedUndoStack) => {
+      console.log("Dispatching undoStack:", storedUndoStack); // Debugging log
+      dispatchForCanvas({ type: "SET_UNDO_STACK", payload: storedUndoStack });
+    });
+
+    getStackFromDB("redoStack", (storedRedoStack) => {
+      console.log("Dispatching redoStack:", storedRedoStack); // Debugging log
+      dispatchForCanvas({ type: "SET_REDO_STACK", payload: storedRedoStack });
+    });
     return () => {
       canvas.dispose();
     };
@@ -356,18 +367,19 @@ export default function DesignArea({
   };
 
   const reset = () => {
-    dispatchDesign({ type: "CLEAR_ALL" });
+    dispatchForCanvas({ type: "RESET" });
+    // dispatchDesign({ type: "CLEAR_ALL" });
     localStorage.removeItem("savedDesignState");
     localStorage.removeItem("savedPropsState");
     localStorage.removeItem("cart_id");
     router.refresh();
   };
 
-  const undo = (e: any) => {
+  const handleUndo = () => {
     dispatchForCanvas({ type: "UNDO" });
   };
 
-  const redo = (e: any) => {
+  const handleRedo = () => {
     dispatchForCanvas({ type: "REDO" });
   };
 
@@ -665,7 +677,7 @@ export default function DesignArea({
 
         <div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={(e) => redo(e)}>
+            <button onClick={handleRedo}>
               <IconContext.Provider
                 value={{
                   size: "10px",
@@ -678,7 +690,7 @@ export default function DesignArea({
             </button>
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
-            <button onClick={(e) => undo(e)}>
+            <button onClick={handleUndo}>
               <IconContext.Provider
                 value={{
                   size: "10px",
