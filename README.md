@@ -1,7 +1,7 @@
 # Design UI
 
 ## Overview
-Design UI is a modular project with five main folders, each designed for specific functionality. The project uses **Next.js** for the frontend and **Node.js with Express** for the backend. Follow the steps below to set up and run the project efficiently.
+Design UI is a modular project with five main modules, each designed for specific functionality. The project uses **Next.js** for the frontend and **Node.js with Express** for the backend. Follow the steps below to set up and run the project efficiently.
 
 ## Folder Structure and Usage
 
@@ -82,5 +82,5 @@ Design UI is a modular project with five main folders, each designed for specifi
 - For troubleshooting, check the logs in the respective folder.
 
 ## License
-This project is licensed under [Insert License Name].
+This project is licensed under MIT.
 
