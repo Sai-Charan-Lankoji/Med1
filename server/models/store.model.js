@@ -63,7 +63,7 @@ const Store = sequelize.define(
     }
   },
   {
-    tableName: "store", // Use existing table name
+    tableName: "store", 
     timestamps: true, // Enable created_at and updated_at
     underscored: true, // Use snake_case for column names
     hooks: {

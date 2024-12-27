@@ -1,7 +1,8 @@
 const Customer = require("../models/customer.model")
 const TokenBlacklist = require("../models/tokenBlacklist.model"); // Example blacklist model
 const { generateToken } = require("../utils/jwt");
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcrypt'); 
+const TokenEncryption = require("../utils/encryption")
 
 
 class CustomerService { 
@@ -21,8 +22,11 @@ class CustomerService {
         const token = generateToken({
             id: customer.id,
             email: customer.email,
-        });
-        return {token, customer};
+        }); 
+
+        const encryptedToken = TokenEncryption.encrypt(token);
+
+        return {token : encryptedToken, customer};
     } 
 
 
@@ -40,8 +44,9 @@ class CustomerService {
         const token = generateToken({
             id: customer.id,
             email: customer.email,
-        });
-        return {token, customer};
+        }); 
+        const encryptedToken = TokenEncryption.encrypt(token);
+        return {token : encryptedToken, customer};
     } 
 
     // get customer by email

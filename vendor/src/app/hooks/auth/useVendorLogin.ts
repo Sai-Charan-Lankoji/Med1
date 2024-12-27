@@ -1,7 +1,8 @@
 'use client'
 
 import { useAuth } from '@/app/context/AuthContext';
-import { useState } from 'react';
+import { useState } from 'react'; 
+import { TokenEncryption } from '@/app/utils/encryption';
 
 interface VendorLoginResponse {
   token: string | null;
@@ -36,9 +37,11 @@ const useVendorLogin = () => {
       return;
     }
 
-    try {
+    try { 
+      const localUrl = "http://localhost:5000/api/vendor/login"
       const url = 'https://med1-wyou.onrender.com';
-      const response = await fetch(`${url}/api/vendor/login`, {
+      //`${url}/api/vendor/login`,
+      const response = await fetch( `${url}/api/vendor/login`,{
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -60,8 +63,10 @@ const useVendorLogin = () => {
       }
 
       const data: VendorLoginResponse = await response.json();
-      if (data.token) {
-         sessionStorage.setItem('auth_token',data.token)
+      if (data.token) {  
+        const encryptedToken = await TokenEncryption.encrypt(data.token);
+          const decryptedToken = await TokenEncryption.decrypt(encryptedToken);
+         sessionStorage.setItem('auth_token',decryptedToken);
         if (data.vendor) {
           sessionStorage.setItem('vendor_id', data.vendor.id);
           sessionStorage.setItem('business_type', data.vendor.business_type);

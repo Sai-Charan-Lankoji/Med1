@@ -1,9 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Vendor = require("../models/vendor.model");
-const VendorUser = require("../models/vendoruser.model")
+const VendorUser = require("../models/vendoruser.model");
 const TokenBlacklist = require("../models/tokenBlacklist.model");
 const { generateToken } = require("../utils/jwt");
+const TokenEncryption  = require("../utils/encryption");
 
 class VendorAuthService {
   /**
@@ -23,7 +24,11 @@ class VendorAuthService {
           id: vendor.id,
           email: vendor.contact_email,
         });
-        return { token, vendor };
+
+        const encryptedToken = TokenEncryption.encrypt(token);
+
+
+        return { token: encryptedToken, vendor };
       } else {
         throw new Error("Invalid email or password.");
       }
@@ -31,17 +36,21 @@ class VendorAuthService {
 
     const vendorUser = await VendorUser.findOne({ where: { email: email } });
     if (vendorUser) {
-      const isPasswordValid = await bcrypt.compare(password, vendorUser.password);
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        vendorUser.password
+      );
       if (isPasswordValid) {
         const token = generateToken({
           id: vendorUser.id,
           email: vendorUser.email,
         });
-        return { token, vendorUser };
-      }else{
+        const encryptedToken = TokenEncryption.encrypt(token);
+        return { token : encryptedToken, vendorUser };
+      } else {
         throw new Error("Invalid Password.");
       }
-    } 
+    }
   }
 
   async resetPassword(email, newPassword) {
@@ -54,7 +63,9 @@ class VendorAuthService {
     if (vendor) {
       const isPasswordSame = await bcrypt.compare(newPassword, vendor.password);
       if (isPasswordSame) {
-        throw new Error("New password must be different from the current password.");
+        throw new Error(
+          "New password must be different from the current password."
+        );
       }
 
       vendor.password = await bcrypt.hash(newPassword, 10);
@@ -63,9 +74,14 @@ class VendorAuthService {
     }
     const vendorUser = await VendorUser.findOne({ where: { email } });
     if (vendorUser) {
-      const isPasswordSame = await bcrypt.compare(newPassword, vendorUser.password);
+      const isPasswordSame = await bcrypt.compare(
+        newPassword,
+        vendorUser.password
+      );
       if (isPasswordSame) {
-        throw new Error("New password must be different from the current password.");
+        throw new Error(
+          "New password must be different from the current password."
+        );
       }
 
       vendorUser.password = await bcrypt.hash(newPassword, 10);

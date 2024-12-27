@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
-import {NEXT_PUBLIC_API_URL} from "../../constants/constants"
+import {NEXT_PUBLIC_API_URL} from "../../constants/constants" 
+import { TokenEncryption } from '../utils/encryption';
 
 interface StoreLoginResponse {
   customer: any;
@@ -34,7 +35,9 @@ export const useCustomerLogin = () => {
     setLoading(true);
     setError(null);
 
-    try {
+    try { 
+      const localUrl = "http://localhost:5000/api/customer/login" 
+      //`${url}/api/customer/login`
       const url = NEXT_PUBLIC_API_URL;
       const response = await fetch(`${url}/api/customer/login`, {
         method: 'POST',
@@ -46,7 +49,8 @@ export const useCustomerLogin = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json(); 
+
         console.log(`Error Response Data:`, errorData);
         if (response.status === 401) {
           throw new Error('Unauthorized: Invalid email or password');
@@ -56,9 +60,12 @@ export const useCustomerLogin = () => {
 
       const data: StoreLoginResponse = await response.json();
       
-      if (data.token) {
+      if (data.token) { 
+        const encryptedToken = await TokenEncryption.encrypt(data.token);
+        const decryptedToken = await TokenEncryption.decrypt(encryptedToken); 
+
          
-        setUser(data.customer.first_name, data.customer.email, data.token); 
+        setUser(data.customer.first_name, data.customer.email, decryptedToken); 
         sessionStorage.setItem('customerId', data.customer.id)
         sessionStorage.setItem('customerEmail', data.customer.email);
         
