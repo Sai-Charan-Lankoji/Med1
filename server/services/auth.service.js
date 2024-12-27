@@ -21,9 +21,10 @@ class AuthService {
       throw new Error(`Password must be at least ${AuthService.PASSWORD_MIN_LENGTH} characters long.`);
     }
     
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
       throw new Error("Invalid email format.");
     }
+    
   }
 
   // Signup logic with improved validation and error handling
