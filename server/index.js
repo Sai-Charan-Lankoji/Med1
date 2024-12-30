@@ -1,13 +1,14 @@
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
-const fs = require("fs");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const sequelize = require("./config/db.js");
 const swaggerUi = require("swagger-ui-express");
 const { swaggerSpecs } = require("./swagger/swagger");
+const { listStores } = require("./services/store.service.js"); // Import your service method
 
+// Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
 const authRoutes = require("./routes/auth.route.js");
 const planRoutes = require("./routes/plan.route.js");
@@ -25,40 +26,76 @@ const fileRoutes = require("./routes/file.route.js");
 
 const app = express();
 
-// Body parser middleware
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+let dynamicAllowedOrigins = [];
+
+// Function to update allowed origins dynamically
+const updateAllowedOrigins = async () => {
+  try {
+    const stores = await listStores(); // Fetch store data using your service
+    dynamicAllowedOrigins = stores.map((store) => store.store_url); // Extract store URLs
+    console.log("Updated Allowed Origins:", dynamicAllowedOrigins);
+  } catch (error) {
+    console.error("Error updating allowed origins:", error.message);
+  }
+};
+
+// Call the updateAllowedOrigins function during server startup
+updateAllowedOrigins();
 
 // CORS middleware
 app.use(
   cors({
-    origin: [
-      "http://localhost:7009",
-      "http://localhost:7000",
-      "http://localhost:3000",
-      "https://med1-4217.vercel.app",
-      "https://med1-five.vercel.app",
-      "https://med1-p6q2.vercel.app",
-    ],
+    origin: (origin, callback) => {
+      const predefinedOrigins = [
+        "http://localhost:7009",
+        "http://localhost:7000",
+        "http://localhost:3000",
+        "https://med1-4217.vercel.app",
+        "https://med1-five.vercel.app",
+        "https://med1-p6q2.vercel.app",
+      ];
+
+      const allowedOrigins = [...predefinedOrigins, ...dynamicAllowedOrigins];
+
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "credentials"],
     credentials: true,
   })
 );
 
-// Serve /uploads with proper headers
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', 'https://med1-p6q2.vercel.app', 'http://localhost:3000');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+// Body parser middleware
+app.use(bodyParser.json({ limit: "50mb" }));
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-  next();
-}, express.static(path.join(__dirname, 'public/uploads')));
+// Serve /uploads with proper headers
+app.use(
+  "/uploads",
+  (req, res, next) => {
+    res.setHeader(
+      "Access-Control-Allow-Origin",
+      req.headers.origin || "*"
+    );
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept"
+    );
+    res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+
+    if (req.method === "OPTIONS") {
+      return res.status(200).end();
+    }
+
+    next();
+  },
+  express.static(path.join(__dirname, "public/uploads"))
+);
 
 // API Documentation
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
@@ -78,6 +115,9 @@ app.use("/api/saleschannels", saleschannelRoutes);
 app.use("/api/token-blacklist", tokenBlacklistRoutes);
 app.use("/api/publishibleapikey", publishableApiKeyRoutes);
 app.use("/api", fileRoutes);
+
+// Periodically refresh the allowed origins (optional)
+setInterval(updateAllowedOrigins, 60000); // Refresh every 60 seconds
 
 // Start server
 const startServer = async () => {
