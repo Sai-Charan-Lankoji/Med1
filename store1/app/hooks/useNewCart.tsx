@@ -13,7 +13,7 @@ import {
 } from "../../reducer/cartReducer";
 import { IDesign, IProps } from "@/@types/models";
 import { useRouter } from "next/navigation";
-import { NEXT_PUBLIC_API_URL } from "../../constants/constants";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 const baseUrl = NEXT_PUBLIC_API_URL;
 

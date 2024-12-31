@@ -14,7 +14,7 @@ import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
 import { IDesign, IProps } from "@/@types/models";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
-import { NEXT_STORE_NAME, NEXT_PUBLIC_VENDOR_ID } from "@/constants/constants";
+import { useStore } from "@/context/storecontext";
 
 
 const Navbar: React.FC = () => {
@@ -32,8 +32,9 @@ const Navbar: React.FC = () => {
     [key: string]: boolean;
   }>({});
    const params = useParams();
+   const { store } = useStore();
   const vendorId = params.vendorId as string;
-  const isVendorMode = vendorId === NEXT_PUBLIC_VENDOR_ID;
+  const isVendorMode = vendorId === store?.vendor_id;
 
   useEffect(() => {
     if (email) {
@@ -236,7 +237,7 @@ const Navbar: React.FC = () => {
   <div className="flex items-center">
     <ShirtIcon className="h-8 w-8 text-indigo-600" />
     <h1 className="ml-2 sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-      {NEXT_STORE_NAME}
+      {store?.name}
     </h1>
   </div>
 </Link>

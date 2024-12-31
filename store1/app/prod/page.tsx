@@ -7,7 +7,8 @@ import { useGetProducts } from "../hooks/useGetProducts";
 import { useRouter } from "next/navigation";
 import { DesignContext } from "@/context/designcontext";
 import { IDesign, IProps } from "@/@types/models";
-
+import { useStore } from "@/context/storecontext";
+ 
 const InfiniteScrollContainer = ({
   children,
 }: {
@@ -57,7 +58,9 @@ const InfiniteScrollContainer = ({
 };
 
 const ProductGallery = () => {
-  const { data: products, isLoading, error } = useGetProducts();
+  const { store }  = useStore()
+  const store_id = store?.id
+  const { data: products, isLoading, error } = useGetProducts(store_id);
   const router = useRouter();
   const designContext = React.useContext(DesignContext);
   const { dispatchDesign } = designContext || {

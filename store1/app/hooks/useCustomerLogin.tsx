@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserContext } from '@/context/userContext';
-import {NEXT_PUBLIC_API_URL} from "../../constants/constants" 
+import {NEXT_PUBLIC_API_URL} from "@/constants/constants" 
 import { TokenEncryption } from '../utils/encryption';
 
 interface StoreLoginResponse {

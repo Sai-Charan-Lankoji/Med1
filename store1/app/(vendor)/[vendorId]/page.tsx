@@ -10,21 +10,21 @@ import { store } from "@/reducer/store";
 import { Provider } from "react-redux";
 import { Template } from "@/components/templates";
 import { useParams, useRouter } from "next/navigation";
-import {NEXT_PUBLIC_VENDOR_ID} from "@/constants/constants";
+import { useStore } from "@/context/storecontext";
 
 const VendorDesignCanvas = () => {
     const params = useParams();
     const router = useRouter();
     const vendorId = params.vendorId as string;
- 
+    const { store } = useStore()
     React.useEffect(() => {
         // Verify vendor ID
-        if (vendorId !== NEXT_PUBLIC_VENDOR_ID) {
+        if (vendorId !== store?.vendor_id) {
            router.push('/');
         }
       }, [vendorId, router]);
     
-      if (vendorId !== NEXT_PUBLIC_VENDOR_ID) {
+      if (vendorId !== store?.vendor_id) {
         return null;
       }
 

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { HiEye, HiEyeOff } from "react-icons/hi";
 import { useCustomerLogin } from "../hooks/useCustomerLogin";
 import { useCustomerSignup } from "../hooks/useCustomerSignup";
-import {NEXT_PUBLIC_VENDOR_ID} from "../../constants/constants"
+ import { useStore } from "@/context/storecontext";
 
 type Errors = {
   firstName?: string;
@@ -15,7 +15,8 @@ type Errors = {
   password?: string;
 };
 export default function SignIn() {
-  const vendorId = NEXT_PUBLIC_VENDOR_ID  || null;
+  const { store } = useStore();
+  const vendorId = store?.vendor_id  || null;
 
   const { login, loading: loginLoading, error: loginError } = useCustomerLogin();
   const { signup, loading: signupLoading, error: signupError } = useCustomerSignup();

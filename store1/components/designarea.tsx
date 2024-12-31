@@ -28,11 +28,8 @@ import { useRouter } from "next/navigation";
 import { useSvgContext } from "../context/svgcontext";
 import { useNewCart } from "@/app/hooks/useNewCart";
 import { useEffect, useState } from "react";
-import {
-  NEXT_PUBLIC_VENDOR_ID,
-  NEXT_PUBLIC_STORE_ID,
-} from "@/constants/constants";
 import { getStackFromDB } from "@/utils/indexedDButils";
+import { useStore } from "@/context/storecontext";
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
@@ -87,7 +84,7 @@ export default function DesignArea({
     }))
   );
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
-
+  const { store }  = useStore()
   const autoSaveDesign = React.useCallback(() => {
     if (!canvas || !design) return;
 
@@ -459,8 +456,8 @@ export default function DesignArea({
       };
 
       const requestBody = {
-        vendor_id: NEXT_PUBLIC_VENDOR_ID,
-        store_id: NEXT_PUBLIC_STORE_ID,
+        vendor_id: store?.vendor_id,
+        store_id: store?.id,
         designs: designs,
         designstate: currentDesignState,
         propstate: currentPropsState,

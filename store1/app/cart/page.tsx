@@ -12,7 +12,7 @@ import { ChevronLeft, ChevronRight, XMarkMini } from "@medusajs/icons";
 import { ICartItem } from "@/@types/models";
 import { IDesign, IProps } from "@/@types/models";
 import { DesignContext } from "@/context/designcontext";
-import {NEXT_PUBLIC_VENDOR_ID,NEXT_PUBLIC_STORE_ID} from "../../constants/constants"
+import { useStore } from "@/context/storecontext";
 
 interface OrderData {
   line_items: Array<{
@@ -61,7 +61,7 @@ const CartPage = () => {
     Record<string, "apparel" | "uploaded">
   >({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-
+  const { store } = useStore();
   const toggleViewMode = (itemId: string) => {
     setImageViewMode((prev) => ({
       ...prev,
@@ -205,9 +205,9 @@ const CartPage = () => {
       customer_id: sessionStorage.getItem("customerId"),
       email: sessionStorage.getItem("customerEmail"),
       region_id: "reg_01J2GRDEGRBXFBD4HZW443AF8K",
-      vendor_id: NEXT_PUBLIC_VENDOR_ID,
+      vendor_id: store?.vendor_id,
       public_api_key: process.env.NEXT_PUBLIC_API_KEY || null,
-      store_id : NEXT_PUBLIC_STORE_ID 
+      store_id : store?.id
     };
 
     createOrder(orderData, {
