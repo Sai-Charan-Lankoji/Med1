@@ -32,7 +32,7 @@
     "medusa-react": "^9.0.18",
     "mime": "^4.0.3",
     "nanoid": "^5.0.7",
-    "next": "^14.2.15",
+    "next": "^14.2.21",
     "react": "^18",
     "react-best-gradient-color-picker": "^3.0.8",
     "react-dom": "^18",
