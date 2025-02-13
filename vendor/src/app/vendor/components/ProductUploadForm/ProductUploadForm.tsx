@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2, Plus, X } from "lucide-react"
-import ReactSelect from "react-select"
+import Select from "react-select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -42,16 +42,16 @@ export function ProductUploadForm({ onClose, store }) {
     defaultValues: {
       title: "",
       description: "",
-      price: 0,
+      price: null,
       category: "",
       sizes: [],
       colors: [],
-      stock: 0,
+      stock: null,
       images: [],
       brand: "",
       sku: "",
-      weight: 0,
-      dimensions: { length: 0, width: 0, height: 0 },
+      weight: null,
+      dimensions: { length: null, width: null, height: null },
       store_id: store.id,
     },
   })
@@ -141,7 +141,7 @@ export function ProductUploadForm({ onClose, store }) {
               <FormItem>
                 <FormLabel>Category</FormLabel>
                 <FormControl>
-                  <ReactSelect
+                  <Select
                     options={CATEGORIES}
                     value={CATEGORIES.find((option) => option.value === field.value)}
                     onChange={(selectedOption) => field.onChange(selectedOption?.value)}
@@ -284,26 +284,38 @@ export function ProductUploadForm({ onClose, store }) {
         </div>
 
         <FormField
-          control={form.control}
-          name="colors"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Colors</FormLabel>
-              <FormControl>
-                <ReactSelect
-                  isMulti
-                  options={COLORS}
-                  value={field.value.map((color) => ({ value: color.hex, label: color.name }))}
-                  onChange={(selectedOptions) => {
-                    field.onChange(selectedOptions.map((option) => ({ name: option.label, hex: option.value })))
-                  }}
-                  placeholder="Select colors"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      control={form.control}
+      name="colors"
+      render={({ field }) => (
+        <FormItem>
+          <FormLabel>Colors</FormLabel>
+          <FormControl>
+            <Select className="border-none"
+              isMulti
+              options={COLORS.map((color) => ({
+                value: color.value,
+                label: color.label,
+              }))}
+              value={field.value.map((color) => ({
+                value: color.hex,
+                label: color.name,
+              }))}
+              onChange={(selectedOptions) => {
+                // Update field value based on selection
+                field.onChange(
+                  selectedOptions.map((option) => ({
+                    name: option.label,
+                    hex: option.value,
+                  }))
+                );
+              }}
+              placeholder="Select colors"
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
 
         <FormField
           control={form.control}
