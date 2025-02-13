@@ -131,6 +131,27 @@ router.post("/", upload, standardProductController.createStandardProduct);
  */
 router.get("/", standardProductController.getAllStandardProducts);
 
+
+/**
+ * @swagger
+ * /api/standardproducts/{storeId}:
+ *   get:
+ *     summary: List all standard products by storeId
+ *     tags: [StandardProducts]
+ *     parameters:
+ *       - in: path
+ *         name: storeId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Product found
+ *       404:
+ *         description: Product not found
+ */
+router.get("/:storeId", standardProductController.getAllStandardProductsByStoreId);
+
 /**
  * @swagger
  * /api/standardproducts/{id}:

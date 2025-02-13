@@ -10,6 +10,11 @@ const getAllStandardProducts = async () => {
   return await StandardProduct.findAll();
 };
 
+// Get all standard products by storeId
+const getAllStandardProductsByStoreId = async (storeId) => {
+  return await StandardProduct.findAll({where : {store_id : storeId}});
+};
+
 // Get a single standard product by ID
 const getStandardProductById = async (id) => {
   return await StandardProduct.findByPk(id);
@@ -32,6 +37,7 @@ const deleteStandardProduct = async (id) => {
 module.exports = {
   createStandardProduct,
   getAllStandardProducts,
+  getAllStandardProductsByStoreId,
   getStandardProductById,
   updateStandardProduct,
   deleteStandardProduct,

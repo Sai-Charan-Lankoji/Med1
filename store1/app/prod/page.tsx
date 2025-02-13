@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -8,7 +8,8 @@ import { useRouter } from "next/navigation";
 import { DesignContext } from "@/context/designcontext";
 import { IDesign, IProps } from "@/@types/models";
 import { useStore } from "@/context/storecontext";
- 
+import { useGetStandardProducts } from "../hooks/useGetStandardProducts";
+
 const InfiniteScrollContainer = ({
   children,
 }: {
@@ -58,9 +59,11 @@ const InfiniteScrollContainer = ({
 };
 
 const ProductGallery = () => {
-  const { store }  = useStore()
-  const store_id = store?.id
+  const { store } = useStore();
+  const store_id = store?.id;
   const { data: products, isLoading, error } = useGetProducts(store_id);
+  const { data: standardProducts } = useGetStandardProducts(store_id);
+  console.log(standardProducts);
   const router = useRouter();
   const designContext = React.useContext(DesignContext);
   const { dispatchDesign } = designContext || {
@@ -94,6 +97,11 @@ const ProductGallery = () => {
       return () => clearInterval(intervalId);
     }
   }, [hoveredProduct, products]);
+
+
+  const handleProductClick = (productId: any) => {
+    router.push(`/product/${productId}`);
+  };
 
   const handleDesignClick = async (
     designstate: IDesign,
@@ -155,18 +163,10 @@ const ProductGallery = () => {
     );
   }
 
-  const renderProducts = () => {
-    const productElements = products
-      .filter((product: { designs?: IDesign[] }) => product.designs?.length)
-      .map((product: { id: string; designs: IDesign[]; designstate: IDesign; propstate: IProps }, index: number) => {
-        const currentImageIndex =
-          hoveredProduct === product.id
-            ? currentImageIndices[product.id] || 0
-            : 0;
-
-        const currentDesign = product.designs[currentImageIndex];
-
-        return (
+  const renderStandardProducts = () => {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mt-10">
+        {standardProducts?.map((product: any) => (
           <motion.div
             key={product.id}
             className="flex-shrink-0 w-64 mx-2 snap-start cursor-pointer group"
@@ -174,122 +174,167 @@ const ProductGallery = () => {
               scale: 1.05,
               transition: { type: "spring", stiffness: 500, damping: 30 },
             }}
-            onHoverStart={() => setHoveredProduct(product.id)}
-            onHoverEnd={() => {
-              setHoveredProduct(null);
-              setCurrentImageIndices((prev) => ({
-                ...prev,
-                [product.id]: 0,
-              }));
-            }}
-            onClick={() =>
-              handleDesignClick(
-                product.designstate,
-                product.propstate,
-                product.id
-              )
-            }
+            onClick={() => handleProductClick(product.id)}
           >
-           <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                        <Image
-                          src={currentDesign.apparel.url}
-                          alt={`Product ${product.id} ${currentDesign.apparel.side}`}
-                          fill
-                          sizes="100%"
-                          className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
-                          style={{
-                            backgroundColor: currentDesign.apparel?.color,
-                          }}
-                        />
-                        <div
-                          className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        >
-                          <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <p className="text-white text-sm sm:text-base">
-                              Current Side:{" "}
-                              {capitalizeFirstLetter(
-                                currentDesign.apparel.side
-                              )}
-                            </p>
-                            <p className="text-white text-xs mt-1">
-                              Product ID: {product.id.slice(-8)}
-                            </p>
-                          </div>
-                        </div>
-                        <div
-                          className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 group-hover:opacity-100 transition-opacity duration-300"
-                          style={{
-                            top:
-                              currentDesign.apparel.side === "leftshoulder"
-                                ? "170px"
-                                : currentDesign.apparel.side === "rightshoulder"
-                                ? "170px"
-                                : "initial",
-                            left:
-                              currentDesign.apparel.side === "leftshoulder"
-                                ? "130px"
-                                : currentDesign.apparel.side === "rightshoulder"
-                                ? "145px"
-                                : "initial",
-                            width:
-                              currentDesign.apparel.side === "leftshoulder" ||
-                              currentDesign.apparel.side === "rightshoulder"
-                                ? "30%"
-                                : "50%",
-                            height:
-                              currentDesign.apparel.side === "leftshoulder" ||
-                              currentDesign.apparel.side === "rightshoulder"
-                                ? "30%"
-                                : "50%",
-                            transform: "translate(-50%, -50%)",
-                            transition:
-                              "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
-                          }}
-                        >
-                          {currentDesign.pngImage ? (
-                            <Image
-                              src={currentDesign.pngImage}
-                              alt="Design"
-                              fill
-                              sizes="100%"
-                              className="rounded-md transition-opacity duration-300 ease-in-out"
-                              style={{ objectFit: "contain" }}
-                            />
-                          ) : currentDesign.uploadedImages?.length > 1 ? (
-                            <div className="flex overflow-x-auto space-x-2">
-                              {currentDesign.uploadedImages.map(
-                                (imageUrl, idx) => (
-                                  <Image
-                                    key={idx}
-                                    src={imageUrl}
-                                    alt={`Uploaded Image ${idx + 1}`}
-                                    width={100} 
-                                    height={100}
-                                    className="object-cover rounded-md"
-                                  />
-                                )
-                              )}
-                            </div>
-                          ) : (
-                            <Image
-                              src={currentDesign.uploadedImages[0]}
-                              alt="Uploaded Image"
-                              fill
-                              className="rounded-md transition-opacity duration-300 ease-in-out w-4 h-4"
-                              style={{ objectFit: "scale-down" }}
-                            />
-                          )}
-                        </div>
-                      </div>
+            <div className="aspect-square bg-gray-100 relative overflow-hidden">
+              <Image
+                src={product.front_image || "/placeholder.jpg"}
+                alt={product.title}
+                fill
+                sizes="100%"
+                className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-black/60 text-white">
+                <h3 className="text-sm font-semibold">{product.title}</h3>
+                <p className="text-xs">Price: ${product.price}</p>
+                <p className="text-xs">Brand: {product.brand}</p>
+              </div>
+            </div>
           </motion.div>
-        );
-      });
+        ))}
+      </div>
+    );
+  };
+
+  const renderProducts = () => {
+    const productElements = products
+      .filter((product: { designs?: IDesign[] }) => product.designs?.length)
+      .map(
+        (
+          product: {
+            id: string;
+            designs: IDesign[];
+            designstate: IDesign;
+            propstate: IProps;
+          },
+          index: number
+        ) => {
+          const currentImageIndex =
+            hoveredProduct === product.id
+              ? currentImageIndices[product.id] || 0
+              : 0;
+
+          const currentDesign = product.designs[currentImageIndex];
+
+          return (
+            <motion.div
+              key={product.id}
+              className="flex-shrink-0 w-64 mx-2 snap-start cursor-pointer group"
+              whileHover={{
+                scale: 1.05,
+                transition: { type: "spring", stiffness: 500, damping: 30 },
+              }}
+              onHoverStart={() => setHoveredProduct(product.id)}
+              onHoverEnd={() => {
+                setHoveredProduct(null);
+                setCurrentImageIndices((prev) => ({
+                  ...prev,
+                  [product.id]: 0,
+                }));
+              }}
+              onClick={() =>
+                handleDesignClick(
+                  product.designstate,
+                  product.propstate,
+                  product.id
+                )
+              }
+            >
+              <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                <Image
+                  src={currentDesign.apparel.url}
+                  alt={`Product ${product.id} ${currentDesign.apparel.side}`}
+                  fill
+                  sizes="100%"
+                  className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-110"
+                  style={{
+                    backgroundColor: currentDesign.apparel?.color,
+                  }}
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent 
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                >
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <p className="text-white text-sm sm:text-base">
+                      Current Side:{" "}
+                      {capitalizeFirstLetter(currentDesign.apparel.side)}
+                    </p>
+                    <p className="text-white text-xs mt-1">
+                      Product ID: {product.id.slice(-8)}
+                    </p>
+                  </div>
+                </div>
+                <div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-100 group-hover:opacity-100 transition-opacity duration-300"
+                  style={{
+                    top:
+                      currentDesign.apparel.side === "leftshoulder"
+                        ? "170px"
+                        : currentDesign.apparel.side === "rightshoulder"
+                        ? "170px"
+                        : "initial",
+                    left:
+                      currentDesign.apparel.side === "leftshoulder"
+                        ? "130px"
+                        : currentDesign.apparel.side === "rightshoulder"
+                        ? "145px"
+                        : "initial",
+                    width:
+                      currentDesign.apparel.side === "leftshoulder" ||
+                      currentDesign.apparel.side === "rightshoulder"
+                        ? "30%"
+                        : "50%",
+                    height:
+                      currentDesign.apparel.side === "leftshoulder" ||
+                      currentDesign.apparel.side === "rightshoulder"
+                        ? "30%"
+                        : "50%",
+                    transform: "translate(-50%, -50%)",
+                    transition:
+                      "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
+                  }}
+                >
+                  {currentDesign.pngImage ? (
+                    <Image
+                      src={currentDesign.pngImage}
+                      alt="Design"
+                      fill
+                      sizes="100%"
+                      className="rounded-md transition-opacity duration-300 ease-in-out"
+                      style={{ objectFit: "contain" }}
+                    />
+                  ) : currentDesign.uploadedImages?.length > 1 ? (
+                    <div className="flex overflow-x-auto space-x-2">
+                      {currentDesign.uploadedImages.map((imageUrl, idx) => (
+                        <Image
+                          key={idx}
+                          src={imageUrl}
+                          alt={`Uploaded Image ${idx + 1}`}
+                          width={100}
+                          height={100}
+                          className="object-cover rounded-md"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <Image
+                      src={currentDesign.uploadedImages[0]}
+                      alt="Uploaded Image"
+                      fill
+                      className="rounded-md transition-opacity duration-300 ease-in-out w-4 h-4"
+                      style={{ objectFit: "scale-down" }}
+                    />
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          );
+        }
+      );
 
     return products.length > 4 ? (
-      <InfiniteScrollContainer>
-        {productElements}
-      </InfiniteScrollContainer>
+      <InfiniteScrollContainer>{productElements}</InfiniteScrollContainer>
     ) : (
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
         {productElements}
@@ -299,10 +344,14 @@ const ProductGallery = () => {
 
   return (
     <section className="py-24 bg-gray-50" id="showcase">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        {renderProducts()}
-      </div>
-    </section>
+    <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <h2 className="text-2xl font-bold mb-6">Customizable Products</h2>
+      {products?.length ? renderProducts() : <p>No customizable products found.</p>}
+
+      <h2 className="text-2xl font-bold mt-12 mb-6">Standard Products</h2>
+      {standardProducts?.length ? renderStandardProducts() : <p>No standard products found.</p>}
+    </div>
+  </section>
   );
 };
 

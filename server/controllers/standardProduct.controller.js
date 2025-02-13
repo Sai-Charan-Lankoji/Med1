@@ -6,32 +6,31 @@ const fileService = new FileService();
 /**
  * Create a new standard product with image uploads.
  */
+
 exports.createStandardProduct = async (req, res) => {
   try {
-   
     await fileService.createUploadDirectory();
-
 
     const productData = {
       title: req.body.title,
       description: req.body.description,
       price: parseFloat(req.body.price),
       category: req.body.category,
-      sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || '[]'),
-      colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || '[]'),
+      sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || "[]"),
+      colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || "[]"),
       stock: parseInt(req.body.stock),
       brand: req.body.brand,
       sku: req.body.sku,
       weight: parseFloat(req.body.weight),
-      dimensions: typeof req.body.dimensions === 'object' ? 
-        req.body.dimensions : 
-        JSON.parse(req.body.dimensions || '{"length": 0, "width": 0, "height": 0}'),
-      is_customizable: req.body.is_customizable === 'true' || req.body.is_customizable === true,
-      is_discountable: req.body.is_discountable === 'true' || req.body.is_discountable === true,
+      dimensions: typeof req.body.dimensions === "object"
+        ? req.body.dimensions
+        : JSON.parse(req.body.dimensions || '{"length": 0, "width": 0, "height": 0}'),
+      is_customizable: req.body.is_customizable === "true" || req.body.is_customizable === true,
+      is_discountable: req.body.is_discountable === "true" || req.body.is_discountable === true,
       store_id: req.body.store_id,
     };
 
-    // Handle image uploads
+    // Handle image uploads using FileService
     const uploadedImages = {};
     const imageFields = ["front_image", "back_image", "left_image", "right_image"];
 
@@ -47,16 +46,18 @@ exports.createStandardProduct = async (req, res) => {
     // Merge the data
     const finalProductData = {
       ...productData,
-      ...uploadedImages
+      images: uploadedImages, // Store image URLs in DB
     };
 
     const product = await standardProductService.createStandardProduct(finalProductData);
     res.status(201).json({ success: true, product });
   } catch (error) {
-    console.error('Error creating product:', error);
+    console.error("Error creating product:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+
 
 /**
  * List all standard products.
@@ -64,6 +65,20 @@ exports.createStandardProduct = async (req, res) => {
 exports.getAllStandardProducts = async (req, res) => {
   try {
     const products = await standardProductService.getAllStandardProducts();
+    res.status(200).json({ success: true, products });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+
+/**
+ * List standard products by storeId.
+ */
+exports.getAllStandardProductsByStoreId = async (req, res) => {
+  const storeId = req.params.storeId;
+  try {
+    const products = await standardProductService.getAllStandardProductsByStoreId(storeId);
     res.status(200).json({ success: true, products });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
