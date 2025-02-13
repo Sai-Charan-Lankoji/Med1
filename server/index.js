@@ -22,7 +22,8 @@ const cartRoutes = require("./routes/cart.route.js");
 const saleschannelRoutes = require("./routes/saleschannel.route.js");
 const tokenBlacklistRoutes = require("./routes/tokenBlacklist.route.js");
 const publishableApiKeyRoutes = require("./routes/publishableapikey.route.js");
-const fileRoutes = require("./routes/file.route.js");
+const fileRoutes = require("./routes/file.route.js"); 
+const standardProductRoutes = require("./routes/standardProduct.route.js");
 
 const app = express();
 
@@ -33,7 +34,7 @@ const updateAllowedOrigins = async () => {
   try {
     const stores = await listStores(); // Fetch store data using your service
     dynamicAllowedOrigins = stores.map((store) => store.store_url); // Extract store URLs
-    console.log("Updated Allowed Origins:", dynamicAllowedOrigins);
+    // console.log("Updated Allowed Origins:", dynamicAllowedOrigins);
   } catch (error) {
     console.error("Error updating allowed origins:", error.message);
   }
@@ -114,7 +115,8 @@ app.use("/api/carts", cartRoutes);
 app.use("/api/saleschannels", saleschannelRoutes);
 app.use("/api/token-blacklist", tokenBlacklistRoutes);
 app.use("/api/publishibleapikey", publishableApiKeyRoutes);
-app.use("/api", fileRoutes);
+app.use("/api", fileRoutes); 
+app.use("/api", standardProductRoutes)
 
 // Periodically refresh the allowed origins (optional)
 setInterval(updateAllowedOrigins, 60000); // Refresh every 60 seconds
