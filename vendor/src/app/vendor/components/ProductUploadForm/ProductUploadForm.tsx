@@ -4,19 +4,37 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Loader2, Plus, X } from "lucide-react"
-
+import ReactSelect from "react-select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { productFormSchema, type ProductFormValues } from "@/lib/schema"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { productFormSchema, type ProductFormValues } from "./schema"
 
-const sizeOptions = ["XS", "S", "M", "L", "XL", "XXL"]
-const categoryOptions = ["Clothing", "Shoes", "Accessories", "Electronics", "Home"]
+// Define categories and colors
+const CATEGORIES = [
+  { value: "Clothing", label: "Clothing" },
+  { value: "Shoes", label: "Shoes" },
+  { value: "Accessories", label: "Accessories" },
+  { value: "Electronics", label: "Electronics" },
+  { value: "Home", label: "Home" },
+]
 
-export function ProductUploadForm() {
+const COLORS = [
+  { value: "#FF0000", label: "Red" },
+  { value: "#00FF00", label: "Green" },
+  { value: "#0000FF", label: "Blue" },
+  { value: "#FFFF00", label: "Yellow" },
+  { value: "#800080", label: "Purple" },
+  { value: "#FFA500", label: "Orange" },
+  { value: "#FFC0CB", label: "Pink" },
+  { value: "#A52A2A", label: "Brown" },
+  { value: "#808080", label: "Gray" },
+  { value: "#000000", label: "Black" },
+  { value: "#FFFFFF", label: "White" },
+]
+
+export function ProductUploadForm({ onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<ProductFormValues>({
@@ -34,23 +52,37 @@ export function ProductUploadForm() {
       sku: "",
       weight: 0,
       dimensions: { length: 0, width: 0, height: 0 },
-      is_customizable : false, 
-      is_discountable: false,
     },
   })
 
   async function onSubmit(data: ProductFormValues) {
     setIsSubmitting(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    console.log(data)
-    setIsSubmitting(false)
-    // Here you would typically send the data to your backend
+    try {
+      const response = await fetch("http://localhost:5000/api/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to upload product")
+      }
+
+      const result = await response.json()
+      console.log(result)
+      onClose?.()
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
@@ -65,6 +97,7 @@ export function ProductUploadForm() {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="price"
@@ -76,7 +109,7 @@ export function ProductUploadForm() {
                     type="number"
                     placeholder="0.00"
                     {...field}
-                    onChange={(e) => field.onChange(Number.parseFloat(e.target.value))}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
@@ -92,100 +125,52 @@ export function ProductUploadForm() {
             <FormItem>
               <FormLabel>Description</FormLabel>
               <FormControl>
-                <Textarea placeholder="Enter product description" {...field} />
+                <Textarea placeholder="Enter product description" className="h-24" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="category"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="category"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Category</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categoryOptions.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="sizes"
-          render={() => (
-            <FormItem>
-              <div className="mb-4">
-                <FormLabel className="text-base">Sizes</FormLabel>
-                <FormDescription>Select the available sizes for this product.</FormDescription>
-              </div>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-                {sizeOptions.map((size) => (
-                  <FormField
-                    key={size}
-                    control={form.control}
-                    name="sizes"
-                    render={({ field }) => {
-                      return (
-                        <FormItem key={size} className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(size)}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, size])
-                                  : field.onChange(field.value?.filter((value) => value !== size))
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal">{size}</FormLabel>
-                        </FormItem>
-                      )
-                    }}
+                  <ReactSelect
+                    options={CATEGORIES}
+                    value={CATEGORIES.find((option) => option.value === field.value)}
+                    onChange={(selectedOption) => field.onChange(selectedOption?.value)}
+                    placeholder="Select a category"
                   />
-                ))}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <ColorPicker control={form.control} />
-
-        <FormField
-          control={form.control}
-          name="stock"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Available Stock</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="0"
-                  {...field}
-                  onChange={(e) => field.onChange(Number.parseInt(e.target.value, 10))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <ImageUpload control={form.control} />
+          <FormField
+            control={form.control}
+            name="stock"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Stock</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="0"
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
@@ -201,6 +186,7 @@ export function ProductUploadForm() {
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="sku"
@@ -216,26 +202,26 @@ export function ProductUploadForm() {
           />
         </div>
 
-        <FormField
-          control={form.control}
-          name="weight"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Weight (kg)</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  {...field}
-                  onChange={(e) => field.onChange(Number.parseFloat(e.target.value))}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid gap-4 md:grid-cols-2">
+          <FormField
+            control={form.control}
+            name="weight"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Weight (kg)</FormLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <div className="grid gap-4 md:grid-cols-3">
           <FormField
             control={form.control}
             name="dimensions.length"
@@ -245,15 +231,18 @@ export function ProductUploadForm() {
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="0.00"
+                    placeholder="0"
                     {...field}
-                    onChange={(e) => field.onChange(Number.parseFloat(e.target.value))}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
             name="dimensions.width"
@@ -263,15 +252,16 @@ export function ProductUploadForm() {
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="0.00"
+                    placeholder="0"
                     {...field}
-                    onChange={(e) => field.onChange(Number.parseFloat(e.target.value))}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="dimensions.height"
@@ -281,9 +271,9 @@ export function ProductUploadForm() {
                 <FormControl>
                   <Input
                     type="number"
-                    placeholder="0.00"
+                    placeholder="0"
                     {...field}
-                    onChange={(e) => field.onChange(Number.parseFloat(e.target.value))}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
                 <FormMessage />
@@ -292,122 +282,102 @@ export function ProductUploadForm() {
           />
         </div>
 
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading Product
-            </>
-          ) : (
-            "Upload Product"
+        <FormField
+          control={form.control}
+          name="colors"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Colors</FormLabel>
+              <FormControl>
+                <ReactSelect
+                  isMulti
+                  options={COLORS}
+                  value={field.value.map((color) => ({ value: color.hex, label: color.name }))}
+                  onChange={(selectedOptions) => {
+                    field.onChange(selectedOptions.map((option) => ({ name: option.label, hex: option.value })))
+                  }}
+                  placeholder="Select colors"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </Button>
+        />
+
+        <FormField
+          control={form.control}
+          name="images"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Product Images</FormLabel>
+              <div className="flex flex-wrap gap-2">
+                {field.value.map((image, index) => (
+                  <div key={index} className="relative">
+                    <img
+                      src={image || "/api/placeholder/96/96"}
+                      alt={`Product ${index + 1}`}
+                      className="w-24 h-24 object-cover rounded-md"
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute top-1 right-1 h-6 w-6 p-0"
+                      onClick={() => {
+                        const newImages = field.value.filter((_, i) => i !== index)
+                        field.onChange(newImages)
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-24 h-24"
+                  onClick={() => {
+                    const fileInput = document.createElement("input")
+                    fileInput.type = "file"
+                    fileInput.accept = "image/*"
+                    fileInput.onchange = (e) => {
+                      const file = (e.target as HTMLInputElement).files[0]
+                      if (file) {
+                        const reader = new FileReader()
+                        reader.onload = (fileEvent) => {
+                          field.onChange([...field.value, fileEvent.target.result])
+                        }
+                        reader.readAsDataURL(file)
+                      }
+                    }
+                    fileInput.click()
+                  }}
+                >
+                  <Plus className="h-6 w-6" />
+                </Button>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="flex gap-2 justify-end pt-4">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Uploading...
+              </>
+            ) : (
+              "Upload Product"
+            )}
+          </Button>
+        </div>
       </form>
     </Form>
-  )
-}
-
-function ColorPicker({ control }: { control: any }) {
-  return (
-    <FormField
-      control={control}
-      name="colors"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Colors</FormLabel>
-          <FormControl>
-            <div className="flex flex-wrap gap-2">
-              {field.value.map((color: { name: string; hex: string }, index: number) => (
-                <div key={index} className="flex items-center space-x-2 bg-gray-100 p-2 rounded-md">
-                  <div className="w-6 h-6 rounded-full" style={{ backgroundColor: color.hex }} />
-                  <span>{color.name}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      const newColors = [...field.value]
-                      newColors.splice(index, 1)
-                      field.onChange(newColors)
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={() => {
-                  const newColor = { name: "New Color", hex: "#000000" }
-                  field.onChange([...field.value, newColor])
-                }}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-  )
-}
-
-function ImageUpload({ control }: { control: any }) {
-  return (
-    <FormField
-      control={control}
-      name="images"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Product Images</FormLabel>
-          <FormControl>
-            <div className="flex flex-wrap gap-2">
-              {field.value.map((image: string, index: number) => (
-                <div key={index} className="relative">
-                  <img
-                    src={image || "/placeholder.svg"}
-                    alt={`Product ${index + 1}`}
-                    className="w-24 h-24 object-cover rounded-md"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="absolute top-0 right-0 h-6 w-6 p-0"
-                    onClick={() => {
-                      const newImages = [...field.value]
-                      newImages.splice(index, 1)
-                      field.onChange(newImages)
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                className="w-24 h-24"
-                onClick={() => {
-                  const newImage = prompt("Enter image URL")
-                  if (newImage) {
-                    field.onChange([...field.value, newImage])
-                  }
-                }}
-              >
-                <Plus className="h-6 w-6" />
-              </Button>
-            </div>
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
   )
 }
 

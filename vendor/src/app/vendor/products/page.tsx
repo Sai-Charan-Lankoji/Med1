@@ -10,6 +10,7 @@ import withAuth from "@/lib/withAuth";
 import { useGetStores } from '@/app/hooks/store/useGetStores';
 import ProductGallery from '../components/productgallery/page';
 import {ProductUploadForm} from "../components/ProductUploadForm/ProductUploadForm"
+import { Settings, Package } from 'lucide-react';
 
 const Product = () => {
   const [isStoreDialogOpen, setIsStoreDialogOpen] = useState(false);
@@ -91,39 +92,53 @@ const Product = () => {
           </DialogHeader>
         </DialogContent>
       </Dialog>
-
+      
       {/* Option Selection Dialog */}
       <Dialog open={isOptionDialogOpen} onOpenChange={setIsOptionDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Select Product Type</DialogTitle>
-            <DialogDescription>
-              Choose whether the product should be customizable or non-customizable.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center space-x-4 mt-4">
-            <Button onClick={() => handleOptionSelect("customizable")}>
-              Customizable
-            </Button>
-            <Button onClick={() => handleOptionSelect("non-customizable")}>
-              Non-Customizable
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+  <DialogContent className="sm:max-w-md">
+    <DialogHeader>
+      <DialogTitle>Select Product Type</DialogTitle>
+      <DialogDescription>
+        Choose whether the product should be customizable or non-customizable.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="flex justify-center items-stretch gap-6 mt-6">
+      <Button
+        onClick={() => handleOptionSelect("customizable")}
+        className="flex flex-col items-center justify-center w-40 h-40 p-4 hover:scale-105 transition-transform"
+        variant="outline"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Settings className="h-16 w-16" />
+          <span className="text-sm font-medium">Customizable</span>
+        </div>
+      </Button>
+      <Button
+        onClick={() => handleOptionSelect("non-customizable")}
+        className="flex flex-col items-center justify-center w-40 h-40 p-4 hover:scale-105 transition-transform"
+        variant="outline"
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Package className="h-16 w-16" />
+          <span className="text-sm font-medium">Non-Customizable</span>
+        </div>
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
 
       {/* Product Upload Form for Non-Customizable */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upload Product</DialogTitle>
-            <DialogDescription>
-              Provide details like size, color, and other attributes for the product.
-            </DialogDescription>
-          </DialogHeader>
-          <ProductUploadForm />
-        </DialogContent>
-      </Dialog>
+  <DialogContent className="max-h-[90vh] overflow-y-auto">
+    <DialogHeader>
+      <DialogTitle>Upload Product</DialogTitle>
+      <DialogDescription>
+        Provide product details below
+      </DialogDescription>
+    </DialogHeader>
+    <ProductUploadForm onClose={() => setIsFormOpen(false)} />
+  </DialogContent>
+</Dialog>
       
       <ProductGallery />
     </div>
