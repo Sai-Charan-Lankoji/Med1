@@ -34,7 +34,7 @@ const COLORS = [
   { value: "#FFFFFF", label: "White" },
 ]
 
-export function ProductUploadForm({ onClose }) {
+export function ProductUploadForm({ onClose, store }) {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const form = useForm<ProductFormValues>({
@@ -52,13 +52,14 @@ export function ProductUploadForm({ onClose }) {
       sku: "",
       weight: 0,
       dimensions: { length: 0, width: 0, height: 0 },
+      store_id: store.id,
     },
   })
 
   async function onSubmit(data: ProductFormValues) {
     setIsSubmitting(true)
     try {
-      const response = await fetch("http://localhost:5000/api/products", {
+      const response = await fetch("http://localhost:5000/api/standardproducts", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

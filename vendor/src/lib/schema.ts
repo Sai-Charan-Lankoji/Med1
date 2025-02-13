@@ -29,6 +29,7 @@ export const productFormSchema = z.object({
   }), 
   is_customizable: z.boolean(),
   is_discountable: z.boolean(),
+  store_id: z.string().min(1, "Store ID is required"),
 })
 
 export type ProductFormValues = z.infer<typeof productFormSchema>

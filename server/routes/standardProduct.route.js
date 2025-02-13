@@ -21,7 +21,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /api/products:
+ * /api/standardproducts:
  *   post:
  *     summary: Create a new standard product (with image uploads)
  *     tags: [StandardProducts]
@@ -121,7 +121,7 @@ router.post("/", upload, standardProductController.createStandardProduct);
 
 /**
  * @swagger
- * /api/products:
+ * /api/standardproducts:
  *   get:
  *     summary: List all standard products
  *     tags: [StandardProducts]
@@ -133,7 +133,7 @@ router.get("/", standardProductController.getAllStandardProducts);
 
 /**
  * @swagger
- * /api/products/{id}:
+ * /api/standardproducts/{id}:
  *   get:
  *     summary: Get a standard product by ID
  *     tags: [StandardProducts]
@@ -153,7 +153,7 @@ router.get("/:id", standardProductController.getStandardProductById);
 
 /**
  * @swagger
- * /api/products/{id}:
+ * /api/standardproducts/{id}:
  *   put:
  *     summary: Update a standard product by ID (including image uploads)
  *     tags: [StandardProducts]
@@ -219,7 +219,7 @@ router.put("/:id", upload, standardProductController.updateStandardProduct);
 
 /**
  * @swagger
- * /api/products/{id}:
+ * /api/standardproducts/{id}:
  *   delete:
  *     summary: Delete a standard product by ID (including images)
  *     tags: [StandardProducts]

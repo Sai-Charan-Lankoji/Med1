@@ -136,7 +136,7 @@ const Product = () => {
         Provide product details below
       </DialogDescription>
     </DialogHeader>
-    <ProductUploadForm onClose={() => setIsFormOpen(false)} />
+    <ProductUploadForm onClose={() => setIsFormOpen(false)} store={selectedStore} />
   </DialogContent>
 </Dialog>
       

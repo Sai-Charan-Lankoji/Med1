@@ -27,7 +27,8 @@ exports.createStandardProduct = async (req, res) => {
         req.body.dimensions : 
         JSON.parse(req.body.dimensions || '{"length": 0, "width": 0, "height": 0}'),
       is_customizable: req.body.is_customizable === 'true' || req.body.is_customizable === true,
-      is_discountable: req.body.is_discountable === 'true' || req.body.is_discountable === true
+      is_discountable: req.body.is_discountable === 'true' || req.body.is_discountable === true,
+      store_id: req.body.store_id,
     };
 
     // Handle image uploads

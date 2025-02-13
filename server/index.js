@@ -116,7 +116,7 @@ app.use("/api/saleschannels", saleschannelRoutes);
 app.use("/api/token-blacklist", tokenBlacklistRoutes);
 app.use("/api/publishibleapikey", publishableApiKeyRoutes);
 app.use("/api", fileRoutes); 
-app.use("/api", standardProductRoutes)
+app.use("/api/standardproducts", standardProductRoutes)
 
 // Periodically refresh the allowed origins (optional)
 setInterval(updateAllowedOrigins, 60000); // Refresh every 60 seconds

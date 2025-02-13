@@ -19,6 +19,7 @@ export const productFormSchema = z.object({
   sku: z.string(),
   weight: z.number().min(0),
   dimensions: createDimensionsSchema,
+  store_id: z.string().min(1),
 })
 
 export type ProductFormValues = z.infer<typeof productFormSchema>

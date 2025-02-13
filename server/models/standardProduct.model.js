@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const Store = require("./store.model"); // Import Store model
 
 const StandardProduct = sequelize.define(
   "StandardProduct",
@@ -22,6 +23,17 @@ const StandardProduct = sequelize.define(
     back_image: { type: DataTypes.STRING, allowNull: true },
     left_image: { type: DataTypes.STRING, allowNull: true },
     right_image: { type: DataTypes.STRING, allowNull: true },
+
+    // Foreign Key for Store
+    store_id: {
+      type: DataTypes.STRING(250), // Matches Store ID type
+      allowNull: false,
+      references: {
+        model: Store,
+        key: "id",
+      },
+      onDelete: "CASCADE", // If a store is deleted, its products are also deleted
+    },
   },
   {
     tableName: "standard_products",
@@ -30,6 +42,5 @@ const StandardProduct = sequelize.define(
     paranoid: true, 
   }
 );
-
 
 module.exports = StandardProduct;
