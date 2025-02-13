@@ -15,6 +15,7 @@ const swaggerOptions = {
         url: "http://localhost:5000", // Base URL of your API
       },
     ],
+    
     components: {
       securitySchemes: {
         BearerAuth: {

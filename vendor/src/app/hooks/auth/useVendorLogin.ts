@@ -39,7 +39,7 @@ const useVendorLogin = () => {
 
     try { 
       const localUrl = "http://localhost:5000/api/vendor/login"
-      const url = 'https://med1-wyou.onrender.com';
+      const url = 'http://localhost:5000';
       //`${url}/api/vendor/login`,
       const response = await fetch( `${url}/api/vendor/login`,{
         method: 'POST',

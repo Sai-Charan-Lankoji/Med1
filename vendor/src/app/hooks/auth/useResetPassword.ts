@@ -11,7 +11,7 @@ interface ResetPasswordResponse {
 
 export const useResetPassword = () => {
   const queryClient = useQueryClient();
-  const url = "https://med1-wyou.onrender.com";
+  const url = "http://localhost:5000";
 
   const mutation = useMutation<ResetPasswordResponse, Error, ResetPasswordPayload>(
     async (data: ResetPasswordPayload) => {

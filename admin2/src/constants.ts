@@ -1,1 +1,1 @@
-export const  NEXT_URL = "https://med1-wyou.onrender.com";
+export const  NEXT_URL = "http://localhost:5000";

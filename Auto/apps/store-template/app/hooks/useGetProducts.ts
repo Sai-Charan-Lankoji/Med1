@@ -1,7 +1,7 @@
 import { NEXT_PUBLIC_STORE_ID } from '@/constants/constants';
 import { useQuery } from '@tanstack/react-query';
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseUrl = "https://med1-wyou.onrender.com";
 const storeId = NEXT_PUBLIC_STORE_ID
 const fetchProducts = async () => {
   if (!storeId) {

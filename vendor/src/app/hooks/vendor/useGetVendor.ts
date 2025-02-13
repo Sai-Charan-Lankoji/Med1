@@ -1,4 +1,4 @@
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 import { vendor_id } from '@/app/utils/constant';
 import { useQuery } from '@tanstack/react-query';
 const id = vendor_id

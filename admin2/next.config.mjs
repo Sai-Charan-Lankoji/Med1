@@ -5,7 +5,7 @@ export default (phase, { defaultConfig }) => {
    */
   const nextConfig = {
     publicRuntimeConfig: {
-      MEDUSA_BACKEND_URL: 'https://med1-wyou.onrender.com',  
+      MEDUSA_BACKEND_URL: 'http://localhost:5000',  
     },
     images: {
       remotePatterns: [

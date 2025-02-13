@@ -1,7 +1,7 @@
 import { StoreFormData } from "@/app/@types/store";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 const createStore = async (storeData: StoreFormData) => {
   const response = await fetch(`${baseUrl}/api/stores`, {
     method: "POST",

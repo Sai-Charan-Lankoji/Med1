@@ -1,4 +1,4 @@
-export const NEXT_PUBLIC_API_URL = "https://med1-wyou.onrender.com"
+export const NEXT_PUBLIC_API_URL = "http://localhost:5000"
 export const NEXT_PUBLIC_API_KEY = "undefined"
 export const NEXT_PUBLIC_VENDOR_ID = "vendor_01JDHBPFEBM0NZJHNMZHN55XAG"
 export const NEXT_STORE_NAME = "Custom-Tees"

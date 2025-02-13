@@ -120,7 +120,7 @@ const VendorForm =({ plan }: VendorFormProps) => {
         plan_id: plan.id
       };
 
-      const response = await fetch("https://med1-wyou.onrender.com/api/vendors", {
+      const response = await fetch("http://localhost:5000/api/vendors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

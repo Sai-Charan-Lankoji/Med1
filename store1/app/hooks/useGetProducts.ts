@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
  
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 const fetchProducts = async (store_id: string) => {
   
   if (!store_id) {

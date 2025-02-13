@@ -1,6 +1,6 @@
 import { UserFormData } from '@/app/@types/user';
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 
 
 

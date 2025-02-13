@@ -18,7 +18,7 @@ import { Spinner } from "@medusajs/icons";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 
-const baseUrl = 'https://med1-wyou.onrender.com';
+const baseUrl = 'http://localhost:5000';
 const backendManagementUrl = "http://localhost:3000"; // Backend store management server
 
 interface StoreFormData {

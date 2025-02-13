@@ -5,7 +5,7 @@ const path = require("path");
 const cors = require("cors");
 const fetch = require("node-fetch");
 const treeKill = require('tree-kill');
-
+const { fetchAndWriteStores } = require('./fetchStores');
 const app = express();
 
 // Middleware
@@ -57,8 +57,10 @@ async function createStore(storeDetails) {
   const newPort = await PortManager.allocatePort();
   
   const sourcePath = path.join(__dirname, "apps", "store-template");
-  const newStoreName = `store${storeRegistry.length + 1}`;
+  const newStoreName = `store_${newPort}`;
   const targetPath = path.join(__dirname, "apps", newStoreName);
+
+  
 
   try {
     await fs.mkdir(targetPath, { recursive: true });
@@ -502,6 +504,7 @@ app.put("/update-store", async (req, res) => {
 
 
 async function startServer() {
+  await fetchAndWriteStores()
   await initializeStoreRegistry();
   await startExistingStores();
 

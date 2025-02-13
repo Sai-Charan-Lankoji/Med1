@@ -16,7 +16,7 @@ export const useUpdateVendorPlan = () => {
 
   return useMutation({
     mutationFn: async (updateData: UpdatePlanData) => {
-      const response = await fetch(`https://med1-wyou.onrender.com/api/vendors/${vendor_id}`, {
+      const response = await fetch(`http://localhost:5000/api/vendors/${vendor_id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 
 // Function to create a publishable API key
 const createPublishableApiKey = async ({ title,created_by }) => {

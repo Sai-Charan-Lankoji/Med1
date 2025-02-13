@@ -467,7 +467,7 @@ export default function DesignArea({
       console.log("this is product request Body : ", requestBody);
 
       const response = await fetch(
-        "https://med1-wyou.onrender.com/api/products",
+        "http://localhost:5000/api/products",
         {
           method: "POST",
           headers: {

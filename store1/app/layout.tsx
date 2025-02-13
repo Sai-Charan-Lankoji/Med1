@@ -28,10 +28,10 @@ export default function RootLayout({
             <QueryClientProvider client={queryClient}>
               <MedusaProvider
                 queryClientProviderProps={{ client: queryClient }}
-                baseUrl="https://med1-wyou.onrender.com"
+                baseUrl="http://localhost:5000"
                 publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
               >
-                <StoreProvider> {/* Add StoreProvider here */}
+                <StoreProvider> 
                   <UserProvider>
                     <SvgProvider>
                       <main className="min-h-screen">

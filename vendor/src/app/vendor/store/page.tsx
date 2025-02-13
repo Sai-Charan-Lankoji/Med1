@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { useMemo, useState, useEffect } from "react"
@@ -259,7 +260,7 @@ const Store = () => {
          setLoadingStage("Initializing domain creation...");
   
         const storeName = formData.storeName;
-        const addDomainUrl = "https://med1-wyou.onrender.com/api/stores/add-domain";  
+        const addDomainUrl = "http://localhost:5000/api/stores/add-domain";  
   
         // Check if store name already exists and create domain
         let domain = null;

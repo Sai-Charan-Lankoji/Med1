@@ -1,4 +1,4 @@
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const deleteImage = async (productId: any): Promise<void> => {

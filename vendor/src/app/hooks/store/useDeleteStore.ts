@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-const baseUrl = "https://med1-wyou.onrender.com";
+const baseUrl = "http://localhost:5000";
 
 const deleteStore = async (id: string) => {
   const response = await fetch(`${baseUrl}/api/stores/${id}`, {

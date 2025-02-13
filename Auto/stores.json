@@ -1,12 +1,52 @@
 [
   {
-    "directoryName": "store2",
-    "storeName": "sam",
-    "vendorId": "vendor_01JEDY7QNB4YJV6G0V5QFVWGJ5",
-    "storeId": "store_01JEMXXFWD1MB7WBH53D6KNXJT",
-    "salesChannelId": "sc_01JEMXTT8RWQ8426JQABPMGQPX",
+    "directoryName": "store_8008",
+    "storeName": "Techno T-sirts",
+    "vendorId": "vendor_01JDM55VT5XYS2F7TWNG7TRMED",
+    "storeId": "store_01JDM5909CG2SQFTYZ3DRAEPW5",
+    "salesChannelId": "sc_01JDM580HXAEH81R0CK8NSQHJ7",
     "currencyCode": "usd",
-    "port": 8011,
-    "url": "http://localhost:8011"
+    "port": 8008,
+    "url": "http://localhost:8008"
+  },
+  {
+    "directoryName": "store_8003",
+    "storeName": "FB",
+    "vendorId": "vendor_01JDHBPFEBM0NZJHNMZHN55XAG",
+    "storeId": "store_01JEADBKRRJQZA160CREH15VEA",
+    "salesChannelId": "sc_01JEADBD2EQPAA2BGX88Z0QEXV",
+    "currencyCode": "usd",
+    "port": 8003,
+    "url": "http://localhost:8003"
+  },
+  {
+    "directoryName": "store_8010",
+    "storeName": "S&D Fashion",
+    "vendorId": "vendor_01JEDY7QNB4YJV6G0V5QFVWGJ5",
+    "storeId": "store_01JENGKX65BY4WMGFEHZ1SR61M",
+    "salesChannelId": "sc_01JENGK5S5CSR149NA19N1D7RJ",
+    "currencyCode": "usd",
+    "port": 8010,
+    "url": "http://localhost:8010"
+  },
+  {
+    "directoryName": "store_8004",
+    "storeName": "Rama Lakshmana Stores",
+    "vendorId": "vendor_01JDPG6P3ZSYDRKEZFB1WAR6AE",
+    "storeId": "store_01JDPGC05AH7R4AGJMREZPNHHG",
+    "salesChannelId": "sc_01JDPGB9N6J7ENJ0D2B7C3B6CK",
+    "currencyCode": "usd",
+    "port": 8004,
+    "url": "http://localhost:8004"
+  },
+  {
+    "directoryName": "store_8005",
+    "storeName": "Testing store Name",
+    "vendorId": "vendor_01JEDY7QNB4YJV6G0V5QFVWGJ5",
+    "storeId": "store_01JEE00MFZXAHWEW46VH5BMCMX",
+    "salesChannelId": "sc_01JEE007DA1X068H3R05WJBEZX",
+    "currencyCode": "usd",
+    "port": 8005,
+    "url": "http://localhost:8005"
   }
 ]

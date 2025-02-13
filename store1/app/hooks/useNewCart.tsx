@@ -35,7 +35,7 @@ export const useNewCart = () => {
   
         try {
           const response = await fetch(
-            `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+            `http://localhost:5000/api/carts/customer/${customerId}`,
             {
               method: "GET",
               headers: {
@@ -67,7 +67,7 @@ export const useNewCart = () => {
       dispatch(updateCartItemQuantity({ cartId, quantity }));
 
       const response = await fetch(
-        `https://med1-wyou.onrender.com/api/carts/${cartId}/quantity`,
+        `http://localhost:5000/api/carts/${cartId}/quantity`,
         {
           method: "PATCH",
           headers: {
@@ -79,7 +79,7 @@ export const useNewCart = () => {
 
       if (!response.ok) {
         const cartResponse = await fetch(
-          `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+          `http://localhost:5000/api/carts/customer/${customerId}`,
           {
             method: "GET",
             headers: {
@@ -109,7 +109,7 @@ export const useNewCart = () => {
       dispatch(removeFromCart(cartId));
 
       const response = await fetch(
-        `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+        `http://localhost:5000/api/carts/customer/${customerId}`,
         {
           method: "DELETE",
           headers: {
@@ -120,7 +120,7 @@ export const useNewCart = () => {
 
       if (!response.ok) {
         const cartResponse = await fetch(
-          `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+          `http://localhost:5000/api/carts/customer/${customerId}`,
           {
             method: "GET",
             headers: {
@@ -157,7 +157,7 @@ export const useNewCart = () => {
         designs,
       };
       const response = await fetch(
-        `https://med1-wyou.onrender.com/api/carts/${cartId}`,
+        `http://localhost:5000/api/carts/${cartId}`,
         {
           method: "PUT",
           headers: {
@@ -260,7 +260,7 @@ export const useNewCart = () => {
       dispatch(setLoading(true));
 
       const response = await fetch(
-        `https://med1-wyou.onrender.com/api/carts/customer/${customerId}`,
+        `http://localhost:5000/api/carts/customer/${customerId}`,
         {
           method: "DELETE",
           headers: {

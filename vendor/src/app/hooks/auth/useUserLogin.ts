@@ -15,7 +15,7 @@ export const useUserLogin = () => {
 
     try { 
       const localUrl = "http://localhost:5000/api/vendor-users"
-        const url = 'https://med1-wyou.onrender.com'; 
+        const url = 'http://localhost:5000'; 
         //`${url}/vendor/login`
         const response = await fetch(`${url}/vendor/login`, {
         method: "POST",

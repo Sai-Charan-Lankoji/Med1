@@ -13,7 +13,7 @@ export const useVendorLogout = () => {
   const logout = async () => {
     setLoading(true);
     setError(null); 
-    const url = 'https://med1-wyou.onrender.com';
+    const url = 'http://localhost:5000';
     try {
       const response = await fetch(`${url}/api/vendor/logout`, {
         method: 'POST',
