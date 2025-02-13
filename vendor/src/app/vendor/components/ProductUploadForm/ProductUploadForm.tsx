@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { productFormSchema, type ProductFormValues } from "./schema"
 
-// Define categories and colors
+// Define categories, colors, and sizes
 const CATEGORIES = [
   { value: "Clothing", label: "Clothing" },
   { value: "Shoes", label: "Shoes" },
@@ -32,6 +33,13 @@ const COLORS = [
   { value: "#808080", label: "Gray" },
   { value: "#000000", label: "Black" },
   { value: "#FFFFFF", label: "White" },
+]
+
+const SIZES = [
+  { value: "S", label: "Small" },
+  { value: "M", label: "Medium" },
+  { value: "L", label: "Large" },
+  { value: "XL", label: "Extra Large" },
 ]
 
 export function ProductUploadForm({ onClose, store }) {
@@ -64,7 +72,14 @@ export function ProductUploadForm({ onClose, store }) {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...data,
+          colors: data.colors.map(color => ({
+            name: color.name,
+            hex: color.hex
+          })),
+          sizes: Array.isArray(data.sizes) ? data.sizes : [data.sizes].filter(Boolean)
+        }),
       })
 
       if (!response.ok) {
@@ -172,6 +187,70 @@ export function ProductUploadForm({ onClose, store }) {
             )}
           />
         </div>
+
+        <FormField
+  control={form.control}
+  name="sizes"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Sizes</FormLabel>
+      <FormControl>
+        <div className="flex flex-wrap gap-4">
+          {SIZES.map((size) => (
+            <div key={size.value} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id={size.value}
+                checked={field.value.includes(size.value)}
+                onChange={(e) => {
+                  const updatedSizes = e.target.checked
+                    ? [...field.value, size.value]
+                    : field.value.filter((s: string) => s !== size.value);
+                  field.onChange(updatedSizes);
+                }}
+                className="form-checkbox h-4 w-4"
+              />
+              <label htmlFor={size.value} className="font-normal cursor-pointer">
+                {size.label}
+              </label>
+            </div>
+          ))}
+        </div>
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+
+        <FormField
+          control={form.control}
+          name="colors"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Colors</FormLabel>
+              <FormControl>
+                <Select
+                  isMulti
+                  options={COLORS}
+                  value={field.value.map((color) => ({
+                    value: color.hex,
+                    label: color.name,
+                  }))}
+                  onChange={(selectedOptions) => {
+                    field.onChange(
+                      selectedOptions.map((option) => ({
+                        name: option.label,
+                        hex: option.value,
+                      }))
+                    )
+                  }}
+                  placeholder="Select colors"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
@@ -284,40 +363,6 @@ export function ProductUploadForm({ onClose, store }) {
         </div>
 
         <FormField
-      control={form.control}
-      name="colors"
-      render={({ field }) => (
-        <FormItem>
-          <FormLabel>Colors</FormLabel>
-          <FormControl>
-            <Select className="border-none"
-              isMulti
-              options={COLORS.map((color) => ({
-                value: color.value,
-                label: color.label,
-              }))}
-              value={field.value.map((color) => ({
-                value: color.hex,
-                label: color.name,
-              }))}
-              onChange={(selectedOptions) => {
-                // Update field value based on selection
-                field.onChange(
-                  selectedOptions.map((option) => ({
-                    name: option.label,
-                    hex: option.value,
-                  }))
-                );
-              }}
-              placeholder="Select colors"
-            />
-          </FormControl>
-          <FormMessage />
-        </FormItem>
-      )}
-    />
-
-        <FormField
           control={form.control}
           name="images"
           render={({ field }) => (
@@ -354,11 +399,11 @@ export function ProductUploadForm({ onClose, store }) {
                     fileInput.type = "file"
                     fileInput.accept = "image/*"
                     fileInput.onchange = (e) => {
-                      const file = (e.target as HTMLInputElement).files[0]
+                      const file = (e.target as HTMLInputElement).files?.[0]
                       if (file) {
                         const reader = new FileReader()
                         reader.onload = (fileEvent) => {
-                          field.onChange([...field.value, fileEvent.target.result])
+                          field.onChange([...field.value, fileEvent.target?.result])
                         }
                         reader.readAsDataURL(file)
                       }
@@ -393,4 +438,3 @@ export function ProductUploadForm({ onClose, store }) {
     </Form>
   )
 }
-
