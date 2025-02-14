@@ -1,7 +1,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 // const Store = require("./store.model");
-// const Vendor = require("./vendormodel");
+// const Vendor = require("./vendormodel"); 
+const Wishlist = require("./wishlist.model");
 
 const Product = sequelize.define(
   "Product",
@@ -138,7 +139,7 @@ const Product = sequelize.define(
 
 
 
-
+Product.hasMany(Wishlist, { foreignKey: "product_id", as: "wishlistedBy" });
 
 // // Many-to-One: Product -> Store
 // Product.belongsTo(Store, {

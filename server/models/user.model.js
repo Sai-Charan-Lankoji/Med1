@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db"); 
-const crypto = require("crypto");
+const crypto = require("crypto"); 
+const Wishlist = require("./wishlist.model");
 
 
 const generateEntityId = (prefix) => {
@@ -68,8 +69,11 @@ const User = sequelize.define(
         }
       },
     },
-  }
-);
+  } 
 
+
+); 
+
+User.hasMany(Wishlist, { foreignKey: "user_id", as: "wishlistItems" });
 
 module.exports = User;

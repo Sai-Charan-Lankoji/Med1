@@ -6,7 +6,7 @@ const cors = require("cors");
 const sequelize = require("./config/db.js");
 const swaggerUi = require("swagger-ui-express");
 const { swaggerSpecs } = require("./swagger/swagger");
-const { listStores } = require("./services/store.service.js"); // Import your service method
+const { listStores } = require("./services/store.service.js"); 
 
 // Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
@@ -23,7 +23,8 @@ const saleschannelRoutes = require("./routes/saleschannel.route.js");
 const tokenBlacklistRoutes = require("./routes/tokenBlacklist.route.js");
 const publishableApiKeyRoutes = require("./routes/publishableapikey.route.js");
 const fileRoutes = require("./routes/file.route.js"); 
-const standardProductRoutes = require("./routes/standardProduct.route.js");
+const standardProductRoutes = require("./routes/standardProduct.route.js"); 
+const wishlistRoutes = require("./routes/wishlist.route.js");
 
 const app = express();
 
@@ -117,7 +118,9 @@ app.use("/api/saleschannels", saleschannelRoutes);
 app.use("/api/token-blacklist", tokenBlacklistRoutes);
 app.use("/api/publishibleapikey", publishableApiKeyRoutes);
 app.use("/api", fileRoutes); 
-app.use("/api/standardproducts", standardProductRoutes)
+app.use("/api/standardproducts", standardProductRoutes) 
+app.use("/api/wishlists", wishlistRoutes)  
+
 
 // Periodically refresh the allowed origins (optional)
 setInterval(updateAllowedOrigins, 60000); // Refresh every 60 seconds
