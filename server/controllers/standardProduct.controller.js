@@ -27,6 +27,7 @@ exports.createStandardProduct = async (req, res) => {
       is_customizable: req.body.is_customizable === "true" || req.body.is_customizable === true,
       is_discountable: req.body.is_discountable === "true" || req.body.is_discountable === true,
       store_id: req.body.store_id,
+      product_type: "Standard"
     };
 
     // Process side images (front, back, left, right)

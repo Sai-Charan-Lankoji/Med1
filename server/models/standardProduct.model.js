@@ -23,6 +23,7 @@ const StandardProduct = sequelize.define(
     back_image: { type: DataTypes.STRING, allowNull: true },
     left_image: { type: DataTypes.STRING, allowNull: true },
     right_image: { type: DataTypes.STRING, allowNull: true },
+    product_type: { type: DataTypes.STRING, allowNull: true },
 
     // Foreign Key for Store
     store_id: {
