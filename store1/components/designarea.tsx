@@ -403,7 +403,6 @@ export default function DesignArea({
     localStorage.setItem("designState", JSON.stringify(stateToSave));
   };
 
-  const clearDesignObject = () => {};
 
   const handleUpdateCart = async () => {
     const currentDesignState = designs.map((design) => ({

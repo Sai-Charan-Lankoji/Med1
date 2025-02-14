@@ -72,19 +72,6 @@ exports.getAllStandardProducts = async (req, res) => {
   }
 };
 
-/**
- * List standard products by storeId.
- */
-exports.getAllStandardProductsByStoreId = async (req, res) => {
-  const storeId = req.params.storeId;
-  try {
-    const products =
-      await standardProductService.getAllStandardProductsByStoreId(storeId);
-    res.status(200).json({ success: true, products });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
 /**
  * Retrieve a standard product by ID.
@@ -92,17 +79,20 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
 exports.getStandardProductById = async (req, res) => {
   try {
     const { id } = req.params;
+
     const product = await standardProductService.getStandardProductById(id);
+
     if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
+
     res.status(200).json({ success: true, product });
   } catch (error) {
+    console.error("Error fetching product:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
 
 /**
  * Update a standard product by ID (including images).
@@ -197,17 +187,6 @@ exports.deleteStandardProduct = async (req, res) => {
   }
 };
 
-/**
- * List all standard products.
- */
-exports.getAllStandardProducts = async (req, res) => {
-  try {
-    const products = await standardProductService.getAllStandardProducts();
-    res.status(200).json({ success: true, products });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
 /**
  * List standard products by storeId.
@@ -218,117 +197,6 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
     const products =
       await standardProductService.getAllStandardProductsByStoreId(storeId);
     res.status(200).json({ success: true, products });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-/**
- * Retrieve a standard product by ID.
- */
-exports.getStandardProductById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const product = await standardProductService.getStandardProductById(id);
-    if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
-    }
-    res.status(200).json({ success: true, product });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-/**
- * Update a standard product by ID (including images).
- */
-exports.updateStandardProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const existingProduct = await standardProductService.getStandardProductById(
-      id
-    );
-    if (!existingProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
-    }
-
-    // Handle updated images
-    const uploadedImages = {};
-    const imageFields = [
-      "front_image",
-      "back_image",
-      "left_image",
-      "right_image",
-    ];
-
-    for (const field of imageFields) {
-      if (req.files && req.files[field]) {
-        const file = req.files[field][0];
-        await fileService.validateFile(file);
-        const savedFile = await fileService.saveFile(file);
-        uploadedImages[field] = fileService.generateFileUrl(
-          req,
-          savedFile.filename
-        );
-
-        // Delete old image file if exists
-        if (existingProduct[field]) {
-          await fileService.deleteFile(existingProduct[field]);
-        }
-      }
-    }
-
-    // Merge request body with uploaded images
-    const updatedProduct = await standardProductService.updateStandardProduct(
-      id,
-      {
-        ...req.body,
-        ...uploadedImages,
-      }
-    );
-
-    res.status(200).json({ success: true, product: updatedProduct });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-/**
- * Delete a standard product by ID (including images).
- */
-exports.deleteStandardProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const existingProduct = await standardProductService.getStandardProductById(
-      id
-    );
-    if (!existingProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
-    }
-
-    // Delete associated images
-    const imageFields = [
-      "front_image",
-      "back_image",
-      "left_image",
-      "right_image",
-    ];
-    for (const field of imageFields) {
-      if (existingProduct[field]) {
-        await fileService.deleteFile(existingProduct[field]);
-      }
-    }
-
-    await standardProductService.deleteStandardProduct(id);
-    res
-      .status(200)
-      .json({ success: true, message: "Product deleted successfully" });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

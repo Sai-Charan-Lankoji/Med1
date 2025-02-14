@@ -16,9 +16,26 @@ const getAllStandardProductsByStoreId = async (storeId) => {
 };
 
 // Get a single standard product by ID
-const getStandardProductById = async (id) => {
-  return await StandardProduct.findByPk(id);
+const getStandardProductById = async (productId) => {
+  try {
+    const product = await StandardProduct.findOne({
+      where: {
+        id: productId,  // ✅ Correctly filter by product ID
+        deleted_at: null, // ✅ Ensure only non-deleted products are fetched
+      },
+    });
+
+    if (!product) {
+      throw new Error("Product not found");
+    }
+
+    return product;
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    throw error;
+  }
 };
+
 
 // Update a standard product
 const updateStandardProduct = async (id, data) => {

@@ -226,13 +226,14 @@ export const useNewCart = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          customer_id: customerId,
+          product_type: "Designable",
           designs: processedDesigns,
           designState: designState,
           propsState: propsState,
           quantity: 1,
           price: basePrice,
-          email: email,
-          customer_id: customerId,
+          email: email
         }),
       });
 
