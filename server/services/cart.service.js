@@ -8,32 +8,54 @@ class CartService {
    */
   async createCart(data) {
     if (!data.customer_id || !data.product_id || !data.product_type) {
-      throw new Error(
-        "Missing required fields: customer_id, product_id, product_type"
-      );
+        throw new Error("Missing required fields: customer_id, product_id, product_type");
     }
 
+    // Check if the product already exists in the cart
+    const existingCartItem = await Cart.findOne({
+        where: {
+            customer_id: data.customer_id,
+            product_id: data.product_id,
+            product_type: data.product_type
+        }
+    });
+
+    if (existingCartItem) {
+        // ✅ If product exists, update the quantity instead of adding a duplicate entry
+        const newQuantity = existingCartItem.quantity + (data.quantity || 1);
+        const updatedTotalPrice = existingCartItem.price * newQuantity;
+
+        await existingCartItem.update({
+            quantity: newQuantity,
+            total_price: updatedTotalPrice
+        });
+
+        return existingCartItem;
+    }
+
+    // ✅ If product doesn't exist, create a new cart item
     let price = data.price;
     let total_price = price * data.quantity;
 
     const cartData = {
-      id: crypto.randomUUID(),
-      customer_id: data.customer_id,
-      email: data.email,
-      product_id: data.product_id,
-      product_type: data.product_type,
-      quantity: data.quantity,
-      price,
-      total_price,
-      ...(data.product_type === "designable" && {
-        designs: data.designs,
-        design_state: data.design_state,
-        props_state: data.props_state,
-      }),
+        id: crypto.randomUUID(),
+        customer_id: data.customer_id,
+        email: data.email,
+        product_id: data.product_id,
+        product_type: data.product_type,
+        quantity: data.quantity,
+        price,
+        total_price,
+        ...(data.product_type === "designable" && {
+            designs: data.designs,
+            design_state: data.design_state,
+            props_state: data.props_state,
+        }),
     };
 
     return await Cart.create(cartData);
-  }
+}
+
 
   /**
    * Get a single cart item by ID
