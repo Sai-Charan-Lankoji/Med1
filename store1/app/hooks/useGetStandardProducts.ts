@@ -8,7 +8,7 @@ const fetchStandardProducts = async (store_id: string) => {
     return [];
   }
 
-  const url = `${baseUrl}/api/standardproducts/${store_id}`;
+  const url = `${baseUrl}/api/standardproducts/store/${store_id}`;
 
   try {
     const response = await fetch(url, {

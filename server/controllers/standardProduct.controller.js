@@ -193,11 +193,20 @@ exports.deleteStandardProduct = async (req, res) => {
  */
 exports.getAllStandardProductsByStoreId = async (req, res) => {
   const storeId = req.params.storeId;
+
   try {
-    const products =
-      await standardProductService.getAllStandardProductsByStoreId(storeId);
+    if (!storeId) {
+      return res.status(400).json({ success: false, message: "Store ID is required" });
+    }
+
+    console.log("Store ID:", storeId);
+
+    const products = await standardProductService.getAllStandardProductsByStoreId(storeId.toString());
+
     res.status(200).json({ success: true, products });
   } catch (error) {
+    console.error("Error fetching standard products:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
+

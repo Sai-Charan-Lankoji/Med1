@@ -12,7 +12,9 @@ const getAllStandardProducts = async () => {
 
 // Get all standard products by storeId
 const getAllStandardProductsByStoreId = async (storeId) => {
-  return await StandardProduct.findAll({where : {store_id : storeId}});
+  return await StandardProduct.findAll({
+    where: { store_id: storeId.toString() }, // ✅ Ensure it's treated as a string
+  });
 };
 
 // Get a single standard product by ID
