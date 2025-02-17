@@ -18,6 +18,8 @@ interface StandardProduct {
   right_image: string
   category: string
   sku: string
+  sale: boolean
+  customizable: boolean
 }
 
 interface StandardProductsProps {
@@ -35,7 +37,7 @@ const StandardProducts: React.FC<StandardProductsProps> = ({ products }) => {
     setSelectedProduct(null)
   }
 
-  const defaultSizes = ["XS", "S", "M", "L", "XL"]
+  const defaultSizes = [ "S", "M", "L", "XL","2XL"]
 
   return (
     <>

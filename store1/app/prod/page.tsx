@@ -322,47 +322,48 @@ const ProductGallery: React.FC = () => {
           Standard Products
         </h2>
         {standardProducts?.length ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-10">
-            {standardProducts.map((product) => (
-              <motion.div
-                key={product.id}
-                className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
-                whileHover={{ y: -5 }}
-                onClick={() => handleProductClick(product)}
-              >
-                <div className="relative aspect-square">
-                  <Image
-                    src={product.front_image || "/placeholder.svg"}
-                    alt={product.title}
-                    layout="fill"
-                    objectFit="cover"
-                    className="transition-transform duration-300 hover:scale-105"
-                  />
-                </div>
-                <div className="p-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    {product.title}
-                  </h3>
-                  <p className="text-gray-600 mb-2 font-medium">
-                    ${product.price.toFixed(2)}
-                  </p>
-                  <p className="text-sm text-gray-500 mb-3">
-                    Brand: {product.brand}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((size: string) => (
-                      <span
-                        key={size}
-                        className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full"
-                      >
-                        {size}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          // <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-10">
+          //   {standardProducts.map((product) => (
+          //     <motion.div
+          //       key={product.id}
+          //       className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
+          //       whileHover={{ y: -5 }}
+          //       onClick={() => handleProductClick(product)}
+          //     >
+          //       <div className="relative aspect-square">
+          //         <Image
+          //           src={product.front_image || "/placeholder.svg"}
+          //           alt={product.title}
+          //           layout="fill"
+          //           objectFit="cover"
+          //           className="transition-transform duration-300 hover:scale-105"
+          //         />
+          //       </div>
+          //       <div className="p-4">
+          //         <h3 className="text-lg font-semibold text-gray-800 mb-2">
+          //           {product.title}
+          //         </h3>
+          //         <p className="text-gray-600 mb-2 font-medium">
+          //           ${product.price.toFixed(2)}
+          //         </p>
+          //         <p className="text-sm text-gray-500 mb-3">
+          //           Brand: {product.brand}
+          //         </p>
+          //         <div className="flex flex-wrap gap-2">
+          //           {product.sizes.map((size: string) => (
+          //             <span
+          //               key={size}
+          //               className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full"
+          //             >
+          //               {size}
+          //             </span>
+          //           ))}
+          //         </div>
+          //       </div>
+          //     </motion.div>
+          //   ))}
+          // </div>
+          <StandardProducts products={standardProducts} />
         ) : (
           <p className="text-gray-600">No standard products found.</p>
         )}

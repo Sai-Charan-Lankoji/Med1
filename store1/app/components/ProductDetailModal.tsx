@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Minus, Plus, ShoppingCart, Pencil } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -36,6 +36,20 @@ interface ProductDetailModalProps {
   onClose: () => void;
 }
 
+const DEFAULT_COLORS: Color[] = [
+  { hex: "#FFFFFF", name: "White" },
+  { hex: "#000000", name: "Black" },
+  { hex: "#FF0000", name: "Red" },
+  { hex: "#00FF00", name: "Green" },
+  { hex: "#0000FF", name: "Blue" },
+  { hex: "#FFFF00", name: "Yellow" },
+  { hex: "#800080", name: "Purple" },
+  { hex: "#FFA500", name: "Orange" },
+  { hex: "#FFC0CB", name: "Pink" },
+  { hex: "#A52A2A", name: "Brown" },
+  { hex: "#808080", name: "Gray" }
+];
+
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   product,
   onClose,
@@ -44,11 +58,26 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [selectedSize, setSelectedSize] = useState(
     product.sizes && product.sizes.length > 0 ? product.sizes[0] : ""
   );
-  const [selectedColor, setSelectedColor] = useState(
-    product.colors && product.colors.length > 0 ? product.colors[0].hex : ""
-  );
+  // Initialize selectedColor based on whether the product has colors or is customizable
+  const [selectedColor, setSelectedColor] = useState(() => {
+    if (product.colors && product.colors.length > 0) {
+      return product.colors[0].hex;
+    } else if (product.customizable) {
+      return DEFAULT_COLORS[0].hex; // Default white for customizable products
+    }
+    return "";
+  });
+  
   const [mainImage, setMainImage] = useState(product.front_image);
+  const [currentSide, setCurrentSide] = useState("front");
   const router = useRouter();
+
+  // Get the appropriate colors array based on whether the product has colors defined
+  const colorsToUse = product.customizable 
+    ? (product.colors && product.colors.length > 0 ? product.colors : DEFAULT_COLORS)
+    : product.colors || [];
+
+  const defaultSizes = ["S", "M", "L", "XL", "2XL"];
 
   const handleQuantityChange = (change: number) => {
     setQuantity(Math.max(1, quantity + change));
@@ -79,12 +108,79 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  const images = [
-    { src: product.front_image, alt: "Front View" },
-    { src: product.back_image, alt: "Back View" },
-    { src: product.left_image, alt: "Left View" },
-    { src: product.right_image, alt: "Right View" },
-  ].filter((img) => img.src);
+  // Helper function to get design for a specific side
+  const getDesignForSide = (side : String) => {
+    if (!product.designs || product.designs.length === 0) return null;
+    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    return design;
+  };
+
+  // Helper function to get image URL for a specific side from designs array
+  const getImageUrlFromDesigns = (side : String) => {
+    if (!product.designs || product.designs.length === 0) return null;
+    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    return design?.apparel?.url || null;
+  };
+
+  // Helper function to update currentSide based on selected image
+  const updateCurrentSide = (imgSrc :string) => {
+    // Find the corresponding side for this image URL
+    const matchingImage = images.find((img) => img.src === imgSrc);
+    if (matchingImage) {
+      setCurrentSide(matchingImage.side);
+    }
+  };
+
+  // Get all available images, prioritizing standard product images and falling back to design images
+  const getImages = () => {
+    const result :any[] = [];
+    
+    // Add standard product images if they exist
+    if (product.front_image) {
+      result.push({ src: product.front_image, alt: "Front View", side: "front" });
+    }
+    if (product.back_image) {
+      result.push({ src: product.back_image, alt: "Back View", side: "back" });
+    }
+    if (product.left_image) {
+      result.push({ src: product.left_image, alt: "Left View", side: "leftshoulder" });
+    }
+    if (product.right_image) {
+      result.push({ src: product.right_image, alt: "Right View", side: "rightshoulder" });
+    }
+
+    // For customizable products, add missing sides from designs if not already present
+    if (product.customizable && product.designs) {
+      const sides = ["front", "back", "leftshoulder", "rightshoulder"];
+      sides.forEach(side => {
+        // Check if we already have this side from standard product images
+        if (!result.some(img => img.side === side)) {
+          const designImgUrl = getImageUrlFromDesigns(side);
+          if (designImgUrl) {
+            result.push({ src: designImgUrl, alt: `${side} View`, side: side });
+          }
+        }
+      });
+    }
+
+    return result;
+  };
+
+  const images = getImages();
+
+  // Get position styles for design overlays based on the side
+  const getPositionForSide = (side: String) => {
+    switch(side) {
+      case "leftshoulder":
+        return { top: "60%", left: "45%", width: "30%", height: "30%" };
+      case "rightshoulder":
+        return { top: "60%", left: "55%", width: "30%", height: "30%" };
+      case "front":
+      case "back":
+      default:
+        return { top: "50%", left: "50%", width: "50%", height: "50%" };
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
@@ -99,7 +195,43 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 layout="fill"
                 objectFit="cover"
                 className="transition-transform duration-300 hover:scale-105"
+                style={{
+                  backgroundColor: product.customizable ? selectedColor : undefined,
+                }}
               />
+              
+              {/* Overlay design image for customizable products */}
+              {product.customizable && product.designs && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  {(() => {
+                    const currentDesign = getDesignForSide(currentSide);
+                    if (!currentDesign || !currentDesign.pngImage) return null;
+                    
+                    const position = getPositionForSide(currentSide);
+                    
+                    return (
+                      <div
+                        className="absolute flex items-center justify-center pointer-events-none"
+                        style={{
+                          top: position.top,
+                          left: position.left,
+                          width: position.width,
+                          height: position.height,
+                          transform: "translate(-50%, -50%)",
+                        }}
+                      >
+                        <Image
+                          src={currentDesign.pngImage}
+                          alt="Design"
+                          layout="fill"
+                          objectFit="contain"
+                          className="rounded-md"
+                        />
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
             </div>
             <div className="grid grid-cols-4 gap-3">
               {images.map((img, index) => (
@@ -111,14 +243,59 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         ? "ring-2 ring-black shadow-lg scale-95"
                         : "hover:ring-2 hover:ring-gray-300 hover:shadow-md"
                     }`}
-                  onClick={() => setMainImage(img.src!)}
+                  onClick={() => {
+                    setMainImage(img.src!);
+                    updateCurrentSide(img.src);
+                  }}
                 >
                   <Image
                     src={img.src || "/placeholder.svg"}
                     alt={img.alt}
                     layout="fill"
                     objectFit="cover"
+                    style={{
+                      backgroundColor: product.customizable ? selectedColor : undefined,
+                    }}
                   />
+                  
+                  {/* Thumbnail overlay design for customizable products */}
+                  {product.customizable && product.designs && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {(() => {
+                        const design = getDesignForSide(img.side);
+                        if (!design || !design.pngImage) return null;
+                        
+                        const position = getPositionForSide(img.side);
+                        const thumbnailPosition = {
+                          top: position.top,
+                          left: position.left,
+                          width: position.width,
+                          height: position.height
+                        };
+                        
+                        return (
+                          <div
+                            className="absolute flex items-center justify-center pointer-events-none"
+                            style={{
+                              top: thumbnailPosition.top,
+                              left: thumbnailPosition.left,
+                              width: thumbnailPosition.width,
+                              height: thumbnailPosition.height,
+                              transform: "translate(-50%, -50%)",
+                            }}
+                          >
+                            <Image
+                              src={design.pngImage}
+                              alt={`Design ${img.side}`}
+                              layout="fill"
+                              objectFit="contain"
+                              className="rounded-md"
+                            />
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </button>
               ))}
             </div>
@@ -129,10 +306,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-3xl font-bold text-black mb-2">
-                  {product.title}
+                  {product.title || "Product Name"}
                 </h2>
                 <p className="text-2xl font-semibold text-black">
-                  ${product.price}
+                  ${product.price || 100}
                 </p>
               </div>
               <button
@@ -144,30 +321,30 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             </div>
 
             <p className="text-gray-600 mb-6 leading-relaxed">
-              {product.description}
+              {product.description || "Product description goes here."}
             </p>
 
             <div className="space-y-6 flex-grow">
               <div className="flex gap-6 text-sm text-gray-500">
                 <div>
                   <span className="block font-medium text-black">Brand</span>
-                  {product.brand}
+                  {product.brand || "Brand Name"}
                 </div>
                 <div>
                   <span className="block font-medium text-black">Category</span>
-                  {product.category}
+                  {product.category || "Clothing"}
                 </div>
                 <div>
                   <span className="block font-medium text-black">SKU</span>
-                  {product.sku}
+                  {product.sku || "SKU001"}
                 </div>
               </div>
 
-              {product.sizes && product.sizes.length > 0 && (
+              {(product.sizes && product.sizes.length > 0 ? product.sizes : defaultSizes) && (
                 <div>
                   <h3 className="font-medium text-black mb-3">Select Size</h3>
                   <div className="flex flex-wrap gap-2">
-                    {product.sizes.map((size) => (
+                    {(product.sizes && product.sizes.length > 0 ? product.sizes : defaultSizes).map((size) => (
                       <button
                         key={size}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
@@ -185,11 +362,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </div>
               )}
 
-              {product.colors && product.colors.length > 0 && (
+              {/* Always show color section for customizable products */}
+              {(product.colors && product.colors.length > 0) || product.customizable ? (
                 <div>
                   <h3 className="font-medium text-black mb-3">Select Color</h3>
                   <div className="flex flex-wrap gap-3">
-                    {product.colors.map((color) => (
+                    {colorsToUse.map((color) => (
                       <button
                         key={color.hex}
                         className={`w-10 h-10 rounded-full transition-transform duration-200 hover:scale-110
@@ -205,7 +383,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
 
               <div className="flex items-center">
                 <button
