@@ -15,24 +15,31 @@ exports.createStandardProduct = async (req, res) => {
       description: req.body.description,
       price: parseFloat(req.body.price),
       category: req.body.category,
-      sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || "[]"),
-      colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || "[]"),
+      sizes: Array.isArray(req.body.sizes)
+        ? req.body.sizes
+        : JSON.parse(req.body.sizes || "[]"),
+      colors: Array.isArray(req.body.colors)
+        ? req.body.colors
+        : JSON.parse(req.body.colors || "[]"),
       stock: parseInt(req.body.stock),
       brand: req.body.brand,
       sku: req.body.sku,
-      weight: parseFloat(req.body.weight),
-      dimensions: typeof req.body.dimensions === "object"
-        ? req.body.dimensions
-        : JSON.parse(req.body.dimensions || '{"length": 0, "width": 0, "height": 0}'),
-      is_customizable: req.body.is_customizable === "true" || req.body.is_customizable === true,
-      is_discountable: req.body.is_discountable === "true" || req.body.is_discountable === true,
+      discount: parseInt(req.body.discount),
+      customizable:
+        req.body.customizable === "true" || req.body.customizable === true,
+      sale: req.body.sale === "true" || req.body.sale === true,
       store_id: req.body.store_id,
-      product_type: "Standard"
+      product_type: "Standard",
     };
 
     // Process side images (front, back, left, right)
     let uploadedImages = {};
-    const imageFields = ["front_image", "back_image", "left_image", "right_image"];
+    const imageFields = [
+      "front_image",
+      "back_image",
+      "left_image",
+      "right_image",
+    ];
 
     for (const field of imageFields) {
       if (req.body[field]) {
@@ -51,14 +58,15 @@ exports.createStandardProduct = async (req, res) => {
       ...uploadedImages, // Store side-wise images with full URLs
     };
 
-    const product = await standardProductService.createStandardProduct(finalProductData);
+    const product = await standardProductService.createStandardProduct(
+      finalProductData
+    );
     res.status(201).json({ success: true, product });
   } catch (error) {
     console.error("Error creating product:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 /**
  * List all standard products.
@@ -72,7 +80,6 @@ exports.getAllStandardProducts = async (req, res) => {
   }
 };
 
-
 /**
  * Retrieve a standard product by ID.
  */
@@ -83,7 +90,9 @@ exports.getStandardProductById = async (req, res) => {
     const product = await standardProductService.getStandardProductById(id);
 
     if (!product) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
     res.status(200).json({ success: true, product });
@@ -92,7 +101,6 @@ exports.getStandardProductById = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-
 
 /**
  * Update a standard product by ID (including images).
@@ -187,7 +195,6 @@ exports.deleteStandardProduct = async (req, res) => {
   }
 };
 
-
 /**
  * List standard products by storeId.
  */
@@ -196,12 +203,17 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
 
   try {
     if (!storeId) {
-      return res.status(400).json({ success: false, message: "Store ID is required" });
+      return res
+        .status(400)
+        .json({ success: false, message: "Store ID is required" });
     }
 
     console.log("Store ID:", storeId);
 
-    const products = await standardProductService.getAllStandardProductsByStoreId(storeId.toString());
+    const products =
+      await standardProductService.getAllStandardProductsByStoreId(
+        storeId.toString()
+      );
 
     res.status(200).json({ success: true, products });
   } catch (error) {
@@ -209,4 +221,3 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
-

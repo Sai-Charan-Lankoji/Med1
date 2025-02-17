@@ -10,17 +10,19 @@ import type { IDesign, IProps } from "@/@types/models"
 import { useStore } from "@/context/storecontext"
 import { useGetStandardProducts } from "../hooks/useGetStandardProducts"
 import StandardProducts from "../components/StandardProdcuts"
+import ProductDetailModal from "../components/ProductDetailModal"
 
-const InfiniteScrollContainer = ({
+
+
+
+const InfiniteScrollContainer: React.FC<{ children: React.ReactNode }> = ({
   children,
-}: {
-  children: React.ReactNode
 }) => {
-  const controls = useAnimation()
-  const [isHovering, setIsHovering] = useState(false)
+  const controls = useAnimation();
+  const [isHovering, setIsHovering] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const startAnimation = async () => {
       if (!isHovering) {
@@ -31,16 +33,16 @@ const InfiniteScrollContainer = ({
             ease: "linear",
             repeat: Number.POSITIVE_INFINITY,
           },
-        })
+        });
       }
-    }
+    };
 
-    startAnimation()
+    startAnimation();
 
     return () => {
-      controls.stop()
-    }
-  }, [isHovering, controls])
+      controls.stop();
+    };
+  }, [isHovering, controls]);
 
   return (
     <motion.div
@@ -48,74 +50,75 @@ const InfiniteScrollContainer = ({
       onHoverStart={() => setIsHovering(true)}
       onHoverEnd={() => setIsHovering(false)}
     >
-      <motion.div animate={controls} className="flex gap-4 will-change-transform">
+      <motion.div
+        animate={controls}
+        className="flex gap-4 will-change-transform"
+      >
         {children}
         {children}
       </motion.div>
     </motion.div>
-  )
-}
+  );
+};
 
-const ProductGallery = () => {
-  const { store } = useStore()
-  const store_id = store?.id
-  const { data: products, isLoading, error } = useGetProducts(store_id)
-  const { data: standardProducts } = useGetStandardProducts(store_id)
-  const router = useRouter()
-  const designContext = React.useContext(DesignContext)
+const ProductGallery: React.FC = () => {
+  const { store } = useStore();
+  const store_id = store?.id;
+  const { data: products, isLoading, error } = useGetProducts(store_id);
+  const { data: standardProducts } = useGetStandardProducts(store_id);
+  const router = useRouter();
+  const designContext = React.useContext(DesignContext);
   const { dispatchDesign } = designContext || {
     dispatchDesign: () => {},
-  }
+  };
 
-  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
-  const [currentImageIndices, setCurrentImageIndices] = useState<Record<string, number>>({})
+  const [hoveredProduct, setHoveredProduct] = useState<string | null>(null);
+  const [currentImageIndices, setCurrentImageIndices] = useState<
+    Record<string, number>
+  >({});
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
 
   useEffect(() => {
     if (hoveredProduct) {
       const intervalId = setInterval(() => {
         setCurrentImageIndices((prev) => {
-          const product = products?.find((p: { id: string }) => p.id === hoveredProduct)
-          if (!product || !product.designs?.length) return prev
+          const product = products?.find(
+            (p: { id: string }) => p.id === hoveredProduct
+          );
+          if (!product || !product.designs?.length) return prev;
 
-          const currentIndex = prev[hoveredProduct] ?? 0
-          const nextIndex = (currentIndex + 1) % product.designs.length
+          const currentIndex = prev[hoveredProduct] ?? 0;
+          const nextIndex = (currentIndex + 1) % product.designs.length;
 
           return {
             ...prev,
             [hoveredProduct]: nextIndex,
-          }
-        })
-      }, 1000)
+          };
+        });
+      }, 1000);
 
-      return () => clearInterval(intervalId)
+      return () => clearInterval(intervalId);
     }
-  }, [hoveredProduct, products])
+  }, [hoveredProduct, products]);
 
-  const handleDesignClick = async (designstate: IDesign, propstate: IProps, productId: string) => {
-    localStorage.setItem("savedDesignState", JSON.stringify(designstate))
-    localStorage.setItem("savedPropsState", JSON.stringify(propstate))
-    localStorage.setItem("product_id", productId)
-    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designstate })
+  const handleProductClick = (product: any) => {
+    setSelectedProduct(product);
+  };
 
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    router.push("/dashboard")
-
-    const canvasElement = document.querySelector(".canvas-container")
-    if (canvasElement) {
-      canvasElement.scrollIntoView({ behavior: "smooth" })
-    }
-  }
+  const closeModal = () => {
+    setSelectedProduct(null);
+  };
 
   const capitalizeFirstLetter = (string: string) => {
-    return string.charAt(0).toUpperCase() + string.slice(1)
-  }
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-xl text-gray-600">Loading products...</p>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -123,15 +126,19 @@ const ProductGallery = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <p className="text-xl text-red-600">Error loading products</p>
       </div>
-    )
+    );
   }
 
   if (!products || products.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-medium mb-4 text-gray-900">No products available</h2>
-          <p className="text-gray-500 mb-8">Check back later for new products.</p>
+          <h2 className="text-xl font-medium mb-4 text-gray-900">
+            No products available
+          </h2>
+          <p className="text-gray-500 mb-8">
+            Check back later for new products.
+          </p>
           <Link
             href="/"
             className="inline-flex items-center justify-center bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-200"
@@ -140,7 +147,7 @@ const ProductGallery = () => {
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
   const renderProducts = () => {
@@ -149,16 +156,19 @@ const ProductGallery = () => {
       .map(
         (
           product: {
-            id: string
-            designs: IDesign[]
-            designstate: IDesign
-            propstate: IProps
+            id: string;
+            designs: IDesign[];
+            designstate: IDesign;
+            propstate: IProps;
           },
-          index: number,
+          index: number
         ) => {
-          const currentImageIndex = hoveredProduct === product.id ? currentImageIndices[product.id] || 0 : 0
+          const currentImageIndex =
+            hoveredProduct === product.id
+              ? currentImageIndices[product.id] || 0
+              : 0;
 
-          const currentDesign = product.designs[currentImageIndex]
+          const currentDesign = product.designs[currentImageIndex];
 
           return (
             <motion.div
@@ -170,13 +180,28 @@ const ProductGallery = () => {
               }}
               onHoverStart={() => setHoveredProduct(product.id)}
               onHoverEnd={() => {
-                setHoveredProduct(null)
+                setHoveredProduct(null);
                 setCurrentImageIndices((prev) => ({
                   ...prev,
                   [product.id]: 0,
-                }))
+                }));
               }}
-              onClick={() => handleDesignClick(product.designstate, product.propstate, product.id)}
+              onClick={() =>
+                handleProductClick({
+                  ...product,
+                  front_image: product.designs[0].apparel.url,
+                  back_image: product.designs.find(
+                    (d) => d.apparel.side === "back"
+                  )?.apparel.url,
+                  left_image: product.designs.find(
+                    (d) => d.apparel.side === "left"
+                  )?.apparel.url,
+                  right_image: product.designs.find(
+                    (d) => d.apparel.side === "right"
+                  )?.apparel.url,
+                  customizable: true,
+                })
+              }
             >
               <div className="aspect-square bg-gray-100 relative overflow-hidden rounded-xl shadow-md">
                 <Image
@@ -195,9 +220,12 @@ const ProductGallery = () => {
                 >
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <p className="text-white text-sm sm:text-base">
-                      Current Side: {capitalizeFirstLetter(currentDesign.apparel.side)}
+                      Current Side:{" "}
+                      {capitalizeFirstLetter(currentDesign.apparel.side)}
                     </p>
-                    <p className="text-white text-xs mt-1">Product ID: {product.id.slice(-8)}</p>
+                    <p className="text-white text-xs mt-1">
+                      Product ID: {product.id.slice(-8)}
+                    </p>
                   </div>
                 </div>
                 <div
@@ -207,24 +235,27 @@ const ProductGallery = () => {
                       currentDesign.apparel.side === "leftshoulder"
                         ? "170px"
                         : currentDesign.apparel.side === "rightshoulder"
-                          ? "170px"
-                          : "initial",
+                        ? "170px"
+                        : "initial",
                     left:
                       currentDesign.apparel.side === "leftshoulder"
                         ? "130px"
                         : currentDesign.apparel.side === "rightshoulder"
-                          ? "145px"
-                          : "initial",
+                        ? "145px"
+                        : "initial",
                     width:
-                      currentDesign.apparel.side === "leftshoulder" || currentDesign.apparel.side === "rightshoulder"
+                      currentDesign.apparel.side === "leftshoulder" ||
+                      currentDesign.apparel.side === "rightshoulder"
                         ? "30%"
                         : "50%",
                     height:
-                      currentDesign.apparel.side === "leftshoulder" || currentDesign.apparel.side === "rightshoulder"
+                      currentDesign.apparel.side === "leftshoulder" ||
+                      currentDesign.apparel.side === "rightshoulder"
                         ? "30%"
                         : "50%",
                     transform: "translate(-50%, -50%)",
-                    transition: "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
+                    transition:
+                      "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
                   }}
                 >
                   {currentDesign.pngImage ? (
@@ -250,7 +281,9 @@ const ProductGallery = () => {
                     </div>
                   ) : (
                     <Image
-                      src={currentDesign.uploadedImages[0] || "/placeholder.svg"}
+                      src={
+                        currentDesign.uploadedImages[0] || "/placeholder.svg"
+                      }
                       alt="Uploaded Image"
                       layout="fill"
                       objectFit="contain"
@@ -260,33 +293,87 @@ const ProductGallery = () => {
                 </div>
               </div>
             </motion.div>
-          )
-        },
-      )
+          );
+        }
+      );
 
     return products.length > 4 ? (
       <InfiniteScrollContainer>{productElements}</InfiniteScrollContainer>
     ) : (
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">{productElements}</div>
-    )
-  }
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+        {productElements}
+      </div>
+    );
+  };
 
   return (
     <section className="py-24 bg-gray-50" id="showcase">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <h2 className="text-3xl font-bold mb-8 text-gray-900">Customizable Products</h2>
-        {products?.length ? renderProducts() : <p className="text-gray-600">No customizable products found.</p>}
+        <h2 className="text-3xl font-bold mb-8 text-gray-900">
+          Customizable Products
+        </h2>
+        {products?.length ? (
+          renderProducts()
+        ) : (
+          <p className="text-gray-600">No customizable products found.</p>
+        )}
 
-        <h2 className="text-3xl font-bold mt-16 mb-8 text-gray-900">Standard Products</h2>
+        <h2 className="text-3xl font-bold mt-16 mb-8 text-gray-900">
+          Standard Products
+        </h2>
         {standardProducts?.length ? (
-          <StandardProducts products={standardProducts} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 mt-10">
+            {standardProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                className="bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 hover:shadow-xl"
+                whileHover={{ y: -5 }}
+                onClick={() => handleProductClick(product)}
+              >
+                <div className="relative aspect-square">
+                  <Image
+                    src={product.front_image || "/placeholder.svg"}
+                    alt={product.title}
+                    layout="fill"
+                    objectFit="cover"
+                    className="transition-transform duration-300 hover:scale-105"
+                  />
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                    {product.title}
+                  </h3>
+                  <p className="text-gray-600 mb-2 font-medium">
+                    ${product.price.toFixed(2)}
+                  </p>
+                  <p className="text-sm text-gray-500 mb-3">
+                    Brand: {product.brand}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {product.sizes.map((size: string) => (
+                      <span
+                        key={size}
+                        className="px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full"
+                      >
+                        {size}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         ) : (
           <p className="text-gray-600">No standard products found.</p>
         )}
       </div>
+      {selectedProduct && (
+        <ProductDetailModal product={selectedProduct} onClose={closeModal} />
+      )}
     </section>
-  )
-}
+  );
+};
 
-export default ProductGallery
+export default ProductGallery;
+
 

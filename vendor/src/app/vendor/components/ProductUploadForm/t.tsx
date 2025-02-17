@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, X } from "lucide-react";
@@ -18,7 +16,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
 import { productFormSchema, type ProductFormValues } from "./schema";
 
 // Define categories, colors, and sizes
@@ -31,34 +28,24 @@ const CATEGORIES = [
 ];
 
 const COLORS = [
-  { hex: "#FF0000", name: "Red" },
-  { hex: "#00FF00", name: "Green" },
-  { hex: "#0000FF", name: "Blue" },
-  { hex: "#FFFF00", name: "Yellow" },
-  { hex: "#800080", name: "Purple" },
-  { hex: "#FFA500", name: "Orange" },
-  { hex: "#FFC0CB", name: "Pink" },
-  { hex: "#A52A2A", name: "Brown" },
-  { hex: "#808080", name: "Gray" },
-  { hex: "#000000", name: "Black" },
-  { hex: "#FFFFFF", name: "White" },
+  { value: "#FF0000", label: "Red" },
+  { value: "#00FF00", label: "Green" },
+  { value: "#0000FF", label: "Blue" },
+  { value: "#FFFF00", label: "Yellow" },
+  { value: "#800080", label: "Purple" },
+  { value: "#FFA500", label: "Orange" },
+  { value: "#FFC0CB", label: "Pink" },
+  { value: "#A52A2A", label: "Brown" },
+  { value: "#808080", label: "Gray" },
+  { value: "#000000", label: "Black" },
+  { value: "#FFFFFF", label: "White" },
 ];
 
-const CLOTHING_SIZES = [
+const SIZES = [
   { value: "S", label: "S" },
-  { value: "M", label: "M" },
-  { value: "L", label: "L" },
-  { value: "XL", label: "XL" },
-  { value: "2XL", label: "2XL" },
-];
-
-const SHOE_SIZES = [
-  { value: "7", label: "7" },
-  { value: "8", label: "8" },
-  { value: "9", label: "9" },
-  { value: "10", label: "10" },
-  { value: "11", label: "11" },
-  { value: "12", label: "12" },
+  { value: "M", label: "Medium" },
+  { value: "L", label: "Large" },
+  { value: "XL", label: "Extra Large" },
 ];
 
 export function ProductUploadForm({ onClose, store }) {
@@ -74,9 +61,10 @@ export function ProductUploadForm({ onClose, store }) {
       sizes: [],
       colors: [],
       stock: null,
+
       brand: "",
       sku: "",
-      discount: null,
+      discount: 10,
       sale: false,
       store_id: store.id,
       front_image: null,
@@ -85,15 +73,6 @@ export function ProductUploadForm({ onClose, store }) {
       right_image: null,
     },
   });
-
-  const category = form.watch("category");
-  const sale = form.watch("sale");
-
-  useEffect(() => {
-    if (category !== "Clothing" && category !== "Shoes") {
-      form.setValue("sizes", ['']);
-    }
-  }, [category, form]);
 
   // Handle side image uploads
   const handleSideImageUpload = (
@@ -127,14 +106,13 @@ export function ProductUploadForm({ onClose, store }) {
           },
           body: JSON.stringify({
             ...data,
-            colors: data.colors.map((color: any) => ({
-              name: color.label,
-              hex: color.value,
+            colors: data.colors.map((color) => ({
+              name: color.name,
+              hex: color.hex,
             })),
             sizes: Array.isArray(data.sizes)
               ? data.sizes
               : [data.sizes].filter(Boolean),
-            discount: sale ? data.discount : 0,
           }),
         }
       );
@@ -155,7 +133,7 @@ export function ProductUploadForm({ onClose, store }) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
@@ -253,52 +231,47 @@ export function ProductUploadForm({ onClose, store }) {
           />
         </div>
 
-        {(category === "Clothing" || category === "Shoes") && (
-          <FormField
-            control={form.control}
-            name="sizes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Sizes</FormLabel>
-                <FormControl>
-                  <div className="flex flex-wrap gap-4">
-                    {(category === "Clothing"
-                      ? CLOTHING_SIZES
-                      : SHOE_SIZES
-                    ).map((size) => (
-                      <div
-                        key={size.value}
-                        className="flex items-center space-x-2"
+        <FormField
+          control={form.control}
+          name="sizes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Sizes</FormLabel>
+              <FormControl>
+                <div className="flex flex-wrap gap-4">
+                  {SIZES.map((size) => (
+                    <div
+                      key={size.value}
+                      className="flex items-center space-x-2"
+                    >
+                      <input
+                        type="checkbox"
+                        id={size.value}
+                        checked={field.value.includes(size.value)}
+                        onChange={(e) => {
+                          const updatedSizes = e.target.checked
+                            ? [...field.value, size.value]
+                            : field.value.filter(
+                                (s: string) => s !== size.value
+                              );
+                          field.onChange(updatedSizes);
+                        }}
+                        className="form-checkbox h-4 w-4"
+                      />
+                      <label
+                        htmlFor={size.value}
+                        className="font-normal cursor-pointer"
                       >
-                        <input
-                          type="checkbox"
-                          id={size.value}
-                          checked={field.value.includes(size.value)}
-                          onChange={(e) => {
-                            const updatedSizes = e.target.checked
-                              ? [...field.value, size.value]
-                              : field.value.filter(
-                                  (s: string) => s !== size.value
-                                );
-                            field.onChange(updatedSizes);
-                          }}
-                          className="form-checkbox h-4 w-4"
-                        />
-                        <label
-                          htmlFor={size.value}
-                          className="font-normal cursor-pointer"
-                        >
-                          {size.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
+                        {size.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <FormField
           control={form.control}
@@ -310,20 +283,19 @@ export function ProductUploadForm({ onClose, store }) {
                 <Select
                   isMulti
                   options={COLORS}
-                  value={field.value}
-                  onChange={(selectedOptions) =>
-                    field.onChange(selectedOptions)
-                  }
+                  value={field.value.map((color) => ({
+                    value: color.hex,
+                    label: color.name,
+                  }))}
+                  onChange={(selectedOptions) => {
+                    field.onChange(
+                      selectedOptions.map((option) => ({
+                        name: option.label,
+                        hex: option.value,
+                      }))
+                    );
+                  }}
                   placeholder="Select colors"
-                  formatOptionLabel={({ hex, name }) => (
-                    <div className="flex items-center">
-                      <div
-                        className="w-4 h-4 mr-2 rounded-full"
-                        style={{ backgroundColor: hex }}
-                      />
-                      <span>{name}</span>
-                    </div>
-                  )}
                 />
               </FormControl>
               <FormMessage />
@@ -361,43 +333,25 @@ export function ProductUploadForm({ onClose, store }) {
           />
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
-            name="sale"
+            name="discount"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-2">
+              <FormItem>
+                <FormLabel>Discount (%)</FormLabel>
                 <FormControl>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
+                  <Input
+                    type="number"
+                    placeholder="10"
+                    {...field}
+                    onChange={(e) => field.onChange(Number(e.target.value))}
                   />
                 </FormControl>
-                <FormLabel>On Sale</FormLabel>
+                <FormMessage />
               </FormItem>
             )}
           />
-
-          {sale && (
-            <FormField
-              control={form.control}
-              name="discount"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Discount (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="10"
-                      {...field}
-                      onChange={(e) => field.onChange(Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -418,7 +372,7 @@ export function ProductUploadForm({ onClose, store }) {
                       {field.value ? (
                         <div className="relative">
                           <img
-                            src={field.value || "/placeholder.svg"}
+                            src={field.value}
                             alt={side}
                             className="w-24 h-24 object-cover rounded-md"
                           />
