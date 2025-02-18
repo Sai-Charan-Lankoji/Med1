@@ -2,7 +2,8 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Address = require("../models/address.model")
-const crypto = require("crypto");
+const crypto = require("crypto"); 
+const Store = require('../models/store.model');
 
 // Function to generate a custom ID
 const generateEntityId = (prefix) => {
@@ -95,6 +96,15 @@ Vendor.hasMany(Address, {
 
 Address.belongsTo(Vendor, {
   foreignKey: "id",
+  as: "vendor",
+}); 
+Vendor.hasMany(Store, {
+  foreignKey: "vendor_id",
+  as: "stores",
+});
+
+Store.belongsTo(Vendor, {
+  foreignKey: "vendor_id",
   as: "vendor",
 });
 

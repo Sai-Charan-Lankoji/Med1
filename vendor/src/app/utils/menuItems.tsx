@@ -43,10 +43,16 @@ const menuItems = [
     href: "/vendor/users",
   },
   {
+    title: "Revenue-Analytics",
+    icon: LayoutDashboard,
+    href: "/vendor/Revenue-Analytics",
+  },
+  {
     title: "Settings",
     icon: Settings,
     href: "/vendor/settings",
-  },
+  }, 
+  
 ];
 
 export default function MenuItems({ collapsed, currentPath }: MenuItemsProps) {

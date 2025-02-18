@@ -126,6 +126,11 @@ router.put("/:id", vendorController.updateVendor);
  *       404:
  *         description: Vendor not found
  */
-router.delete("/:id", vendorController.deleteVendor);
+router.delete("/:id", vendorController.deleteVendor); 
+
+
+
+
+
 
 module.exports = router;

@@ -24,7 +24,8 @@ const tokenBlacklistRoutes = require("./routes/tokenBlacklist.route.js");
 const publishableApiKeyRoutes = require("./routes/publishableapikey.route.js");
 const fileRoutes = require("./routes/file.route.js"); 
 const standardProductRoutes = require("./routes/standardProduct.route.js"); 
-const wishlistRoutes = require("./routes/wishlist.route.js");
+const wishlistRoutes = require("./routes/wishlist.route.js"); 
+const revenueRoutes = require("./routes/revenue.js");
 
 const app = express();
 
@@ -119,7 +120,8 @@ app.use("/api/token-blacklist", tokenBlacklistRoutes);
 app.use("/api/publishibleapikey", publishableApiKeyRoutes);
 app.use("/api", fileRoutes); 
 app.use("/api/standardproducts", standardProductRoutes) 
-app.use("/api/wishlists", wishlistRoutes)  
+app.use("/api/wishlists", wishlistRoutes)   
+app.use("/api",revenueRoutes);
 
 
 // Periodically refresh the allowed origins (optional)

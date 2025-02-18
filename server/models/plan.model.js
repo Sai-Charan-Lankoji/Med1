@@ -11,7 +11,7 @@ const Plan = sequelize.define(
   "Plan",
   {
     id: {
-      type: DataTypes.STRING, // Set as STRING since the generated IDs are strings
+      type: DataTypes.STRING, 
       primaryKey: true,
     },
     name: {

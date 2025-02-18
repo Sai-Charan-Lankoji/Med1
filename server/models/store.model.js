@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const crypto = require("crypto"); // Used for generating unique IDs
+const crypto = require("crypto"); // Used for generating unique IDs 
+const Order = require("../models/order.model");
 
 // Function to generate a custom ID
 const generateEntityId = (prefix) => {
@@ -73,6 +74,16 @@ const Store = sequelize.define(
       },
     },
   }
-);
+); 
+
+Store.hasMany(Order, {
+  foreignKey: "store_id",
+  as: "orders",
+});
+
+Order.belongsTo(Store, {
+  foreignKey: "store_id",
+  as: "store",
+});
 
 module.exports = Store;
