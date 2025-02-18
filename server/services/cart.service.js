@@ -75,26 +75,53 @@ class CartService {
     const cartItems = await Cart.findAll({ where: { customer_id } });
 
     const designableProducts = [];
-    const standardProducts = [];
+    const standardProductIds = [];
+    const standardProductsMap = new Map();
 
     for (const item of cartItems) {
-      if (item.product_type === "Designable") {
-        // ✅ Push designable products as they are
-        designableProducts.push(item);
-      } else {
-        // ✅ Fetch Standard Product Details
-        const product = await StandardProduct.findByPk(item.product_id);
-        if (product) {
-          standardProducts.push({ ...item.toJSON(), product_details: product });
+        if (item.product_type === "Designable") {
+            // Convert item to JSON and remove jsonDesign
+            const itemData = item.toJSON();
+            if (itemData.designs) {
+                itemData.designs = itemData.designs.map(design => {
+                    const { jsonDesign, ...rest } = design; // Exclude jsonDesign
+                    return rest;
+                });
+            }
+            designableProducts.push(itemData);
+        } else {
+            // Collect all product IDs for batch fetching
+            standardProductIds.push(item.product_id);
         }
-      }
     }
 
+    // Batch fetch standard products for efficiency
+    if (standardProductIds.length > 0) {
+        const standardProducts = await StandardProduct.findAll({
+            where: { id: standardProductIds }
+        });
+
+        // Store products in a map for quick lookup
+        standardProducts.forEach(product => {
+            standardProductsMap.set(product.id, product);
+        });
+    }
+
+    // Prepare final standard products array
+    const standardProducts = cartItems
+        .filter(item => item.product_type !== "Designable")
+        .map(item => ({
+            ...item.toJSON(),
+            product_details: standardProductsMap.get(item.product_id) || null
+        }));
+
     return {
-      designable_products: designableProducts,
-      standard_products: standardProducts,
+        designable_products: designableProducts,
+        standard_products: standardProducts
     };
-  }
+}
+
+
 
   /**
    * ✅ Update cart item (Handles updates for both product types)
@@ -150,6 +177,19 @@ class CartService {
     await Cart.destroy({ where: { customer_id } });
     return { message: "All cart items cleared" };
   }
+
+  async updateCustomerDetails (id, updateData)  {
+    try {
+      const customer = await Customer.findByIdAndUpdate(id, updateData, { new: true });
+      if (!customer) {
+        throw new Error("Customer not found.");
+      }
+      return customer;
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  };
+  
 }
 
 module.exports = new CartService();

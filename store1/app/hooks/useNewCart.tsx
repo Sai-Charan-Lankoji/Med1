@@ -49,7 +49,7 @@ export const useNewCart = () => {
           }
   
           const data = await response.json();
-          dispatch(fetchCartSuccess(data));
+          dispatch(fetchCartSuccess(data.data.designable_products));
         } catch (error: any) {
           dispatch(setError(error.message));
         } finally {
@@ -288,6 +288,7 @@ export const useNewCart = () => {
     cartItems,
     loading,
     error,
+    fetchCartData,
     deleteCart,
     updateCart,
     addDesignToCart,

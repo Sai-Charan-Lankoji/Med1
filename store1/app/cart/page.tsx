@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { useNewCart } from "../hooks/useNewCart";
 import { useUserContext } from "@/context/userContext";
 import { useState } from "react";
@@ -31,13 +31,33 @@ interface OrderData {
   region_id: string;
   vendor_id: string | null;
   public_api_key: string | null;
-  store_id : string | null;
+  store_id: string | null;
 }
-
-
+interface DesignableProduct {
+  id: string;
+  product_id: string;
+  product_type: "Designable";
+  designs: IDesign[];
+  designState: any | null;
+  propsState: any | null;
+  price: number;
+  quantity: number;
+  total_price: number;
+  customer_id: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
 const CartPage = () => {
-  const { cartItems, deleteCart, updateCartQuantity, clearCart, loading } =
-    useNewCart();
+  const {
+    cartItems,
+    deleteCart,
+    updateCartQuantity,
+    clearCart,
+    loading,
+    fetchCartData,
+  } = useNewCart();
   const { customerToken } = useUserContext();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +82,14 @@ const CartPage = () => {
   >({});
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const { store } = useStore();
+
+  // Fetch cart data on component mount
+  useEffect(() => {
+    if (customerToken) {
+      fetchCartData();
+    }
+  }, [customerToken]);
+
   const toggleViewMode = (itemId: string) => {
     setImageViewMode((prev) => ({
       ...prev,
@@ -84,11 +112,11 @@ const CartPage = () => {
   const handleSelectAll = () => {
     setSelectedItems((prev) => {
       // If all items are selected, unselect all
-      if (prev.size === cartItems.length) {
+      if (prev.size === cartItems?.length) {
         return new Set();
       }
       // Otherwise, select all items
-      return new Set(cartItems.map((item) => item.id));
+      return new Set(cartItems.map((item: { id: any; }) => item.id));
     });
   };
 
@@ -110,7 +138,7 @@ const CartPage = () => {
     const success = await clearCart();
     if (success) {
       setSelectedItems(new Set());
-     } else {
+    } else {
       setError("Failed to clear cart");
     }
   };
@@ -159,10 +187,10 @@ const CartPage = () => {
   };
 
   const calculateSelectedTotals = () => {
-    const selectedCartItems = cartItems.filter((item) =>
+    const selectedCartItems = cartItems.filter((item: { id: string; }) =>
       selectedItems.has(item.id)
     );
-    const subtotal = selectedCartItems.reduce((total, item) => {
+    const subtotal = selectedCartItems.reduce((total: number, item: { designs: string | any[]; quantity: number; }) => {
       const numberOfSides = item.designs ? item.designs.length : 1;
       return total + 100 * numberOfSides * item.quantity;
     }, 0);
@@ -185,13 +213,13 @@ const CartPage = () => {
     setIsProcessingOrder(true);
     setError(null);
 
-    const selectedCartItems = cartItems.filter((item) =>
+    const selectedCartItems = cartItems.filter((item: { id: string; }) =>
       selectedItems.has(item.id)
     );
     const { total } = calculateSelectedTotals();
 
     const orderData: OrderData = {
-      line_items: selectedCartItems.map((item) => ({
+      line_items: selectedCartItems.map((item: { id: any; quantity: any; price: any; designs: any; }) => ({
         product_id: item.id,
         quantity: item.quantity,
         price: item.price,
@@ -207,19 +235,18 @@ const CartPage = () => {
       region_id: "reg_01J2GRDEGRBXFBD4HZW443AF8K",
       vendor_id: store?.vendor_id,
       public_api_key: process.env.NEXT_PUBLIC_API_KEY || null,
-      store_id : store?.id
+      store_id: store?.id,
     };
 
     createOrder(orderData, {
       onSuccess: async () => {
-    
-          router.push("./order-confirmation");
-          try {
-            // Remove ordered items from cart
-            for (const itemId of selectedItems) {
-              await deleteCart(itemId);
-            }
-            setSelectedItems(new Set()); 
+        router.push("./order-confirmation");
+        try {
+          // Remove ordered items from cart
+          for (const itemId of selectedItems) {
+            await deleteCart(itemId);
+          }
+          setSelectedItems(new Set());
         } catch (err) {
           console.error("Error processing order:", err);
           setError("Failed to complete order process.");
@@ -276,7 +303,7 @@ const CartPage = () => {
   };
 
   const isAllSelected =
-    cartItems.length > 0 && selectedItems.size === cartItems.length;
+    cartItems?.length > 0 && selectedItems.size === cartItems?.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -312,25 +339,25 @@ const CartPage = () => {
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">
                   Shopping Cart
                 </h1>
-                {cartItems.length > 0 && (
-               <div className="flex justify-between space-x-4">
-               <button
-                 onClick={handleSelectAll}
-                 className="px-4 py-2 text-sm font-medium text-gray-600 bg-blue-100 rounded hover:bg-blue-200 hover:text-gray-800 transition-colors"
-               >
-                 {isAllSelected ? "Unselect All" : "Select All"}
-               </button>
-               
-               <button
-                 onClick={handleClearCart}
-                 className={`px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 transition-colors ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
-                 disabled={loading}
-               >
-                 {loading ? "Clearing..." : "Clear Cart"}
-               </button>
-             </div>
-             
-              
+                {cartItems && (
+                  <div className="flex justify-between space-x-4">
+                    <button
+                      onClick={handleSelectAll}
+                      className="px-4 py-2 text-sm font-medium text-gray-600 bg-blue-100 rounded hover:bg-blue-200 hover:text-gray-800 transition-colors"
+                    >
+                      {isAllSelected ? "Unselect All" : "Select All"}
+                    </button>
+
+                    <button
+                      onClick={handleClearCart}
+                      className={`px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 transition-colors ${
+                        loading ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={loading}
+                    >
+                      {loading ? "Clearing..." : "Clear Cart"}
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -677,7 +704,7 @@ const CartPage = () => {
           </div>
 
           {/* Order Summary  */}
-          {cartItems.length > 0 && (
+          {cartItems?.length > 0 && (
             <div className="lg:w-[380px] flex-shrink-0">
               <div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-8">
                 <h2 className="text-xl text-black font-bold mb-6">

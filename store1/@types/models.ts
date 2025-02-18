@@ -145,8 +145,24 @@ export const bgColours: IBgcolor[] = [
   { name: "warning", value: "#ffc107", selected: false }, // Yellow
   { name: "danger", value: "#dc3545", selected: false }, // Red
 ];
-
+interface DesignableProduct {
+  id: string;
+  product_id: string;
+  product_type: "Designable";
+  designs: IDesign[];
+  designState: any | null;
+  propsState: any | null;
+  price: number;
+  quantity: number;
+  total_price: number;
+  customer_id: string;
+  email: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+}
 export interface ICartItem {
+  product_type: string;
   id: string;
   designs: IDesign[];
   quantity: number;
@@ -155,6 +171,9 @@ export interface ICartItem {
   customer_id: any;
   designState: IDesign;
   propsState: IProps;
+  designable_products?: DesignableProduct[];  
+  standard_products?: any;
+
 }
 
 export const designApparels: IApparel[] = [
