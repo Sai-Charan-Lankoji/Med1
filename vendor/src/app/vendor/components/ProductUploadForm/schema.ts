@@ -1,4 +1,3 @@
-import { disconnect } from "process";
 import { z } from "zod";
 
 export const productFormSchema = z.object({
@@ -6,21 +5,42 @@ export const productFormSchema = z.object({
   description: z.string().min(1, "Description is required"),
   price: z.number().min(0, "Price must be a positive number"),
   category: z.string().min(1, "Category is required"),
-  sizes: z.array(z.string()).nonempty("At least one size must be selected"),
+  sizes: z.array(z.string()).optional(),
   colors: z
-    .array(z.object({ name: z.string().min(1), hex: z.string().min(1) }))
-    .nonempty("At least one color must be selected"),
+    .array(z.object({ 
+      value: z.string().min(1),
+      label: z.string().min(1) 
+    }))
+    .optional(),
   stock: z.number().min(0, "Stock must be a positive number"),
   brand: z.string().min(1, "Brand is required"),
   sku: z.string().min(1, "SKU is required"),
-  discount: z.number().min(0, "Discount must be a positive number").default(0),
+  discount: z.number().nullable().optional(),
   sale: z.boolean().default(false),
   store_id: z.string().min(1, "Store ID is required"),
-  front_image: z.string().nullable(),
-  back_image: z.string().nullable(),
-  left_image: z.string().nullable(),
-  right_image: z.string().nullable(),
-});
-
+  front_image: z.string().nullable().optional(),
+  back_image: z.string().nullable().optional(),
+  left_image: z.string().nullable().optional(),
+  right_image: z.string().nullable().optional(),
+  product_type: z.enum(["standard", "customizable"])
+}).refine(
+  (data) => {
+    if (data.sale && data.discount === null) return false;
+    return true;
+  },
+  {
+    message: "Discount is required when item is on sale",
+    path: ["discount"],
+  }
+).refine(
+  (data) => {
+    if (data.product_type === "standard" && (!data.colors || data.colors.length === 0)) return false;
+    return true;
+  },
+  {
+    message: "At least one color must be selected for standard products",
+    path: ["colors"],
+  }
+);
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

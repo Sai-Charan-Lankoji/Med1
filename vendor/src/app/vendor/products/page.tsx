@@ -17,6 +17,7 @@ const Product = () => {
   const [selectedStore, setSelectedStore] = useState(null);
   const [isOptionDialogOpen, setIsOptionDialogOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [productType, setProductType] = useState(null); // "customizable" or "non-customizable"
   
   const { data: stores, isLoading, error } = useGetStores();
   const router = useRouter();
@@ -37,13 +38,13 @@ const Product = () => {
 
   const handleOptionSelect = (option) => {
     setIsOptionDialogOpen(false);
-    if (option === "customizable") {
-      const { store_url, vendor_id } = selectedStore;
-      const storeUrl = `${store_url}/${vendor_id}`;
-      window.open(storeUrl, '_blank');
-    } else {
-      setIsFormOpen(true);
-    }
+    setProductType(option);
+    setIsFormOpen(true);
+  };
+
+  const handleFormClose = () => {
+    setIsFormOpen(false);
+    setProductType(null);
   };
 
   return (
@@ -95,50 +96,55 @@ const Product = () => {
       
       {/* Option Selection Dialog */}
       <Dialog open={isOptionDialogOpen} onOpenChange={setIsOptionDialogOpen}>
-  <DialogContent className="sm:max-w-md">
-    <DialogHeader>
-      <DialogTitle>Select Product Type</DialogTitle>
-      <DialogDescription>
-        Choose whether the product should be customizable or non-customizable.
-      </DialogDescription>
-    </DialogHeader>
-    <div className="flex justify-center items-stretch gap-6 mt-6">
-      <Button
-        onClick={() => handleOptionSelect("customizable")}
-        className="flex flex-col items-center justify-center w-40 h-40 p-4 hover:scale-105 transition-transform"
-        variant="outline"
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Settings className="h-16 w-16" />
-          <span className="text-sm font-medium">Customizable</span>
-        </div>
-      </Button>
-      <Button
-        onClick={() => handleOptionSelect("non-customizable")}
-        className="flex flex-col items-center justify-center w-40 h-40 p-4 hover:scale-105 transition-transform"
-        variant="outline"
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Package className="h-16 w-16" />
-          <span className="text-sm font-medium">Non-Customizable</span>
-        </div>
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Product Type</DialogTitle>
+            <DialogDescription>
+              Choose whether the product should be customizable or non-customizable.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center items-stretch gap-6 mt-6">
+            <Button
+              onClick={() => handleOptionSelect("customizable")}
+              className="flex flex-col items-center justify-center w-40 h-40 p-4 hover:scale-105 transition-transform"
+              variant="outline"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <Settings className="h-16 w-16" />
+                <span className="text-sm font-medium">Customizable</span>
+              </div>
+            </Button>
+            <Button
+              onClick={() => handleOptionSelect("non-customizable")}
+              className="flex flex-col items-center justify-center w-40 h-40 p-4 hover:scale-105 transition-transform"
+              variant="outline"
+            >
+              <div className="flex flex-col items-center gap-4">
+                <Package className="h-16 w-16" />
+                <span className="text-sm font-medium">Non-Customizable</span>
+              </div>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-      {/* Product Upload Form for Non-Customizable */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-  <DialogContent className="max-h-[90vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle>Upload Product</DialogTitle>
-      <DialogDescription>
-        Provide product details below
-      </DialogDescription>
-    </DialogHeader>
-    <ProductUploadForm onClose={() => setIsFormOpen(false)} store={selectedStore} />
-  </DialogContent>
-</Dialog>
+      {/* Product Upload Form Dialog */}
+      {isFormOpen && (
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {productType === "customizable" ? "Create Custom Product" : "Upload Product"}
+              </DialogTitle>
+            </DialogHeader>
+            <ProductUploadForm 
+              onClose={handleFormClose} 
+              store={selectedStore} 
+              productType={productType} 
+            />
+          </DialogContent>
+        </Dialog>
+      )}
       
       <ProductGallery />
     </div>

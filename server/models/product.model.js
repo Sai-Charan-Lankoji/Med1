@@ -54,7 +54,7 @@ const Product = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
-    subtitle: {
+    sku: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -62,27 +62,28 @@ const Product = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-    handle: {
+    product_type: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    is_giftcard: {
+    sale: {
       type: DataTypes.BOOLEAN,
       allowNull: true,
+      defaultValue: false,
     },
-    thumbnail: {
+    category: {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    weight: {
+    price: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    height: {
+    discount: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    length: {
+    stock: {
       type: DataTypes.INTEGER,
       allowNull: true,
     },
@@ -90,7 +91,7 @@ const Product = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
-    hs_code: {
+    brand: {
       type: DataTypes.STRING,
       allowNull: true,
     },
@@ -130,6 +131,8 @@ const Product = sequelize.define(
       type: DataTypes.BOOLEAN,
       allowNull: true,
     },
+    sizes: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true,  },
+    
   },
   {
     tableName: "product", 

@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,18 +8,10 @@ import Select from "react-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { productFormSchema, type ProductFormValues } from "./schema";
 
-// Define categories, colors, and sizes
 const CATEGORIES = [
   { value: "Clothing", label: "Clothing" },
   { value: "Shoes", label: "Shoes" },
@@ -44,46 +34,34 @@ const COLORS = [
   { hex: "#FFFFFF", name: "White" },
 ];
 
-const CLOTHING_SIZES = [
-  { value: "S", label: "S" },
-  { value: "M", label: "M" },
-  { value: "L", label: "L" },
-  { value: "XL", label: "XL" },
-  { value: "2XL", label: "2XL" },
-];
+const CLOTHING_SIZES = ["S", "M", "L", "XL", "2XL"];
+const SHOE_SIZES = ["7", "8", "9", "10", "11", "12"];
 
-const SHOE_SIZES = [
-  { value: "7", label: "7" },
-  { value: "8", label: "8" },
-  { value: "9", label: "9" },
-  { value: "10", label: "10" },
-  { value: "11", label: "11" },
-  { value: "12", label: "12" },
-];
-
-export function ProductUploadForm({ onClose, store }) {
+export function ProductUploadForm({ onClose, store, productType }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isCustomizable = productType === "customizable";
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
       title: "",
       description: "",
-      price: null,
+      price: 0,
       category: "",
       sizes: [],
       colors: [],
-      stock: null,
+      stock: 0,
       brand: "",
       sku: "",
       discount: null,
       sale: false,
       store_id: store.id,
+      product_type: isCustomizable ? "customizable" : "standard",
       front_image: null,
       back_image: null,
       left_image: null,
       right_image: null,
-    },
+    }
   });
 
   const category = form.watch("category");
@@ -91,71 +69,86 @@ export function ProductUploadForm({ onClose, store }) {
 
   useEffect(() => {
     if (category !== "Clothing" && category !== "Shoes") {
-      form.setValue("sizes", ['']);
+      form.setValue("sizes", []);
     }
   }, [category, form]);
 
-  // Handle side image uploads
-  const handleSideImageUpload = (
-    side: string,
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleSideImageUpload = (side: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (fileEvent) => {
         if (fileEvent.target?.result) {
-          form.setValue(
-            side as keyof ProductFormValues,
-            fileEvent.target.result as string
-          );
+          form.setValue(side as keyof ProductFormValues, fileEvent.target.result as string);
         }
       };
       reader.readAsDataURL(file);
     }
   };
 
-  async function onSubmit(data: ProductFormValues) {
-    setIsSubmitting(true);
+  const redirectToStore = (formData: ProductFormValues) => {
     try {
-      const response = await fetch(
-        "http://localhost:5000/api/standardproducts",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            ...data,
-            colors: data.colors.map((color: any) => ({
-              name: color.label,
-              hex: color.value,
-            })),
-            sizes: Array.isArray(data.sizes)
-              ? data.sizes
-              : [data.sizes].filter(Boolean),
-            discount: sale ? data.discount : 0,
-          }),
-        }
-      );
+      const simplifiedData = {
+        ...formData,
+        product_type: "customizable",
+        colors: undefined,
+        front_image: undefined,
+        back_image: undefined,
+        left_image: undefined,
+        right_image: undefined
+      };
+      
+      const serializedData = encodeURIComponent(JSON.stringify(simplifiedData));
+      const storeUrl = `${store.store_url}/${store.vendor_id}?productData=${serializedData}`;
+      window.open(storeUrl, '_blank');
+    } catch (error) {
+      console.error("Redirect error:", error);
+      alert("Failed to proceed to store");
+      setIsSubmitting(false);
+    }
+  };
 
-      if (!response.ok) {
-        throw new Error("Failed to upload product");
+  const handleSubmit = async (formData: ProductFormValues) => {
+    setIsSubmitting(true);
+    
+    try {
+      if (isCustomizable) {
+        redirectToStore(formData);
+        return;
       }
 
+      const preparedData = {
+        ...formData,
+        colors: formData.colors?.map((color) => ({
+          name: color.label,
+          hex: color.value
+        })),
+        sizes: formData.sizes,
+        discount: sale ? formData.discount : 0,
+      };
+
+      const response = await fetch("http://localhost:5000/api/standardproducts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(preparedData)
+      });
+
+      if (!response.ok) throw new Error("Upload failed");
+      
       const result = await response.json();
-      console.log(result);
+      console.log("Upload success:", result);
       onClose?.();
     } catch (error) {
-      console.error(error);
+      console.error("Submission error:", error);
+      alert("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
             control={form.control}
@@ -219,13 +212,9 @@ export function ProductUploadForm({ onClose, store }) {
                 <FormControl>
                   <Select
                     options={CATEGORIES}
-                    value={CATEGORIES.find(
-                      (option) => option.value === field.value
-                    )}
-                    onChange={(selectedOption) =>
-                      field.onChange(selectedOption?.value)
-                    }
-                    placeholder="Select a category"
+                    value={CATEGORIES.find((c) => c.value === field.value)}
+                    onChange={(val) => field.onChange(val?.value)}
+                    placeholder="Select category"
                   />
                 </FormControl>
                 <FormMessage />
@@ -254,82 +243,72 @@ export function ProductUploadForm({ onClose, store }) {
         </div>
 
         {(category === "Clothing" || category === "Shoes") && (
-          <FormField
-            control={form.control}
-            name="sizes"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Sizes</FormLabel>
-                <FormControl>
-                  <div className="flex flex-wrap gap-4">
-                    {(category === "Clothing"
-                      ? CLOTHING_SIZES
-                      : SHOE_SIZES
-                    ).map((size) => (
-                      <div
-                        key={size.value}
-                        className="flex items-center space-x-2"
-                      >
-                        <input
-                          type="checkbox"
-                          id={size.value}
-                          checked={field.value.includes(size.value)}
-                          onChange={(e) => {
-                            const updatedSizes = e.target.checked
-                              ? [...field.value, size.value]
-                              : field.value.filter(
-                                  (s: string) => s !== size.value
-                                );
-                            field.onChange(updatedSizes);
-                          }}
-                          className="form-checkbox h-4 w-4"
-                        />
-                        <label
-                          htmlFor={size.value}
-                          className="font-normal cursor-pointer"
-                        >
-                          {size.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+  <FormField
+    control={form.control}
+    name="sizes"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Sizes</FormLabel>
+        <FormControl>
+          <div className="flex flex-wrap gap-4">
+            {(category === "Clothing" ? CLOTHING_SIZES : SHOE_SIZES).map((size) => (
+              <div key={size} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id={size}
+                  checked={field.value?.includes(size)}
+                  onChange={(e) => {
+                    const updated = e.target.checked
+                      ? [...field.value, size]
+                      : field.value.filter((s: string) => s !== size);
+                    field.onChange(updated);
+                  }}
+                  className="form-checkbox h-4 w-4"
+                />
+                <label htmlFor={size} className="font-medium">{size}</label>
+              </div>
+            ))}
+          </div>
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+)}
+
+{!isCustomizable && (
+  <FormField
+    control={form.control}
+    name="colors"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Colors</FormLabel>
+        <FormControl>
+          <Select
+            isMulti
+            options={COLORS.map(c => ({
+              value: c.hex,
+              label: c.name
+            }))}
+            value={field.value}
+            onChange={field.onChange}
+            placeholder="Select colors"
+            formatOptionLabel={({ value, label }) => (
+              <div className="flex items-center">
+                <div
+                  className="w-4 h-4 mr-2 rounded-full"
+                  style={{ backgroundColor: value }}
+                />
+                <span>{label}</span>
+              </div>
             )}
           />
-        )}
-
-        <FormField
-          control={form.control}
-          name="colors"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Colors</FormLabel>
-              <FormControl>
-                <Select
-                  isMulti
-                  options={COLORS}
-                  value={field.value}
-                  onChange={(selectedOptions) =>
-                    field.onChange(selectedOptions)
-                  }
-                  placeholder="Select colors"
-                  formatOptionLabel={({ hex, name }) => (
-                    <div className="flex items-center">
-                      <div
-                        className="w-4 h-4 mr-2 rounded-full"
-                        style={{ backgroundColor: hex }}
-                      />
-                      <span>{name}</span>
-                    </div>
-                  )}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+)}
 
         <div className="grid gap-4 md:grid-cols-2">
           <FormField
@@ -339,7 +318,7 @@ export function ProductUploadForm({ onClose, store }) {
               <FormItem>
                 <FormLabel>Brand</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter brand name" {...field} />
+                  <Input placeholder="Brand name" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -353,7 +332,7 @@ export function ProductUploadForm({ onClose, store }) {
               <FormItem>
                 <FormLabel>SKU</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter SKU" {...field} />
+                  <Input placeholder="SKU code" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -366,7 +345,7 @@ export function ProductUploadForm({ onClose, store }) {
             control={form.control}
             name="sale"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-center space-x-2">
+              <FormItem className="flex items-center space-x-2">
                 <FormControl>
                   <Switch
                     checked={field.value}
@@ -400,66 +379,65 @@ export function ProductUploadForm({ onClose, store }) {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {(
-            ["front_image", "back_image", "left_image", "right_image"] as const
-          ).map((side) => (
-            <FormField
-              key={side}
-              control={form.control}
-              name={side}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="capitalize">
-                    {side.replace("_", " ")}
-                  </FormLabel>
-                  <FormControl>
-                    <div className="flex flex-col items-center space-y-2">
-                      {field.value ? (
-                        <div className="relative">
-                          <img
-                            src={field.value || "/placeholder.svg"}
-                            alt={side}
-                            className="w-24 h-24 object-cover rounded-md"
-                          />
+        {!isCustomizable && (
+          <div className="grid grid-cols-2 gap-4">
+            {["front_image", "back_image", "left_image", "right_image"].map((side) => (
+              <FormField
+                key={side}
+                control={form.control}
+                name={side as keyof ProductFormValues}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="capitalize">
+                      {side.replace("_", " ")}
+                    </FormLabel>
+                    <FormControl>
+                      <div className="flex flex-col items-center space-y-2">
+                        {field.value ? (
+                          <div className="relative">
+                            <img
+                              src={field.value}
+                              alt={side}
+                              className="w-24 h-24 object-cover rounded-md"
+                            />
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-1 right-1 h-6 w-6 p-0"
+                              onClick={() => form.setValue(side as keyof ProductFormValues, null)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
                           <Button
                             type="button"
-                            variant="destructive"
-                            size="sm"
-                            className="absolute top-1 right-1 h-6 w-6 p-0"
-                            onClick={() => form.setValue(side, null)}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-24 h-24"
-                          onClick={() => {
-                            const fileInput = document.createElement("input");
-                            fileInput.type = "file";
-                            fileInput.accept = "image/*";
-                            fileInput.onchange = (e) =>
-                              handleSideImageUpload(
+                            variant="outline"
+                            className="w-24 h-24"
+                            onClick={() => {
+                              const input = document.createElement("input");
+                              input.type = "file";
+                              input.accept = "image/*";
+                              input.onchange = (e) => handleSideImageUpload(
                                 side,
                                 e as unknown as React.ChangeEvent<HTMLInputElement>
                               );
-                            fileInput.click();
-                          }}
-                        >
-                          <Plus className="h-6 w-6" />
-                        </Button>
-                      )}
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-        </div>
+                              input.click();
+                            }}
+                          >
+                            <Plus className="h-6 w-6" />
+                          </Button>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ))}
+          </div>
+        )}
 
         <div className="flex gap-2 justify-end pt-4">
           <Button type="button" variant="outline" onClick={onClose}>
@@ -469,14 +447,12 @@ export function ProductUploadForm({ onClose, store }) {
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
+                {isCustomizable ? "Redirecting..." : "Uploading..."}
               </>
-            ) : (
-              "Upload Product"
-            )}
+            ) : isCustomizable ? "Next" : "Upload Product"}
           </Button>
         </div>
       </form>
     </Form>
   );
-}
+};
