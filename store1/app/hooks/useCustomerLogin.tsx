@@ -12,6 +12,7 @@ interface StoreLoginResponse {
   username: string;
   email: string;
   vendor_id: string;
+  profile_photo: string;
 }
 
 interface CartItem {
@@ -51,7 +52,6 @@ export const useCustomerLogin = () => {
       if (!response.ok) {
         const errorData = await response.json(); 
 
-        console.log(`Error Response Data:`, errorData);
         if (response.status === 401) {
           throw new Error('Unauthorized: Invalid email or password');
         }
@@ -65,7 +65,7 @@ export const useCustomerLogin = () => {
         const decryptedToken = await TokenEncryption.decrypt(encryptedToken); 
 
          
-        setUser(data.customer.first_name, data.customer.email, decryptedToken); 
+        setUser(data.customer.first_name, data.customer.email, data.customer.profile_photo, decryptedToken); 
         sessionStorage.setItem('customerId', data.customer.id)
         sessionStorage.setItem('customerEmail', data.customer.email);
         

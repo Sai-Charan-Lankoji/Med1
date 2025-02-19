@@ -1,14 +1,14 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { FaUserCircle, FaShoppingCart, FaSignOutAlt } from "react-icons/fa";
+import { FaUserCircle, FaShoppingCart, FaSignOutAlt, FaCog } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
-import {ShirtIcon} from 'lucide-react'
+import { ShirtIcon } from 'lucide-react';
 import Link from "next/link";
 import Image from "next/image";
 import { MdDeleteForever } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
-import { useRouter,useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
@@ -16,10 +16,9 @@ import { IDesign, IProps } from "@/@types/models";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 import { useStore } from "@/context/storecontext";
 
-
 const Navbar: React.FC = () => {
   const { cartItems, deleteCart } = useNewCart();
-  const { email, customerToken } = useUserContext();
+  const { email, customerToken,profile } = useUserContext();
   const [username, setUsername] = useState<string>("");
   const { logout } = useCustomerLogout();
   const router = useRouter();
@@ -31,11 +30,10 @@ const Navbar: React.FC = () => {
   const [expandedItems, setExpandedItems] = useState<{
     [key: string]: boolean;
   }>({});
-   const params = useParams();
-   const { store } = useStore();
+  const params = useParams();
+  const { store } = useStore();
   const vendorId = params.vendorId as string;
   const isVendorMode = vendorId === store?.vendor_id;
-
   useEffect(() => {
     if (email) {
       const storedUsername = sessionStorage.getItem("username");
@@ -83,7 +81,7 @@ const Navbar: React.FC = () => {
     propsState: IProps,
     id: any
   ) => {
-     localStorage.setItem("savedDesignState", JSON.stringify(designState));
+    localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
     localStorage.setItem("cart_id", id);
     dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
@@ -121,7 +119,7 @@ const Navbar: React.FC = () => {
       localStorage.removeItem("savedDesignState");
       localStorage.removeItem("cart_id");
       router.refresh();
-     } else {
+    } else {
       console.log("Failed to delete cart item");
     }
   };
@@ -134,7 +132,6 @@ const Navbar: React.FC = () => {
       closeAllMenus();
     } else {
       setIsCartOpen((prev) => !prev);
- 
       setIsProfileOpen(false);
     }
   };
@@ -229,32 +226,33 @@ const Navbar: React.FC = () => {
     const lastSide = sides.pop();
     return `${sides.join(", ")} & ${lastSide}`;
   };
+
   return (
     <nav className="bg-white fixed w-full top-0 z-50 border-b border-gray-200 shadow-sm">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex-shrink-0">
-  <div className="flex items-center">
-    <ShirtIcon className="h-8 w-8 text-indigo-600" />
-    <h1 className="ml-2 sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-      {store?.name}
-    </h1>
-  </div>
-</Link>
+            <div className="flex items-center">
+              <ShirtIcon className="h-8 w-8 text-indigo-600" />
+              <h1 className="ml-2 sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
+                {store?.name}
+              </h1>
+            </div>
+          </Link>
 
           {!isVendorMode && (
-          <div className="md:hidden">
-            <button
-              onClick={handleMobileMenuToggle}
-              className="mobile-menu-button p-2 text-gray-700 hover:bg-gray-100 rounded-md"
-            >
-              { isMobileMenuOpen ? (
-                <HiX className="h-6 w-6" />
-              ) : (
-                <HiMenu className="h-6 w-6" />
-              )}
-            </button>
-          </div>
+            <div className="md:hidden">
+              <button
+                onClick={handleMobileMenuToggle}
+                className="mobile-menu-button p-2 text-gray-700 hover:bg-gray-100 rounded-md"
+              >
+                {isMobileMenuOpen ? (
+                  <HiX className="h-6 w-6" />
+                ) : (
+                  <HiMenu className="h-6 w-6" />
+                )}
+              </button>
+            </div>
           )}
 
           {/* Desktop Navigation */}
@@ -262,7 +260,7 @@ const Navbar: React.FC = () => {
             {!isVendorMode && !email && (
               <Link
                 href="./auth"
-                className="mx-3 px-4 py-2 text-sm font-medium text-white rounded-md text-left bg-purple-700  hover:bg-purple-500 transition-colors duration-200 flex items-center space-x-2"
+                className="mx-3 px-4 py-2 text-sm font-medium text-white rounded-md text-left bg-purple-700 hover:bg-purple-500 transition-colors duration-200 flex items-center space-x-2"
                 onClick={closeAllMenus}
               >
                 <FaUserCircle className="text-xl text-white" />
@@ -276,18 +274,31 @@ const Navbar: React.FC = () => {
                   onClick={handleDesktopProfileClick}
                   className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
                 >
-                  <FaUserCircle className="text-2xl text-gray-700" />
-
+                  <div className="relative w-8 h-8 rounded-full overflow-hidden">
+                    <Image
+                      src={ profile || "/images/profile-sample.jpg"}
+                      alt="Profile Picture"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                   <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
-                    {username || email}{" "}
+                    {username || email}
                   </span>
                 </button>
 
                 {isProfileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1">
+                  <div className="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg ring-1 ring-black ring-opacity-5 p-1">
+                    <button
+                      onClick={() => router.push("/profile")}
+                      className="w-full px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
+                    >
+                      <FaCog className="text-xl text-gray-700 w-4 h-4" />
+                      <span>Settings</span>
+                    </button>
                     <button
                       onClick={handleDesktopLogout}
-                      className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
+                      className="w-full px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
                     >
                       <FaSignOutAlt className="text-xl text-gray-700" />
                       <span>Logout</span>
@@ -336,7 +347,6 @@ const Navbar: React.FC = () => {
                                 <div className="p-3 hover:bg-gray-50">
                                   <div className="flex justify-between items-start mb-2">
                                     <div>
-                                     
                                       <p className="text-sm text-gray-600">
                                         Qty: {item.quantity}
                                       </p>

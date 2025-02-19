@@ -26,6 +26,24 @@ class FileService {
     return `${sanitizedFilename}-${uniqueSuffix}${fileExtension}`;
   }
 
+
+  async saveBase64File(base64String, req) {
+    await this.createUploadDirectory();
+
+    // Generate a unique filename
+    const filename = `image-${Date.now()}.png`;
+    const filepath = path.join(this.uploadDir, filename);
+
+    // Decode and save the base64 string as a file
+    const buffer = Buffer.from(base64String, "base64");
+    await fs.writeFile(filepath, buffer);
+
+    // Generate the file URL
+    const fileUrl = this.generateFileUrl(req, filename);
+    
+    return { filename, url: fileUrl };
+}
+
   async saveFile(file) {
     await this.createUploadDirectory();
 

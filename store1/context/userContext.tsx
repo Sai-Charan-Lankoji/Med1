@@ -6,7 +6,8 @@ interface UserContextType {
   username: string | null;
   email: string | null;
   customerToken: string | null;
-  setUser: (username: string | null, email: string | null, token?: string | null) => void; 
+  profile: string | null;
+  setUser: (username: string | null, email: string | null, profile_photo: string | null, token?: string | null) => void; 
   logout: () => void;  
   isLogin: boolean; 
   setIsLogin: (status: boolean) => void;
@@ -20,7 +21,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [customerToken, setCustomerToken] = useState<string | null>(null); 
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const [responseData, setResponseData] = useState<string | null>(null);
-
+  const [ profile, setProfilePhoto] = useState<string | null>(null);
   useEffect(() => {
     const storedUsername = sessionStorage.getItem('username');
     const storedEmail = sessionStorage.getItem('email');
@@ -47,7 +48,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const setUser = (username: string | null, email: string | null, token?: string | null) => {
+  const setUser = (username: string | null, email: string | null, profile_photo?: string | null, token?: string | null) => {
     setUsername(username);
     setEmail(email);
     if (token) {
@@ -56,6 +57,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setCustomerToken(null); 
       sessionStorage.removeItem('auth_token'); 
+    }
+
+    if (profile_photo) {
+      setProfilePhoto(profile_photo); 
+    } else {
+      setProfilePhoto(null); 
     }
 
     if (username && email) {
@@ -72,7 +79,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <UserContext.Provider value={{ username, email, customerToken, setUser, logout, isLogin, setIsLogin}}>
+    <UserContext.Provider value={{ username, email, customerToken, profile, setUser, logout, isLogin, setIsLogin }}>
       {children}
     </UserContext.Provider>
   );

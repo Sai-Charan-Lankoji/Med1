@@ -1,4 +1,8 @@
 const customerService = require("../services/customer.service");
+const FileService = require("../services/file.service");
+const multer = require("multer");
+const fileService = new FileService();
+const upload = multer(); // Use Multer to parse multipart form-data
 
 // create a new customer
 const createCustomer = async (req, res) => {
@@ -91,6 +95,42 @@ const logout = async (req, res) => {
   }
 };
 
+
+const updateCustomerDetails = async (req, res) => {
+  try {
+      // Extract customer ID from path parameters
+      const { id } = req.params;
+
+      // Parse multipart form-data fields
+      const { email, first_name, last_name, phone, old_password, new_password } = req.body;
+
+      let profile_photo = null;
+
+      // Handle profile photo upload if it exists
+      if (req.file) {
+          const fileData = await fileService.saveBase64File(req.file.buffer.toString("base64"), req);
+          profile_photo = fileData.url; // Store uploaded file URL in the database
+      }
+
+
+      // Call the service to update customer details
+      const updatedCustomer = await customerService.updateCustomerDetails(id, {
+          email,
+          first_name,
+          last_name,
+          phone,
+          profile_photo,
+          old_password,
+          new_password, // Pass plain password (hashing is done in service)
+      });
+
+      res.status(200).json({ message: "Profile updated successfully", data: updatedCustomer });
+
+  } catch (error) {
+      console.error("❌ Controller  Error updating customer:", error);
+      res.status(400).json({ error: error.message });
+  }
+};
 module.exports = {
   getAllCustomers,
   createCustomer,
@@ -99,4 +139,5 @@ module.exports = {
   getCustomerByEmail,
   customerByVendorId,
   logout,
+  updateCustomerDetails
 };

@@ -60,6 +60,10 @@ const Customer = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    profile_photo:{
+      type: DataTypes.STRING,
+      allowNull: true,
+    }
   },
   {
     tableName: 'customer',

@@ -1,5 +1,5 @@
 const express = require("express");
-
+const multer = require("multer");
 const {
   getAllCustomers,
   createCustomer,
@@ -8,8 +8,11 @@ const {
   getCustomerByEmail,
   customerByVendorId,
   logout,
+  getLoggedInCustomer,
+  updateCustomerDetails,
 } = require("../controllers/customer.controller");
 const router = express.Router();
+const upload = multer(); // Initialize Multer for parsing form-data
 
 /**
  * @swagger
@@ -138,7 +141,7 @@ router.get("/:id", getCustomerDetails);
  *               email:
  *                 type: string
  *                 description: Email of the customer
- *                 example: johndoe@example.com
+ *                 example: jayaramsai@gmail.com
  *               password:
  *                 type: string
  *                 description: Password for the customer account
@@ -232,5 +235,66 @@ router.get("/:email", getCustomerByEmail);
  *         description: Server error
  */
 router.post("/logout", logout);
+
+/**
+ * @swagger
+ * /api/customer/{id}:
+ *   put:
+ *     summary: Update customer details
+ *     tags: [Customers]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: ID of the customer to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email of the customer
+ *                 example: johndoe@example.com
+ *               first_name:
+ *                 type: string
+ *                 description: First name of the customer
+ *                 example: John
+ *               last_name:
+ *                 type: string
+ *                 description: Last name of the customer
+ *                 example: Doe
+ *               phone:
+ *                 type: string
+ *                 description: Phone number of the customer
+ *                 example: 9908798484
+ *               profile_photo:
+ *                 type: string
+ *                 format: binary
+ *                 description: Profile photo of the customer
+ *     responses:
+ *       200:
+ *         description: Customer updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Profile updated successfully"
+ *                 data:
+ *                   $ref: '#/components/schemas/Customer'
+ *       400:
+ *         description: Invalid input data
+ *       404:
+ *         description: Customer not found
+ */
+
+router.put("/:id", upload.single("profile_photo"), updateCustomerDetails);
 
 module.exports = router;
