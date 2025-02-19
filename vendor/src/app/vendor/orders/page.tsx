@@ -22,6 +22,7 @@ import { FiSearch } from "react-icons/fi";
 import { parseISO, format, parse, isValid } from "date-fns";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { motion, AnimatePresence } from "framer-motion";
+import { TbReload } from "react-icons/tb";
 
 const Order = () => {
   const { data: OrdersData, isLoading } = useGetOrders();
@@ -97,7 +98,9 @@ const Order = () => {
     const store = stores?.find((s: any) => s.id === storeId);
     return store ? store.name : "N/A";
   };
-
+  const handlefetchOrders = () => {
+    window.location.reload();
+  }
   if (isLoading) {
     return <OrderSkeleton />;
   }
@@ -182,7 +185,13 @@ const Order = () => {
             className="text-center text-indigo-500 py-8 bg-white rounded-lg shadow"
           >
             <p>No Orders found.</p>
-          </motion.div>
+            <Button
+              onClick={handlefetchOrders}
+              className="mt-2 space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:from-blue-600 hover:to-purple-600 transition duration-300"
+            >
+              <span>Retry</span>
+              <TbReload className="w-5 h-5" />
+            </Button>          </motion.div>
         ) : (
           <div className="overflow-x-auto rounded-xl shadow-md">
             <Table className="w-full">
