@@ -94,7 +94,7 @@ const VendorDesignCanvas = () => {
                   </div>
                   <div className="lg:col-span-7 md:col-span-12 sm:col-span-12 col-span-12">
                     <main className="designarea">
-                      <DesignArea isVendorMode={true} />
+                      <DesignArea isVendorMode={true} productData={productData} />
                     </main>
                   </div>
                   <div className="col-span-2">

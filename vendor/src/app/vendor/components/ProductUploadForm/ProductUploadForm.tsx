@@ -396,7 +396,7 @@ export function ProductUploadForm({ onClose, store, productType }) {
                         {field.value ? (
                           <div className="relative">
                             <img
-                              src={field.value}
+                              src={field.value as string}
                               alt={side}
                               className="w-24 h-24 object-cover rounded-md"
                             />

@@ -38,8 +38,11 @@ const itextGal = /(i-text)/i;
 
 export default function DesignArea({
   isVendorMode = false,
+  productData,
+
 }: {
   isVendorMode?: boolean;
+  productData?: any;
 }): React.ReactElement {
   interface RootState {
     setReducer: {
@@ -456,11 +459,11 @@ export default function DesignArea({
 
       const requestBody = {
         vendor_id: store?.vendor_id,
-        store_id: store?.id,
         designs: designs,
         designstate: currentDesignState,
         propstate: currentPropsState,
         customizable: true,
+        ...productData,
       };
 
       console.log("this is product request Body : ", requestBody);
