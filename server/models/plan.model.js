@@ -1,5 +1,5 @@
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db")
+const sequelize = require("../config/db");
 const crypto = require("crypto");
 
 // Utility function to generate a custom ID
@@ -25,6 +25,15 @@ const Plan = sequelize.define(
     price: {
       type: DataTypes.FLOAT,
       allowNull: false,
+    },
+    commission_rate: {
+      type: DataTypes.FLOAT,  // Added commission rate field
+      allowNull: false,
+      defaultValue: 0.0, // Default commission is 0%
+      validate: {
+        min: 0,
+        max: 100, // Ensuring commission doesn't exceed 100%
+      },
     },
     features: {
         type: DataTypes.JSON,

@@ -7,6 +7,7 @@ export interface UpdatePlanData {
   price?: number
   features?: string[]
   isActive?: boolean
+  commission_rate?: number // Added commission_rate to the interface
 }
 
 const baseUrl = NEXT_URL;

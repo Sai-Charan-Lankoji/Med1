@@ -27,7 +27,8 @@ interface Plan {
   updated_at: string
   deleted_at: string | null
   description?: string 
-  no_stores : string | null
+  no_stores: string | null
+  commission_rate: number // New field for commission rate
 }
 
 interface EditPlanDialogProps {
@@ -66,6 +67,9 @@ export function EditPlanDialog({ isOpen, onClose, plan, onUpdate }: EditPlanDial
     if (!editedPlan?.description?.trim()) {
       newErrors.description = "Description is required"
     }
+    if (editedPlan?.commission_rate < 0 || editedPlan?.commission_rate > 100) {
+      newErrors.commission_rate = "Commission rate must be between 0 and 100"
+    }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -80,7 +84,8 @@ export function EditPlanDialog({ isOpen, onClose, plan, onUpdate }: EditPlanDial
           description: editedPlan.description,
           price: parseFloat(editedPlan.price),
           features: editedPlan.features,
-          isActive: editedPlan.isActive
+          isActive: editedPlan.isActive,
+          commission_rate: editedPlan.commission_rate // Added commission_rate to update data
         }
         await updatePlanMutation.mutateAsync({ id: editedPlan.id, ...updateData });
         toast({
@@ -129,175 +134,189 @@ export function EditPlanDialog({ isOpen, onClose, plan, onUpdate }: EditPlanDial
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-  <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
-    <DialogHeader>
-      <DialogTitle className="text-xl font-semibold">Edit Plan</DialogTitle>
-      <DialogDescription>
-        Update the details of your subscription plan.
-      </DialogDescription>
-    </DialogHeader>
-    <form onSubmit={handleSubmit} className="mt-4">
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name" className="text-sm font-medium">
-            Plan Name
-          </Label>
-          <Input
-            id="name"
-            value={editedPlan.name}
-            onChange={(e) => setEditedPlan({ ...editedPlan, name: e.target.value })}
-            className={cn(errors.name && "border-destructive")}
-          />
-          {errors.name && (
-            <p className="text-sm text-destructive">{errors.name}</p>
-          )}
-        </div>
+      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">Edit Plan</DialogTitle>
+          <DialogDescription>
+            Update the details of your subscription plan.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="mt-4">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Plan Name
+              </Label>
+              <Input
+                id="name"
+                value={editedPlan.name}
+                onChange={(e) => setEditedPlan({ ...editedPlan, name: e.target.value })}
+                className={cn(errors.name && "border-destructive")}
+              />
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name}</p>
+              )}
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description" className="text-sm font-medium">
-            Description
-          </Label>
-          <Input
-            id="description"
-            value={editedPlan.description}
-            onChange={(e) => setEditedPlan({ ...editedPlan, description: e.target.value })}
-            className={cn(errors.description && "border-destructive")}
-          />
-          {errors.description && (
-            <p className="text-sm text-destructive">{errors.description}</p>
-          )}
-        </div>
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={editedPlan.description}
+                onChange={(e) => setEditedPlan({ ...editedPlan, description: e.target.value })}
+                className={cn(errors.description && "border-destructive")}
+              />
+              {errors.description && (
+                <p className="text-sm text-destructive">{errors.description}</p>
+              )}
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="price" className="text-sm font-medium">
-            Price ($)
-          </Label>
-          <Input
-            id="price"
-            type="number"
-            value={editedPlan.price}
-            onChange={(e) =>
-              setEditedPlan({
-                ...editedPlan,
-                price: Math.max(0, parseFloat(e.target.value)).toString(),
-              })
-            }
-            className={cn(errors.price && "border-destructive")}
-            step="0.01"
-            min="0"
-          />
-          {errors.price && (
-            <p className="text-sm text-destructive">{errors.price}</p>
-          )}
-        </div> 
+            <div className="space-y-2">
+              <Label htmlFor="price" className="text-sm font-medium">
+                Price ($)
+              </Label>
+              <Input
+                id="price"
+                type="number"
+                value={editedPlan.price}
+                onChange={(e) =>
+                  setEditedPlan({
+                    ...editedPlan,
+                    price: Math.max(0, parseFloat(e.target.value)).toString(),
+                  })
+                }
+                className={cn(errors.price && "border-destructive")}
+                step="0.01"
+                min="0"
+              />
+              {errors.price && (
+                <p className="text-sm text-destructive">{errors.price}</p>
+              )}
+            </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="commission_rate" className="text-sm font-medium">
+                Commission Rate (%)
+              </Label>
+              <Input
+                id="commission_rate"
+                type="number"
+                value={editedPlan.commission_rate}
+                onChange={(e) => 
+                  setEditedPlan({
+                    ...editedPlan,
+                    commission_rate: Math.min(100, Math.max(0, parseFloat(e.target.value))),
+                  })
+                }
+                className={cn(errors.commission_rate && "border-destructive")}
+                step="0.01"
+                min="0"
+                max="100"
+              />
+              {errors.commission_rate && (
+                <p className="text-sm text-destructive">{errors.commission_rate}</p>
+              )}
+            </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="NoOfStores" className="text-sm font-medium">
+                No of Stores
+              </Label>
+              <Input
+                id="stores"
+                type="string"
+                value={editedPlan.no_stores ?? ''}
+                onChange={(e) =>
+                  setEditedPlan({
+                    ...editedPlan,
+                    no_stores: e.target.value,
+                  })
+                }
+                className={cn(errors.no_stores && "border-destructive")}
+              />
+              {errors.no_stores && (
+                <p className="text-sm text-destructive">{errors.no_stores}</p>
+              )}
+            </div>
 
-
-        <div className="space-y-2">
-          <Label htmlFor="NoOfStores" className="text-sm font-medium">
-           no of stores
-          </Label>
-          <Input
-            id="stores"
-            type="string"
-            value={editedPlan.no_stores}
-            onChange={(e) =>
-              setEditedPlan({
-                ...editedPlan,
-                no_stores: e.target.value,
-              })
-            }
-            className={cn(errors.no_stores && "border-destructive")}
-            step="0.01"
-            min="0"
-          />
-          {errors.price && (
-            <p className="text-sm text-destructive">{errors.no_stores}</p>
-          )}
-        </div>
-
-
-
-
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Label className="text-sm font-medium">Features</Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={addFeature}
-            >
-              + Add Feature
-            </Button>
-          </div>
-          <div className="max-h-[200px] overflow-y-auto border rounded-md p-2 space-y-2">
-            {editedPlan.features.map((feature, index) => (
-              <div key={index} className="flex space-x-2">
-                <Input
-                  value={feature}
-                  onChange={(e) => updateFeature(index, e.target.value)}
-                  placeholder={`Feature ${index + 1}`}
-                  className={cn(errors.features && "border-destructive", "flex-grow")}
-                />
-                {index > 0 && (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => removeFeature(index)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm font-medium">Features</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={addFeature}
+                >
+                  + Add Feature
+                </Button>
               </div>
-            ))}
+              <div className="max-h-[200px] overflow-y-auto border rounded-md p-2 space-y-2">
+                {editedPlan.features.map((feature, index) => (
+                  <div key={index} className="flex space-x-2">
+                    <Input
+                      value={feature}
+                      onChange={(e) => updateFeature(index, e.target.value)}
+                      placeholder={`Feature ${index + 1}`}
+                      className={cn(errors.features && "border-destructive", "flex-grow")}
+                    />
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => removeFeature(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {errors.features && (
+                <p className="text-sm text-destructive">{errors.features}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Plan Status</Label>
+              <div className="flex items-center space-x-4">
+                <Label className="flex items-center space-x-2">
+                  <Input
+                    type="radio"
+                    name="isActive"
+                    className="mr-2"
+                    checked={editedPlan.isActive === true}
+                    onChange={() => setEditedPlan({ ...editedPlan, isActive: true })}
+                  />
+                  Active
+                </Label>
+                <Label className="flex items-center space-x-2">
+                  <Input
+                    type="radio"
+                    name="isActive"
+                    className="mr-2"
+                    checked={editedPlan.isActive === false}
+                    onChange={() => setEditedPlan({ ...editedPlan, isActive: false })}
+                  />
+                  Inactive
+                </Label>
+              </div>
+            </div>
           </div>
-          {errors.features && (
-            <p className="text-sm text-destructive">{errors.features}</p>
-          )}
-        </div>
 
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">Plan Status</Label>
-          <div className="flex items-center space-x-4">
-            <Label className="flex items-center space-x-2">
-              <Input
-                type="radio"
-                name="isActive"
-                className="mr-2"
-                checked={editedPlan.isActive === true}
-                onChange={() => setEditedPlan({ ...editedPlan, isActive: true })}
-              />
-              Active
-            </Label>
-            <Label className="flex items-center space-x-2">
-              <Input
-                type="radio"
-                name="isActive"
-                className="mr-2"
-                checked={editedPlan.isActive === false}
-                onChange={() => setEditedPlan({ ...editedPlan, isActive: false })}
-              />
-              Inactive
-            </Label>
-          </div>
-        </div>
-      </div>
-
-      <DialogFooter className="mt-6 gap-2">
-        <Button type="button" variant="outline" onClick={onClose}>
-          <X className="mr-2 h-4 w-4" /> Cancel
-        </Button>
-        <Button type="submit">
-          <Check className="mr-2 h-4 w-4" /> Save Changes
-        </Button>
-      </DialogFooter>
-    </form>
-  </DialogContent>
-</Dialog>
-
+          <DialogFooter className="mt-6 gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              <X className="mr-2 h-4 w-4" /> Cancel
+            </Button>
+            <Button type="submit">
+              <Check className="mr-2 h-4 w-4" /> Save Changes
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
-

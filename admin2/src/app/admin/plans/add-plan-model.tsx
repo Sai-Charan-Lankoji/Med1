@@ -16,7 +16,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useCreatePlan } from "@/app/hooks/plan/useCreatePlan";
 import { CreatePlanData } from "@/app/@types/plan";
 import { useQueryClient } from "@tanstack/react-query";
-import { string } from "zod";
 
 interface AddPlanDialogProps {
   isOpen: boolean;
@@ -31,9 +30,10 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
   const [newPlan, setNewPlan] = useState<CreatePlanData>({
     name: "",
     description: "A enterprise plan with additional features",
-    price: 0, 
-    no_stores : "",
+    price: 0,
+    no_stores: "",
     features: [""],
+    commission_rate: 0, // New field for commission rate
     isActive: true,
   });
 
@@ -60,6 +60,9 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
     if (!newPlan.description?.trim()) {
       newErrors.description = "Description is required";
     }
+    if (newPlan.commission_rate < 0 || newPlan.commission_rate > 100) {
+      newErrors.commission_rate = "Commission rate must be between 0 and 100";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -81,8 +84,9 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
           name: "",
           description: "A enterprise plan with additional features",
           price: 0,
-          no_stores : "",
+          no_stores: "",
           features: [""],
+          commission_rate: 0,
           isActive: true,
         });
         onClose();
@@ -127,196 +131,214 @@ export function AddPlanDialog({ isOpen, onClose }: AddPlanDialogProps) {
   };
 
   return (
-
     <Dialog open={isOpen} onOpenChange={onClose}>
-    <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="text-xl font-semibold">Add New Plan</DialogTitle>
-        <DialogDescription>
-          Create a new subscription plan with detailed information.
-        </DialogDescription>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
-        <div className="flex-1 overflow-y-auto space-y-4">
-          {/* Plan Name */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">
-              Plan Name
-            </Label>
-            <select
-              id="name"
-              value={newPlan.name}
-              onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
-              className={cn(
-                "w-full px-3 py-2 border rounded-md",
-                errors.name && "border-destructive"
-              )}
-            >
-              <option value="">Select a Plan</option>
-              <option value="Basic">Basic</option>
-              <option value="Pro">Professional</option>
-              <option value="Enterprise">Enterprise</option>
-            </select>
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name}</p>
-            )}
-          </div>
-  
-          {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Description
-            </Label>
-            <Input
-              id="description"
-              value={newPlan.description}
-              onChange={(e) =>
-                setNewPlan({ ...newPlan, description: e.target.value })
-              }
-              className={cn(errors.description && "border-destructive")}
-              placeholder="Enter plan description"
-            />
-            {errors.description && (
-              <p className="text-sm text-destructive">{errors.description}</p>
-            )}
-          </div>
-  
-          {/* Price */}
-          <div className="space-y-2">
-            <Label htmlFor="price" className="text-sm font-medium">
-              Price ($)
-            </Label>
-            <Input
-              id="price"
-              type="number"
-              value={newPlan.price}
-              onChange={(e) =>
-                setNewPlan({
-                  ...newPlan,
-                  price: Math.max(0, parseFloat(e.target.value)),
-                })
-              }
-              className={cn(errors.price && "border-destructive")}
-              placeholder="0.00"
-              step="0.01"
-              min="0"
-            />
-            {errors.price && (
-              <p className="text-sm text-destructive">{errors.price}</p>
-            )}
-          </div> 
-
-          <div className="space-y-2">
-            <Label htmlFor="No of Stores" className="text-sm font-medium">
-              No of Stores
-            </Label>
-            <Input
-              id="stores"
-              type="string"
-              value={newPlan.no_stores}
-              onChange={(e) =>
-                setNewPlan({
-                  ...newPlan,
-                  no_stores: e.target.value,
-                })
-              }
-              className={cn(errors.price && "border-destructive")}
-              placeholder="0"
-              step="0.01"
-              min="0"
-            />
-            {errors.price && (
-              <p className="text-sm text-destructive">{errors.price}</p>
-            )}
-          </div> 
-
-
-
-       
-  
-          {/* Features */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label className="text-sm font-medium">Features</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={addFeature}
+      <DialogContent className="sm:max-w-[525px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-xl font-semibold">Add New Plan</DialogTitle>
+          <DialogDescription>
+            Create a new subscription plan with detailed information.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4">
+          <div className="flex-1 overflow-y-auto space-y-4">
+            {/* Plan Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Plan Name
+              </Label>
+              <select
+                id="name"
+                value={newPlan.name}
+                onChange={(e) => setNewPlan({ ...newPlan, name: e.target.value })}
+                className={cn(
+                  "w-full px-3 py-2 border rounded-md",
+                  errors.name && "border-destructive"
+                )}
               >
-                + Add Feature
-              </Button>
+                <option value="">Select a Plan</option>
+                <option value="Basic">Basic</option>
+                <option value="Pro">Professional</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+              {errors.name && (
+                <p className="text-sm text-destructive">{errors.name}</p>
+              )}
             </div>
-            <div className="max-h-[200px] overflow-y-auto border rounded-md p-2 space-y-2">
-              {newPlan.features.map((feature, index) => (
-                <div key={index} className="flex space-x-2">
-                  <Input
-                    value={feature}
-                    onChange={(e) => updateFeature(index, e.target.value)}
-                    placeholder={`Feature ${index + 1}`}
-                    className={cn(
-                      errors.features && "border-destructive",
-                      "flex-grow"
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
+              </Label>
+              <Input
+                id="description"
+                value={newPlan.description}
+                onChange={(e) =>
+                  setNewPlan({ ...newPlan, description: e.target.value })
+                }
+                className={cn(errors.description && "border-destructive")}
+                placeholder="Enter plan description"
+              />
+              {errors.description && (
+                <p className="text-sm text-destructive">{errors.description}</p>
+              )}
+            </div>
+
+            {/* Price */}
+            <div className="space-y-2">
+              <Label htmlFor="price" className="text-sm font-medium">
+                Price ($)
+              </Label>
+              <Input
+                id="price"
+                type="number"
+                value={newPlan.price}
+                onChange={(e) =>
+                  setNewPlan({
+                    ...newPlan,
+                    price: Math.max(0, parseFloat(e.target.value)),
+                  })
+                }
+                className={cn(errors.price && "border-destructive")}
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+              />
+              {errors.price && (
+                <p className="text-sm text-destructive">{errors.price}</p>
+              )}
+            </div>
+
+            {/* Commission Rate */}
+            <div className="space-y-2">
+              <Label htmlFor="commission_rate" className="text-sm font-medium">
+                Commission Rate (%)
+              </Label>
+              <Input
+                id="commission_rate"
+                type="number"
+                value={newPlan.commission_rate}
+                onChange={(e) =>
+                  setNewPlan({
+                    ...newPlan,
+                    commission_rate: Math.min(100, Math.max(0, parseFloat(e.target.value))),
+                  })
+                }
+                className={cn(errors.commission_rate && "border-destructive")}
+                placeholder="0"
+                step="0.01"
+                min="0"
+                max="100"
+              />
+              {errors.commission_rate && (
+                <p className="text-sm text-destructive">{errors.commission_rate}</p>
+              )}
+            </div>
+
+            {/* No of Stores */}
+            <div className="space-y-2">
+              <Label htmlFor="stores" className="text-sm font-medium">
+                No of Stores
+              </Label>
+              <Input
+                id="stores"
+                value={newPlan.no_stores}
+                onChange={(e) =>
+                  setNewPlan({
+                    ...newPlan,
+                    no_stores: e.target.value,
+                  })
+                }
+                className={cn(errors.no_stores && "border-destructive")}
+                placeholder="0"
+              />
+              {errors.no_stores && (
+                <p className="text-sm text-destructive">{errors.no_stores}</p>
+              )}
+            </div>
+
+            {/* Features */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm font-medium">Features</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={addFeature}
+                >
+                  + Add Feature
+                </Button>
+              </div>
+              <div className="max-h-[200px] overflow-y-auto border rounded-md p-2 space-y-2">
+                {newPlan.features.map((feature, index) => (
+                  <div key={index} className="flex space-x-2">
+                    <Input
+                      value={feature}
+                      onChange={(e) => updateFeature(index, e.target.value)}
+                      placeholder={`Feature ${index + 1}`}
+                      className={cn(
+                        errors.features && "border-destructive",
+                        "flex-grow"
+                      )}
+                    />
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => removeFeature(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     )}
+                  </div>
+                ))}
+              </div>
+              {errors.features && (
+                <p className="text-sm text-destructive">{errors.features}</p>
+              )}
+            </div>
+
+            {/* Plan Status */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Plan Status</Label>
+              <div className="flex items-center space-x-4">
+                <Label className="flex items-center space-x-2">
+                  <Input
+                    type="radio"
+                    name="isActive"
+                    className="mr-2"
+                    checked={newPlan.isActive === true}
+                    onChange={() => setNewPlan({ ...newPlan, isActive: true })}
                   />
-                  {index > 0 && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => removeFeature(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-            {errors.features && (
-              <p className="text-sm text-destructive">{errors.features}</p>
-            )}
-          </div>
-  
-          {/* Plan Status */}
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Plan Status</Label>
-            <div className="flex items-center space-x-4">
-              <Label className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  name="isActive"
-                  className="mr-2"
-                  checked={newPlan.isActive === true}
-                  onChange={() => setNewPlan({ ...newPlan, isActive: true })}
-                />
-                Active
-              </Label>
-              <Label className="flex items-center space-x-2">
-                <Input
-                  type="radio"
-                  name="isActive"
-                  className="mr-2"
-                  checked={newPlan.isActive === false}
-                  onChange={() => setNewPlan({ ...newPlan, isActive: false })}
-                />
-                Inactive
-              </Label>
+                  Active
+                </Label>
+                <Label className="flex items-center space-x-2">
+                  <Input
+                    type="radio"
+                    name="isActive"
+                    className="mr-2"
+                    checked={newPlan.isActive === false}
+                    onChange={() => setNewPlan({ ...newPlan, isActive: false })}
+                  />
+                  Inactive
+                </Label>
+              </div>
             </div>
           </div>
-        </div>
-  
-        {/* Footer */}
-        <DialogFooter className="mt-6 gap-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            <X className="mr-2 h-4 w-4" /> Cancel
-          </Button>
-          <Button type="submit">
-            <Check className="mr-2 h-4 w-4" /> Add Plan
-          </Button>
-        </DialogFooter>
-      </form>
-    </DialogContent>
-  </Dialog>
-  
+
+          {/* Footer */}
+          <DialogFooter className="mt-6 gap-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              <X className="mr-2 h-4 w-4" /> Cancel
+            </Button>
+            <Button type="submit">
+              <Check className="mr-2 h-4 w-4" /> Add Plan
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
