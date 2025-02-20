@@ -65,6 +65,10 @@ const Vendor = sequelize.define(
       type: DataTypes.STRING(120),
       allowNull: true,
     },
+    next_billing_date: {
+      type: DataTypes.DATE,
+      allowNull: true, // Will be set after registration
+    },
     business_type: {
       type: DataTypes.ENUM(
         "Apparel Design",
@@ -84,11 +88,14 @@ const Vendor = sequelize.define(
     hooks: {
       beforeCreate: (vendor) => {
         vendor.id = generateEntityId("vendor");
+        // Set initial billing date as 30 days from creation
+        vendor.next_billing_date = new Date(
+          Date.now() + 30 * 24 * 60 * 60 * 1000
+        );
       },
     },
   }
 );
-
 // Define associations
 Vendor.hasMany(Address, {
   foreignKey: "vendor_address_id",
