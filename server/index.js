@@ -27,7 +27,10 @@ const standardProductRoutes = require("./routes/standardProduct.route.js");
 const wishlistRoutes = require("./routes/wishlist.route.js");
 const revenueRoutes = require("./routes/revenue.js");
 const admindiscountRouters = require("./routes/admindiscount.route.js");
-
+const supplierRoutes = require("./routes/supplier.route.js");
+const transporterRoutes = require("./routes/transport.route.js");
+const consignmentRoutes = require("./routes/consignment.route.js");
+const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
 const app = express();
 
 let dynamicAllowedOrigins = [];
@@ -119,6 +122,10 @@ app.use("/api/standardproducts", standardProductRoutes);
 app.use("/api/wishlists", wishlistRoutes);
 app.use("/api", revenueRoutes);
 app.use("/api/admin", admindiscountRouters);
+app.use("/suppliers", supplierRoutes);
+app.use("/transporters", transporterRoutes);
+app.use("/consignments", consignmentRoutes);
+app.use("/stock-transactions", stockTransactionRoutes);
 
 // Periodically refresh the allowed origins
 setInterval(updateAllowedOrigins, 60000);

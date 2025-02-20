@@ -1,6 +1,7 @@
+// models/StandardProduct.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const Store = require("./store.model"); // Import Store model
+const Store = require("./store.model"); // Assuming this exists
 
 const StandardProduct = sequelize.define(
   "StandardProduct",
@@ -9,7 +10,10 @@ const StandardProduct = sequelize.define(
     title: { type: DataTypes.STRING, allowNull: false },
     description: { type: DataTypes.TEXT, allowNull: true },
     price: { type: DataTypes.FLOAT, allowNull: false },
-    category: { type: DataTypes.ENUM("Clothing", "Shoes", "Accessories", "Electronics", "Home"), allowNull: false },
+    category: { 
+      type: DataTypes.ENUM("Clothing", "Shoes", "Accessories", "Electronics", "Home"), 
+      allowNull: false 
+    },
     sizes: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true, defaultValue: [] },
     colors: { type: DataTypes.JSONB, allowNull: true, defaultValue: [] },
     stock: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
@@ -23,23 +27,21 @@ const StandardProduct = sequelize.define(
     left_image: { type: DataTypes.STRING, allowNull: true },
     right_image: { type: DataTypes.STRING, allowNull: true },
     product_type: { type: DataTypes.STRING, allowNull: true },
-
-    // Foreign Key for Store
     store_id: {
-      type: DataTypes.STRING(250), // Matches Store ID type
+      type: DataTypes.STRING(250),
       allowNull: false,
       references: {
         model: Store,
         key: "id",
       },
-      onDelete: "CASCADE", // If a store is deleted, its products are also deleted
+      onDelete: "CASCADE",
     },
   },
   {
     tableName: "standard_products",
     timestamps: true,
     underscored: true,
-    paranoid: true, 
+    paranoid: true, // Soft deletes enabled
   }
 );
 
