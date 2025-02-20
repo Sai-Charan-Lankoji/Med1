@@ -6,7 +6,7 @@ const cors = require("cors");
 const sequelize = require("./config/db.js");
 const swaggerUi = require("swagger-ui-express");
 const { swaggerSpecs } = require("./swagger/swagger");
-const { listStores } = require("./services/store.service.js"); 
+const { listStores } = require("./services/store.service.js");
 
 // Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
@@ -22,30 +22,28 @@ const cartRoutes = require("./routes/cart.route.js");
 const saleschannelRoutes = require("./routes/saleschannel.route.js");
 const tokenBlacklistRoutes = require("./routes/tokenBlacklist.route.js");
 const publishableApiKeyRoutes = require("./routes/publishableapikey.route.js");
-const fileRoutes = require("./routes/file.route.js"); 
-const standardProductRoutes = require("./routes/standardProduct.route.js"); 
-const wishlistRoutes = require("./routes/wishlist.route.js"); 
+const fileRoutes = require("./routes/file.route.js");
+const standardProductRoutes = require("./routes/standardProduct.route.js");
+const wishlistRoutes = require("./routes/wishlist.route.js");
 const revenueRoutes = require("./routes/revenue.js");
+const admindiscountRouters = require("./routes/admindiscount.route.js");
 
 const app = express();
 
 let dynamicAllowedOrigins = [];
 
-// Function to update allowed origins dynamically
 const updateAllowedOrigins = async () => {
   try {
-    const stores = await listStores(); // Fetch store data using your service
-    dynamicAllowedOrigins = stores.map((store) => store.store_url); // Extract store URLs
+    const stores = await listStores();
+    dynamicAllowedOrigins = stores.map((store) => store.store_url);
     // console.log("Updated Allowed Origins:", dynamicAllowedOrigins);
   } catch (error) {
     console.error("Error updating allowed origins:", error.message);
   }
 };
 
-// Call the updateAllowedOrigins function during server startup
 updateAllowedOrigins();
 
-// CORS middleware
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -73,11 +71,9 @@ app.use(
   })
 );
 
-// Body parser middleware
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// Serve /uploads with proper headers
 app.use(
   "/uploads",
   (req, res, next) => {
@@ -101,7 +97,7 @@ app.use(
   express.static(path.join(__dirname, "public/uploads"))
 );
 
-// API Documentation
+// API Documentation - Swagger UI
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Routes
@@ -118,14 +114,14 @@ app.use("/api/carts", cartRoutes);
 app.use("/api/saleschannels", saleschannelRoutes);
 app.use("/api/token-blacklist", tokenBlacklistRoutes);
 app.use("/api/publishibleapikey", publishableApiKeyRoutes);
-app.use("/api", fileRoutes); 
-app.use("/api/standardproducts", standardProductRoutes) 
-app.use("/api/wishlists", wishlistRoutes)   
-app.use("/api",revenueRoutes);
+app.use("/api", fileRoutes);
+app.use("/api/standardproducts", standardProductRoutes);
+app.use("/api/wishlists", wishlistRoutes);
+app.use("/api", revenueRoutes);
+app.use("/api/admin", admindiscountRouters);
 
-
-// Periodically refresh the allowed origins (optional)
-setInterval(updateAllowedOrigins, 60000); // Refresh every 60 seconds
+// Periodically refresh the allowed origins
+setInterval(updateAllowedOrigins, 60000);
 
 // Start server
 const startServer = async () => {
