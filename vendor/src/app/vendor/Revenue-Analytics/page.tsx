@@ -1,5 +1,5 @@
-import { RevenueAnalyticsDashboard } from "../components/revenue-analytics-dashboard/revenue-analytics-dashboard";
+import  RevenueAnalytics from "../components/revenue-analytics-dashboard/revenue-analytics-dashboard";
 
 export default function RevenueAnalyticsPage() {
-  return <RevenueAnalyticsDashboard/>;
+  return <RevenueAnalytics/>;
 }

@@ -3,7 +3,7 @@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"  
 import { useRevenueData } from "@/app/hooks/storeRevenue/useRevenueData" 
 import { vendor_id } from "@/app/utils/constant";
-import { useEffect } from "react";
+import { useEffect } from "react"; 
 
 
 
@@ -20,7 +20,8 @@ const data = [
 
 
 
-export function StoreRevenueChart() {  
+export function StoreRevenueChart() {   
+
   useEffect(()=>{
     sessionStorage.getItem(vendor_id)
   }) 

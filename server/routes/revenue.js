@@ -1,11 +1,15 @@
 const express = require("express");
-const  storeRevenueController = require("../controllers/storeRevenue.controller"); 
+const  {getVendorRevenueController,getMonthlyRevnueController,getCommissionBreakdownController} = require("../controllers/storeRevenue.controller"); 
 
 
 const router = express.Router(); 
 
 
-router.get("/:vendor_id", storeRevenueController.getVendorRevenueController); 
+router.get("/:vendor_id", getVendorRevenueController);  
+router.get("/monthly/:vendor_id", getMonthlyRevnueController); 
+
+router.get("/commission/:vendor_id", getCommissionBreakdownController);
+
 
 module.exports = router;
 
