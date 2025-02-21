@@ -1,30 +1,38 @@
-const Cart = require("../models/cart.model");
+const Cart2 = require("../models/cart2.model");
 const StandardProduct = require("../models/standardProduct.model");
+const Product = require("../models/product.model");
 const crypto = require("crypto");
 
 class CartService {
-  /**
-   * ✅ Create a cart item (Handles both Standard & Designable Products)
-   */
   async createCart(data) {
-    if (!data.customer_id || !data.product_type) {
-      throw new Error(
-        "Missing required fields: customer_id, product_id, product_type"
-      );
+    if (!data.customer_id || !data.product_id || !data.product_type) {
+      throw new Error("Missing required fields: customer_id, product_id, product_type");
     }
 
-    // Check if the product already exists in the cart
-    if (data.product_type === "Standard") {
-      const existingCartItem = await Cart.findOne({
+    // Validate product existence
+    if (data.product_type === "designable") {
+      const product = await Product.findByPk(data.product_id);
+      if (!product) throw new Error("Designable product not found");
+      data.price = product.price;
+    } else {
+      const standardProduct = await StandardProduct.findByPk(data.product_id);
+      if (!standardProduct) throw new Error("Standard product not found");
+      data.price = standardProduct.price;
+    }
+
+    // Check for existing standard product in cart
+    if (data.product_type === "standard") {
+      const existingCartItem = await Cart2.findOne({
         where: {
           customer_id: data.customer_id,
           product_id: data.product_id,
-          product_type: data.product_type,
+          product_type: "standard",
+          selected_size: data.selected_size || null,
+          selected_color: data.selected_color || null,
         },
       });
 
       if (existingCartItem) {
-        // ✅ If product exists, update quantity instead of creating duplicate entry
         const newQuantity = existingCartItem.quantity + (data.quantity || 1);
         const updatedTotalPrice = existingCartItem.price * newQuantity;
 
@@ -36,84 +44,86 @@ class CartService {
         return existingCartItem;
       }
     }
-    // ✅ Default values
-    let quantity = data.quantity || 1;
-    let price = data.price || 0;
-    let total_price = price * quantity;
 
-    // ✅ Prepare base cart data
+    // Prepare cart data
+    const quantity = data.quantity || 1;
+    const total_price = data.price * quantity;
+
     const cartData = {
       id: crypto.randomUUID(),
       customer_id: data.customer_id,
       email: data.email,
-      product_id: crypto.randomUUID(),
+      product_id: data.product_id,
       product_type: data.product_type,
       quantity,
-      price,
+      price: data.price,
       total_price,
     };
 
-    // ✅ If product is designable, include design-related fields
-    if (data.product_type === "Designable") {
-      if (!data.designs || !Array.isArray(data.designs)) {
-        throw new Error(
-          "Designs must be provided as an array for designable products."
-        );
-      }
-      cartData.designs = data.designs;
-      cartData.design_state = data.design_state || {};
-      cartData.props_state = data.props_state || {};
+    // Add type-specific fields
+    if (data.product_type === "designable") {
+      cartData.designs = data.designs || null;
+      cartData.designState = data.designState || null;
+      cartData.propsState = data.propsState || null;
+    } else {
+      cartData.selected_size = data.selected_size || null;
+      cartData.selected_color = data.selected_color || null;
     }
 
-    return await Cart.create(cartData);
+    return await Cart2.create(cartData);
   }
 
-  /**
-   * ✅ Get all cart items for a customer
-   */
-  async getCartByCustomer(customer_id) {
-    const cartItems = await Cart.findAll({ where: { customer_id } });
+  async getCartById(id) {
+    const cartItem = await Cart2.findByPk(id);
+    if (!cartItem) throw new Error("Cart item not found");
+    return cartItem;
+  }
+
+  async getCartByCustomer(customerId) {
+    // Get cart items for the specific customer
+    const cartItems = await Cart2.findAll({ 
+        where: { customer_id: customerId }
+    });  
 
     const designableProducts = [];
     const standardProductIds = [];
     const standardProductsMap = new Map();
 
+    // Process each cart item
     for (const item of cartItems) {
-        if (item.product_type === "Designable") {
-            // Convert item to JSON and remove jsonDesign
+        if (item.product_type === "designable") {
             const itemData = item.toJSON();
             if (itemData.designs) {
                 itemData.designs = itemData.designs.map(design => {
-                    const { jsonDesign, ...rest } = design; // Exclude jsonDesign
+                    const { jsonDesign, ...rest } = design;
                     return rest;
                 });
             }
             designableProducts.push(itemData);
         } else {
-            // Collect all product IDs for batch fetching
             standardProductIds.push(item.product_id);
         }
     }
 
-    // Batch fetch standard products for efficiency
+    // Batch fetch standard products
+    let standardProducts = [];
     if (standardProductIds.length > 0) {
-        const standardProducts = await StandardProduct.findAll({
+        const standardProductsData = await StandardProduct.findAll({
             where: { id: standardProductIds }
         });
 
-        // Store products in a map for quick lookup
-        standardProducts.forEach(product => {
+        standardProductsData.forEach(product => {
             standardProductsMap.set(product.id, product);
         });
-    }
 
-    // Prepare final standard products array
-    const standardProducts = cartItems
-        .filter(item => item.product_type !== "Designable")
-        .map(item => ({
-            ...item.toJSON(),
-            product_details: standardProductsMap.get(item.product_id) || null
-        }));
+        // Map standard products with cart items
+        standardProducts = cartItems
+            .filter(item => item.product_type !== "designable")
+            .map(item => ({
+                ...item.toJSON(),
+                product_details: standardProductsMap.get(item.product_id) || null
+            }));
+    }
 
     return {
         designable_products: designableProducts,
@@ -121,36 +131,21 @@ class CartService {
     };
 }
 
-
-
-  /**
-   * ✅ Update cart item (Handles updates for both product types)
-   */
   async updateCart(cartId, updates) {
-    const cartItem = await Cart.findByPk(cartId);
+    const cartItem = await Cart2.findByPk(cartId);
     if (!cartItem) throw new Error("Cart item not found");
 
-    // Update price and total price if quantity is changed
     if (updates.quantity) {
       updates.total_price = cartItem.price * updates.quantity;
     }
 
-    const updatedCart = await cartItem.update(updates);
-    return updatedCart;
+    return await cartItem.update(updates);
   }
 
-  /**
-   * ✅ Update Cart Quantity
-   */
   async updateCartQuantity(cartId, newQuantity) {
-    const cart = await Cart.findByPk(cartId);
-    if (!cart) throw new Error(`Cart with ID ${cartId} not found.`);
+    const cart = await Cart2.findByPk(cartId);
+    if (!cart) throw new Error("Cart item not found");
 
-    if (newQuantity <= 0) {
-      throw new Error("Quantity must be greater than zero.");
-    }
-
-    // ✅ Update total price based on the new quantity
     const updatedTotalPrice = cart.price * newQuantity;
 
     return await cart.update({
@@ -159,37 +154,17 @@ class CartService {
     });
   }
 
-  /**
-   * ✅ Delete a single cart item
-   */
   async deleteCart(cartId) {
-    const cartItem = await Cart.findByPk(cartId);
+    const cartItem = await Cart2.findByPk(cartId);
     if (!cartItem) throw new Error("Cart item not found");
-
     await cartItem.destroy();
     return { message: "Cart item deleted successfully" };
   }
 
-  /**
-   * ✅ Clear all cart items for a customer
-   */
   async clearCustomerCart(customer_id) {
-    await Cart.destroy({ where: { customer_id } });
+    await Cart2.destroy({ where: { customer_id } });
     return { message: "All cart items cleared" };
   }
-
-  async updateCustomerDetails (id, updateData)  {
-    try {
-      const customer = await Customer.findByIdAndUpdate(id, updateData, { new: true });
-      if (!customer) {
-        throw new Error("Customer not found.");
-      }
-      return customer;
-    } catch (error) {
-      throw new Error(error.message);
-    }
-  };
-  
 }
 
 module.exports = new CartService();

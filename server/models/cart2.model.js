@@ -70,18 +70,18 @@ const Cart2 = sequelize.define('Cart2', {
 Cart2.belongsTo(Product, {
   foreignKey: 'product_id',
   constraints: false,
-  scope: {
-    product_type: 'designable'
-  },
+  // scope: {
+  //   product_type: 'designable'
+  // },
   as: 'designable_product',
 });
 
 Cart2.belongsTo(StandardProduct, {
   foreignKey: 'product_id',
   constraints: false,
-  scope: {
-    product_type: 'standard'
-  },
+  // scope: {
+  //   product_type: 'standard'
+  // },
   as: 'standard_product',
 });
 

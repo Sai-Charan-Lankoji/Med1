@@ -173,4 +173,4 @@ async function getCommissionBreakdown(vendorId) {
 
 
 
-module.exports = { getVendorRevenue , getTotalMonthlyRevenue,getCommissionBreakdown};
+module.exports = { getCommissionBreakdown};

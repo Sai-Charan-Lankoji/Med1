@@ -1,10 +1,5 @@
 const cartService = require("../services/cart.service");
 
-/**
- * @desc Create a new cart item
- * @route POST /api/carts
- * @access Public
- */
 const createCart = async (req, res) => {
   try {
     const cartItem = await cartService.createCart(req.body);
@@ -27,11 +22,6 @@ const createCart = async (req, res) => {
   }
 };
 
-/**
- * @desc Retrieve a cart item by ID
- * @route GET /api/carts/:id
- * @access Public
- */
 const getCart = async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,11 +45,6 @@ const getCart = async (req, res) => {
   }
 };
 
-/**
- * @desc Update an existing cart item
- * @route PUT /api/carts/:id
- * @access Public
- */
 const updateCart = async (req, res) => {
   try {
     const { id } = req.params;
@@ -83,11 +68,6 @@ const updateCart = async (req, res) => {
   }
 };
 
-/**
- * @desc Delete a cart item
- * @route DELETE /api/carts/:id
- * @access Public
- */
 const deleteCart = async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,11 +91,6 @@ const deleteCart = async (req, res) => {
   }
 };
 
-/**
- * @desc Retrieve all cart items for a customer (Designable & Standard)
- * @route GET /api/carts/customer/:customerId
- * @access Public
- */
 const getCartsByCustomer = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -142,11 +117,6 @@ const getCartsByCustomer = async (req, res) => {
   }
 };
 
-/**
- * @desc Clear all cart items for a customer
- * @route DELETE /api/carts/customer/:customerId
- * @access Public
- */
 const clearCustomerCart = async (req, res) => {
   try {
     const { customerId } = req.params;
@@ -170,11 +140,6 @@ const clearCustomerCart = async (req, res) => {
   }
 };
 
-/**
- * @desc Update cart quantity
- * @route PATCH /api/carts/:id/quantity
- * @access Public
- */
 const updateCartQuantity = async (req, res) => {
   try {
     const { id } = req.params;

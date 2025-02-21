@@ -4,6 +4,7 @@ import Image from "next/image"
 import { motion } from "framer-motion"
 import { Eye } from "lucide-react"
 import ProductDetailModal from "./ProductDetailModal"
+//import StandardProduct from "@/types/StandardProduct"
 interface StandardProduct {
   id: string
   title: string

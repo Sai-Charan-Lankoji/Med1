@@ -126,6 +126,25 @@ export interface IMenus {
   clipartColorPanel: boolean;
 }
 
+
+export interface StandardProduct {
+  id: string
+  title: string
+  description: string
+  price: number
+  brand: string
+  sizes: string[]
+  colors: { hex: string; name: string }[]
+  front_image: string
+  back_image: string
+  left_image: string
+  right_image: string
+  category: string
+  sku: string
+  sale: boolean
+  customizable: boolean
+}
+
 export type MenusAction =
   | { type: "TO_CLIPART_GALLERY"; payload: boolean }
   | { type: "TO_SHAPE-GALLERY"; payload: boolean }
@@ -160,6 +179,13 @@ interface DesignableProduct {
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
+}
+
+export interface ICartState {
+  designable: ICartItem[];
+  standard: ICartItem[];
+  loading: boolean;
+  error: string | null;
 }
 export interface ICartItem {
   product_type: string;

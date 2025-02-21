@@ -4,6 +4,8 @@ import { ICartItem } from "@/@types/models";
 // Define cart state interface
 interface CartState {
   items: ICartItem[];
+  designable: ICartItem[];
+  standard: ICartItem[];
   loading: boolean;
   error: string | null;
 }
@@ -11,6 +13,8 @@ interface CartState {
 // Initial state
 const initialState: CartState = {
   items: [],
+  designable: [],
+  standard: [],
   loading: false,
   error: null,
 };

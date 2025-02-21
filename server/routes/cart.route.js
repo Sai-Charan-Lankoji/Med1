@@ -53,12 +53,18 @@ const cartController = require("../controllers/cart.controller");
  *                 type: object
  *                 description: JSON representation of design
  *           description: Design configurations (only for designable products)
- *         design_state:
+ *         designState:
  *           type: object
  *           description: State of the design, including zoom and rotation (only for designable products)
- *         props_state:
+ *         propsState:
  *           type: object
  *           description: Properties like color and font (only for designable products)
+ *         selected_size:
+ *           type: string
+ *           description: Selected size (only for standard products)
+ *         selected_color:
+ *           type: object
+ *           description: Selected color details (only for standard products)
  *         quantity:
  *           type: integer
  *           description: Quantity of the product in the cart
@@ -80,8 +86,8 @@ const cartController = require("../controllers/cart.controller");
  *           - side: "front"
  *             image: "https://example.com/design-front.png"
  *             jsonDesign: { "objects": [ { "type": "text", "text": "Custom Name" } ] }
- *         design_state: { "zoom": 1.2, "rotation": 0 }
- *         props_state: { "color": "red", "font_family": "Arial" }
+ *         designState: { "zoom": 1.2, "rotation": 0 }
+ *         propsState: { "color": "red", "font_family": "Arial" }
  *         quantity: 2
  *         price: 50.0
  *         total_price: 100.0
@@ -91,20 +97,61 @@ const cartController = require("../controllers/cart.controller");
  * @swagger
  * /api/carts:
  *   post:
- *     summary: Add an item to the cart
+ *     summary: Add an item to the cart (Handles both Designable and Standard Products)
  *     tags: [Carts]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Cart'
+ *             type: object
+ *             properties:
+ *               customer_id:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               product_id:
+ *                 type: string
+ *               product_type:
+ *                 type: string
+ *                 enum: [designable, standard]
+ *               quantity:
+ *                 type: integer
+ *               designs:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               designState:
+ *                 type: object
+ *               propsState:
+ *                 type: object
+ *               selected_size:
+ *                 type: string
+ *               selected_color:
+ *                 type: object
+ *             example:
+ *               customer_id: "12345"
+ *               email: "customer@example.com"
+ *               product_id: "design_001"
+ *               product_type: "designable"
+ *               quantity: 2
+ *               designs:
+ *                 - side: "front"
+ *                   image: "https://example.com/design-front.png"
+ *                   jsonDesign: { "objects": [ { "type": "text", "text": "Custom Name" } ] }
+ *               designState: { "zoom": 1.2, "rotation": 0 }
+ *               propsState: { "color": "red", "font_family": "Arial" }
  *     responses:
  *       201:
  *         description: Cart item added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Cart'
  *       400:
- *         description: Invalid input
+ *         description: Invalid input or product not found
  */
+
 router.post("/", cartController.createCart);
 
 /**
@@ -129,6 +176,7 @@ router.post("/", cartController.createCart);
  *       404:
  *         description: Cart item not found
  */
+
 router.get("/:id", cartController.getCart);
 
 /**
@@ -155,6 +203,7 @@ router.get("/:id", cartController.getCart);
  *       404:
  *         description: Cart item not found
  */
+
 router.put("/:id", cartController.updateCart);
 
 /**
@@ -175,13 +224,14 @@ router.put("/:id", cartController.updateCart);
  *       404:
  *         description: Cart item not found
  */
+
 router.delete("/:id", cartController.deleteCart);
 
 /**
  * @swagger
  * /api/carts/customer/{customerId}:
  *   get:
- *     summary: Retrieve all cart items for a customer
+ *     summary: Retrieve all cart items for a customer (Separates Designable and Standard Products)
  *     tags: [Carts]
  *     parameters:
  *       - in: path
@@ -208,6 +258,7 @@ router.delete("/:id", cartController.deleteCart);
  *       404:
  *         description: No cart items found for the customer
  */
+
 router.get("/customer/:customerId", cartController.getCartsByCustomer);
 
 /**
@@ -228,6 +279,7 @@ router.get("/customer/:customerId", cartController.getCartsByCustomer);
  *       404:
  *         description: No cart items found for the customer
  */
+
 router.delete("/customer/:customerId", cartController.clearCustomerCart);
 
 /**
@@ -260,6 +312,7 @@ router.delete("/customer/:customerId", cartController.clearCustomerCart);
  *       400:
  *         description: Invalid input or cart item not found
  */
+
 router.patch("/:id/quantity", cartController.updateCartQuantity);
 
 module.exports = router;

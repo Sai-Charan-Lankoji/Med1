@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { X, Minus, Plus, ShoppingCart, Pencil } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-
+import { useNewCart } from "../hooks/useNewCart";
 interface Color {
   hex: string;
   name: string;
@@ -58,7 +58,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [selectedSize, setSelectedSize] = useState(
     product.sizes && product.sizes.length > 0 ? product.sizes[0] : ""
   );
-  // Initialize selectedColor based on whether the product has colors or is customizable
   const [selectedColor, setSelectedColor] = useState(() => {
     if (product.colors && product.colors.length > 0) {
       return product.colors[0].hex;
@@ -67,12 +66,13 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
     return "";
   });
-  
   const [mainImage, setMainImage] = useState(product.front_image);
   const [currentSide, setCurrentSide] = useState("front");
   const router = useRouter();
 
-  // Get the appropriate colors array based on whether the product has colors defined
+  // Use the useNewCart hook
+  const { addDesignToCart, addStandardProductToCart } = useNewCart();
+
   const colorsToUse = product.customizable 
     ? (product.colors && product.colors.length > 0 ? product.colors : DEFAULT_COLORS)
     : product.colors || [];
@@ -83,14 +83,37 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     setQuantity(Math.max(1, quantity + change));
   };
 
-  const handleAddToCart = () => {
-    console.log("Added to cart:", {
-      ...product,
-      quantity,
-      selectedSize,
-      selectedColor,
-    });
-    onClose();
+  // Updated handleAddToCart function
+  const handleAddToCart = async () => {
+    try {
+      if (product.customizable) {
+        // Add designable product to cart
+        await addDesignToCart(
+          product.designs || [],
+          product.designstate || {},
+          product.propstate || {}
+        );
+      } else {
+        // Add standard product to cart
+        await addStandardProductToCart(
+          product.id,
+          quantity,
+          selectedSize,
+          selectedColor
+        );
+      }
+
+      console.log("Added to cart:", {
+        ...product,
+        quantity,
+        selectedSize,
+        selectedColor,
+      });
+
+      onClose(); // Close the modal after adding to cart
+    } catch (error) {
+      console.error("Failed to add to cart:", error);
+    }
   };
 
   const handleCustomize = () => {
@@ -108,34 +131,29 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  // Helper function to get design for a specific side
-  const getDesignForSide = (side : String) => {
+  // Helper functions (unchanged)
+  const getDesignForSide = (side: String) => {
     if (!product.designs || product.designs.length === 0) return null;
     const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
     return design;
   };
 
-  // Helper function to get image URL for a specific side from designs array
-  const getImageUrlFromDesigns = (side : String) => {
+  const getImageUrlFromDesigns = (side: String) => {
     if (!product.designs || product.designs.length === 0) return null;
     const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
     return design?.apparel?.url || null;
   };
 
-  // Helper function to update currentSide based on selected image
-  const updateCurrentSide = (imgSrc :string) => {
-    // Find the corresponding side for this image URL
+  const updateCurrentSide = (imgSrc: string) => {
     const matchingImage = images.find((img) => img.src === imgSrc);
     if (matchingImage) {
       setCurrentSide(matchingImage.side);
     }
   };
 
-  // Get all available images, prioritizing standard product images and falling back to design images
   const getImages = () => {
-    const result :any[] = [];
+    const result: any[] = [];
     
-    // Add standard product images if they exist
     if (product.front_image) {
       result.push({ src: product.front_image, alt: "Front View", side: "front" });
     }
@@ -149,11 +167,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       result.push({ src: product.right_image, alt: "Right View", side: "rightshoulder" });
     }
 
-    // For customizable products, add missing sides from designs if not already present
     if (product.customizable && product.designs) {
       const sides = ["front", "back", "leftshoulder", "rightshoulder"];
       sides.forEach(side => {
-        // Check if we already have this side from standard product images
         if (!result.some(img => img.side === side)) {
           const designImgUrl = getImageUrlFromDesigns(side);
           if (designImgUrl) {
@@ -168,7 +184,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   const images = getImages();
 
-  // Get position styles for design overlays based on the side
   const getPositionForSide = (side: String) => {
     switch(side) {
       case "leftshoulder":
