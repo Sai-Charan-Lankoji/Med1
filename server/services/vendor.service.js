@@ -430,6 +430,7 @@ class VendorService {
           commission_rate: `${commissionRate * 100}%`,
           stores: Object.values(commissionByStore),
           monthly_revenue: monthlyRevenue,
+          next_billing_date: new Date(vendor.next_billing_date)
         },
       };
     } catch (error) {
