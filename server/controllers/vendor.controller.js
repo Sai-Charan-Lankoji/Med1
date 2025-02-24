@@ -1,3 +1,4 @@
+const e = require("express");
 const vendorService = require("../services/vendor.service");
 
 exports.getAllVendors = async (req, res) => {
@@ -42,5 +43,25 @@ exports.deleteVendor = async (req, res) => {
     res.status(200).json({ success: true, message: "Vendor deleted successfully" });
   } catch (error) {
     res.status(404).json({ success: false, message: error.message });
+  }
+};
+
+
+exports.getVendorAnalytics = async (req, res) => {
+  try {
+    const analytics = await vendorService.getVendorAnalytics(req.params.id);
+    res.status(200).json({ success: true, analytics });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getStoreCommissionBreakdownByVendor = async (req, res) => { 
+  
+  try {
+    const breakdown = await vendorService.getStoreCommissionBreakdownByVendor(req.params.vendorId);
+    res.status(200).json({ success: true, breakdown });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };
