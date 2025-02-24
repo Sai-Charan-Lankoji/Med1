@@ -173,4 +173,4 @@ async function getCommissionBreakdown(vendorId) {
 
 
 
-module.exports = { getCommissionBreakdown};
+module.exports = {getCommissionBreakdown};
