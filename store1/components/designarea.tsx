@@ -15,6 +15,8 @@ import {
   bgColours,
   designApparels,
   IApparel,
+  IDesign,
+  IProps,
 } from "../@types/models";
 import { useDispatch, useSelector } from "react-redux";
 import { ColorPickerContext } from "../context/colorpickercontext";
@@ -22,7 +24,6 @@ import { MenuContext } from "../context/menucontext";
 import { useDownload } from "../shared/download";
 import * as React from "react";
 import { GetTextStyles } from "../shared/draw";
-
 import { useUserContext } from "../context/userContext";
 import { useRouter } from "next/navigation";
 import { useSvgContext } from "../context/svgcontext";
@@ -39,7 +40,6 @@ const itextGal = /(i-text)/i;
 export default function DesignArea({
   isVendorMode = false,
   productData,
-
 }: {
   isVendorMode?: boolean;
   productData?: any;
@@ -54,13 +54,17 @@ export default function DesignArea({
       initialState: any;
     };
   }
+const baseurl = process.env.NEXT_PUBLIC_API_URL;
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
     null
   );
   const [lastSavedDesign, setLastSavedDesign] = useState<string | null>(null);
   const canvasState = useSelector((state: RootState) => state.setReducer);
-  const { addDesignToCart, loading: cartLoading } = useNewCart();
-  const { updateCart } = useNewCart();
+  const {
+    addDesignToCart,
+    updateCartItem,
+    loading: cartLoading,
+  } = useNewCart();
   const { customerToken } = useUserContext();
   const isAuthorized = isVendorMode || customerToken;
   const router = useRouter();
@@ -79,7 +83,7 @@ export default function DesignArea({
   const [apparels, setApparels] = React.useState<IApparel[]>(designApparels);
   let selectionCreated: fabric.Object[] | undefined;
   const [cart, setCart] = React.useState<{ name: string; image: string }[]>([]);
-  const [cartId, setCartId] = useState<any>();
+  const [cartId, setCartId] = useState<string | null>(null);
   const [colors, setColors] = React.useState<IBgcolor[]>(
     bgColours.map((color) => ({
       ...color,
@@ -87,13 +91,16 @@ export default function DesignArea({
     }))
   );
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
-  const { store }  = useStore()
+  const { store } = useStore();
+
+  const customerId =
+    typeof window !== "undefined" ? sessionStorage.getItem("customerId") : null;
+
   const autoSaveDesign = React.useCallback(() => {
     if (!canvas || !design) return;
 
     const currentCanvasJSON = JSON.stringify(canvas.toJSON());
 
-    // Only save if the design state has changed
     if (currentCanvasJSON !== lastSavedDesign) {
       const pngImage = canvas.toDataURL({ multiplier: 4 });
       const svgImage = canvas.toSVG();
@@ -105,9 +112,9 @@ export default function DesignArea({
         jsonDesign: canvas.toJSON(),
         pngImage: canvas.toJSON().objects.length ? pngImage : null,
         svgImage: svgImage,
-      }); 
+      });
 
-      setLastSavedDesign(currentCanvasJSON); // Update the last saved state
+      setLastSavedDesign(currentCanvasJSON);
     }
   }, [canvas, design, dispatchDesign, lastSavedDesign]);
 
@@ -121,24 +128,13 @@ export default function DesignArea({
 
       autoSaveTimeout = setTimeout(() => {
         autoSaveDesign();
-      }, 500); // Auto-save triggered after 500ms of inactivity
+      }, 500);
     };
 
-    const handleObjectModified = () => {
-      debouncedAutoSave();
-    };
-
-    const handleObjectMoving = () => {
-      debouncedAutoSave();
-    };
-
-    const handleObjectScaling = () => {
-      debouncedAutoSave();
-    };
-
-    const handleObjectRotating = () => {
-      debouncedAutoSave();
-    };
+    const handleObjectModified = () => debouncedAutoSave();
+    const handleObjectMoving = () => debouncedAutoSave();
+    const handleObjectScaling = () => debouncedAutoSave();
+    const handleObjectRotating = () => debouncedAutoSave();
 
     const events = [
       { name: "object:modified", handler: handleObjectModified },
@@ -147,28 +143,19 @@ export default function DesignArea({
       { name: "object:rotating", handler: handleObjectRotating },
     ];
 
-    // Add event listeners
-    events.forEach(({ name, handler }) => {
-      canvas.on(name, handler);
-    });
+    events.forEach(({ name, handler }) => canvas.on(name, handler));
 
     return () => {
-      // Cleanup event listeners
-      events.forEach(({ name, handler }) => {
-        canvas.off(name, handler);
-      });
-
+      events.forEach(({ name, handler }) => canvas.off(name, handler));
       if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
     };
   }, [canvas, autoSaveDesign]);
 
   useEffect(() => {
     if (canvas) {
-      // Directly set individual properties on the canvas
       canvas.renderOnAddRemove = true;
       canvas.preserveObjectStacking = true;
       canvas.enableRetinaScaling = true;
-
       canvas.selection = true;
       canvas.hoverCursor = "pointer";
       canvas.defaultCursor = "default";
@@ -177,8 +164,6 @@ export default function DesignArea({
 
   const handleImageClick = async (e: any, apparel: IApparel) => {
     e.preventDefault();
-
-    // Auto-save current design before switching
     autoSaveDesign();
 
     setApparels(
@@ -234,20 +219,22 @@ export default function DesignArea({
     }
     selectionCreated = options.selected;
     if (selectionCreated && selectionCreated.length > 0) {
-      if (selectionCreated[0].type == "group") {
+      if (selectionCreated[0].type === "group") {
         let colors = extractFillColorsSelectedObject(canvas.getActiveObject());
         dispatchColorPicker({ type: "SVG_COLORS", payload: colors });
       }
     }
   });
+
   canvas?.on("selection:cleared", function (options) {
     let deselectedObj = options.deselected;
     if (deselectedObj && deselectedObj.length > 0) {
-      if (deselectedObj[0].type == "group") {
+      if (deselectedObj[0].type === "group") {
         dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
       }
     }
   });
+
   canvas?.on("object:removed", function (options) {
     dispatchColorPicker({ type: "SVG_COLORS", payload: [] });
   });
@@ -268,6 +255,7 @@ export default function DesignArea({
   });
 
   initControls();
+
   React.useEffect(() => {
     let canvas = new fabric.Canvas("canvas", {
       height: design?.apparel.height,
@@ -303,9 +291,9 @@ export default function DesignArea({
     } else if (design?.apparel.url === designApparels[3].url) {
       return "canvas-style4";
     }
-
     return "";
   };
+
   const handleColorClick = (value: string) => {
     setColors(
       colors.map((color) =>
@@ -316,6 +304,7 @@ export default function DesignArea({
     );
     updateColor(value);
   };
+
   const downloadDesignJson = (e: any) => {
     const json = JSON.stringify(designs);
     const blob = new Blob([json], { type: "application/json;charset=utf-8" });
@@ -406,7 +395,6 @@ export default function DesignArea({
     localStorage.setItem("designState", JSON.stringify(stateToSave));
   };
 
-
   const handleUpdateCart = async () => {
     const currentDesignState = designs.map((design) => ({
       ...design,
@@ -416,17 +404,18 @@ export default function DesignArea({
       ...props,
       designId: design?.id,
     };
+
     if (!customerToken) {
       saveStateToLocalStorage();
       router.push("/auth");
       return;
     }
 
-    const success = await updateCart(
-      cartId,
+    const success = await updateCartItem(
+      cartId!,
       currentDesignState,
-      currentPropsState,
-      designs
+      currentDesignState,
+      currentPropsState
     );
 
     if (success) {
@@ -468,16 +457,13 @@ export default function DesignArea({
 
       console.log("this is product request Body : ", requestBody);
 
-      const response = await fetch(
-        "http://localhost:5000/api/products",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch("http://localhost:5000/api/products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -532,13 +518,27 @@ export default function DesignArea({
 
     const success = await addDesignToCart(
       designs,
-      customerToken,
-      svgUrl,
       currentDesignState,
-      currentPropsState
+      currentPropsState,
+      productData?.id
     );
 
     if (success) {
+      const response = await fetch(
+        `${baseurl}/api/carts/customer/${customerId}`
+      );
+      if (response.ok) {
+        const cartData = await response.json();
+        const addedItem = cartData.data.designable_products.find(
+          (item: any) =>
+            JSON.stringify(item.designs) === JSON.stringify(currentDesignState)
+        );
+        if (addedItem) {
+          setCartId(addedItem.id);
+          localStorage.setItem("cart_id", addedItem.id);
+        }
+      }
+
       dispatchDesign({ type: "CLEAR_ALL" });
       localStorage.removeItem("savedDesignState");
       localStorage.removeItem("savedPropsState");
@@ -569,13 +569,28 @@ export default function DesignArea({
 
           const success = await addDesignToCart(
             pendingDesignState,
-            customerToken,
-            svgUrl,
             pendingDesignState,
-            pendingPropsState
+            pendingPropsState,
+            productData?.id
           );
 
           if (success) {
+            const response = await fetch(
+              `${baseurl}/api/carts/customer/${customerId}`
+            );
+            if (response.ok) {
+              const cartData = await response.json();
+              const addedItem = cartData.data.designable_products.find(
+                (item: any) =>
+                  JSON.stringify(item.designs) ===
+                  JSON.stringify(pendingDesignState)
+              );
+              if (addedItem) {
+                setCartId(addedItem.id);
+                localStorage.setItem("cart_id", addedItem.id);
+              }
+            }
+
             dispatchDesign({ type: "CLEAR_ALL" });
             localStorage.removeItem("savedDesignState");
             localStorage.removeItem("savedPropsState");
@@ -594,8 +609,66 @@ export default function DesignArea({
       }
     };
 
+    const checkPendingCartUpdate = async () => {
+      const hasPendingUpdate = localStorage.getItem("pendingCartUpdate");
+
+      if (customerToken && hasPendingUpdate === "true") {
+        const pendingDesignStateStr =
+          localStorage.getItem("pendingDesignState");
+        const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
+        const pendingCartId = localStorage.getItem("pendingCartId");
+
+        if (!pendingDesignStateStr || !pendingPropsStateStr || !pendingCartId) {
+          return;
+        }
+
+        try {
+          const pendingDesignState: IDesign[] = JSON.parse(
+            pendingDesignStateStr
+          );
+          const pendingPropsState: IProps & { designId?: string } =
+            JSON.parse(pendingPropsStateStr);
+
+          const success = await updateCartItem(
+            pendingCartId,
+            pendingDesignState,
+            pendingDesignState,
+            pendingPropsState
+          );
+
+          if (success) {
+            dispatchDesign({ type: "CLEAR_ALL" });
+            localStorage.removeItem("savedDesignState");
+            localStorage.removeItem("savedPropsState");
+            localStorage.removeItem("pendingCartUpdate");
+            localStorage.removeItem("pendingDesignState");
+            localStorage.removeItem("pendingPropsState");
+            localStorage.removeItem("pendingCartId");
+            updateColor("#fff");
+            dispatchDesign({ type: "UPDATE_APPAREL_COLOR", payload: "#fff" });
+          }
+        } catch (error) {
+          console.error("Error processing pending cart update:", error);
+          localStorage.removeItem("pendingCartUpdate");
+          localStorage.removeItem("pendingDesignState");
+          localStorage.removeItem("pendingPropsState");
+          localStorage.removeItem("pendingCartId");
+        }
+      }
+    };
+
     checkPendingCartAdd();
-  }, [customerToken, addDesignToCart, svgUrl, dispatchDesign, updateColor]);
+    checkPendingCartUpdate();
+  }, [
+    customerToken,
+    addDesignToCart,
+    updateCartItem,
+    svgUrl,
+    dispatchDesign,
+    updateColor,
+    productData,
+    customerId,
+  ]);
 
   return (
     <div>
@@ -620,7 +693,7 @@ export default function DesignArea({
             <button
               type="button"
               onClick={downloadZip}
-              className="text-purple-700 hover:text-white border-purple-700  hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
+              className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
             >
               <IconContext.Provider
                 value={{
@@ -653,7 +726,7 @@ export default function DesignArea({
                   <p className="px-2 text-[10px]">SVG</p>
                 </button>
               </div>
-              <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
+              <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
                 <button onClick={() => downloadPNG()}>
                   <IconContext.Provider
                     value={{
@@ -671,7 +744,7 @@ export default function DesignArea({
         </div>
 
         <div>
-          <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
+          <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={handleRedo}>
               <IconContext.Provider
                 value={{
@@ -684,7 +757,7 @@ export default function DesignArea({
               <p className="px-2 text-[10px]">Redo</p>
             </button>
           </div>
-          <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
+          <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={handleUndo}>
               <IconContext.Provider
                 value={{
@@ -697,7 +770,7 @@ export default function DesignArea({
               <p className="px-2 text-[10px]">Undo</p>
             </button>
           </div>
-          <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br  group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg  text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white  dark:focus:ring-blue-800">
+          <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={() => reset()}>
               <IconContext.Provider
                 value={{
@@ -714,7 +787,7 @@ export default function DesignArea({
       </div>
 
       <div className="canvas_section relative bg-white text-center border border-t-0 border-zinc-300">
-        <div className={`inline-block p-2 `}>
+        <div className={`inline-block p-2`}>
           <img
             src={design?.apparel.url}
             className="img-fluid inline w-3/4"

@@ -1,18 +1,16 @@
 import { AnyAction } from "redux";
-import { ICartItem } from "@/@types/models";
+import { IDesignableCartItem, IStandardCartItem } from "@/@types/models";
 
 // Define cart state interface
 interface CartState {
-  items: ICartItem[];
-  designable: ICartItem[];
-  standard: ICartItem[];
+  designable: IDesignableCartItem[];
+  standard: IStandardCartItem[];
   loading: boolean;
   error: string | null;
 }
 
 // Initial state
 const initialState: CartState = {
-  items: [],
   designable: [],
   standard: [],
   loading: false,
@@ -21,40 +19,14 @@ const initialState: CartState = {
 
 // Action types
 export const ADD_TO_CART = "ADD_TO_CART";
-export const REMOVE_FROM_CART = "REMOVE_FROM_CART";
-export const CLEAR_CART = "CLEAR_CART";
 export const SET_LOADING = "SET_LOADING";
 export const SET_ERROR = "SET_ERROR";
 export const FETCH_CART_SUCCESS = "FETCH_CART_SUCCESS";
-export const UPDATE_CART = "UPDATE_CART";
-export const UPDATE_CART_ITEM_QUANTITY = "UPDATE_CART_ITEM_QUANTITY";
 
 // Action creators
-
-export const updateCartItemQuantity = (payload: {
-  cartId: string;
-  quantity: number;
-}) => ({
-  type: UPDATE_CART_ITEM_QUANTITY,
-  payload,
-});
-export const addToCart = (item: ICartItem) => ({
+export const addToCart = (item: IDesignableCartItem | IStandardCartItem) => ({
   type: ADD_TO_CART,
   payload: item,
-});
-
-export const removeFromCart = (id: string) => ({
-  type: REMOVE_FROM_CART,
-  payload: id,
-});
-
-export const clearCart = () => ({
-  type: CLEAR_CART,
-});
-
-export const updateCart = (cartData: any) => ({
-  type: UPDATE_CART,
-  payload: cartData,
 });
 
 export const setLoading = (loading: boolean) => ({
@@ -67,63 +39,60 @@ export const setError = (error: string | null) => ({
   payload: error,
 });
 
-export const fetchCartSuccess = (cartData: ICartItem[]) => ({
+export const fetchCartSuccess = (cartData: {
+  designable: IDesignableCartItem[];
+  standard: IStandardCartItem[];
+}) => ({
   type: FETCH_CART_SUCCESS,
   payload: cartData,
 });
 
+// Reducer
 export const cartReducer = (
   state = initialState,
   action: AnyAction
 ): CartState => {
   switch (action.type) {
-    case ADD_TO_CART:
-      return {
-        ...state,
-        items: [...state.items, action.payload],
-      };
-    case REMOVE_FROM_CART:
-      return {
-        ...state,
-        items: state.items.filter((item) => item.id !== action.payload),
-      };
+    case ADD_TO_CART: {
+      const item = action.payload as IDesignableCartItem | IStandardCartItem;
+      if (item.product_type === "designable") {
+        return {
+          ...state,
+          designable: [...state.designable, item as IDesignableCartItem],
+        };
+      } else if (item.product_type === "standard") {
+        return {
+          ...state,
+          standard: [...state.standard, item as IStandardCartItem],
+        };
+      }
+      return state; // No change if product_type is invalid
+    }
 
-    case CLEAR_CART:
-      return {
-        ...state,
-        items: [],
-      };
     case SET_LOADING:
       return {
         ...state,
         loading: action.payload,
       };
+
     case SET_ERROR:
       return {
         ...state,
         error: action.payload,
       };
 
-    case FETCH_CART_SUCCESS:
+    case FETCH_CART_SUCCESS: {
+      const { designable, standard } = action.payload as {
+        designable: IDesignableCartItem[];
+        standard: IStandardCartItem[];
+      };
       return {
         ...state,
-        items: action.payload,
+        designable: designable || [],
+        standard: standard || [],
       };
-    case UPDATE_CART:
-      return {
-        ...state,
-        items: action.payload,
-      };
+    }
 
-    case UPDATE_CART_ITEM_QUANTITY:
-      return {
-        ...state,
-        items: state.items.map((item) =>
-          item.id === action.payload.cartId
-            ? { ...item, quantity: action.payload.quantity }
-            : item
-        ),
-      };
     default:
       return state;
   }

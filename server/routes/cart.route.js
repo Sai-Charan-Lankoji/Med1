@@ -204,7 +204,7 @@ router.get("/:id", cartController.getCart);
  *         description: Cart item not found
  */
 
-router.put("/:id", cartController.updateCart);
+router.patch("/:id", cartController.updateCart);
 
 /**
  * @swagger

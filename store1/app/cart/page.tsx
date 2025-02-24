@@ -1,25 +1,33 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNewCart } from "../hooks/useNewCart";
 import { useUserContext } from "@/context/userContext";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { FaTrash } from "react-icons/fa";
 import { useCreateOrder } from "../hooks/useCreateOrder";
-import { ChevronLeft, ChevronRight, XMarkMini } from "@medusajs/icons";
-import { ICartItem } from "@/@types/models";
-import { IDesign, IProps } from "@/@types/models";
-import { DesignContext } from "@/context/designcontext";
+import { XMarkMini } from "@medusajs/icons";
+import {
+  ICartItem,
+  IDesignableCartItem,
+  IStandardCartItem,
+  IDesign,
+  IProps,
+} from "@/@types/models";
 import { useStore } from "@/context/storecontext";
+import { DesignContext } from "@/context/designcontext";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 interface OrderData {
   line_items: Array<{
-    product_id: number | string | undefined;
+    product_id: string | undefined;
     quantity: number;
     price: number;
-    designs: any[];
+    designs?: IDesignableCartItem["designs"];
+    selected_size?: IStandardCartItem["selected_size"];
+    selected_color?: IStandardCartItem["selected_color"];
   }>;
   total_amount: number;
   currency_code: string;
@@ -33,41 +41,30 @@ interface OrderData {
   public_api_key: string | null;
   store_id: string | null;
 }
-interface DesignableProduct {
-  id: string;
-  product_id: string;
-  product_type: "Designable";
-  designs: IDesign[];
-  designState: any | null;
-  propsState: any | null;
-  price: number;
-  quantity: number;
-  total_price: number;
-  customer_id: string;
-  email: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-}
+
 const CartPage = () => {
   const {
-    cartItems,
-    deleteCart,
+    cartItems: designableCartItems,
+    deleteCartItem,
     updateCartQuantity,
-    clearCart,
-    loading,
     fetchCartData,
+    loading,
+    getStandardCartItems,
   } = useNewCart();
   const { customerToken } = useUserContext();
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { mutate: createOrder, isLoading, isError } = useCreateOrder();
+  const { mutate: createOrder, isLoading: isOrderLoading } = useCreateOrder();
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [itemToRemove, setItemToRemove] = useState<any | null>(null);
+  const [itemToRemove, setItemToRemove] = useState<string | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isCartLoaded, setIsCartLoaded] = useState(false); // Prevent re-fetching
+  const { store } = useStore();
+
   const designContext = React.useContext(DesignContext);
-  const { designs, dispatchDesign } = designContext || {
+  const { designs: contextDesigns, dispatchDesign } = designContext || {
     designs: [],
     dispatchDesign: () => {},
   };
@@ -80,15 +77,18 @@ const CartPage = () => {
   const [imageViewMode, setImageViewMode] = useState<
     Record<string, "apparel" | "uploaded">
   >({});
-  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const { store } = useStore();
 
-  // Fetch cart data on component mount
+  // Combine designable and standard items locally
+  const allCartItems: ICartItem[] = [
+    ...designableCartItems,
+    ...getStandardCartItems(),
+  ];
+
   useEffect(() => {
-    if (customerToken) {
-      fetchCartData();
+    if (customerToken && !isCartLoaded && !loading) {
+      fetchCartData().then(() => setIsCartLoaded(true));
     }
-  }, [customerToken]);
+  }, [customerToken, fetchCartData, isCartLoaded, loading]);
 
   const toggleViewMode = (itemId: string) => {
     setImageViewMode((prev) => ({
@@ -110,18 +110,16 @@ const CartPage = () => {
   };
 
   const handleSelectAll = () => {
-    setSelectedItems((prev) => {
-      // If all items are selected, unselect all
-      if (prev.size === cartItems?.length) {
-        return new Set();
-      }
-      // Otherwise, select all items
-      return new Set(cartItems.map((item: { id: any; }) => item.id));
-    });
+    setSelectedItems((prev) =>
+      prev.size === allCartItems.length
+        ? new Set()
+        : new Set(allCartItems.map((item) => item.id))
+    );
   };
 
-  const handleDeleteCart = async (cartId: string) => {
-    const success = await deleteCart(cartId);
+  const handleDeleteCartItem = async (cartId: string) => {
+    setError(null);
+    const success = await deleteCartItem(cartId);
     if (success) {
       setSelectedItems((prev) => {
         const newSelected = new Set(prev);
@@ -129,17 +127,26 @@ const CartPage = () => {
         return newSelected;
       });
       closeModal();
+      toast.success("Item removed from cart");
     } else {
       setError("Failed to delete cart item");
+      toast.error("Failed to remove item");
     }
   };
 
   const handleClearCart = async () => {
-    const success = await clearCart();
-    if (success) {
+    setError(null);
+    try {
+      const deletePromises = allCartItems.map((item) =>
+        deleteCartItem(item.id)
+      );
+      await Promise.all(deletePromises);
       setSelectedItems(new Set());
-    } else {
+      setIsCartLoaded(false); // Allow re-fetch after clear
+      toast.success("Cart cleared successfully");
+    } catch (err) {
       setError("Failed to clear cart");
+      toast.error("Failed to clear cart");
     }
   };
 
@@ -156,18 +163,16 @@ const CartPage = () => {
 
   const handleConfirmDelete = async () => {
     if (itemToRemove) {
-      await handleDeleteCart(itemToRemove);
+      await handleDeleteCartItem(itemToRemove);
     }
   };
 
-  const handleQuantityChange = async (itemId: any, newQuantity: any) => {
+  const handleQuantityChange = async (itemId: string, newQuantity: number) => {
     setError(null);
-
     if (newQuantity <= 0) {
       setError("Quantity must be greater than 0");
       return;
     }
-
     if (newQuantity > 10) {
       setError("Maximum quantity allowed is 10");
       return;
@@ -178,21 +183,28 @@ const CartPage = () => {
       const success = await updateCartQuantity(itemId, newQuantity);
       if (!success) {
         setError("Failed to update quantity");
+        toast.error("Failed to update quantity");
+      } else {
+        toast.success("Quantity updated");
       }
     } catch (error) {
       setError("Failed to update quantity");
+      toast.error("Failed to update quantity");
     } finally {
       setUpdating(false);
     }
   };
 
   const calculateSelectedTotals = () => {
-    const selectedCartItems = cartItems.filter((item: { id: string; }) =>
+    const selectedCartItems = allCartItems.filter((item) =>
       selectedItems.has(item.id)
     );
-    const subtotal = selectedCartItems.reduce((total: number, item: { designs: string | any[]; quantity: number; }) => {
-      const numberOfSides = item.designs ? item.designs.length : 1;
-      return total + 100 * numberOfSides * item.quantity;
+    const subtotal = selectedCartItems.reduce((total, item) => {
+      const pricePerItem =
+        item.product_type === "designable" && item.designs?.length
+          ? item.designs.length * 100
+          : item.price || 100;
+      return total + pricePerItem * item.quantity;
     }, 0);
 
     const shippingCost = 0;
@@ -204,26 +216,33 @@ const CartPage = () => {
   };
 
   const handleProceedToOrder = async () => {
-    if (isProcessingOrder) return;
-    if (selectedItems.size === 0) {
-      setError("Please select at least one item to proceed with the order");
+    if (isProcessingOrder || selectedItems.size === 0) {
+      setError(
+        selectedItems.size === 0 ? "Please select at least one item" : null
+      );
       return;
     }
 
     setIsProcessingOrder(true);
     setError(null);
 
-    const selectedCartItems = cartItems.filter((item: { id: string; }) =>
+    const selectedCartItems = allCartItems.filter((item) =>
       selectedItems.has(item.id)
     );
     const { total } = calculateSelectedTotals();
 
     const orderData: OrderData = {
-      line_items: selectedCartItems.map((item: { id: any; quantity: any; price: any; designs: any; }) => ({
-        product_id: item.id,
+      line_items: selectedCartItems.map((item) => ({
+        product_id: item.product_id,
         quantity: item.quantity,
-        price: item.price,
-        designs: item.designs,
+        price:
+          item.price ||
+          ((item as IDesignableCartItem).designs?.length ? (item as IDesignableCartItem).designs.length * 100 : 100),
+        designs: item.product_type === "designable" ? item.designs : undefined,
+        selected_size:
+          item.product_type === "standard" ? item.selected_size : undefined,
+        selected_color:
+          item.product_type === "standard" ? item.selected_color : undefined,
       })),
       total_amount: total,
       currency_code: "usd",
@@ -240,33 +259,37 @@ const CartPage = () => {
 
     createOrder(orderData, {
       onSuccess: async () => {
-        router.push("./order-confirmation");
         try {
-          // Remove ordered items from cart
           for (const itemId of selectedItems) {
-            await deleteCart(itemId);
+            await deleteCartItem(itemId);
           }
           setSelectedItems(new Set());
+          setIsCartLoaded(false); // Allow re-fetch after order
+          router.push("./order-confirmation");
+          toast.success("Order placed successfully");
         } catch (err) {
-          console.error("Error processing order:", err);
-          setError("Failed to complete order process.");
+          setError("Failed to clear ordered items from cart");
+          toast.error("Failed to clear ordered items");
+          console.error("Error clearing cart:", err);
+        } finally {
           setIsProcessingOrder(false);
         }
       },
       onError: (err) => {
-        console.error("Error placing order:", err);
         setError("Failed to place order. Please try again.");
+        toast.error("Failed to place order");
+        console.error("Error placing order:", err);
         setIsProcessingOrder(false);
       },
     });
   };
 
-  const capitalizeFirstLetter = (string: String) => {
+  const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
-  const getDesignedSidesText = (designs: { apparel: { side: string } }[]) => {
-    if (!designs || designs.length === 0) return "";
+  const getDesignedSidesText = (designs?: IDesignableCartItem["designs"]) => {
+    if (!designs || designs.length === 0) return "N/A";
     const sides = designs.map((design) =>
       capitalizeFirstLetter(design.apparel.side)
     );
@@ -276,15 +299,23 @@ const CartPage = () => {
     return `${sides.join(", ")} & ${lastSide}`;
   };
 
-  const handleDesignClick = async (
-    designState: IDesign,
-    propsState: IProps,
-    id: any
-  ) => {
+  const handleDesignClick = async (item: ICartItem) => {
+    if (item.product_type === "standard") {
+      toast.info("This item is not editable");
+      return;
+    }
+
+    const designItem = item as IDesignableCartItem;
+    const designState = designItem.designState;
+    const propsState = designItem.propsState;
+    const id = item.id;
+
     localStorage.setItem("savedDesignState", JSON.stringify(designState));
     localStorage.setItem("savedPropsState", JSON.stringify(propsState));
     localStorage.setItem("cart_id", id);
-    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
+    if (designState) {
+      dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState[0] });
+    }
 
     await new Promise((resolve) => setTimeout(resolve, 100));
     router.push("/dashboard");
@@ -303,11 +334,16 @@ const CartPage = () => {
   };
 
   const isAllSelected =
-    cartItems?.length > 0 && selectedItems.size === cartItems?.length;
+    allCartItems.length > 0 && selectedItems.size === allCartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Sign in banner */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+      />
+
       {!customerToken && (
         <div className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -332,22 +368,21 @@ const CartPage = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Main cart section */}
           <div className="flex-1">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="p-6 border-b border-gray-100">
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">
                   Shopping Cart
                 </h1>
-                {cartItems && (
+                {allCartItems.length > 0 && (
                   <div className="flex justify-between space-x-4">
                     <button
                       onClick={handleSelectAll}
                       className="px-4 py-2 text-sm font-medium text-gray-600 bg-blue-100 rounded hover:bg-blue-200 hover:text-gray-800 transition-colors"
+                      disabled={loading}
                     >
                       {isAllSelected ? "Unselect All" : "Select All"}
                     </button>
-
                     <button
                       onClick={handleClearCart}
                       className={`px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 transition-colors ${
@@ -361,16 +396,28 @@ const CartPage = () => {
                 )}
               </div>
 
-              {cartItems?.length === 0 ? (
+              {allCartItems.length === 0 ? (
                 <div className="p-12 text-center">
                   <div className="w-24 h-24 mx-auto mb-6 text-gray-300">
-                    {/* Cart icon SVG can go here */}
+                    <svg
+                      className="w-full h-full"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                      />
+                    </svg>
                   </div>
                   <h2 className="text-xl font-medium mb-4 text-gray-900">
                     Your cart is empty
                   </h2>
                   <p className="text-gray-500 mb-8">
-                    Looks like you haven&apost added any items to your cart yet.
+                    Looks like you haven’t added any items to your cart yet.
                   </p>
                   <Link
                     href="/"
@@ -380,250 +427,320 @@ const CartPage = () => {
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100 ">
-                  {cartItems?.map((item) => {
-                    if (!item.designs?.length) return null;
+                <div className="divide-y divide-gray-100">
+                  {allCartItems.map((item) => {
+                    const isDesignable = item.product_type === "designable";
+                    const designItem = item as IDesignableCartItem;
+                    const standardItem = item as IStandardCartItem;
 
-                    const pricePerItem = item.designs
-                      ? item.designs.length * 100
-                      : 100;
+                    const pricePerItem = isDesignable
+                      ? (designItem.designs?.length || 0) * 100
+                      : standardItem.price || 100;
+
                     const itemTotal = pricePerItem * item.quantity;
                     const mainDesignIndex = selectedDesigns[item.id] || 0;
-                    const currentDesign = item.designs[mainDesignIndex];
+                    const currentDesign = isDesignable
+                      ? designItem.designs?.[mainDesignIndex]
+                      : null;
                     const currentUploadedImageIndex =
                       currentImageIndex[item.id] || 0;
                     const viewMode = imageViewMode[item.id] || "apparel";
                     const hasUploadedImages =
-                      currentDesign?.uploadedImages &&
-                      currentDesign.uploadedImages?.[0]?.length > 0;
+                      isDesignable &&
+                      currentDesign?.uploadedImages?.some(
+                        (img) => img?.length > 0
+                      );
 
                     return (
-                      <div key={item.id} className="p-6 ">
+                      <div key={item.id} className="p-6">
                         <div className="flex items-start space-x-4">
                           <div className="pt-2">
                             <input
                               type="checkbox"
                               checked={selectedItems.has(item.id)}
                               onChange={() => handleItemSelect(item.id)}
-                              className="w-4 h-4 text-blue-600 rounded border-gray-500 focus:ring-blue-500 "
+                              className="w-4 h-4 text-blue-600 rounded border-gray-500 focus:ring-blue-500"
+                              disabled={loading}
                             />
                           </div>
 
-                          <div className="flex flex-col md:flex-row gap-4  flex-1">
+                          <div className="flex flex-col md:flex-row gap-4 flex-1">
                             <div className="md:w-1/2">
                               <div
-                                className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100"
-                                onClick={() =>
-                                  handleDesignClick(
-                                    item.designState,
-                                    item.propsState,
-                                    item.id
-                                  )
-                                }
+                                className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100 cursor-pointer"
+                                onClick={() => handleDesignClick(item)}
                               >
-                                {viewMode === "apparel" ? (
-                                  <>
-                                    <div className="absolute inset-0">
-                                      <Image
-                                        src={currentDesign.apparel.url}
-                                        alt={`Side: ${currentDesign.apparel.side}`}
-                                        fill
-                                        sizes="100%"
-                                        priority
-                                        className="rounded-none"
-                                        style={{
-                                          backgroundColor:
-                                            currentDesign.apparel?.color,
-                                          objectFit: "cover",
-                                        }}
-                                      />
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center">
-                                      <div
-                                        className="relative translate-y-[-10%]"
-                                        style={{
-                                          top:
-                                            currentDesign.apparel.side ===
-                                            "leftshoulder"
-                                              ? "35px"
-                                              : currentDesign.apparel.side ===
-                                                "rightshoulder"
-                                              ? "30px"
-                                              : "initial",
-                                          left:
-                                            currentDesign.apparel.side ===
-                                            "leftshoulder"
-                                              ? "-10px"
-                                              : currentDesign.apparel.side ===
-                                                "rightshoulder"
-                                              ? "8px"
-                                              : "initial",
-                                          width:
-                                            currentDesign.apparel.side ===
-                                              "leftshoulder" ||
-                                            currentDesign.apparel.side ===
-                                              "rightshoulder"
-                                              ? "30%"
-                                              : "50%",
-                                          height:
-                                            currentDesign.apparel.side ===
-                                              "leftshoulder" ||
-                                            currentDesign.apparel.side ===
-                                              "rightshoulder"
-                                              ? "30%"
-                                              : "50%",
-                                        }}
-                                      >
+                                {isDesignable && currentDesign ? (
+                                  viewMode === "apparel" ? (
+                                    <>
+                                      <div className="absolute inset-0">
                                         <Image
-                                          src={currentDesign.pngImage}
-                                          alt="Design"
+                                          src={
+                                            currentDesign.apparel.url ||
+                                            "/placeholder.svg"
+                                          }
+                                          alt={`Side: ${currentDesign.apparel.side}`}
                                           fill
                                           sizes="100%"
-                                          className="rounded-md"
-                                          style={{ objectFit: "contain" }}
+                                          priority
+                                          className="rounded-none"
+                                          style={{
+                                            backgroundColor:
+                                              currentDesign.apparel?.color ||
+                                              "#ffffff",
+                                            objectFit: "cover",
+                                          }}
                                         />
                                       </div>
-                                    </div>
-                                  </>
-                                ) : (
-                                  hasUploadedImages &&
-                                  currentDesign?.uploadedImages?.[
-                                    currentUploadedImageIndex
-                                  ] && (
-                                    <Image
-                                      src={
-                                        currentDesign.uploadedImages[
-                                          currentUploadedImageIndex
-                                        ]
-                                      }
-                                      alt={`Uploaded image`}
-                                      fill
-                                      sizes="100%"
-                                      className="object-contain"
-                                    />
+                                      <div className="absolute inset-0 flex items-center justify-center">
+                                        <div
+                                          className="relative translate-y-[-10%]"
+                                          style={{
+                                            top:
+                                              currentDesign.apparel.side ===
+                                              "leftshoulder"
+                                                ? "35px"
+                                                : currentDesign.apparel.side ===
+                                                  "rightshoulder"
+                                                ? "30px"
+                                                : "initial",
+                                            left:
+                                              currentDesign.apparel.side ===
+                                              "leftshoulder"
+                                                ? "-10px"
+                                                : currentDesign.apparel.side ===
+                                                  "rightshoulder"
+                                                ? "8px"
+                                                : "initial",
+                                            width:
+                                              currentDesign.apparel.side ===
+                                                "leftshoulder" ||
+                                              currentDesign.apparel.side ===
+                                                "rightshoulder"
+                                                ? "30%"
+                                                : "50%",
+                                            height:
+                                              currentDesign.apparel.side ===
+                                                "leftshoulder" ||
+                                              currentDesign.apparel.side ===
+                                                "rightshoulder"
+                                                ? "30%"
+                                                : "50%",
+                                          }}
+                                        >
+                                          <Image
+                                            src={
+                                              currentDesign.pngImage ||
+                                              "/placeholder.svg"
+                                            }
+                                            alt="Design"
+                                            fill
+                                            sizes="100%"
+                                            className="rounded-md"
+                                            style={{ objectFit: "contain" }}
+                                          />
+                                        </div>
+                                      </div>
+                                    </>
+                                  ) : (
+                                    hasUploadedImages &&
+                                    currentDesign?.uploadedImages?.[
+                                      currentUploadedImageIndex
+                                    ] && (
+                                      <Image
+                                        src={
+                                          currentDesign.uploadedImages[
+                                            currentUploadedImageIndex
+                                          ] || "/placeholder.svg"
+                                        }
+                                        alt={`Uploaded image`}
+                                        fill
+                                        sizes="100%"
+                                        className="object-contain"
+                                      />
+                                    )
                                   )
+                                ) : (
+                                  <Image
+                                    src={
+                                      standardItem.product_details
+                                        ?.front_image || "/placeholder.svg"
+                                    }
+                                    alt={
+                                      standardItem.product_details?.title ||
+                                      "Standard Product"
+                                    }
+                                    fill
+                                    sizes="100%"
+                                    className="object-cover"
+                                  />
                                 )}
                               </div>
 
-                              {/* Thumbnails */}
-                              <div className="mt-4 grid grid-cols-4 gap-6">
-                                {viewMode === "apparel"
-                                  ? item.designs.map((design, index) => (
-                                      <div
-                                        key={index}
-                                        className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
-                                          index === mainDesignIndex
-                                            ? "ring-2 ring-gray-700"
-                                            : "hover:ring-2 hover:ring-gray-300"
-                                        }`}
-                                        onClick={() =>
-                                          handleThumbnailClick(item.id, index)
-                                        }
-                                      >
-                                        <div className="absolute inset-0">
-                                          <Image
-                                            src={design.apparel?.url}
-                                            alt={`Side: ${design.apparel.side}`}
-                                            fill
-                                            sizes="100%"
-                                            priority
-                                            className="rounded-none"
-                                            style={{
-                                              backgroundColor:
-                                                design.apparel?.color,
-                                              objectFit: "cover",
-                                            }}
-                                          />
-                                        </div>
-                                        <div className="absolute inset-0 flex items-center  justify-center">
-                                          <div
-                                            className="relative translate-y-[-10%]"
-                                            style={{
-                                              top:
-                                                design.apparel.side ===
-                                                "leftshoulder"
-                                                  ? "12px"
-                                                  : design.apparel.side ===
-                                                    "rightshoulder"
-                                                  ? "12px"
-                                                  : "initial",
-                                              left:
-                                                design.apparel.side ===
-                                                "leftshoulder"
-                                                  ? "-3px"
-                                                  : design.apparel.side ===
-                                                    "rightshoulder"
-                                                  ? "2px"
-                                                  : "initial",
-                                              width:
-                                                design.apparel.side ===
-                                                  "leftshoulder" ||
-                                                design.apparel.side ===
-                                                  "rightshoulder"
-                                                  ? "30%"
-                                                  : "50%",
-                                              height:
-                                                design.apparel.side ===
-                                                  "leftshoulder" ||
-                                                design.apparel.side ===
-                                                  "rightshoulder"
-                                                  ? "30%"
-                                                  : "50%",
-                                            }}
-                                          >
-                                            <Image
-                                              src={design.pngImage}
-                                              alt={`Thumbnail ${index + 1}`}
-                                              fill
-                                              sizes="100%"
-                                              className="rounded-md"
-                                              style={{ objectFit: "contain" }}
-                                            />
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ))
-                                  : currentDesign?.uploadedImages?.map(
-                                      (image, index) => (
-                                        <button
-                                          key={index}
-                                          className={`aspect-square relative rounded-md overflow-hidden ${
-                                            index === currentUploadedImageIndex
-                                              ? "ring-2 ring-black"
-                                              : "ring-1 ring-gray-200 hover:ring-gray-300"
-                                          }`}
-                                          onClick={() =>
-                                            setCurrentImageIndex((prev) => ({
-                                              ...prev,
-                                              [item.id]: index,
-                                            }))
-                                          }
-                                        >
-                                          <Image
-                                            src={image}
-                                            alt={`Upload ${index + 1}`}
-                                            fill
-                                            sizes="100%"
-                                            className="object-cover"
-                                          />
-                                        </button>
-                                      )
-                                    )}
-                              </div>
+                              {isDesignable &&
+                                designItem.designs &&
+                                designItem.designs.length > 0 && (
+                                  <div className="mt-4 grid grid-cols-4 gap-6">
+                                    {viewMode === "apparel"
+                                      ? designItem.designs.map(
+                                          (design, index) => (
+                                            <div
+                                              key={index}
+                                              className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                                index === mainDesignIndex
+                                                  ? "ring-2 ring-gray-700"
+                                                  : "hover:ring-2 hover:ring-gray-300"
+                                              }`}
+                                              onClick={() =>
+                                                handleThumbnailClick(
+                                                  item.id,
+                                                  index
+                                                )
+                                              }
+                                            >
+                                              <div className="absolute inset-0">
+                                                <Image
+                                                  src={
+                                                    design.apparel?.url ||
+                                                    "/placeholder.svg"
+                                                  }
+                                                  alt={`Side: ${design.apparel.side}`}
+                                                  fill
+                                                  sizes="100%"
+                                                  priority
+                                                  className="rounded-none"
+                                                  style={{
+                                                    backgroundColor:
+                                                      design.apparel?.color ||
+                                                      "#ffffff",
+                                                    objectFit: "cover",
+                                                  }}
+                                                />
+                                              </div>
+                                              <div className="absolute inset-0 flex items-center justify-center">
+                                                <div
+                                                  className="relative translate-y-[-10%]"
+                                                  style={{
+                                                    top:
+                                                      design.apparel.side ===
+                                                      "leftshoulder"
+                                                        ? "12px"
+                                                        : design.apparel
+                                                            .side ===
+                                                          "rightshoulder"
+                                                        ? "12px"
+                                                        : "initial",
+                                                    left:
+                                                      design.apparel.side ===
+                                                      "leftshoulder"
+                                                        ? "-3px"
+                                                        : design.apparel
+                                                            .side ===
+                                                          "rightshoulder"
+                                                        ? "2px"
+                                                        : "initial",
+                                                    width:
+                                                      design.apparel.side ===
+                                                        "leftshoulder" ||
+                                                      design.apparel.side ===
+                                                        "rightshoulder"
+                                                        ? "30%"
+                                                        : "50%",
+                                                    height:
+                                                      design.apparel.side ===
+                                                        "leftshoulder" ||
+                                                      design.apparel.side ===
+                                                        "rightshoulder"
+                                                        ? "30%"
+                                                        : "50%",
+                                                  }}
+                                                >
+                                                  <Image
+                                                    src={
+                                                      design.pngImage ||
+                                                      "/placeholder.svg"
+                                                    }
+                                                    alt={`Thumbnail ${
+                                                      index + 1
+                                                    }`}
+                                                    fill
+                                                    sizes="100%"
+                                                    className="rounded-md"
+                                                    style={{
+                                                      objectFit: "contain",
+                                                    }}
+                                                  />
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )
+                                        )
+                                      : currentDesign?.uploadedImages?.map(
+                                          (image, index) => (
+                                            <button
+                                              key={index}
+                                              className={`aspect-square relative rounded-md overflow-hidden ${
+                                                index ===
+                                                currentUploadedImageIndex
+                                                  ? "ring-2 ring-black"
+                                                  : "ring-1 ring-gray-200 hover:ring-gray-300"
+                                              }`}
+                                              onClick={() =>
+                                                setCurrentImageIndex(
+                                                  (prev) => ({
+                                                    ...prev,
+                                                    [item.id]: index,
+                                                  })
+                                                )
+                                              }
+                                            >
+                                              <Image
+                                                src={
+                                                  image || "/placeholder.svg"
+                                                }
+                                                alt={`Upload ${index + 1}`}
+                                                fill
+                                                sizes="100%"
+                                                className="object-cover"
+                                              />
+                                            </button>
+                                          )
+                                        )}
+                                  </div>
+                                )}
                             </div>
 
-                            {/* Product details */}
                             <div className="md:w-1/2 flex flex-col">
                               <div className="flex justify-between items-start">
                                 <div>
+                                  <h3 className="text-lg font-semibold text-gray-900">
+                                    {isDesignable
+                                      ? "Custom Designed Product"
+                                      : standardItem.product_details?.title ||
+                                        "Standard Product"}
+                                  </h3>
                                   <p className="text-sm text-gray-600 mb-1">
-                                    Designed Sides:{" "}
-                                    {getDesignedSidesText(item.designs)}
+                                    {isDesignable
+                                      ? `Designed Sides: ${getDesignedSidesText(
+                                          designItem.designs
+                                        )}`
+                                      : `Size: ${
+                                          standardItem.selected_size || "N/A"
+                                        }, Color: ${
+                                          standardItem.selected_color
+                                            ? typeof standardItem.selected_color ===
+                                              "string"
+                                              ? standardItem.selected_color
+                                              : standardItem.selected_color
+                                                   || "N/A"
+                                            : "N/A"
+                                        }`}
                                   </p>
-                                  {hasUploadedImages && (
+                                  {isDesignable && hasUploadedImages && (
                                     <button
                                       onClick={() => toggleViewMode(item.id)}
                                       className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                      disabled={loading}
                                     >
                                       {viewMode === "apparel"
                                         ? "View Uploaded Images"
@@ -635,6 +752,7 @@ const CartPage = () => {
                                   onClick={() => openModal(item.id)}
                                   className="text-gray-400 hover:text-red-500 transition-colors"
                                   title="Remove item"
+                                  disabled={loading}
                                 >
                                   <FaTrash className="w-4 h-4" />
                                 </button>
@@ -651,7 +769,11 @@ const CartPage = () => {
                                           item.quantity - 1
                                         )
                                       }
-                                      disabled={updating || item.quantity <= 1}
+                                      disabled={
+                                        updating ||
+                                        loading ||
+                                        item.quantity <= 1
+                                      }
                                     >
                                       -
                                     </button>
@@ -666,7 +788,11 @@ const CartPage = () => {
                                           item.quantity + 1
                                         )
                                       }
-                                      disabled={updating || item.quantity >= 10}
+                                      disabled={
+                                        updating ||
+                                        loading ||
+                                        item.quantity >= 10
+                                      }
                                     >
                                       +
                                     </button>
@@ -703,8 +829,7 @@ const CartPage = () => {
             </div>
           </div>
 
-          {/* Order Summary  */}
-          {cartItems?.length > 0 && (
+          {allCartItems.length > 0 && (
             <div className="lg:w-[380px] flex-shrink-0">
               <div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-8">
                 <h2 className="text-xl text-black font-bold mb-6">
@@ -752,10 +877,13 @@ const CartPage = () => {
                   className="w-full mt-6 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   onClick={handleProceedToOrder}
                   disabled={
-                    isLoading || selectedItems.size === 0 || !customerToken
+                    isOrderLoading ||
+                    loading ||
+                    selectedItems.size === 0 ||
+                    !customerToken
                   }
                 >
-                  {isLoading
+                  {isOrderLoading || loading
                     ? "Processing..."
                     : !customerToken
                     ? "Login to proceed order"
@@ -775,7 +903,6 @@ const CartPage = () => {
         </div>
       </div>
 
-      {/* Modal for deleting items */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
@@ -784,6 +911,7 @@ const CartPage = () => {
               <button
                 onClick={closeModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
+                disabled={loading}
               >
                 <XMarkMini className="w-5 h-5" />
               </button>
@@ -797,14 +925,16 @@ const CartPage = () => {
               <button
                 className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 onClick={closeModal}
+                disabled={loading}
               >
                 Cancel
               </button>
               <button
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:bg-red-400"
                 onClick={handleConfirmDelete}
+                disabled={loading}
               >
-                Delete
+                {loading ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

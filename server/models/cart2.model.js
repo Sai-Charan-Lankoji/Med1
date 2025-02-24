@@ -11,7 +11,7 @@ const Cart2 = sequelize.define('Cart2', {
   },
   product_id: {
     type: DataTypes.STRING,
-    allowNull: false,
+    allowNull: true,
   },
   product_type: {
     type: DataTypes.ENUM('designable', 'standard'),

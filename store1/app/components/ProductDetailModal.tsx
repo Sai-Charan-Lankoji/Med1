@@ -6,6 +6,8 @@ import { X, Minus, Plus, ShoppingCart, Pencil } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useNewCart } from "../hooks/useNewCart";
+import { IDesign } from "@/@types/models";
+
 interface Color {
   hex: string;
   name: string;
@@ -26,9 +28,9 @@ interface Product {
   category: string;
   sku: string;
   customizable?: boolean;
-  designstate?: any;
+  designstate?: IDesign[];
   propstate?: any;
-  designs?: any[];
+  designs?: IDesign[];
 }
 
 interface ProductDetailModalProps {
@@ -47,7 +49,7 @@ const DEFAULT_COLORS: Color[] = [
   { hex: "#FFA500", name: "Orange" },
   { hex: "#FFC0CB", name: "Pink" },
   { hex: "#A52A2A", name: "Brown" },
-  { hex: "#808080", name: "Gray" }
+  { hex: "#808080", name: "Gray" },
 ];
 
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
@@ -62,57 +64,94 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     if (product.colors && product.colors.length > 0) {
       return product.colors[0].hex;
     } else if (product.customizable) {
-      return DEFAULT_COLORS[0].hex; // Default white for customizable products
+      return DEFAULT_COLORS[0].hex;
     }
     return "";
   });
   const [mainImage, setMainImage] = useState(product.front_image);
   const [currentSide, setCurrentSide] = useState("front");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const router = useRouter();
+  const {
+    addDesignToCart,
+    addStandardProductToCart,
+    loading: cartLoading,
+  } = useNewCart();
 
-  // Use the useNewCart hook
-  const { addDesignToCart, addStandardProductToCart } = useNewCart();
-
-  const colorsToUse = product.customizable 
-    ? (product.colors && product.colors.length > 0 ? product.colors : DEFAULT_COLORS)
-    : product.colors || [];
+  const colorsToUse =
+    product.customizable && (!product.colors || product.colors.length === 0)
+      ? DEFAULT_COLORS
+      : product.colors || [];
 
   const defaultSizes = ["S", "M", "L", "XL", "2XL"];
 
   const handleQuantityChange = (change: number) => {
-    setQuantity(Math.max(1, quantity + change));
+    setQuantity((prev) => Math.max(1, prev + change));
   };
 
-  // Updated handleAddToCart function
   const handleAddToCart = async () => {
+    setIsLoading(true);
+    setError(null);
+
     try {
       if (product.customizable) {
-        // Add designable product to cart
-        await addDesignToCart(
-          product.designs || [],
-          product.designstate || {},
-          product.propstate || {}
+        const designs = product.designs || [];
+        const designState = product.designstate || [];
+        const propState = product.propstate || {};
+
+        // Log data being sent for debugging
+        console.log("Adding designable product:", {
+          productId: product.id,
+          designs,
+          designState,
+          propState,
+        });
+
+        const success = await addDesignToCart(
+          designs,
+          designState,
+          propState,
+          product.id
         );
+        if (!success)
+          throw new Error("Failed to add designable product to cart");
       } else {
-        // Add standard product to cart
-        await addStandardProductToCart(
+        const colorObj = colorsToUse.find((c) => c.hex === selectedColor) || {
+          hex: selectedColor,
+          name: "",
+        };
+
+        // Log data being sent for debugging
+        console.log("Adding standard product:", {
+          productId: product.id,
+          quantity,
+          selectedSize,
+          selectedColor: colorObj.hex,
+        });
+
+        const success = await addStandardProductToCart(
           product.id,
           quantity,
           selectedSize,
-          selectedColor
+          colorObj.hex
         );
+        if (!success) throw new Error("Failed to add standard product to cart");
       }
 
-      console.log("Added to cart:", {
+      console.log("Added to cart successfully:", {
         ...product,
         quantity,
         selectedSize,
         selectedColor,
       });
-
-      onClose(); // Close the modal after adding to cart
-    } catch (error) {
+      onClose();
+    } catch (error: any) {
+      setError(error.message || "Failed to add to cart");
       console.error("Failed to add to cart:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -131,16 +170,19 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  // Helper functions (unchanged)
-  const getDesignForSide = (side: String) => {
+  const getDesignForSide = (side: string) => {
     if (!product.designs || product.designs.length === 0) return null;
-    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    const design = product.designs.find(
+      (d) => d.apparel && d.apparel.side === side
+    );
     return design;
   };
 
-  const getImageUrlFromDesigns = (side: String) => {
+  const getImageUrlFromDesigns = (side: string) => {
     if (!product.designs || product.designs.length === 0) return null;
-    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    const design = product.designs.find(
+      (d) => d.apparel && d.apparel.side === side
+    );
     return design?.apparel?.url || null;
   };
 
@@ -152,25 +194,37 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   const getImages = () => {
-    const result: any[] = [];
-    
+    const result: { src: string; alt: string; side: string }[] = [];
+
     if (product.front_image) {
-      result.push({ src: product.front_image, alt: "Front View", side: "front" });
+      result.push({
+        src: product.front_image,
+        alt: "Front View",
+        side: "front",
+      });
     }
     if (product.back_image) {
       result.push({ src: product.back_image, alt: "Back View", side: "back" });
     }
     if (product.left_image) {
-      result.push({ src: product.left_image, alt: "Left View", side: "leftshoulder" });
+      result.push({
+        src: product.left_image,
+        alt: "Left View",
+        side: "leftshoulder",
+      });
     }
     if (product.right_image) {
-      result.push({ src: product.right_image, alt: "Right View", side: "rightshoulder" });
+      result.push({
+        src: product.right_image,
+        alt: "Right View",
+        side: "rightshoulder",
+      });
     }
 
     if (product.customizable && product.designs) {
       const sides = ["front", "back", "leftshoulder", "rightshoulder"];
-      sides.forEach(side => {
-        if (!result.some(img => img.side === side)) {
+      sides.forEach((side) => {
+        if (!result.some((img) => img.side === side)) {
           const designImgUrl = getImageUrlFromDesigns(side);
           if (designImgUrl) {
             result.push({ src: designImgUrl, alt: `${side} View`, side: side });
@@ -184,8 +238,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   const images = getImages();
 
-  const getPositionForSide = (side: String) => {
-    switch(side) {
+  const getPositionForSide = (side: string) => {
+    switch (side) {
       case "leftshoulder":
         return { top: "60%", left: "45%", width: "30%", height: "30%" };
       case "rightshoulder":
@@ -211,19 +265,20 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 objectFit="cover"
                 className="transition-transform duration-300 hover:scale-105"
                 style={{
-                  backgroundColor: product.customizable ? selectedColor : undefined,
+                  backgroundColor: product.customizable
+                    ? selectedColor
+                    : undefined,
                 }}
               />
-              
-              {/* Overlay design image for customizable products */}
+
               {product.customizable && product.designs && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   {(() => {
                     const currentDesign = getDesignForSide(currentSide);
                     if (!currentDesign || !currentDesign.pngImage) return null;
-                    
+
                     const position = getPositionForSide(currentSide);
-                    
+
                     return (
                       <div
                         className="absolute flex items-center justify-center pointer-events-none"
@@ -269,25 +324,26 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     layout="fill"
                     objectFit="cover"
                     style={{
-                      backgroundColor: product.customizable ? selectedColor : undefined,
+                      backgroundColor: product.customizable
+                        ? selectedColor
+                        : undefined,
                     }}
                   />
-                  
-                  {/* Thumbnail overlay design for customizable products */}
+
                   {product.customizable && product.designs && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       {(() => {
                         const design = getDesignForSide(img.side);
                         if (!design || !design.pngImage) return null;
-                        
+
                         const position = getPositionForSide(img.side);
                         const thumbnailPosition = {
                           top: position.top,
                           left: position.left,
                           width: position.width,
-                          height: position.height
+                          height: position.height,
                         };
-                        
+
                         return (
                           <div
                             className="absolute flex items-center justify-center pointer-events-none"
@@ -330,6 +386,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <button
                 onClick={onClose}
                 className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                disabled={isLoading}
               >
                 <X className="w-6 h-6 text-gray-500" />
               </button>
@@ -338,6 +395,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
             <p className="text-gray-600 mb-6 leading-relaxed">
               {product.description || "Product description goes here."}
             </p>
+
+            {error && <div className="text-red-500 mb-4">{error}</div>}
 
             <div className="space-y-6 flex-grow">
               <div className="flex gap-6 text-sm text-gray-500">
@@ -355,11 +414,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </div>
               </div>
 
-              {(product.sizes && product.sizes.length > 0 ? product.sizes : defaultSizes) && (
+              {(product.sizes && product.sizes.length > 0) ||
+              (!product.customizable && defaultSizes) ? (
                 <div>
                   <h3 className="font-medium text-black mb-3">Select Size</h3>
                   <div className="flex flex-wrap gap-2">
-                    {(product.sizes && product.sizes.length > 0 ? product.sizes : defaultSizes).map((size) => (
+                    {(product.sizes && product.sizes.length > 0
+                      ? product.sizes
+                      : defaultSizes
+                    ).map((size) => (
                       <button
                         key={size}
                         className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
@@ -369,16 +432,17 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                               : "bg-gray-100 text-gray-800 hover:bg-gray-200"
                           }`}
                         onClick={() => setSelectedSize(size)}
+                        disabled={isLoading}
                       >
                         {size}
                       </button>
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
 
-              {/* Always show color section for customizable products */}
-              {(product.colors && product.colors.length > 0) || product.customizable ? (
+              {(product.colors && product.colors.length > 0) ||
+              product.customizable ? (
                 <div>
                   <h3 className="font-medium text-black mb-3">Select Color</h3>
                   <div className="flex flex-wrap gap-3">
@@ -394,6 +458,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         style={{ backgroundColor: color.hex }}
                         onClick={() => setSelectedColor(color.hex)}
                         title={color.name}
+                        disabled={isLoading}
                       />
                     ))}
                   </div>
@@ -404,6 +469,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <button
                   className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   onClick={() => handleQuantityChange(-1)}
+                  disabled={isLoading}
                 >
                   <Minus className="w-5 h-5" />
                 </button>
@@ -413,6 +479,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <button
                   className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   onClick={() => handleQuantityChange(1)}
+                  disabled={isLoading}
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -423,18 +490,26 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               <button
                 className="flex-1 bg-black text-white py-4 px-6 rounded-xl font-semibold 
                   hover:bg-gray-900 transition-all duration-300 flex items-center justify-center
-                  shadow-lg hover:shadow-xl"
+                  shadow-lg hover:shadow-xl disabled:bg-gray-500 disabled:cursor-not-allowed"
                 onClick={handleAddToCart}
+                disabled={isLoading}
               >
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                Add to Cart
+                {isLoading ? (
+                  "Adding..."
+                ) : (
+                  <>
+                    <ShoppingCart className="w-5 h-5 mr-2" />
+                    Add to Cart
+                  </>
+                )}
               </button>
               {product.customizable && (
                 <button
                   className="flex-1 bg-white text-black border-2 border-black py-4 px-6 rounded-xl font-semibold 
                     hover:bg-gray-100 transition-all duration-300 flex items-center justify-center
-                    shadow-lg hover:shadow-xl"
+                    shadow-lg hover:shadow-xl disabled:border-gray-500 disabled:text-gray-500 disabled:cursor-not-allowed"
                   onClick={handleCustomize}
+                  disabled={isLoading}
                 >
                   <Pencil className="w-5 h-5 mr-2" />
                   Customize
