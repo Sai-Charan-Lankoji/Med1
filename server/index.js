@@ -3,11 +3,15 @@ const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const http = require("http"); // Added for socket.io
+const { Server } = require("socket.io"); // Added for socket.io
 const sequelize = require("./config/db.js");
 const swaggerUi = require("swagger-ui-express");
 const { swaggerSpecs } = require("./swagger/swagger");
 const { listStores } = require("./services/store.service.js");
 const { startBillingScheduler } = require("./schedulers/billingScheduler");
+const notificationService = require("./services/notification.service.js"); // Import NotificationService
+
 // Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
 const authRoutes = require("./routes/auth.route.js");
@@ -32,10 +36,29 @@ const transporterRoutes = require("./routes/transport.route.js");
 const consignmentRoutes = require("./routes/consignment.route.js");
 const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
 const notificationRoutes = require("./routes/notification.route.js");
+
 const app = express();
+const server = http.createServer(app); // Changed from app.listen to support socket.io
+const io = new Server(server, {
+  cors: {
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:7000",
+      "http://localhost:7009",
+      "https://med1-4217.vercel.app",
+      "https://med1-five.vercel.app",
+      "https://med1-p6q2.vercel.app",
+    ], // Match your allowed origins
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    credentials: true,
+  },
+});
 
 // Initialize scheduler
 startBillingScheduler();
+
+// Pass io to NotificationService
+notificationService.setSocketIo(io);
 
 let dynamicAllowedOrigins = [];
 
@@ -84,10 +107,7 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use(
   "/uploads",
   (req, res, next) => {
-    res.setHeader(
-      "Access-Control-Allow-Origin",
-      req.headers.origin || "*"
-    );
+    res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
     res.setHeader(
       "Access-Control-Allow-Headers",
@@ -131,6 +151,21 @@ app.use("/transporters", transporterRoutes);
 app.use("/consignments", consignmentRoutes);
 app.use("/stock-transactions", stockTransactionRoutes);
 app.use("/api/notifications", notificationRoutes);
+
+// WebSocket connection handling
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("joinVendorRoom", (vendorId) => {
+    socket.join(`vendor_${vendorId}`);
+    console.log(`Client ${socket.id} joined room: vendor_${vendorId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("Client disconnected:", socket.id);
+  });
+});
+
 // Periodically refresh the allowed origins
 setInterval(updateAllowedOrigins, 60000);
 
@@ -141,7 +176,7 @@ const startServer = async () => {
     console.log("Database connected!");
 
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    server.listen(PORT, () => { // Changed from app.listen to server.listen
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
