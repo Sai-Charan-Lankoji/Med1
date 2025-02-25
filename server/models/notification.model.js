@@ -42,9 +42,9 @@ const Notification = sequelize.define(
       allowNull: false,
     },
     status: {
-      type: DataTypes.ENUM("pending", "sent", "failed"),
+      type: DataTypes.ENUM("active", "inactive"),
       allowNull: false,
-      defaultValue: "pending",
+      defaultValue: "inactive",
     },
     sent_at: {
       type: DataTypes.DATE,
