@@ -50,19 +50,19 @@ const BillingServicesPage = () => {
   const router = useRouter();
 
   // Notify handler (placeholder)
-  const handleNotify = async () => {
-    try {
-      const response = await fetch("http://localhost:5000/api/vendors/notify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vendorId: "all" }), // Adjust as needed
-      });
-      if (!response.ok) throw new Error("Failed to send notification");
-      alert("Notification sent successfully!");
-    } catch (err) {
-      alert(`Error sending notification: ${err instanceof Error ? err.message : "Unknown error"}`);
-    }
-  };
+  // const handleNotify = async () => {
+  //   try {
+  //     const response = await fetch("http://localhost:5000/api/vendors/notify", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ vendorId: "all" }), // Adjust as needed
+  //     });
+  //     if (!response.ok) throw new Error("Failed to send notification");
+  //     alert("Notification sent successfully!");
+  //   } catch (err) {
+  //     alert(`Error sending notification: ${err instanceof Error ? err.message : "Unknown error"}`);
+  //   }
+  // };
 
   const vendors: Vendor[] = vendorsData?.vendors || [];
 
@@ -104,14 +104,14 @@ const BillingServicesPage = () => {
     <div className="container mx-auto p-4 space-y-6">
       <Card className="border-none shadow-lg">
         <CardHeader className="relative">
-          <CardTitle className="text-3xl font-bold">Vendor Billing Services</CardTitle>
+          <CardTitle className="text-3xl font-bold">Billing Services</CardTitle>
           <CardDescription>Overall financial summary and vendor details</CardDescription>
-          <Button
+          {/* <Button
             onClick={handleNotify}
             className="absolute top-4 right-4 bg-blue-600 hover:bg-blue-700"
           >
             <Bell className="h-4 w-4 mr-2" /> Notify
-          </Button>
+          </Button> */}
         </CardHeader>
         <CardContent>
           {/* Overall Analytics Cards */}
