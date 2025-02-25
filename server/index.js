@@ -31,6 +31,7 @@ const supplierRoutes = require("./routes/supplier.route.js");
 const transporterRoutes = require("./routes/transport.route.js");
 const consignmentRoutes = require("./routes/consignment.route.js");
 const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
+const notificationRoutes = require("./routes/notification.route.js");
 const app = express();
 
 // Initialize scheduler
@@ -125,11 +126,11 @@ app.use("/api/standardproducts", standardProductRoutes);
 app.use("/api/wishlists", wishlistRoutes);
 app.use("/api", revenueRoutes);
 app.use("/api/admin", admindiscountRouters);
-app.use("/suppliers", supplierRoutes);
+app.use("/api/suppliers", supplierRoutes);
 app.use("/transporters", transporterRoutes);
 app.use("/consignments", consignmentRoutes);
 app.use("/stock-transactions", stockTransactionRoutes);
-
+app.use("/api/notifications", notificationRoutes);
 // Periodically refresh the allowed origins
 setInterval(updateAllowedOrigins, 60000);
 

@@ -1,5 +1,5 @@
 // services/supplierService.js
-const { Supplier } = require("../models/supplier.model");
+const Supplier  = require("../models/supplier.model");
 
 /**
  * Create a new supplier
@@ -15,18 +15,18 @@ const createSupplier = async (data) => {
   }
 
   const supplier = await Supplier.create({
-    Name: name,
-    ContactInfo: contact_info,
-    GSTIN: gstin,
-    Address: address,
+    name: name,
+    contact_info: contact_info,
+    gstin: gstin,
+    address: address,
   });
 
   return {
-    supplier_id: supplier.SupplierID,
-    name: supplier.Name,
-    contact_info: supplier.ContactInfo,
-    gstin: supplier.GSTIN,
-    address: supplier.Address,
+    supplier_id: supplier.supplier_id,
+    name: supplier.name,
+    contact_info: supplier.contact_info,
+    gstin: supplier.gstin,
+    address: supplier.address,
   };
 };
 
@@ -37,11 +37,11 @@ const createSupplier = async (data) => {
 const getAllSuppliers = async () => {
   const suppliers = await Supplier.findAll();
   return suppliers.map((s) => ({
-    supplier_id: s.SupplierID,
-    name: s.Name,
-    contact_info: s.ContactInfo,
-    gstin: s.GSTIN,
-    address: s.Address,
+    supplier_id: s.supplier_id,
+    name: s.name,
+    contact_info: s.contact_info,
+    gstin: s.gstin,
+    address: s.address,
   }));
 };
 
