@@ -33,6 +33,11 @@ const Vendor = sequelize.define(
       type: DataTypes.STRING(250),
       allowNull: true,
     },
+    status:{
+      type: DataTypes.ENUM('active', 'inactive', 'suspended'),
+      allowNull: false,
+      defaultValue: 'active',
+    },
     contact_email: {
       type: DataTypes.STRING,
       allowNull: false,

@@ -7,7 +7,7 @@ const sequelize = require("./config/db.js");
 const swaggerUi = require("swagger-ui-express");
 const { swaggerSpecs } = require("./swagger/swagger");
 const { listStores } = require("./services/store.service.js");
-
+const { startBillingScheduler } = require("./schedulers/billingScheduler");
 // Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
 const authRoutes = require("./routes/auth.route.js");
@@ -32,6 +32,9 @@ const transporterRoutes = require("./routes/transport.route.js");
 const consignmentRoutes = require("./routes/consignment.route.js");
 const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
 const app = express();
+
+// Initialize scheduler
+startBillingScheduler();
 
 let dynamicAllowedOrigins = [];
 

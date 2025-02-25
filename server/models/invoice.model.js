@@ -1,3 +1,8 @@
+const { DataTypes } = require('sequelize');
+const Vendor = require('./vendor.model'); // Assuming you have a vendor.model.js file
+const sequelize = require("../config/db");
+
+// ... rest of your code
 const Invoice = sequelize.define(
     "Invoice",
     {
