@@ -46,6 +46,7 @@ const Notification = sequelize.define(
       allowNull: false,
       defaultValue: "inactive",
     },
+    acknowledged: { type: DataTypes.BOOLEAN, defaultValue: false }, 
     sent_at: {
       type: DataTypes.DATE,
       allowNull: true,
