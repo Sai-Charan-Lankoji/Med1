@@ -1,6 +1,6 @@
 "use client";
 
-import { useVendorSpecificAnalytics } from "@/app/hooks/vendor-revenue/useGetTotalVendorRevenue"; // Adjust path
+import { useVendorSpecificAnalytics } from "@/app/hooks/vendor-revenue/useGetTotalVendorRevenue";
 import { useParams } from "next/navigation";
 import {
   Card,
@@ -18,7 +18,16 @@ import {
   ShoppingCart,
   Bell,
 } from "lucide-react";
-import { Bar, Area } from "recharts";
+import {
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Legend,
+} from "recharts";
 import { motion } from "framer-motion";
 import {
   ChartContainer,
@@ -27,6 +36,7 @@ import {
 } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { AnimatedCounter } from "@/components/ui/animated-counter"; // Adjust path
 
 const VendorAnalyticsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,7 +60,7 @@ const VendorAnalyticsPage = () => {
 
       const result = await response.json();
       setNotificationStatus(`Notification sent: ${result.message}`);
-      setTimeout(() => setNotificationStatus(null), 3000); // Clear after 3 seconds
+      setTimeout(() => setNotificationStatus(null), 3000);
     } catch (err) {
       setNotificationStatus(`Error: ${err instanceof Error ? err.message : "Unknown error"}`);
       setTimeout(() => setNotificationStatus(null), 3000);
@@ -90,37 +100,47 @@ const VendorAnalyticsPage = () => {
   const totalOrders = data.stores.reduce((acc, store) => acc + store.orders_count, 0);
 
   const statsCards = [
-    {
-      title: "Total Revenue",
-      value: `$${totalRevenue.toLocaleString()}`,
-      icon: DollarSign,
+    { 
+      title: "Total Revenue", 
+      value: totalRevenue, 
+      icon: DollarSign, 
       color: "text-green-500",
+      formatValue: (val: number) => `$${val.toLocaleString()}`,
     },
-    {
-      title: "Total Admin Commission",
-      value: `$${totalCommission.toLocaleString()}`,
-      icon: TrendingUp,
+    { 
+      title: "Total Admin Commission", 
+      value: totalCommission, 
+      icon: TrendingUp, 
       color: "text-blue-500",
+      formatValue: (val: number) => `$${val.toLocaleString()}`,
     },
-    {
-      title: "Total Orders",
-      value: totalOrders,
-      icon: ShoppingCart,
+    { 
+      title: "Total Orders", 
+      value: totalOrders, 
+      icon: ShoppingCart, 
       color: "text-purple-500",
+      formatValue: (val: number) => val.toLocaleString(),
     },
-    {
-      title: "Active Stores",
-      value: data.stores.length,
-      icon: Store,
+    { 
+      title: "Active Stores", 
+      value: data.stores.length, 
+      icon: Store, 
       color: "text-orange-500",
+      formatValue: (val: number) => val.toLocaleString(),
     },
-    {
-      title: "Total Vendor Revenue After Commission",
-      value: `$${(totalRevenue - totalCommission).toLocaleString()}`,
-      icon: DollarSign,
+    { 
+      title: "Total Vendor Revenue After Commission", 
+      value: totalRevenue - totalCommission, 
+      icon: DollarSign, 
       color: "text-yellow-500",
+      formatValue: (val: number) => `$${val.toLocaleString()}`,
     },
   ];
+
+  const chartConfig = {
+    revenue: { label: "Revenue", color: "hsl(var(--chart-1))" },
+    commission: { label: "Commission", color: "hsl(var(--chart-2))" },
+  };
 
   return (
     <div className="container mx-auto p-4 space-y-6">
@@ -146,7 +166,6 @@ const VendorAnalyticsPage = () => {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Notification Status */}
             {notificationStatus && (
               <motion.div
                 initial={{ opacity: 0 }}
@@ -158,7 +177,6 @@ const VendorAnalyticsPage = () => {
               </motion.div>
             )}
 
-            {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {statsCards.map((stat, index) => (
                 <motion.div
@@ -172,7 +190,9 @@ const VendorAnalyticsPage = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-muted-foreground">{stat.title}</p>
-                          <p className="text-2xl font-bold">{stat.value}</p>
+                          <p className="text-2xl font-bold">
+                            <AnimatedCounter value={stat.value} duration={1.5} formatValue={stat.formatValue} />
+                          </p>
                         </div>
                         <stat.icon className={`h-8 w-8 ${stat.color}`} />
                       </div>
@@ -182,9 +202,7 @@ const VendorAnalyticsPage = () => {
               ))}
             </div>
 
-            {/* Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Store Revenue Chart */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -195,35 +213,37 @@ const VendorAnalyticsPage = () => {
                     <CardTitle>Store Revenue and Commission</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ChartContainer
-                      config={{
-                        revenue: {
-                          label: "Revenue",
-                          color: "hsl(var(--chart-1))",
-                        },
-                        commission: {
-                          label: "Commission",
-                          color: "hsl(var(--chart-2))",
-                        },
-                      }}
-                      className="h-[300px]"
-                    >
-                      <Bar
+                    <ChartContainer config={chartConfig} className="h-[300px]">
+                      <BarChart
                         data={data.stores.map((store) => ({
                           name: store.store_name,
                           revenue: store.total_revenue,
                           commission: store.total_commission,
                         }))}
-                        layout="vertical"
                       >
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </Bar>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <ChartTooltip content={ChartTooltipContent} />
+                        <Legend />
+                        <Bar
+                          dataKey="revenue"
+                          fill={chartConfig.revenue.color}
+                          barSize={30}
+                          animationDuration={1000}
+                        />
+                        <Bar
+                          dataKey="commission"
+                          fill={chartConfig.commission.color}
+                          barSize={30}
+                          animationDuration={1000}
+                        />
+                      </BarChart>
                     </ChartContainer>
                   </CardContent>
                 </Card>
               </motion.div>
 
-              {/* Monthly Revenue Chart */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -235,22 +255,29 @@ const VendorAnalyticsPage = () => {
                   </CardHeader>
                   <CardContent>
                     <ChartContainer
-                      config={{
-                        revenue: {
-                          label: "Revenue",
-                          color: "hsl(var(--chart-3))",
-                        },
-                      }}
+                      config={{ revenue: { label: "Revenue", color: "hsl(var(--chart-3))" } }}
                       className="h-[300px]"
                     >
-                      <Area
+                      <AreaChart
                         data={data.monthly_revenue.map((item) => ({
                           month: item.month,
                           revenue: Number.parseFloat(item.revenue),
                         }))}
                       >
-                        <ChartTooltip content={<ChartTooltipContent />} />
-                      </Area>
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <ChartTooltip content={ChartTooltipContent} />
+                        <Legend />
+                        <Area
+                          type="monotone"
+                          dataKey="revenue"
+                          stroke="hsl(var(--chart-3))"
+                          fill="hsl(var(--chart-3))"
+                          fillOpacity={0.3}
+                          animationDuration={1000}
+                        />
+                      </AreaChart>
                     </ChartContainer>
                   </CardContent>
                 </Card>

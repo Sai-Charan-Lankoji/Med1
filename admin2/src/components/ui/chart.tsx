@@ -1,13 +1,11 @@
-"use client"
-
-import type React from "react"
-
-import { Bar as BarChart, Area as AreaChart, Tooltip, ResponsiveContainer } from "recharts"
+// components/ui/chart.tsx
+import type React from "react";
+import { BarChart, Bar, AreaChart, Area, Tooltip, ResponsiveContainer } from "recharts";
 
 interface ChartProps {
-  children: React.ReactElement
-  config?: Record<string, { label: string; color: string }>
-  className?: string
+  children: React.ReactElement;
+  config?: Record<string, { label: string; color: string }>;
+  className?: string;
 }
 
 export function ChartContainer({ children, config, className }: ChartProps) {
@@ -17,40 +15,37 @@ export function ChartContainer({ children, config, className }: ChartProps) {
         {children}
       </ResponsiveContainer>
     </div>
-  )
+  );
 }
 
 interface ChartTooltipProps {
-  active?: boolean
-  payload?: any[]
-  label?: string
+  active?: boolean;
+  payload?: any[];
+  label?: string;
 }
 
 export function ChartTooltip({ content }: { content: React.ComponentType<ChartTooltipProps> }) {
-  return <Tooltip content={content} />
+  return <Tooltip content={content as any} />;
 }
 
 export function ChartTooltipContent({ active, payload, label }: ChartTooltipProps) {
-  if (!active || !payload) return null
+  if (!active || !payload || !payload.length) return null;
 
   return (
-    <div className="rounded-lg border bg-background p-2 shadow-sm">
-      <div className="grid gap-2">
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-sm text-muted-foreground">{label}</span>
-        </div>
-        {payload.map((item: any, index: number) => (
+    <div className="rounded-lg border bg-background p-3 shadow-md text-sm">
+      <div className="font-semibold text-gray-800 mb-2">{label}</div>
+      <div className="space-y-1">
+        {payload.map((item, index) => (
           <div key={index} className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: item.color }} />
-            <span className="text-sm font-medium">
-              {item.name}: ${Number(item.value).toLocaleString()}
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+            <span className="text-gray-700">
+              {item.name}: <span className="font-medium">${Number(item.value).toLocaleString()}</span>
             </span>
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
-export { BarChart as Bar, AreaChart as Area }
-
+export { BarChart as Bar, AreaChart as Area };
