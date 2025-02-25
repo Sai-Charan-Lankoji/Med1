@@ -25,6 +25,8 @@ interface OrderData {
     product_id: string | undefined;
     quantity: number;
     price: number;
+    title: string;
+    images: string[];
     designs?: IDesignableCartItem["designs"];
     selected_size?: IStandardCartItem["selected_size"];
     selected_color?: IStandardCartItem["selected_color"];
@@ -215,6 +217,24 @@ const CartPage = () => {
     return { subtotal, shippingCost, taxAmount, total };
   };
 
+  // Helper function to extract available sides for standard products
+  const getStandardProductSides = (productDetails: any) => {
+    const sides = [];
+    if (productDetails?.front_image) {
+      sides.push({ side: "front", url: productDetails.front_image });
+    }
+    if (productDetails?.back_image) {
+      sides.push({ side: "back", url: productDetails.back_image });
+    }
+    if (productDetails?.left_image) {
+      sides.push({ side: "left", url: productDetails.left_image });
+    }
+    if (productDetails?.right_image) {
+      sides.push({ side: "right", url: productDetails.right_image });
+    }
+    return sides;
+  };
+
   const handleProceedToOrder = async () => {
     if (isProcessingOrder || selectedItems.size === 0) {
       setError(
@@ -232,18 +252,41 @@ const CartPage = () => {
     const { total } = calculateSelectedTotals();
 
     const orderData: OrderData = {
-      line_items: selectedCartItems.map((item) => ({
-        product_id: item.product_id,
-        quantity: item.quantity,
-        price:
-          item.price ||
-          ((item as IDesignableCartItem).designs?.length ? (item as IDesignableCartItem).designs.length * 100 : 100),
-        designs: item.product_type === "designable" ? item.designs : undefined,
-        selected_size:
-          item.product_type === "standard" ? item.selected_size : undefined,
-        selected_color:
-          item.product_type === "standard" ? item.selected_color : undefined,
-      })),
+      line_items: selectedCartItems.map((item) => {
+        const isDesignable = item.product_type === "designable";
+        const designItem = item as IDesignableCartItem;
+        const standardItem = item as IStandardCartItem;
+
+        // Determine title
+        const title = isDesignable
+          ? "Custom Designed Product"
+          : standardItem.product_details?.title || "Standard Product";
+
+        // Determine images
+        const images = isDesignable
+          ? (designItem.designs || []).map((design) => {
+              // Prefer pngImage (designed output), fall back to apparel.url
+              return design.pngImage || design.apparel?.url || "";
+            }).filter((url) => url && url !== "") // Ensure only valid URLs are included
+          : getStandardProductSides(standardItem.product_details)
+              .map((side) => side.url)
+              .filter((url) => url && url !== ""); // Ensure only valid URLs are included
+
+        return {
+          product_id: item.product_id, // Already included
+          quantity: item.quantity,
+          price:
+            item.price ||
+            (isDesignable && designItem.designs?.length
+              ? designItem.designs.length * 100
+              : 100),
+          title, // Include title
+          images: images.length > 0 ? images : ["/placeholder.svg"], // Fallback to placeholder if no images
+          designs: isDesignable ? designItem.designs : undefined,
+          selected_size: !isDesignable ? standardItem.selected_size : undefined,
+          selected_color: !isDesignable ? standardItem.selected_color : undefined,
+        };
+      }),
       total_amount: total,
       currency_code: "usd",
       status: "pending",
@@ -451,6 +494,14 @@ const CartPage = () => {
                         (img) => img?.length > 0
                       );
 
+                    // Get available sides for standard products
+                    const standardSides = !isDesignable
+                      ? getStandardProductSides(standardItem.product_details)
+                      : [];
+                    const currentStandardSide = !isDesignable
+                      ? standardSides[mainDesignIndex] || standardSides[0]
+                      : null;
+
                     return (
                       <div key={item.id} className="p-6">
                         <div className="flex items-start space-x-4">
@@ -563,8 +614,8 @@ const CartPage = () => {
                                 ) : (
                                   <Image
                                     src={
-                                      standardItem.product_details
-                                        ?.front_image || "/placeholder.svg"
+                                      currentStandardSide?.url ||
+                                      "/placeholder.svg"
                                     }
                                     alt={
                                       standardItem.product_details?.title ||
@@ -577,137 +628,160 @@ const CartPage = () => {
                                 )}
                               </div>
 
-                              {isDesignable &&
-                                designItem.designs &&
-                                designItem.designs.length > 0 && (
-                                  <div className="mt-4 grid grid-cols-4 gap-6">
-                                    {viewMode === "apparel"
-                                      ? designItem.designs.map(
-                                          (design, index) => (
-                                            <div
-                                              key={index}
-                                              className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
-                                                index === mainDesignIndex
-                                                  ? "ring-2 ring-gray-700"
-                                                  : "hover:ring-2 hover:ring-gray-300"
-                                              }`}
-                                              onClick={() =>
-                                                handleThumbnailClick(
-                                                  item.id,
-                                                  index
-                                                )
-                                              }
-                                            >
-                                              <div className="absolute inset-0">
+                              {/* Thumbnails for both designable and standard products */}
+                              {(isDesignable
+                                ? designItem.designs && designItem.designs.length > 0
+                                : standardSides.length > 0) && (
+                                <div className="mt-4 grid grid-cols-4 gap-6">
+                                  {isDesignable ? (
+                                    viewMode === "apparel" ? (
+                                      designItem.designs?.map(
+                                        (design, index) => (
+                                          <div
+                                            key={index}
+                                            className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                              index === mainDesignIndex
+                                                ? "ring-2 ring-gray-700"
+                                                : "hover:ring-2 hover:ring-gray-300"
+                                            }`}
+                                            onClick={() =>
+                                              handleThumbnailClick(
+                                                item.id,
+                                                index
+                                              )
+                                            }
+                                          >
+                                            <div className="absolute inset-0">
+                                              <Image
+                                                src={
+                                                  design.apparel?.url ||
+                                                  "/placeholder.svg"
+                                                }
+                                                alt={`Side: ${design.apparel.side}`}
+                                                fill
+                                                sizes="100%"
+                                                priority
+                                                className="rounded-none"
+                                                style={{
+                                                  backgroundColor:
+                                                    design.apparel?.color ||
+                                                    "#ffffff",
+                                                  objectFit: "cover",
+                                                }}
+                                              />
+                                            </div>
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                              <div
+                                                className="relative translate-y-[-10%]"
+                                                style={{
+                                                  top:
+                                                    design.apparel.side ===
+                                                    "leftshoulder"
+                                                      ? "12px"
+                                                      : design.apparel.side ===
+                                                        "rightshoulder"
+                                                      ? "12px"
+                                                      : "initial",
+                                                  left:
+                                                    design.apparel.side ===
+                                                    "leftshoulder"
+                                                      ? "-3px"
+                                                      : design.apparel.side ===
+                                                        "rightshoulder"
+                                                      ? "2px"
+                                                      : "initial",
+                                                  width:
+                                                    design.apparel.side ===
+                                                      "leftshoulder" ||
+                                                    design.apparel.side ===
+                                                      "rightshoulder"
+                                                      ? "30%"
+                                                      : "50%",
+                                                  height:
+                                                    design.apparel.side ===
+                                                      "leftshoulder" ||
+                                                    design.apparel.side ===
+                                                      "rightshoulder"
+                                                      ? "30%"
+                                                      : "50%",
+                                                }}
+                                              >
                                                 <Image
                                                   src={
-                                                    design.apparel?.url ||
+                                                    design.pngImage ||
                                                     "/placeholder.svg"
                                                   }
-                                                  alt={`Side: ${design.apparel.side}`}
+                                                  alt={`Thumbnail ${
+                                                    index + 1
+                                                  }`}
                                                   fill
                                                   sizes="100%"
-                                                  priority
-                                                  className="rounded-none"
+                                                  className="rounded-md"
                                                   style={{
-                                                    backgroundColor:
-                                                      design.apparel?.color ||
-                                                      "#ffffff",
-                                                    objectFit: "cover",
+                                                    objectFit: "contain",
                                                   }}
                                                 />
                                               </div>
-                                              <div className="absolute inset-0 flex items-center justify-center">
-                                                <div
-                                                  className="relative translate-y-[-10%]"
-                                                  style={{
-                                                    top:
-                                                      design.apparel.side ===
-                                                      "leftshoulder"
-                                                        ? "12px"
-                                                        : design.apparel
-                                                            .side ===
-                                                          "rightshoulder"
-                                                        ? "12px"
-                                                        : "initial",
-                                                    left:
-                                                      design.apparel.side ===
-                                                      "leftshoulder"
-                                                        ? "-3px"
-                                                        : design.apparel
-                                                            .side ===
-                                                          "rightshoulder"
-                                                        ? "2px"
-                                                        : "initial",
-                                                    width:
-                                                      design.apparel.side ===
-                                                        "leftshoulder" ||
-                                                      design.apparel.side ===
-                                                        "rightshoulder"
-                                                        ? "30%"
-                                                        : "50%",
-                                                    height:
-                                                      design.apparel.side ===
-                                                        "leftshoulder" ||
-                                                      design.apparel.side ===
-                                                        "rightshoulder"
-                                                        ? "30%"
-                                                        : "50%",
-                                                  }}
-                                                >
-                                                  <Image
-                                                    src={
-                                                      design.pngImage ||
-                                                      "/placeholder.svg"
-                                                    }
-                                                    alt={`Thumbnail ${
-                                                      index + 1
-                                                    }`}
-                                                    fill
-                                                    sizes="100%"
-                                                    className="rounded-md"
-                                                    style={{
-                                                      objectFit: "contain",
-                                                    }}
-                                                  />
-                                                </div>
-                                              </div>
                                             </div>
-                                          )
+                                          </div>
                                         )
-                                      : currentDesign?.uploadedImages?.map(
-                                          (image, index) => (
-                                            <button
-                                              key={index}
-                                              className={`aspect-square relative rounded-md overflow-hidden ${
-                                                index ===
-                                                currentUploadedImageIndex
-                                                  ? "ring-2 ring-black"
-                                                  : "ring-1 ring-gray-200 hover:ring-gray-300"
-                                              }`}
-                                              onClick={() =>
-                                                setCurrentImageIndex(
-                                                  (prev) => ({
-                                                    ...prev,
-                                                    [item.id]: index,
-                                                  })
-                                                )
+                                      )
+                                    ) : (
+                                      currentDesign?.uploadedImages?.map(
+                                        (image, index) => (
+                                          <button
+                                            key={index}
+                                            className={`aspect-square relative rounded-md overflow-hidden ${
+                                              index ===
+                                              currentUploadedImageIndex
+                                                ? "ring-2 ring-black"
+                                                : "ring-1 ring-gray-200 hover:ring-gray-300"
+                                            }`}
+                                            onClick={() =>
+                                              setCurrentImageIndex((prev) => ({
+                                                ...prev,
+                                                [item.id]: index,
+                                              }))
+                                            }
+                                          >
+                                            <Image
+                                              src={
+                                                image || "/placeholder.svg"
                                               }
-                                            >
-                                              <Image
-                                                src={
-                                                  image || "/placeholder.svg"
-                                                }
-                                                alt={`Upload ${index + 1}`}
-                                                fill
-                                                sizes="100%"
-                                                className="object-cover"
-                                              />
-                                            </button>
-                                          )
-                                        )}
-                                  </div>
-                                )}
+                                              alt={`Upload ${index + 1}`}
+                                              fill
+                                              sizes="100%"
+                                              className="object-cover"
+                                            />
+                                          </button>
+                                        )
+                                      )
+                                    )
+                                  ) : (
+                                    standardSides.map((side, index) => (
+                                      <div
+                                        key={index}
+                                        className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                          index === mainDesignIndex
+                                            ? "ring-2 ring-gray-700"
+                                            : "hover:ring-2 hover:ring-gray-300"
+                                        }`}
+                                        onClick={() =>
+                                          handleThumbnailClick(item.id, index)
+                                        }
+                                      >
+                                        <Image
+                                          src={side.url || "/placeholder.svg"}
+                                          alt={`Side: ${side.side}`}
+                                          fill
+                                          sizes="100%"
+                                          className="object-cover"
+                                        />
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              )}
                             </div>
 
                             <div className="md:w-1/2 flex flex-col">
@@ -731,8 +805,8 @@ const CartPage = () => {
                                             ? typeof standardItem.selected_color ===
                                               "string"
                                               ? standardItem.selected_color
-                                              : standardItem.selected_color
-                                                   || "N/A"
+                                              : standardItem.selected_color ||
+                                                "N/A"
                                             : "N/A"
                                         }`}
                                   </p>

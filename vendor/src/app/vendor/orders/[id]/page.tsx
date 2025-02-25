@@ -15,7 +15,7 @@ const OrderDetailsView = () => {
   const { id } = useParams();
   const { data: order, isLoading } = useGetOrder(id as string);
   const { data: customers } = useGetCustomers();
-  const [expandedItem, setExpandedItem] = useState<number | null>(null);
+  
   const [selectedDesigns, setSelectedDesigns] = useState<
     Record<string, number>
   >({});
@@ -28,7 +28,8 @@ const OrderDetailsView = () => {
   const matchingCustomers = customers?.filter(
     (customer) => customer?.id === order?.customer_id
   );
-console.log("order", order);
+  console.log("order", order);
+
   if (isLoading) return <OrderDetailsSkeleton />;
   if (!order) {
     return (
@@ -141,6 +142,15 @@ console.log("order", order);
                 const currentUploadedImageIndex =
                   currentImageIndex[item.product_id] || 0;
 
+                // Use images from line_items for standard products
+                const standardImages = !isDesignable ? item.images || [] : [];
+                const selectedStandardImageIndex =
+                  selectedDesigns[item.product_id] || 0;
+                const selectedStandardImage =
+                  standardImages[selectedStandardImageIndex] ||
+                  standardImages[0] ||
+                  "/placeholder.svg";
+
                 return (
                   <Container
                     key={item.product_id}
@@ -148,8 +158,10 @@ console.log("order", order);
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-bold text-black">
-                        Item {itemIndex + 1}
+                        {item.title} {/* Display the title from line_items */}
                       </h3>
+                      {/* <p>Product_id : {item.product_id}</p> */}
+
                       <div className="flex items-center space-x-4">
                         <span className="text-sm text-black/80">
                           Quantity: {item.quantity}
@@ -251,10 +263,10 @@ console.log("order", order);
                             )
                           )
                         ) : (
-                          // Standard product: Use a placeholder or fetch product image if available
+                          // Standard product: Use selected image from images array
                           <Image
-                            src="/placeholder.svg" // Replace with actual product image if available (e.g., via API)
-                            alt="Standard Product"
+                            src={selectedStandardImage}
+                            alt={`${item.title} view`}
                             fill
                             sizes="100%"
                             className="object-cover"
@@ -264,9 +276,7 @@ console.log("order", order);
 
                       {/* Vertical Thumbnails and Controls */}
                       <div className="flex flex-col space-y-4">
-                        {isDesignable &&
-                        item.designs &&
-                        item.designs.length > 0 ? (
+                        {isDesignable && item.designs && item.designs.length > 0 ? (
                           <div className="flex flex-col space-y-2">
                             {item.designs.map((design, index) => (
                               <button
@@ -334,13 +344,35 @@ console.log("order", order);
                             ))}
                           </div>
                         ) : (
-                          <div className="text-sm text-black/80">
-                            <p>Size: {item.selected_size || "N/A"}</p>
-                            <p>Color: {item.selected_color || "N/A"}</p>
-                          </div>
+                          // Thumbnails for standard products
+                          standardImages.length > 0 && (
+                            <div className="flex flex-col space-y-2">
+                              {standardImages.map((image, index) => (
+                                <button
+                                  key={index}
+                                  onClick={() =>
+                                    handleThumbnailClick(item.product_id, index)
+                                  }
+                                  className={`relative w-24 h-24 rounded-lg overflow-hidden transition-all ${
+                                    selectedStandardImageIndex === index
+                                      ? "ring-2 ring-indigo-500 shadow-lg"
+                                      : "ring-1 ring-indigo-200 hover:ring-2 hover:ring-indigo-300"
+                                  }`}
+                                >
+                                  <Image
+                                    src={image || "/placeholder.svg"}
+                                    alt={`View ${index + 1}`}
+                                    fill
+                                    sizes="100%"
+                                    className="object-cover"
+                                  />
+                                </button>
+                              ))}
+                            </div>
+                          )
                         )}
 
-                        {hasUploadedImages && (
+                        {isDesignable && hasUploadedImages ? (
                           <div className="space-y-4">
                             <button
                               onClick={() => toggleImageType(item.product_id)}
@@ -351,6 +383,13 @@ console.log("order", order);
                                 : "View on Apparel"}
                             </button>
                           </div>
+                        ) : (
+                          !isDesignable && (
+                            <div className="text-sm text-black/80">
+                              <p>Size: {item.selected_size || "N/A"}</p>
+                              <p>Color: {item.selected_color || "N/A"}</p>
+                            </div>
+                          )
                         )}
                       </div>
                     </div>
@@ -453,7 +492,7 @@ const OrderDetailsSkeleton = () => (
                   key={i}
                   className="bg-black/10 backdrop-blur-md rounded-xl p-6"
                 >
-                  <div className="h-[400px] bg-blacl/20 rounded-xl mb-4"></div>
+                  <div className="h-[400px] bg-black/20 rounded-xl mb-4"></div>
                   <div className="grid grid-cols-4 gap-2">
                     {[1, 2, 3, 4].map((j) => (
                       <div

@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingCart, Tag, Users, Settings, Store, Wrench, LayoutDashboard } from 'lucide-react';
+import { ShoppingCart, Tag, Users, Settings, Store, Wrench, LayoutDashboard,Package } from 'lucide-react';
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Tooltip } from "@medusajs/ui";
@@ -41,6 +41,11 @@ const menuItems = [
     title: "Users",
     icon: User,
     href: "/vendor/users",
+  },
+  {
+    title: "Stock Management",
+    icon: Package,
+    href: "/vendor/stock-management",
   },
   {
     title: "Revenue-Analytics",
