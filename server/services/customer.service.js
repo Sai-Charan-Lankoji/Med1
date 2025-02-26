@@ -52,9 +52,7 @@ class CustomerService {
       id: customer.id,
       email: customer.email,
 
-
-    },
-      { expiresIn: "30d" }
+}
   );
     const encryptedToken = TokenEncryption.encrypt(token);
     return { token: encryptedToken, customer };
