@@ -1,5 +1,5 @@
 // services/transporterService.js
-const { Transporter } = require("../models/transporter.model");
+const Transporter  = require("../models/transporter.model");
 
 /**
  * Create a new transporter
@@ -15,18 +15,18 @@ const createTransporter = async (data) => {
   }
 
   const transporter = await Transporter.create({
-    Name: name,
-    ContactInfo: contact_info,
-    GSTIN: gstin,
-    Address: address,
+    name: name,
+    contact_info: contact_info,
+    gstin: gstin,
+    address: address,
   });
 
   return {
-    transporter_id: transporter.TransporterID,
-    name: transporter.Name,
-    contact_info: transporter.ContactInfo,
-    gstin: transporter.GSTIN,
-    address: transporter.Address,
+    transporter_id: transporter.transporter_id,
+    name: transporter.name,
+    contact_info: transporter.contact_info,
+    gstin: transporter.gstin,
+    address: transporter.address,
   };
 };
 
@@ -37,11 +37,11 @@ const createTransporter = async (data) => {
 const getAllTransporters = async () => {
   const transporters = await Transporter.findAll();
   return transporters.map((t) => ({
-    transporter_id: t.TransporterID,
-    name: t.Name,
-    contact_info: t.ContactInfo,
-    gstin: t.GSTIN,
-    address: t.Address,
+    transporter_id: t.transporter_id,
+    name: t.name,
+    contact_info: t.contact_info,
+    gstin: t.gstin,
+    address: t.address,
   }));
 };
 
@@ -58,11 +58,11 @@ const getTransporterById = async (id) => {
   }
 
   return {
-    transporter_id: transporter.TransporterID,
-    name: transporter.Name,
-    contact_info: transporter.ContactInfo,
-    gstin: transporter.GSTIN,
-    address: transporter.Address,
+    transporter_id: transporter.transporter_id,
+    name: transporter.name,
+    contact_info: transporter.contact_info,
+    gstin: transporter.gstin,
+    address: transporter.address,
   };
 };
 

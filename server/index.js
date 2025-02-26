@@ -10,7 +10,7 @@ const swaggerUi = require("swagger-ui-express");
 const { swaggerSpecs } = require("./swagger/swagger");
 const { listStores } = require("./services/store.service.js");
 const { startBillingScheduler } = require("./schedulers/billingScheduler");
-const notificationService = require("./services/notification.service.js"); // Import NotificationService
+const notificationService = require("./services/notification.service.js"); 
 
 // Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
@@ -32,11 +32,10 @@ const wishlistRoutes = require("./routes/wishlist.route.js");
 const revenueRoutes = require("./routes/revenue.js");
 const admindiscountRouters = require("./routes/admindiscount.route.js");
 const supplierRoutes = require("./routes/supplier.route.js");
-const transporterRoutes = require("./routes/transport.route.js");
 const consignmentRoutes = require("./routes/consignment.route.js");
 const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
 const notificationRoutes = require("./routes/notification.route.js");
-
+const transporterRoutes = require("./routes/transport.route.js");
 const app = express();
 const server = http.createServer(app); // Changed from app.listen to support socket.io
 const io = new Server(server, {
@@ -147,11 +146,10 @@ app.use("/api/wishlists", wishlistRoutes);
 app.use("/api", revenueRoutes);
 app.use("/api/admin", admindiscountRouters);
 app.use("/api/suppliers", supplierRoutes);
-app.use("/transporters", transporterRoutes);
 app.use("/consignments", consignmentRoutes);
 app.use("/stock-transactions", stockTransactionRoutes);
 app.use("/api/notifications", notificationRoutes);
-
+app.use("/api/transporters", transporterRoutes);
 // WebSocket connection handling
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);

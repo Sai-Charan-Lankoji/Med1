@@ -58,11 +58,11 @@ const getSupplierById = async (id) => {
   }
 
   return {
-    supplier_id: supplier.SupplierID,
-    name: supplier.Name,
-    contact_info: supplier.ContactInfo,
-    gstin: supplier.GSTIN,
-    address: supplier.Address,
+    supplier_id: supplier.supplier_id,
+    name: supplier.name,
+    contact_info: supplier.contact_info,
+    gstin: supplier.gstin,
+    address: supplier.address,
   };
 };
 
