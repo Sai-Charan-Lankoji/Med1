@@ -74,6 +74,5 @@ const User = sequelize.define(
 
 ); 
 
-User.hasMany(Wishlist, { foreignKey: "user_id", as: "wishlistItems" });
 
 module.exports = User;

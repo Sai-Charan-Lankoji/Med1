@@ -98,7 +98,6 @@ class VendorAuthService {
 
     try {
       const blacklistedToken = await TokenBlacklist.create({ token });
-      console.log("Blacklisted Token: ", blacklistedToken);
       return { message: "Logout successful." };
     } catch (error) {
       console.error("Error blacklisting token: ", error);

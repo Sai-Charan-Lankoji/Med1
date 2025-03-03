@@ -1,58 +1,141 @@
 const wishlistService = require("../services/wishlist.service");
 
-/**
- * Add an item to the wishlist
- */
 exports.addToWishlist = async (req, res) => {
   try {
     const { product_id, standard_product_id } = req.body;
-    const user_id = req.user.id; // Assuming authentication middleware sets req.user
-
+    const customer_id = req.user.id;
     if (!product_id && !standard_product_id) {
-      return res.status(400).json({ success: false, message: "Either product_id or standard_product_id is required" });
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: {
+          code: "VALIDATION_ERROR",
+          details: "Either product_id or standard_product_id is required",
+        },
+      });
     }
 
-    // Check if already exists
-    const exists = await wishlistService.isProductInWishlist(user_id, product_id, standard_product_id);
+    const exists = await wishlistService.isProductInWishlist(
+      customer_id,
+      product_id,
+      standard_product_id
+    );
     if (exists) {
-      return res.status(400).json({ success: false, message: "Product already in wishlist" });
+      return res.status(409).json({
+        status: 409,
+        success: false,
+        message: "Conflict detected",
+        data: null,
+        error: {
+          code: "RESOURCE_EXISTS",
+          details: "This item is already in your wishlist",
+        },
+      });
     }
-
-    const wishlistItem = await wishlistService.addToWishlist(user_id, product_id, standard_product_id);
-    res.status(201).json({ success: true, wishlistItem });
+    const wishlist_item = await wishlistService.addToWishlist(
+      customer_id,
+      product_id,
+      standard_product_id
+    );
+    
+    res.status(201).json({
+      status: 201,
+      success: true,
+      message: "Resource created successfully",
+      data: wishlist_item,
+    });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: {
+        code: "SERVER_ERROR",
+        details: error.message || "An unexpected error occurred",
+      },
+    });
   }
 };
-
-/**
- * Remove an item from the wishlist
- */
 exports.removeFromWishlist = async (req, res) => {
   try {
     const { product_id, standard_product_id } = req.body;
-    const user_id = req.user.id;
+    const customer_id = req.user.id;
 
     if (!product_id && !standard_product_id) {
-      return res.status(400).json({ success: false, message: "Either product_id or standard_product_id is required" });
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: {
+          code: "VALIDATION_ERROR",
+          details: "Either product_id or standard_product_id is required",
+        },
+      });
     }
 
-    await wishlistService.removeFromWishlist(user_id, product_id, standard_product_id);
-    res.status(200).json({ success: true, message: "Removed from wishlist" });
+    const removed = await wishlistService.removeFromWishlist(
+      customer_id,
+      product_id,
+      standard_product_id
+    );
+    if (!removed) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: {
+          code: "NOT_FOUND",
+          details: "Item not found in wishlist",
+        },
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: null, // No content to return after removal
+    });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: {
+        code: "SERVER_ERROR",
+        details: error.message || "An unexpected error occurred",
+      },
+    });
   }
 };
 
-/**
- * Get all wishlist items for a user
- */
 exports.getWishlistByUser = async (req, res) => {
   try {
-    const user_id = req.user.id;
-    const wishlist = await wishlistService.getWishlistByUser(user_id);
-    res.status(200).json({ success: true, wishlist });
+    const customer_id = req.user.id;
+    const wishlist = await wishlistService.getWishlistByUser(customer_id);
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: wishlist,
+    });
   } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: {
+        code: "SERVER_ERROR",
+        details: error.message || "An unexpected error occurred",
+      },
+    });
   }
 };

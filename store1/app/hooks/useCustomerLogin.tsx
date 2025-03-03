@@ -74,7 +74,7 @@ export const useCustomerLogin = () => {
           router.push(redirectAfterLogin);
           localStorage.removeItem('redirectAfterLogin');
         } else {
-          router.push('dashboard');
+          router.push('/');
         }
       }
     } catch (error) {

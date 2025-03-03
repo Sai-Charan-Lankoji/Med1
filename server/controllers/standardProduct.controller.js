@@ -208,7 +208,6 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
         .json({ success: false, message: "Store ID is required" });
     }
 
-    console.log("Store ID:", storeId);
 
     const products =
       await standardProductService.getAllStandardProductsByStoreId(

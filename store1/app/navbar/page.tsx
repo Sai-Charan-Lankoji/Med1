@@ -1,8 +1,15 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
-import { FaUserCircle, FaShoppingCart, FaSignOutAlt, FaCog } from "react-icons/fa";
+import {
+  FaUserCircle,
+  FaShoppingCart,
+  FaSignOutAlt,
+  FaCog,
+  FaHeart,
+} from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
-import { ShirtIcon } from 'lucide-react';
+import { ShirtIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { MdDeleteForever } from "react-icons/md";
@@ -12,13 +19,55 @@ import { useRouter, useParams } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { DesignContext } from "@/context/designcontext";
 import { useNewCart } from "../hooks/useNewCart";
-import { IDesign, IProps } from "@/@types/models";
+import { IDesign, IProps, ICartItem, IDesignableCartItem, IStandardCartItem } from "@/@types/models";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 import { useStore } from "@/context/storecontext";
+import useSWR from "swr";
+
+// Wishlist Interface
+interface WishlistItem {
+  id: string;
+  customer_id: string;
+  product_id: string | null;
+  standard_product_id: string | null;
+}
+
+interface ApiResponse {
+  status: number;
+  success: boolean;
+  message: string;
+  data: WishlistItem[] | null;
+  error?: { code: string; details: string };
+}
+
+const WISHLIST_API_URL = "http://localhost:5000/api/wishlists";
+const POLLING_INTERVAL = 5000;
+
+// Fetcher function for SWR
+const fetcher = async (url: string, token: string | null) => {
+  if (!token) {
+    throw new Error("No authentication token provided");
+  }
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const data = (await response.json()) as ApiResponse;
+  if (data.status !== 200 || !data.success) {
+    throw new Error(data.message || "Failed to fetch wishlist");
+  }
+
+  return data.data as WishlistItem[];
+};
 
 const Navbar: React.FC = () => {
-  const { cartItems, deleteCart } = useNewCart();
-  const { email, customerToken,profile } = useUserContext();
+  const { cartItems: designableCartItems, deleteCart, fetchCartData, getStandardCartItems } = useNewCart();
+  const { email, customerToken, profile } = useUserContext();
   const [username, setUsername] = useState<string>("");
   const { logout } = useCustomerLogout();
   const router = useRouter();
@@ -27,13 +76,55 @@ const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
-  const [expandedItems, setExpandedItems] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [wishlistCount, setWishlistCount] = useState<number>(0);
+  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
+  const [token, setToken] = useState<string | null>(null);
   const params = useParams();
   const { store } = useStore();
   const vendorId = params.vendorId as string;
   const isVendorMode = vendorId === store?.vendor_id;
+
+  // Combine designable and standard cart items
+  const allCartItems: ICartItem[] = React.useMemo(() => [
+    ...designableCartItems,
+    ...getStandardCartItems(),
+  ], [designableCartItems, getStandardCartItems]);
+
+  // Fetch token on client-side
+  useEffect(() => {
+    const authToken =
+      typeof window !== "undefined" ? sessionStorage.getItem("auth_token") : null;
+    setToken(authToken);
+  }, []);
+
+  // Fetch cart data on mount
+  useEffect(() => {
+    if (customerToken) {
+      fetchCartData();
+    }
+  }, [customerToken, fetchCartData]);
+
+  // Use SWR to fetch and monitor wishlist items
+  const { data: wishlistData, error: wishlistError } = useSWR(
+    token ? [WISHLIST_API_URL, token] : null,
+    ([url, token]) => fetcher(url, token),
+    {
+      refreshInterval: POLLING_INTERVAL,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      dedupingInterval: 2000,
+    }
+  );
+
+  // Update wishlistCount based on SWR data
+  useEffect(() => {
+    if (wishlistData) {
+      setWishlistCount(wishlistData.length);
+    } else if (wishlistError || !token) {
+      setWishlistCount(0);
+    }
+  }, [wishlistData, wishlistError, token]);
+
   useEffect(() => {
     if (email) {
       const storedUsername = sessionStorage.getItem("username");
@@ -44,18 +135,15 @@ const Navbar: React.FC = () => {
   }, [email]);
 
   useEffect(() => {
-    if (customerToken && Array.isArray(cartItems)) {
+    if (customerToken && Array.isArray(allCartItems)) {
       try {
-        const totalItems = cartItems.length;
+        const totalItems = allCartItems.length;
         setCartItemsCount(totalItems);
-
-        const total = cartItems.reduce((sum, item) => {
-          if (!item) return sum; // Skip if item is undefined
-
-          const numberOfSides = item.designs?.length || 1;
-          return sum + 100 * numberOfSides * (item.quantity || 1);
+        const total = allCartItems.reduce((sum, item) => {
+          if (!item) return sum;
+          const numberOfSides = item.product_type === "designable" && item.designs?.length ? item.designs.length : 1;
+          return sum + (item.price || 100) * numberOfSides * (item.quantity || 1);
         }, 0);
-
         setCartTotal(total);
       } catch (error) {
         console.error("Error calculating cart totals:", error);
@@ -66,7 +154,7 @@ const Navbar: React.FC = () => {
       setCartItemsCount(0);
       setCartTotal(0);
     }
-  }, [cartItems, customerToken]);
+  }, [allCartItems, customerToken]);
 
   const designContext = React.useContext(DesignContext);
   const { designs, dispatchDesign } = designContext || {
@@ -155,6 +243,17 @@ const Navbar: React.FC = () => {
     }
   };
 
+  const handleDesktopWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!customerToken) {
+      router.push("/auth");
+    } else {
+      router.push("/wishlist");
+    }
+    closeAllMenus();
+  };
+
   const handleMobileMenuToggle = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -170,6 +269,17 @@ const Navbar: React.FC = () => {
       router.push("/auth");
     } else {
       router.push("/cart");
+    }
+    closeAllMenus();
+  };
+
+  const handleMobileWishlistClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!customerToken) {
+      router.push("/auth");
+    } else {
+      router.push("/wishlist");
     }
     closeAllMenus();
   };
@@ -212,7 +322,7 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const capitalizeFirstLetter = (string: String) => {
+  const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
 
@@ -225,6 +335,24 @@ const Navbar: React.FC = () => {
     if (sides.length === 2) return `${sides[0]} & ${sides[1]}`;
     const lastSide = sides.pop();
     return `${sides.join(", ")} & ${lastSide}`;
+  };
+
+  // Helper function to extract available sides for standard products
+  const getStandardProductSides = (productDetails: any) => {
+    const sides = [];
+    if (productDetails?.front_image) {
+      sides.push({ side: "front", url: productDetails.front_image });
+    }
+    if (productDetails?.back_image) {
+      sides.push({ side: "back", url: productDetails.back_image });
+    }
+    if (productDetails?.left_image) {
+      sides.push({ side: "left", url: productDetails.left_image });
+    }
+    if (productDetails?.right_image) {
+      sides.push({ side: "right", url: productDetails.right_image });
+    }
+    return sides;
   };
 
   return (
@@ -276,7 +404,7 @@ const Navbar: React.FC = () => {
                 >
                   <div className="relative w-8 h-8 rounded-full overflow-hidden">
                     <Image
-                      src={ profile || "/images/profile-sample.jpg"}
+                      src={profile || "/images/profile-sample.jpg"}
                       alt="Profile Picture"
                       fill
                       className="object-cover"
@@ -309,215 +437,370 @@ const Navbar: React.FC = () => {
             )}
 
             {customerToken && (
-              <div className="relative cart-dropdown">
+              <div className="flex items-center space-x-4">
+                {/* Wishlist Icon */}
                 <button
-                  onClick={handleDesktopCartClick}
+                  onClick={handleDesktopWishlistClick}
                   className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
                 >
-                  <FaShoppingCart className="text-2xl text-gray-700" />
-                  {cartItemsCount > 0 && (
+                  <FaHeart className="text-2xl text-pink-500" />
+                  {wishlistCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {cartItemsCount}
+                      {wishlistCount}
                     </span>
                   )}
                 </button>
 
-                {isCartOpen && (
-                  <div className="absolute right-0 mt-3 w-[32rem] bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5">
-                    <div className="p-4">
-                      <div className="flex justify-between items-center border-b border-gray-200 pb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Cart Items
-                        </h3>
-                        {cartItems.length > 0 && (
-                          <span className="text-lg font-bold text-green-600">
-                            ${cartTotal.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
+                {/* Cart Icon */}
+                <div className="relative cart-dropdown">
+                  <button
+                    onClick={handleDesktopCartClick}
+                    className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  >
+                    <FaShoppingCart className="text-2xl text-gray-700" />
+                    {cartItemsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {cartItemsCount}
+                      </span>
+                    )}
+                  </button>
 
-                      <div className="mt-4 max-h-[400px] overflow-y-auto">
-                        {cartItems.length > 0 ? (
-                          <ul className="space-y-4">
-                            {cartItems?.map((item, index) => (
-                              <li
-                                key={index}
-                                className="rounded-lg transition duration-200"
-                              >
-                                <div className="p-3 hover:bg-gray-50">
-                                  <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                      <p className="text-sm text-gray-600">
-                                        Qty: {item.quantity}
-                                      </p>
-                                      <p className="text-sm text-gray-600 mt-1">
-                                        Designed Sides:{" "}
-                                        <span className="text-xs">
-                                          {getDesignedSidesText(item.designs)}
-                                        </span>
-                                      </p>
-                                    </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                      <span className="text-sm font-semibold text-gray-900">
-                                        $
-                                        {(
-                                          (item.designs
-                                            ? item.designs.length * 100
-                                            : 100) * item.quantity
-                                        ).toFixed(2)}
-                                      </span>
-                                      <button
-                                        onClick={() =>
-                                          handleDeleteCart(item.id)
-                                        }
-                                        className="text-red-500 hover:text-red-700 transition duration-200"
-                                        title="Remove item"
-                                      >
-                                        <MdDeleteForever className="text-xl" />
-                                      </button>
-                                    </div>
-                                  </div>
+                  {isCartOpen && (
+                    <div className="absolute right-0 mt-3 w-[32rem] bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5">
+                      <div className="p-4">
+                        <div className="flex justify-between items-center border-b border-gray-200 pb-3">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            Cart Items
+                          </h3>
+                          {allCartItems.length > 0 && (
+                            <span className="text-lg font-bold text-green-600">
+                              ${cartTotal.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
 
-                                  <div
-                                    className="cursor-pointer"
-                                    onClick={() => toggleItemExpansion(item.id)}
+                        <div className="mt-4 max-h-[400px] overflow-y-auto">
+                          {allCartItems.length > 0 ? (
+                            <ul className="space-y-4">
+                              {allCartItems.map((item) => {
+                                const isDesignable = item.product_type === "designable";
+                                const designItem = item as IDesignableCartItem;
+                                const standardItem = item as IStandardCartItem;
+
+                                const pricePerItem = isDesignable
+                                  ? (designItem.designs?.length || 0) * 100
+                                  : standardItem.price || 100;
+                                const itemTotal = pricePerItem * item.quantity;
+
+                                const standardSides = !isDesignable
+                                  ? getStandardProductSides(standardItem.product_details)
+                                  : [];
+                                const mainDesignIndex = standardSides.length > 0 ? 0 : (designItem.designs?.length || 0) > 0 ? 0 : 0;
+                                const currentDesign = isDesignable
+                                  ? designItem.designs?.[mainDesignIndex]
+                                  : null;
+                                const currentStandardSide = !isDesignable
+                                  ? standardSides[mainDesignIndex] || standardSides[0]
+                                  : null;
+
+                                return (
+                                  <li
+                                    key={item.id}
+                                    className="rounded-lg transition duration-200"
                                   >
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-sm text-gray-500">
-                                        View all sides
-                                      </span>
-                                      <FaChevronDown
-                                        className={`transform transition-transform ${
-                                          expandedItems[item.id]
-                                            ? "rotate-180"
-                                            : ""
-                                        }`}
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {expandedItems[item.id] && (
-                                    <div className="mt-2">
-                                      <div className="grid grid-cols-3 gap-4">
-                                        {item.designs.map((design, index) => (
-                                          <div
-                                            key={index}
-                                            className="flex flex-col items-center"
-                                          >
-                                            <div className="relative w-24 h-28 mb-2">
-                                              <div className="absolute inset-0 border rounded-md">
-                                                <Image
-                                                  src={design.apparel?.url}
-                                                  alt={`Side: ${design.apparel.side}`}
-                                                  fill
-                                                  priority
-                                                  sizes="100%"
-                                                  className="hover:cursor-pointer"
-                                                  style={{
-                                                    backgroundColor:
-                                                      design.apparel?.color,
-                                                    objectFit: "cover",
-                                                  }}
-                                                />
-                                              </div>
-                                              <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="p-3 hover:bg-gray-50">
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-start space-x-3">
+                                          {/* Thumbnail Preview */}
+                                          <div className="relative w-16 h-20 rounded-lg overflow-hidden bg-gray-100">
+                                            {isDesignable && currentDesign ? (
+                                              <>
+                                                <div className="absolute inset-0">
+                                                  <Image
+                                                    src={
+                                                      currentDesign.apparel?.url ||
+                                                      "/placeholder.svg"
+                                                    }
+                                                    alt={`Side: ${currentDesign.apparel.side}`}
+                                                    fill
+                                                    sizes="100%"
+                                                    priority
+                                                    className="rounded-none"
+                                                    style={{
+                                                      backgroundColor:
+                                                        currentDesign.apparel?.color ||
+                                                        "#ffffff",
+                                                      objectFit: "cover",
+                                                    }}
+                                                  />
+                                                </div>
                                                 <div className="absolute inset-0 flex items-center justify-center">
                                                   <div
                                                     className="relative translate-y-[-10%]"
                                                     style={{
                                                       top:
-                                                        design.apparel.side ===
+                                                        currentDesign.apparel.side ===
                                                         "leftshoulder"
                                                           ? "12px"
-                                                          : design.apparel
+                                                          : currentDesign.apparel
                                                               .side ===
                                                             "rightshoulder"
                                                           ? "12px"
                                                           : "initial",
                                                       left:
-                                                        design.apparel.side ===
+                                                        currentDesign.apparel.side ===
                                                         "leftshoulder"
                                                           ? "-3px"
-                                                          : design.apparel
+                                                          : currentDesign.apparel
                                                               .side ===
                                                             "rightshoulder"
                                                           ? "2px"
                                                           : "initial",
                                                       width:
-                                                        design.apparel.side ===
+                                                        currentDesign.apparel.side ===
                                                           "leftshoulder" ||
-                                                        design.apparel.side ===
+                                                        currentDesign.apparel.side ===
                                                           "rightshoulder"
                                                           ? "30%"
                                                           : "50%",
                                                       height:
-                                                        design.apparel.side ===
+                                                        currentDesign.apparel.side ===
                                                           "leftshoulder" ||
-                                                        design.apparel.side ===
+                                                        currentDesign.apparel.side ===
                                                           "rightshoulder"
                                                           ? "30%"
                                                           : "50%",
                                                     }}
                                                   >
                                                     <Image
-                                                      src={design.pngImage}
-                                                      alt={`Thumbnail ${
-                                                        index + 1
-                                                      }`}
+                                                      src={
+                                                        currentDesign.pngImage ||
+                                                        "/placeholder.svg"
+                                                      }
+                                                      alt={`Thumbnail`}
                                                       fill
                                                       sizes="100%"
                                                       className="rounded-md"
                                                       style={{
                                                         objectFit: "contain",
                                                       }}
-                                                      onClick={() =>
-                                                        handleDesignClick(
-                                                          item.designState,
-                                                          item.propsState,
-                                                          item.id
-                                                        )
-                                                      }
                                                     />
                                                   </div>
                                                 </div>
-                                              </div>
-                                            </div>
-                                            <span className="text-xs text-gray-600">
-                                              Side:{" "}
-                                              {capitalizeFirstLetter(
-                                                design.apparel.side
-                                              )}
-                                            </span>
+                                              </>
+                                            ) : (
+                                              <Image
+                                                src={
+                                                  currentStandardSide?.url ||
+                                                  "/placeholder.svg"
+                                                }
+                                                alt={
+                                                  standardItem.product_details?.title ||
+                                                  "Standard Product"
+                                                }
+                                                fill
+                                                sizes="100%"
+                                                className="object-cover"
+                                              />
+                                            )}
                                           </div>
-                                        ))}
+                                          <div>
+                                            <p className="text-sm text-gray-600">
+                                              Qty: {item.quantity}
+                                            </p>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                              {isDesignable
+                                                ? `Designed Sides: ${getDesignedSidesText(designItem.designs || [])}`
+                                                : `Size: ${standardItem.selected_size || "N/A"}, Color: ${
+                                                    standardItem.selected_color
+                                                      ? typeof standardItem.selected_color === "string"
+                                                        ? standardItem.selected_color
+                                                        : standardItem.selected_color || "N/A"
+                                                      : "N/A"
+                                                  }`}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2">
+                                          <span className="text-sm font-semibold text-gray-900">
+                                            ${itemTotal.toFixed(2)}
+                                          </span>
+                                          <button
+                                            onClick={() =>
+                                              handleDeleteCart(item.id)
+                                            }
+                                            className="text-red-500 hover:text-red-700 transition duration-200"
+                                            title="Remove item"
+                                          >
+                                            <MdDeleteForever className="text-xl" />
+                                          </button>
+                                        </div>
                                       </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="py-8 text-center text-gray-500">
-                            Your cart is empty
-                          </p>
-                        )}
-                      </div>
 
-                      <button
-                        onClick={handleViewCart}
-                        className="mt-4 w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-600 transition duration-200 flex items-center justify-center space-x-2 shadow-md"
-                      >
-                        <span>View Cart</span>
-                        {cartTotal > 0 && (
-                          <span className="font-semibold">
-                            (${cartTotal.toFixed(2)})
-                          </span>
-                        )}
-                      </button>
+                                      <div
+                                        className="cursor-pointer"
+                                        onClick={() => toggleItemExpansion(item.id)}
+                                      >
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="text-sm text-gray-500">
+                                            View all sides
+                                          </span>
+                                          <FaChevronDown
+                                            className={`transform transition-transform ${
+                                              expandedItems[item.id] ? "rotate-180" : ""
+                                            }`}
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {expandedItems[item.id] && (
+                                        <div className="mt-2">
+                                          <div className="grid grid-cols-3 gap-4">
+                                            {isDesignable && designItem.designs ? (
+                                              designItem.designs.map((design, index) => (
+                                                <div
+                                                  key={index}
+                                                  className="flex flex-col items-center"
+                                                >
+                                                  <div className="relative w-24 h-28 mb-2">
+                                                    <div className="absolute inset-0 border rounded-md">
+                                                      <Image
+                                                        src={
+                                                          design.apparel?.url ||
+                                                          "/placeholder.svg"
+                                                        }
+                                                        alt={`Side: ${design.apparel.side}`}
+                                                        fill
+                                                        sizes="100%"
+                                                        priority
+                                                        className="hover:cursor-pointer"
+                                                        style={{
+                                                          backgroundColor:
+                                                            design.apparel?.color ||
+                                                            "#ffffff",
+                                                          objectFit: "cover",
+                                                        }}
+                                                      />
+                                                    </div>
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                      <div
+                                                        className="relative translate-y-[-10%]"
+                                                        style={{
+                                                          top:
+                                                            design.apparel.side ===
+                                                            "leftshoulder"
+                                                              ? "12px"
+                                                              : design.apparel
+                                                                  .side ===
+                                                                "rightshoulder"
+                                                              ? "12px"
+                                                              : "initial",
+                                                          left:
+                                                            design.apparel.side ===
+                                                            "leftshoulder"
+                                                              ? "-3px"
+                                                              : design.apparel
+                                                                  .side ===
+                                                                "rightshoulder"
+                                                              ? "2px"
+                                                              : "initial",
+                                                          width:
+                                                            design.apparel.side ===
+                                                              "leftshoulder" ||
+                                                            design.apparel.side ===
+                                                              "rightshoulder"
+                                                              ? "30%"
+                                                              : "50%",
+                                                          height:
+                                                            design.apparel.side ===
+                                                              "leftshoulder" ||
+                                                            design.apparel.side ===
+                                                              "rightshoulder"
+                                                              ? "30%"
+                                                              : "50%",
+                                                        }}
+                                                      >
+                                                        <Image
+                                                          src={
+                                                            design.pngImage ||
+                                                            "/placeholder.svg"
+                                                          }
+                                                          alt={`Thumbnail ${
+                                                            index + 1
+                                                          }`}
+                                                          fill
+                                                          sizes="100%"
+                                                          className="rounded-md"
+                                                          style={{
+                                                            objectFit: "contain",
+                                                          }}
+                                                          onClick={() =>
+                                                            handleDesignClick(
+                                                              designItem.designState,
+                                                              designItem.propsState,
+                                                              designItem.id
+                                                            )
+                                                          }
+                                                        />
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                  <span className="text-xs text-gray-600">
+                                                    Side: {capitalizeFirstLetter(design.apparel.side)}
+                                                  </span>
+                                                </div>
+                                              ))
+                                            ) : (
+                                              standardSides.map((side, index) => (
+                                                <div
+                                                  key={index}
+                                                  className="flex flex-col items-center"
+                                                >
+                                                  <div className="relative w-24 h-28 mb-2">
+                                                    <Image
+                                                      src={side.url || "/placeholder.svg"}
+                                                      alt={`Side: ${side.side}`}
+                                                      fill
+                                                      sizes="100%"
+                                                      className="object-cover rounded-md"
+                                                    />
+                                                  </div>
+                                                  <span className="text-xs text-gray-600">
+                                                    Side: {capitalizeFirstLetter(side.side)}
+                                                  </span>
+                                                </div>
+                                              ))
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          ) : (
+                            <p className="py-8 text-center text-gray-500">
+                              Your cart is empty
+                            </p>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={handleViewCart}
+                          className="mt-4 w-full bg-gray-700 text-white py-3 px-4 rounded-lg font-medium hover:bg-gray-600 transition duration-200 flex items-center justify-center space-x-2 shadow-md"
+                        >
+                          <span>View Cart</span>
+                          {cartTotal > 0 && (
+                            <span className="font-semibold">
+                              (${cartTotal.toFixed(2)})
+                            </span>
+                          )}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -545,6 +828,16 @@ const Navbar: React.FC = () => {
 
                     {customerToken && (
                       <>
+                        <button
+                          onClick={handleMobileWishlistClick}
+                          className="flex items-center space-x-2 mx-3 px-4 py-2 hover:bg-gray-100 rounded-md transition-colors duration-200"
+                        >
+                          <FaHeart className="text-xl text-pink-500" />
+                          <span className="text-sm text-gray-700">
+                            Wishlist ({wishlistCount})
+                          </span>
+                        </button>
+
                         <button
                           onClick={handleMobileCartClick}
                           className="flex items-center space-x-2 mx-3 px-4 py-2 hover:bg-gray-100 rounded-md transition-colors duration-200"

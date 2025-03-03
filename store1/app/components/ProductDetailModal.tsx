@@ -1,8 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
-import { X, Minus, Plus, ShoppingCart, Pencil } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { X, Minus, Plus, ShoppingCart, Pencil, Heart } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useNewCart } from "../hooks/useNewCart";
@@ -31,6 +31,13 @@ interface Product {
   designstate?: IDesign[];
   propstate?: any;
   designs?: IDesign[];
+}
+
+interface WishlistItem {
+  id: string;
+  customer_id: string;
+  product_id: string | null;
+  standard_product_id: string | null;
 }
 
 interface ProductDetailModalProps {
@@ -72,6 +79,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [currentSide, setCurrentSide] = useState("front");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInWishlist, setIsInWishlist] = useState(false); // Track if product is in wishlist
 
   const router = useRouter();
   const {
@@ -101,7 +109,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
         const designState = product.designstate || [];
         const propState = product.propstate || {};
 
-        // Log data being sent for debugging
         console.log("Adding designable product:", {
           productId: product.id,
           designs,
@@ -123,7 +130,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           name: "",
         };
 
-        // Log data being sent for debugging
         console.log("Adding standard product:", {
           productId: product.id,
           quantity,
@@ -248,6 +254,97 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       case "back":
       default:
         return { top: "50%", left: "50%", width: "50%", height: "50%" };
+    }
+  };
+
+  // Fetch user's wishlist on mount and when product changes
+
+  const fetchWishlist = useCallback(async () => {
+    try {
+      const token = sessionStorage.getItem("auth_token");
+      if (!token) {
+        setIsInWishlist(false);
+        return;
+      }
+
+      const response = await fetch("http://localhost:5000/api/wishlists", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+      if (data.status === 200 && data.success) {
+        const wishlist = data.data as WishlistItem[];
+        const isPresent = wishlist.some(
+          (item) => item.product_id === product.id || item.standard_product_id === product.id
+        );
+        setIsInWishlist(isPresent);
+      } else {
+        setIsInWishlist(false);
+        console.warn("Failed to fetch wishlist:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching wishlist:", error);
+      setIsInWishlist(false);
+    }
+  }, [product.id]);
+
+  useEffect(() => {
+    fetchWishlist();
+  }, [fetchWishlist]);
+
+  // Handle adding/removing from wishlist
+  const handleWishlistToggle = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const token = sessionStorage.getItem("auth_token");
+      if (!token) {
+        throw new Error("User not authenticated");
+      }
+
+      const isCurrentlyInWishlist = isInWishlist;
+      // Optimistic update: toggle the state immediately
+      setIsInWishlist(!isCurrentlyInWishlist);
+
+      const endpoint = isCurrentlyInWishlist ? "/remove" : "/add";
+      const response = await fetch(`http://localhost:5000/api/wishlists${endpoint}`, {
+        method: isCurrentlyInWishlist ? "DELETE" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          product_id: null,
+          standard_product_id:  product.id, // Only send product_id for now
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.status !== 200 && data.status !== 201) {
+        // Revert optimistic update if the API call fails
+        setIsInWishlist(isCurrentlyInWishlist);
+        throw new Error(data.message || "Failed to update wishlist");
+      }
+
+      console.log(
+        `Product ${isCurrentlyInWishlist ? "removed from" : "added to"} wishlist successfully:`,
+        product.id
+      );
+      // Re-fetch wishlist to ensure state is in sync
+      await fetchWishlist();
+    } catch (error: any) {
+      setError(error.message || "Failed to update wishlist");
+      console.error("Wishlist update error:", error);
+      // Re-fetch wishlist to restore correct state
+      await fetchWishlist();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -486,7 +583,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               </div>
             </div>
 
-            <div className="mt-8 flex gap-4">
+            <div className="mt-8 flex flex-col gap-4">
               <button
                 className="flex-1 bg-black text-white py-4 px-6 rounded-xl font-semibold 
                   hover:bg-gray-900 transition-all duration-300 flex items-center justify-center
@@ -515,6 +612,28 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   Customize
                 </button>
               )}
+              <button
+                className={`flex-1 ${
+                  isInWishlist
+                    ? "bg-red-500 text-white hover:bg-red-600"
+                    : "bg-white text-black border-2 border-black hover:bg-gray-100"
+                } py-4 px-6 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center shadow-lg hover:shadow-xl disabled:border-gray-500 disabled:text-gray-500 disabled:cursor-not-allowed`}
+                onClick={handleWishlistToggle}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  "Updating..."
+                ) : (
+                  <>
+                    <Heart
+                      className={`w-5 h-5 mr-2 ${
+                        isInWishlist ? "fill-white" : "fill-none"
+                      }`}
+                    />
+                    {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
