@@ -93,7 +93,7 @@ const TeamManagement = () => {
     })),
   };
 
-   // const filteredData = combinedData?.filter(
+  //  const filteredData = combinedData?.filter(
   //   (item) =>
   //     item?.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
   //     (item?.type === "admin" &&
@@ -147,22 +147,22 @@ const TeamManagement = () => {
             <TableBody>
               {/* Loop through users */}
               {combinedData?.users?.map((user) => {
-                const status = user.deleted_at ? "Inactive" : "Active";
+                const status = user?.deleted_at ? "Inactive" : "Active";
                 return (
                   <TableRow
-                    key={user.id}
+                    key={user?.id}
                     className="hover:bg-white/5 bg-blue-50"
                   >
                     <TableCell className="font-medium text-black">
-                      {`${user.first_name || ""} ${
-                        user.last_name || ""
-                      }`.trim() || user.email}
+                      {`${user?.first_name || ""} ${
+                        user?.last_name || ""
+                      }`.trim() || user?.email}
                     </TableCell>
                     <TableCell className="text-black/80">
-                      {user.email}
+                      {user?.email}
                     </TableCell>
                     <TableCell className="text-black/80">
-                      {user.role}
+                      {user?.role}
                     </TableCell>
                     <TableCell
                       className={`text-black ${
@@ -202,8 +202,8 @@ const TeamManagement = () => {
               {combinedData?.invites?.map((invite) => {
                 const now = new Date();
                 const expiresAt = new Date(invite.expires_at);
-                const status = expiresAt > now ? "Pending" : "Expired"; // Status based on expiration
-                const name = invite.user_email.split("@")[0]; // Extract name before @
+                const status = expiresAt > now ? "Pending" : "Expired"; 
+                const name = invite.user_email.split("@")[0]; 
 
                 return (
                   <TableRow
