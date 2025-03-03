@@ -34,6 +34,7 @@ const admindiscountRouters = require("./routes/admindiscount.route.js");
 const supplierRoutes = require("./routes/supplier.route.js");
 const consignmentRoutes = require("./routes/consignment.route.js");
 const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
+const stockRoutes = require("./routes/stock.route.js");
 const notificationRoutes = require("./routes/notification.route.js");
 const transporterRoutes = require("./routes/transport.route.js");
 const app = express();
@@ -148,6 +149,7 @@ app.use("/api/admin", admindiscountRouters);
 app.use("/api/suppliers", supplierRoutes);
 app.use("/consignments", consignmentRoutes);
 app.use("/stock-transactions", stockTransactionRoutes);
+app.use("/api/stock", stockRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/transporters", transporterRoutes);
 // WebSocket connection handling

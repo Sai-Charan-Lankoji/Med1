@@ -1,0 +1,63 @@
+// models/StockVariant.js
+const { DataTypes } = require("sequelize");
+const sequelize = require("../config/db");
+const Stock = require("./stock.model");
+
+const StockVariant = sequelize.define(
+  "StockVariant",
+  {
+    variantId: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    stockId: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      references: { model: Stock, key: "stockId" },
+    },
+    size: {
+      type: DataTypes.STRING,
+      allowNull: false, // e.g., "M", "10"
+    },
+    color: {
+      type: DataTypes.STRING,
+      allowNull: true, // e.g., "Blue", null
+    },
+    totalQuantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: { min: 0 },
+    },
+    availableQuantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: { min: 0 },
+    },
+    onHoldQuantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: { min: 0 },
+    },
+    exhaustedQuantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: { min: 0 },
+    },
+  },
+  {
+    tableName: "stock_variants",
+    timestamps: true,
+    underscored: true,
+    indexes: [{ unique: true, fields: ["stockId", "size", "color"] }],
+  }
+);
+
+Stock.hasMany(StockVariant, { foreignKey: "stockId" });
+StockVariant.belongsTo(Stock, { foreignKey: "stockId" });
+
+module.exports = StockVariant;
