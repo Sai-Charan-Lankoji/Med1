@@ -18,7 +18,7 @@ class ProductService {
   }
 
   async getProductById(productId) {
-    const product = await Product.findById(productId);
+    const product = await Product.findByPk(productId);
     if (!product) {
       throw new Error("Product not found.");
     }

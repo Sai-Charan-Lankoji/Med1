@@ -66,7 +66,7 @@ const fetcher = async (url: string, token: string | null) => {
 };
 
 const Navbar: React.FC = () => {
-  const { cartItems: designableCartItems, deleteCart, fetchCartData, getStandardCartItems } = useNewCart();
+  const { cartItems: designableCartItems, deleteCartItem, fetchCartData, getStandardCartItems } = useNewCart();
   const { email, customerToken, profile } = useUserContext();
   const [username, setUsername] = useState<string>("");
   const { logout } = useCustomerLogout();
@@ -202,7 +202,7 @@ const Navbar: React.FC = () => {
   };
 
   const handleDeleteCart = async (cartId: string) => {
-    const success = await deleteCart(cartId);
+    const success = await deleteCartItem(cartId);
     if (success) {
       localStorage.removeItem("savedDesignState");
       localStorage.removeItem("cart_id");

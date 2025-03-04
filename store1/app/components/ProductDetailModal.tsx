@@ -1,5 +1,18 @@
 "use client";
 
+/**
+ * ProductDetailModal Wishlist Enhancement
+ * Total Time Spent: 1 hour
+ * 
+ * 1. I completed the wishlist toggle logic for both product types:
+ *    - I updated handleWishlistToggle to send product_id for designable products and standard_product_id for standard products.
+ *    - I modified fetchWishlist to check for the product's presence in the wishlist using the correct field based on product type.
+ * 
+ * 2. I completed UI and error handling updates:
+ *    - I added logging to debug the request body and wishlist state.
+ *    - I ensured the UI (add to cart, customize, selections) remains unchanged.
+ */
+
 import type React from "react";
 import { useState, useEffect, useCallback } from "react";
 import { X, Minus, Plus, ShoppingCart, Pencil, Heart } from "lucide-react";
@@ -79,7 +92,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [currentSide, setCurrentSide] = useState("front");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isInWishlist, setIsInWishlist] = useState(false); // Track if product is in wishlist
+  const [isInWishlist, setIsInWishlist] = useState(false);
 
   const router = useRouter();
   const {
@@ -258,7 +271,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   };
 
   // Fetch user's wishlist on mount and when product changes
-
   const fetchWishlist = useCallback(async () => {
     try {
       const token = sessionStorage.getItem("auth_token");
@@ -278,8 +290,11 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       const data = await response.json();
       if (data.status === 200 && data.success) {
         const wishlist = data.data as WishlistItem[];
+        const isDesignable = product.customizable === true;
         const isPresent = wishlist.some(
-          (item) => item.product_id === product.id || item.standard_product_id === product.id
+          (item) =>
+            (isDesignable && item.product_id === product.id) ||
+            (!isDesignable && item.standard_product_id === product.id)
         );
         setIsInWishlist(isPresent);
       } else {
@@ -290,7 +305,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       console.error("Error fetching wishlist:", error);
       setIsInWishlist(false);
     }
-  }, [product.id]);
+  }, [product.id, product.customizable]);
 
   useEffect(() => {
     fetchWishlist();
@@ -312,16 +327,22 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       setIsInWishlist(!isCurrentlyInWishlist);
 
       const endpoint = isCurrentlyInWishlist ? "/remove" : "/add";
+      
+      // Determine if the product is designable or standard
+      const isDesignable = product.customizable === true;
+      const requestBody = isDesignable
+        ? { product_id: product.id, standard_product_id: null }
+        : { product_id: null, standard_product_id: product.id };
+
+      console.log("Wishlist toggle request body:", requestBody);
+
       const response = await fetch(`http://localhost:5000/api/wishlists${endpoint}`, {
         method: isCurrentlyInWishlist ? "DELETE" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          product_id: null,
-          standard_product_id:  product.id, // Only send product_id for now
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();

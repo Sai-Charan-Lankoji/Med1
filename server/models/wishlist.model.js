@@ -5,7 +5,7 @@ const Wishlist = sequelize.define(
   "Wishlist",
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.STRING(255),
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
@@ -18,7 +18,7 @@ const Wishlist = sequelize.define(
       },
     },
     product_id: {
-      type: DataTypes.UUID, // Changed to UUID assuming Product model uses UUID
+      type: DataTypes.STRING(255), // Changed to UUID assuming Product model uses UUID
       allowNull: true,
       references: {
         model: "products",
