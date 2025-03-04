@@ -171,13 +171,13 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log("Database connected!");
-    // try {
-    //   await sequelize.sync({ force: false });
-    //   console.log("Models synced!");
-    // } catch (syncError) {
-    //   console.error("Sync failed:", syncError.message, syncError.stack);
-    //   throw syncError;
-    // }
+    try {
+      await sequelize.sync({ force: false });
+      console.log("Models synced!");
+    } catch (syncError) {
+      console.error("Sync failed:", syncError);
+      throw syncError;
+    }
     defineRelationships();
     console.log("Relationships defined!");
     const PORT = process.env.PORT || 5000;
