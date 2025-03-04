@@ -1,4 +1,5 @@
 const standardProductService = require("../services/standardProduct.service");
+const stockService = require("../services/stock.service");
 const FileService = require("../utils/fileupload");
 
 const fileService = new FileService();
@@ -15,52 +16,36 @@ exports.createStandardProduct = async (req, res) => {
       description: req.body.description,
       price: parseFloat(req.body.price),
       category: req.body.category,
-      sizes: Array.isArray(req.body.sizes)
-        ? req.body.sizes
-        : JSON.parse(req.body.sizes || "[]"),
-      colors: Array.isArray(req.body.colors)
-        ? req.body.colors
-        : JSON.parse(req.body.colors || "[]"),
-      stock: parseInt(req.body.stock),
+      sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || "[]"),
+      colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || "[]"),
+      stockId: req.body.stockId, 
       brand: req.body.brand,
       sku: req.body.sku,
-      discount: parseInt(req.body.discount),
-      customizable:
-        req.body.customizable === "true" || req.body.customizable === true,
+      discount: parseInt(req.body.discount) || 0,
+      customizable: req.body.customizable === "true" || req.body.customizable === true,
       sale: req.body.sale === "true" || req.body.sale === true,
       store_id: req.body.store_id,
       product_type: "Standard",
     };
 
-    // Process side images (front, back, left, right)
     let uploadedImages = {};
-    const imageFields = [
-      "front_image",
-      "back_image",
-      "left_image",
-      "right_image",
-    ];
-
+    const imageFields = ["front_image", "back_image", "left_image", "right_image"];
     for (const field of imageFields) {
       if (req.body[field]) {
         try {
           const image = await fileService.saveBase64File(req.body[field], req);
-          uploadedImages[field] = image.url; // Store full URL
+          uploadedImages[field] = image.url;
         } catch (error) {
           console.error(`Error uploading ${field}:`, error);
         }
       }
     }
 
-    // Merge the data
-    const finalProductData = {
-      ...productData,
-      ...uploadedImages, // Store side-wise images with full URLs
-    };
+    const finalProductData = { ...productData, ...uploadedImages };
+    const product = await standardProductService.createStandardProduct(finalProductData);
 
-    const product = await standardProductService.createStandardProduct(
-      finalProductData
-    );
+   
+
     res.status(201).json({ success: true, product });
   } catch (error) {
     console.error("Error creating product:", error);

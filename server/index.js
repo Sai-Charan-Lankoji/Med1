@@ -1,16 +1,18 @@
+// index.js
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const http = require("http"); // Added for socket.io
-const { Server } = require("socket.io"); // Added for socket.io
+const http = require("http");
+const { Server } = require("socket.io");
 const sequelize = require("./config/db.js");
 const swaggerUi = require("swagger-ui-express");
 const { swaggerSpecs } = require("./swagger/swagger");
 const { listStores } = require("./services/store.service.js");
 const { startBillingScheduler } = require("./schedulers/billingScheduler");
-const notificationService = require("./services/notification.service.js"); 
+const notificationService = require("./services/notification.service.js");
+const defineRelationships = require("./models/relationship.model.js"); 
 
 // Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
@@ -37,8 +39,9 @@ const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
 const stockRoutes = require("./routes/stock.route.js");
 const notificationRoutes = require("./routes/notification.route.js");
 const transporterRoutes = require("./routes/transport.route.js");
+
 const app = express();
-const server = http.createServer(app); // Changed from app.listen to support socket.io
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
@@ -48,7 +51,7 @@ const io = new Server(server, {
       "https://med1-4217.vercel.app",
       "https://med1-five.vercel.app",
       "https://med1-p6q2.vercel.app",
-    ], // Match your allowed origins
+    ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
   },
@@ -66,7 +69,6 @@ const updateAllowedOrigins = async () => {
   try {
     const stores = await listStores();
     dynamicAllowedOrigins = stores.map((store) => store.store_url);
-    // console.log("Updated Allowed Origins:", dynamicAllowedOrigins);
   } catch (error) {
     console.error("Error updating allowed origins:", error.message);
   }
@@ -86,9 +88,7 @@ app.use(
         "https://med1-five.vercel.app",
         "https://med1-p6q2.vercel.app",
       ];
-
       const allowedOrigins = [...predefinedOrigins, ...dynamicAllowedOrigins];
-
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -114,11 +114,9 @@ app.use(
       "Origin, X-Requested-With, Content-Type, Accept"
     );
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
-
     if (req.method === "OPTIONS") {
       return res.status(200).end();
     }
-
     next();
   },
   express.static(path.join(__dirname, "public/uploads"))
@@ -152,15 +150,14 @@ app.use("/stock-transactions", stockTransactionRoutes);
 app.use("/api/stock", stockRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/transporters", transporterRoutes);
+
 // WebSocket connection handling
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
-
   socket.on("joinVendorRoom", (vendorId) => {
     socket.join(`vendor_${vendorId}`);
     console.log(`Client ${socket.id} joined room: vendor_${vendorId}`);
   });
-
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
@@ -174,9 +171,17 @@ const startServer = async () => {
   try {
     await sequelize.authenticate();
     console.log("Database connected!");
-
+    // try {
+    //   await sequelize.sync({ force: false });
+    //   console.log("Models synced!");
+    // } catch (syncError) {
+    //   console.error("Sync failed:", syncError.message, syncError.stack);
+    //   throw syncError;
+    // }
+    defineRelationships();
+    console.log("Relationships defined!");
     const PORT = process.env.PORT || 5000;
-    server.listen(PORT, () => { // Changed from app.listen to server.listen
+    server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {

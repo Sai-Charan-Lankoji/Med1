@@ -126,6 +126,23 @@ exports.getStockByProductId = async (req, res) => {
   }
 };
 
+
+exports.restockVariant = async (req, res) => {
+  try {
+    const { variantId, quantity } = req.body;
+
+    if (!variantId || !quantity || quantity <= 0) {
+      return res.status(400).json({ success: false, message: "variantId and valid quantity are required" });
+    }
+
+    const variant = await stockService.restockVariant(variantId, parseInt(quantity));
+    res.status(200).json({ success: true, variant });
+  } catch (error) {
+    console.error("Error restocking variant:", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 /**
  * Get all stock entries
  */

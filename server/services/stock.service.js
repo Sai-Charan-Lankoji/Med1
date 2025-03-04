@@ -20,7 +20,7 @@ class StockService {
     });
 
     const variantEntries = variants.map(v => ({
-      stockId: stock.stockId,
+      stock_id: stock.stock_id,
       size: v.size,
       color: v.color,
       totalQuantity: v.totalQuantity,
@@ -33,10 +33,10 @@ class StockService {
   }
 
   // Link stock to product
-  async linkStockToProduct(stockId, productId) {
+  async linkStockToProduct(stock_id, productId) {
     const updated = await Stock.update(
       { productId },
-      { where: { stockId } }
+      { where: { stock_id } }
     );
     if (!updated[0]) throw new Error("Stock not found");
     return updated;
@@ -48,7 +48,7 @@ class StockService {
     if (!variant) throw new Error("Variant not found");
     if (variant.availableQuantity < quantity) throw new Error("Insufficient stock");
 
-    const stock = await Stock.findByPk(variant.stockId);
+    const stock = await Stock.findByPk(variant.stock_id);
 
     variant.availableQuantity -= quantity;
     variant.onHoldQuantity += quantity;
@@ -65,7 +65,7 @@ class StockService {
     if (!variant) throw new Error("Variant not found");
     if (variant.onHoldQuantity < quantity) throw new Error("Insufficient on-hold stock");
 
-    const stock = await Stock.findByPk(variant.stockId);
+    const stock = await Stock.findByPk(variant.stock_id);
 
     variant.onHoldQuantity -= quantity;
     variant.availableQuantity += quantity;
@@ -82,7 +82,7 @@ class StockService {
     if (!variant) throw new Error("Variant not found");
     if (variant.onHoldQuantity < quantity) throw new Error("Insufficient on-hold stock");
 
-    const stock = await Stock.findByPk(variant.stockId);
+    const stock = await Stock.findByPk(variant.stock_id);
 
     variant.onHoldQuantity -= quantity;
     variant.exhaustedQuantity += quantity;
@@ -101,7 +101,7 @@ class StockService {
     if (!stock) return { sizes: [], colors: [] };
 
     const variants = await StockVariant.findAll({
-      where: { stockId: stock.stockId, availableQuantity: { [Op.gt]: 0 } },
+      where: { stock_id: stock.stock_id, availableQuantity: { [Op.gt]: 0 } },
     });
     const sizes = [...new Set(variants.map(v => v.size))];
     const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
@@ -125,6 +125,8 @@ class StockService {
     };
   }
 
+  
+
   // Get stock by product ID
   async getStockByProductId(productId) {
     const stock = await Stock.findOne({
@@ -141,6 +143,21 @@ class StockService {
       totals,
       availableVariants,
     };
+  }
+// Restock variant
+  async restockVariant(variantId, quantity) {
+    const variant = await StockVariant.findByPk(variantId);
+    if (!variant) throw new Error("Variant not found");
+
+    const stock = await Stock.findByPk(variant.stock_id);
+
+    variant.totalQuantity += quantity;
+    variant.availableQuantity += quantity;
+    stock.totalQuantity += quantity;
+    stock.availableQuantity += quantity;
+
+    await Promise.all([variant.save(), stock.save()]);
+    return variant;
   }
 
   // Get all stocks

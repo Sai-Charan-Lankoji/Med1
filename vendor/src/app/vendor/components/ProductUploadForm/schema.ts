@@ -1,3 +1,4 @@
+// components/schema.ts
 import { z } from "zod";
 
 export const productFormSchema = z.object({
@@ -12,7 +13,7 @@ export const productFormSchema = z.object({
       label: z.string().min(1) 
     }))
     .optional(),
-  stock: z.number().min(0, "Stock must be a positive number"),
+  stockId: z.string().optional(), // Replace stock with stockId
   brand: z.string().min(1, "Brand is required"),
   sku: z.string().min(1, "SKU is required"),
   discount: z.number().nullable().optional(),
@@ -34,12 +35,12 @@ export const productFormSchema = z.object({
   }
 ).refine(
   (data) => {
-    if (data.product_type === "standard" && (!data.colors || data.colors.length === 0)) return false;
+    if (data.product_type === "standard" && !data.stockId) return false;
     return true;
   },
   {
-    message: "At least one color must be selected for standard products",
-    path: ["colors"],
+    message: "Stock selection is required for standard products",
+    path: ["stockId"],
   }
 );
 

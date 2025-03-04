@@ -6,20 +6,15 @@ const StandardProduct = require("./standardProduct.model");
 const Stock = sequelize.define(
   "Stock",
   {
-    stockId: {
+    stock_id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-    productId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: { model: StandardProduct, key: "id" },
-      unique: true, // One-to-one with ProductID
-    },
+   
     title: {
       type: DataTypes.STRING,
-      allowNull: false, // e.g., "Batch 1"
+      allowNull: false, 
     },
     totalQuantity: {
       type: DataTypes.INTEGER,
@@ -53,7 +48,7 @@ const Stock = sequelize.define(
   }
 );
 
-StandardProduct.hasOne(Stock, { foreignKey: "productId" });
-Stock.belongsTo(StandardProduct, { foreignKey: "productId" });
+// StandardProduct.hasOne(Stock, { foreignKey: "productId" });
+// Stock.belongsTo(StandardProduct, { foreignKey: "productId" });
 
 module.exports = Stock;

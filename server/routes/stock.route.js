@@ -192,6 +192,37 @@ router.post("/fulfill-order", stockController.fulfillOrder);
  */
 router.get("/product/:productId", stockController.getStockByProductId);
 
+
+/**
+ * @swagger
+ * /api/stock/restock:
+ *   post:
+ *     summary: Restock a variant
+ *     tags: [Stock]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - variantId
+ *               - quantity
+ *             properties:
+ *               variantId:
+ *                 type: string
+ *                 example: uuid-for-variant
+ *               quantity:
+ *                 type: integer
+ *                 example: 50
+ *     responses:
+ *       200:
+ *         description: Variant restocked successfully
+ *       400:
+ *         description: Invalid input
+ */
+router.post("/restock", stockController.restockVariant);
+
 /**
  * @swagger
  * /api/stock:

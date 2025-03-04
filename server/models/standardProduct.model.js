@@ -2,6 +2,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Store = require("./store.model"); // Assuming this exists
+const Stock = require("./stock.model");
 
 const StandardProduct = sequelize.define(
   "StandardProduct",
@@ -16,7 +17,12 @@ const StandardProduct = sequelize.define(
     },
     sizes: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true, defaultValue: [] },
     colors: { type: DataTypes.JSONB, allowNull: true, defaultValue: [] },
-    stock: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    stock: { type: DataTypes.INTEGER, allowNull: true },
+    stockId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: { model: Stock, key: "stockId" },
+    },
     brand: { type: DataTypes.STRING, allowNull: true },
     sku: { type: DataTypes.STRING, allowNull: true, unique: true },
     discount: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 10 },
@@ -30,10 +36,7 @@ const StandardProduct = sequelize.define(
     store_id: {
       type: DataTypes.STRING(250),
       allowNull: false,
-      references: {
-        model: Store,
-        key: "id",
-      },
+      references: { model: Store, key: "id" },
       onDelete: "CASCADE",
     },
   },
@@ -41,7 +44,7 @@ const StandardProduct = sequelize.define(
     tableName: "standard_products",
     timestamps: true,
     underscored: true,
-    paranoid: true, // Soft deletes enabled
+    paranoid: true,
   }
 );
 
