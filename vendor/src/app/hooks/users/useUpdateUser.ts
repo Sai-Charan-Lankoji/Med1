@@ -11,7 +11,7 @@ const updateUser = async (userData: { id: string; [key: string]: any }) => {
   }
 
   const { id, ...updateData } = userData
-  const url = `${baseUrl}/vendor/vendoruser/${id}`
+  const url = `${baseUrl}/api/vendor-users/${id}`
 
   try {
     const response = await fetch(url, {

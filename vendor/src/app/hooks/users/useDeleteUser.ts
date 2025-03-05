@@ -10,7 +10,7 @@ const deleteUser = async (userId: string) => {
     throw new Error('Vendor ID not found')
   }
 
-  const url = `${baseUrl}/vendor/vendoruser/${userId}`
+  const url = `${baseUrl}/api/vendor-users/${userId}`
 
   try {
     const response = await fetch(url, {

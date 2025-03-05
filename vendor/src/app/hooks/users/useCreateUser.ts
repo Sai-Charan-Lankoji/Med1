@@ -9,7 +9,7 @@ export const useCreateUser = () => {
 
   return useMutation({
     mutationFn: async (newUser: UserFormData) => {
-      const response = await fetch(`${baseUrl}/vendor/vendoruser`, {
+      const response = await fetch(`${baseUrl}/api/vendor-users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
