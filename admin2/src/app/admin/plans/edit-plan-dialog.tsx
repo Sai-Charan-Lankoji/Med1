@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Button } from "@/app/components/ui/button"
+import { Input } from "@/app/components/ui/input"
+import { Label } from "@/app/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -9,10 +9,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { cn } from "@/lib/utils"
+} from "@/app/components/ui/dialog"
+import { cn } from "@/app/lib/utils"
 import { Check, X } from 'lucide-react'
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/app/hooks/use-toast"
 import { useUpdatePlan } from "@/app/hooks/plan/useUpdatePlan"
 import { UpdatePlanData } from "../../hooks/plan/useUpdatePlan"
 
@@ -176,7 +176,7 @@ export function EditPlanDialog({ isOpen, onClose, plan, onUpdate }: EditPlanDial
             <div className="space-y-2">
               <Label htmlFor="price" className="text-sm font-medium">
                 Price ($)
-              </Label>
+              </Label> 
               <Input
                 id="price"
                 type="number"

@@ -1,12 +1,12 @@
 import { Store, CreditCard, Server, Settings  } from 'lucide-react'
 import Link from "next/link"
-import { cn } from "@/lib/utils"
+import { cn } from "@/app/lib/utils"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from "@/app/components/ui/tooltip"
 
 interface MenuItemsProps {
   collapsed: boolean
@@ -29,11 +29,11 @@ export const menuItems = [
     icon: Server,
     href: "/admin/billingservices",
   },
-  {
-    title: "Settings",
-    icon: Settings,
-    href: "/admin/settings"
-  }
+  // {
+  //   title: "Settings",
+  //   icon: Settings,
+  //   href: "/admin/settings"
+  // }
 ]
 
 export default function MenuItems({ collapsed, currentPath }: MenuItemsProps) {

@@ -1,55 +1,47 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+// src/context/AuthContext.tsx
+'use client';
+import React, { createContext, useContext, useState } from 'react';
 
 interface AuthContextType {
   email: string | null;
-  first_name: string | null;
-  last_name: string | null;
+  firstName: string | null;
+  lastName: string | null;
   role: string | null;
-  admin_id: string | null;
+  adminId: string | null;
   setAuthEmail: (email: string | null) => void;
-  setFirstName: (first_name: string | null) => void;
-  setLastName: (last_name: string | null) => void;
+  setFirstName: (firstName: string | null) => void;
+  setLastName: (lastName: string | null) => void;
   setRole: (role: string | null) => void;
-  setAdminId: (admin_id: string | null) => void;
+  setAdminId: (adminId: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [email, setAuthEmail] = useState<string | null>(null);
-  const [first_name, setFirstName] = useState<string | null>(null);
-  const [last_name, setLastName] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
-  const [admin_id, setAdminId] = useState<string | null>(null);
-
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setAuthEmail(localStorage.getItem('email'));
-      setFirstName(localStorage.getItem('first_name'));
-      setLastName(localStorage.getItem('last_name'));
-      setRole(localStorage.getItem('role'));
-      setAdminId(localStorage.getItem('admin_id'));
-    }
-  }, []);
-
-  // Persist data to localStorage on update
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      if (email) localStorage.setItem('email', email);
-      if (first_name) localStorage.setItem('first_name', first_name);
-      if (last_name) localStorage.setItem('last_name', last_name);
-      if (role) localStorage.setItem('role', role);
-      if (admin_id) localStorage.setItem('admin_id', admin_id);
-    }
-  }, [email, first_name, last_name, role, admin_id]);
+export function AuthProvider({
+  children,
+  initialAuth,
+}: {
+  children: React.ReactNode;
+  initialAuth?: {
+    email: string;
+    first_name: string;
+    last_name: string;
+    role: string;
+    id: string;
+  } | null;
+}) {
+  const [email, setAuthEmail] = useState<string | null>(initialAuth?.email || null);
+  const [firstName, setFirstName] = useState<string | null>(initialAuth?.first_name || null);
+  const [lastName, setLastName] = useState<string | null>(initialAuth?.last_name || null);
+  const [role, setRole] = useState<string | null>(initialAuth?.role || null);
+  const [adminId, setAdminId] = useState<string | null>(initialAuth?.id || null);
 
   const contextValue: AuthContextType = {
     email,
-    first_name,
-    last_name,
+    firstName,
+    lastName,
     role,
-    admin_id,
+    adminId,
     setAuthEmail,
     setFirstName,
     setLastName,
@@ -58,7 +50,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

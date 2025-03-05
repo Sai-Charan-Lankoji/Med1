@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/app/components/ui/card";
 import {
   Loader2,
   AlertCircle,
@@ -31,12 +31,12 @@ import {
   Legend,
 } from "recharts";
 import { motion } from "framer-motion";
-import { ChartContainer } from "@/components/ui/chart";
-import { Button } from "@/components/ui/button";
+import { ChartContainer } from "@/app/components/ui/chart";
+import { Button } from "@/app/components/ui/button";
 import { useState } from "react";
-import { AnimatedCounter } from "@/components/ui/animated-counter";
+import { AnimatedCounter } from "@/app/components/ui/animated-counter";
 import { BackButton } from "@/app/utils/backButton";
-import { LoadingDots, ErrorMessage } from "@/components/ui/Loding"
+import { LoadingDots, ErrorMessage } from "@/app/components/ui/Loding";
 
 const VendorAnalyticsPage = () => {
   const { id } = useParams<{ id: string }>();

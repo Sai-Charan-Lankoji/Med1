@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const vendorController = require("../controllers/vendor.controller");
+const AuthMiddleware = require("../middleware/AuthMiddleware")
 
 /**
  * @swagger
@@ -25,7 +26,7 @@ const vendorController = require("../controllers/vendor.controller");
  *               items:
  *                 $ref: '#/components/schemas/Vendor'
  */
-router.get("/", vendorController.getAllVendors);
+router.get("/", AuthMiddleware, vendorController.getAllVendors);
 
 /**
  * @swagger

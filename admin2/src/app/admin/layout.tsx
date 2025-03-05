@@ -1,8 +1,6 @@
-// src/app/page.tsx
-import React from 'react';
+// src/app/admin/layout.tsx
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import {LoginForm} from './LoginForm/page';
 import { NEXT_URL } from '@/constants';
 
 async function fetchAuthData(token: string) {
@@ -22,16 +20,19 @@ async function fetchAuthData(token: string) {
   }
 }
 
-export default async function LoginPage() {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = cookies();
   const token = cookieStore.get('auth_token')?.value;
 
-  if (token) {
-    const authData = await fetchAuthData(token);
-    if (authData) {
-      redirect('/admin/vendors');
-    }
+  if (!token) {
+    redirect('/'); // Redirect to home/login if no token
   }
 
-  return <LoginForm />;
+  const authData = await fetchAuthData(token);
+  if (!authData) {
+    redirect('/'); // Redirect if token is invalid or user not found
+  }
+
+  // If authenticated, render the admin UI with children (e.g., /admin/vendors)
+  return <>{children}</>;
 }

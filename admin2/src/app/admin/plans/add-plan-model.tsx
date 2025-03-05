@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -11,15 +11,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { cn } from "@/lib/utils";
+} from "@/app/components/ui/dialog";
+import { cn } from "@/app/lib/utils";
 import { Check, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/app/hooks/use-toast";
 import { useCreatePlan } from "@/app/hooks/plan/useCreatePlan";
 import { CreatePlanData } from "@/app/@types/plan";
 import { useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { LoadingDots } from "@/components/ui/Loding";
+import { LoadingDots } from "@/app/components/ui/Loding";
 
 interface AddPlanDialogProps {
   isOpen: boolean;

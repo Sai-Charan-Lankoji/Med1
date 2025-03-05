@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGetVendors } from "@/app/hooks/vendors/useGetVendors";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/app/components/ui/input"
 import { Search, Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
@@ -12,18 +12,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/app/components/ui/table"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+} from "@/app/components/ui/card";
+import { Badge } from "@/app/components/ui//badge";
+import { cn } from "@/app/lib/utils";
 import { motion } from "framer-motion";
-import { LoadingDots } from "@/components/ui/Loding";
+import { LoadingDots } from "@/app/components/ui/Loding";
 
 interface Vendor {
   id: string;

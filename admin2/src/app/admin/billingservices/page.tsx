@@ -19,7 +19,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/app/components/ui/card";
 import {
   Table,
   TableBody,
@@ -27,11 +27,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { AnimatedCounter } from "@/components/ui/animated-counter";
+} from "@/app/components/ui/table";
+import { Button } from "@/app/components/ui/button";
+import { AnimatedCounter } from "@/app/components/ui/animated-counter";
 import { motion } from "framer-motion";
-import { LoadingDots, ErrorMessage } from "@/components/ui/Loding";
+import { LoadingDots, ErrorMessage } from "@/app/components/ui/Loding";
 
 interface Vendor {
   id: string;

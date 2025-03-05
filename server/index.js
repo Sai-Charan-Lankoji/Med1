@@ -13,10 +13,12 @@ const { listStores } = require("./services/store.service.js");
 const { startBillingScheduler } = require("./schedulers/billingScheduler");
 const notificationService = require("./services/notification.service.js");
 const defineRelationships = require("./models/relationship.model.js"); 
+const cookieParser = require('cookie-parser');
+
 
 // Import routes
 const vendorRoutes = require("./routes/vendor.route.js");
-const authRoutes = require("./routes/auth.route.js");
+const authRoutes = require("./routes/adminRoutes/auth.route.js");
 const planRoutes = require("./routes/plan.route.js");
 const orderRoutes = require("./routes/order.route.js");
 const vendorauthRoutes = require("./routes/vendorauth.route.js");
@@ -41,6 +43,7 @@ const notificationRoutes = require("./routes/notification.route.js");
 const transporterRoutes = require("./routes/transport.route.js");
 
 const app = express();
+app.use(cookieParser());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {

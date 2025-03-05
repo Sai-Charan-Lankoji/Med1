@@ -5,7 +5,7 @@ import { Channels, ChevronRight, CurrencyDollar, Users } from "@medusajs/icons";
 import { Container } from "@medusajs/ui";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { LoadingDots } from "@/components/ui/Loding";
+import { LoadingDots } from "@/app/components/ui/Loding";
 
 const Settings = () => {
   const settings = [

@@ -2,7 +2,7 @@ import { NEXT_URL } from '@/constants';
 const baseUrl = NEXT_URL;
 import { useQuery } from "@tanstack/react-query";
 
-const fetchCustomers = async () => {
+const fetchVendors = async () => {
   const url = `${baseUrl}/api/vendors`;
   try {
     const response = await fetch(url, {
@@ -40,7 +40,7 @@ const fetchCustomers = async () => {
 };
 
 export const useGetVendors = () => {
-  return useQuery(["vendors"], fetchCustomers, {
+  return useQuery(["vendors"], fetchVendors, {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     cacheTime: 0,
@@ -50,7 +50,7 @@ export const useGetVendors = () => {
     onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error(
-          "Error occurred while fetching customers:",
+          "Error occurred while fetching Vendors:",
           error.message
         );
       } else {

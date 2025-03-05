@@ -14,13 +14,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+} from "@/app/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/app/components/ui/table";
 import { BackButton } from "@/app/utils/backButton";
 import { useGetVendor } from "@/app/hooks/vendors/useGetVendor";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { motion } from "framer-motion";
-import { LoadingDots } from "@/components/ui/Loding";
+import { LoadingDots } from "@/app/components/ui/Loding";
 import { ChevronLeft } from "lucide-react";
 
 export default function VendorDetailsPage() {

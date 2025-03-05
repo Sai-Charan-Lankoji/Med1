@@ -1,6 +1,8 @@
-const express = require("express");
-const { signup, login, logout, getUsers } = require("../controllers/auth.controller");
-const validateRequest = require('../middleware/validateRequest');
+// backend/routes/auth.route.js
+const express = require('express');
+const { signup, login, logout, getUsers,getCurrentUser } = require('../../controllers/auth.controller');
+const validateRequest = require('../../middleware/validateRequest');
+const authMiddleware = require('../../middleware/AuthMiddleware');
 
 const router = express.Router();
 
@@ -34,11 +36,15 @@ const router = express.Router();
  *                 format: password
  *     responses:
  *       201:
- *         description: User created successfully
+ *         description: User created successfully, token set in cookie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
  *       400:
  *         description: Invalid input
  */
-router.post("/signup", validateRequest(["email", "first_name", "last_name", "password"]), signup);
+router.post('/signup', validateRequest(['email', 'first_name', 'last_name', 'password']), signup);
 
 /**
  * @swagger
@@ -64,11 +70,17 @@ router.post("/signup", validateRequest(["email", "first_name", "last_name", "pas
  *                 format: password
  *     responses:
  *       200:
- *         description: Login successful
- *       400:
+ *         description: Login successful, token set in cookie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
  *         description: Invalid credentials
  */
-router.post("/login", validateRequest(["email", "password"]), login);
+router.post('/login', validateRequest(['email', 'password']), login); 
+
+router.get('/me', authMiddleware,getCurrentUser )
 
 /**
  * @swagger
@@ -76,18 +88,15 @@ router.post("/login", validateRequest(["email", "password"]), login);
  *   post:
  *     summary: Admin logout
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
- *         description: Logout successful
+ *         description: Logout successful, cookie cleared
+ *       401:
+ *         description: Unauthorized
  *       400:
- *         description: Token is required for logout
- *       500:
- *         description: Server error
+ *         description: Token required
  */
-router.post("/logout", logout);
-
+router.post('/logout', authMiddleware, logout);
 
 /**
  * @swagger
@@ -95,22 +104,27 @@ router.post("/logout", logout);
  *   get:
  *     summary: Fetch all users
  *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of users
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/User'
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/User'
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 total_pages:
+ *                   type: integer
  *       401:
  *         description: Unauthorized
- *       500:
- *         description: Server error
  */
-router.get("/users", getUsers);
+router.get('/users', authMiddleware, getUsers);
 
 module.exports = router;

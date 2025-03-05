@@ -2,22 +2,22 @@
 
 import { useState } from "react";
 import { PackageSearch, Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/app/components/ui/button";
+import { Input } from "@/app/components/ui/input";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/app/components/ui/card";
 import { AddPlanDialog } from "./add-plan-model";
 import { PlanCard } from "./plan-card";
 import { useGetPlans } from "../../hooks/plan/useGetPlans";
 import { useUpdatePlan, UpdatePlanData } from "../../hooks/plan/useUpdatePlan";
 import { useDeletePlan } from "../../hooks/plan/useDeletePlan";
 import { EditPlanDialog } from "./edit-plan-dialog";
-import { LoadingDots } from "@/components/ui/Loding";
+import { LoadingDots } from "@/app/components/ui/Loding";
 import { motion } from "framer-motion";
 
 
