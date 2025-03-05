@@ -2,30 +2,63 @@
 
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Package2, RefreshCcw, PlusCircle, Search, History, ArrowUpDown, AlertTriangle } from "lucide-react"
+import {
+  Package2,
+  RefreshCcw,
+  PlusCircle,
+  Search,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpDown,
+  AlertTriangle,
+} from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipTrigger,TooltipProvider } from "@radix-ui/react-tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useStock } from "@/app/hooks/useStock"
 import { AddStockDialog } from "./add-stock-dialog"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { format } from "date-fns"
 
 interface Variant {
-  id: string
-  productId: string | null
-  name: string
+  variantId: string
+  stockId: string
   size: string
   color: string
   totalQuantity: number
   availableQuantity: number
   onHoldQuantity: number
   exhaustedQuantity: number
-  status: string
+  createdAt: string
+  updatedAt: string
+  stock_id: string
+}
+
+interface Stock {
+  stock_id: string
+  title: string
+  totalQuantity: number
+  availableQuantity: number
+  onHoldQuantity: number
+  exhaustedQuantity: number
+  createdAt: string
+  updatedAt: string
+  StockVariants: Variant[]
+  totals: {
+    totalQuantity: number
+    availableQuantity: number
+    onHoldQuantity: number
+    exhaustedQuantity: number
+  }
+  availableVariants: {
+    sizes: string[]
+    colors: string[]
+  }
 }
 
 export default function StockManagement() {
@@ -34,6 +67,7 @@ export default function StockManagement() {
   const [showAddStock, setShowAddStock] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState("all")
+  const [expandedStocks, setExpandedStocks] = useState<Record<string, boolean>>({})
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -45,26 +79,22 @@ export default function StockManagement() {
     setShowAddStock(true)
   }
 
-  const standardVariants = stocks.flatMap((stock) =>
-    (stock.StockVariants || []).map((variant) => ({
-      id: variant.variantId,
-      productId: stock.productId,
-      name: "Unknown", // Replace with product title if joined in backend
-      size: variant.size,
-      color: variant.color || "N/A",
-      totalQuantity: variant.totalQuantity,
-      availableQuantity: variant.availableQuantity,
-      onHoldQuantity: variant.onHoldQuantity,
-      exhaustedQuantity: variant.exhaustedQuantity,
-      status:
-        variant.availableQuantity === 0 ? "Out of Stock" : variant.availableQuantity <= 10 ? "Low Stock" : "In Stock",
-    })),
-  )
+  const toggleStockExpansion = (stockId: string) => {
+    setExpandedStocks((prev) => ({
+      ...prev,
+      [stockId]: !prev[stockId],
+    }))
+  }
 
-  const lowStockCount = standardVariants.filter((v) => v.status === "Low Stock").length
-  const outOfStockCount = standardVariants.filter((v) => v.status === "Out of Stock").length
+  // Calculate counts for tabs
+  const lowStockCount = stocks.filter(
+    (stock) => stock.availableQuantity > 0 && stock.availableQuantity <= stock.totalQuantity * 0.2,
+  ).length
 
-  const totals = {
+  const outOfStockCount = stocks.filter((stock) => stock.availableQuantity === 0).length
+
+  // Calculate overall totals
+  const overallTotals = {
     totalQuantity: stocks.reduce((sum, stock) => sum + stock.totalQuantity, 0),
     availableQuantity: stocks.reduce((sum, stock) => sum + stock.availableQuantity, 0),
     onHoldQuantity: stocks.reduce((sum, stock) => sum + stock.onHoldQuantity, 0),
@@ -126,25 +156,25 @@ export default function StockManagement() {
       >
         <StockCard
           title="Total Stock"
-          value={totals.totalQuantity}
+          value={overallTotals.totalQuantity}
           icon={<Package2 className="h-5 w-5" />}
           color="bg-blue-50 text-blue-700"
         />
         <StockCard
           title="Available"
-          value={totals.availableQuantity}
+          value={overallTotals.availableQuantity}
           icon={<Package2 className="h-5 w-5" />}
           color="bg-green-50 text-green-700"
         />
         <StockCard
           title="On Hold"
-          value={totals.onHoldQuantity}
+          value={overallTotals.onHoldQuantity}
           icon={<Package2 className="h-5 w-5" />}
           color="bg-amber-50 text-amber-700"
         />
         <StockCard
           title="Exhausted"
-          value={totals.exhaustedQuantity}
+          value={overallTotals.exhaustedQuantity}
           icon={<Package2 className="h-5 w-5" />}
           color="bg-red-50 text-red-700"
         />
@@ -202,15 +232,35 @@ export default function StockManagement() {
           </div>
 
           <TabsContent value="all" className="m-0">
-            <StockTable data={standardVariants} searchTerm={searchTerm} filterStatus="all" />
+            <StockTable
+              stocks={stocks}
+              searchTerm={searchTerm}
+              filterStatus="all"
+              expandedStocks={expandedStocks}
+              toggleStockExpansion={toggleStockExpansion}
+            />
           </TabsContent>
 
           <TabsContent value="low-stock" className="m-0">
-            <StockTable data={standardVariants} searchTerm={searchTerm} filterStatus="low-stock" />
+            <StockTable
+              stocks={stocks.filter(
+                (stock) => stock.availableQuantity > 0 && stock.availableQuantity <= stock.totalQuantity * 0.2,
+              )}
+              searchTerm={searchTerm}
+              filterStatus="low-stock"
+              expandedStocks={expandedStocks}
+              toggleStockExpansion={toggleStockExpansion}
+            />
           </TabsContent>
 
           <TabsContent value="out-of-stock" className="m-0">
-            <StockTable data={standardVariants} searchTerm={searchTerm} filterStatus="out-of-stock" />
+            <StockTable
+              stocks={stocks.filter((stock) => stock.availableQuantity === 0)}
+              searchTerm={searchTerm}
+              filterStatus="out-of-stock"
+              expandedStocks={expandedStocks}
+              toggleStockExpansion={toggleStockExpansion}
+            />
           </TabsContent>
         </Tabs>
       </motion.div>
@@ -238,13 +288,17 @@ function StockCard({ title, value, icon, color }) {
 }
 
 function StockTable({
-  data,
+  stocks,
   searchTerm,
   filterStatus,
+  expandedStocks,
+  toggleStockExpansion,
 }: {
-  data: Variant[]
+  stocks: Stock[]
   searchTerm: string
   filterStatus: string
+  expandedStocks: Record<string, boolean>
+  toggleStockExpansion: (stockId: string) => void
 }) {
   const { restockVariant, fetchStocks } = useStock()
   const [restockDialog, setRestockDialog] = useState({
@@ -265,30 +319,29 @@ function StockTable({
     setSortConfig({ key, direction })
   }
 
-  const filteredData = data.filter((item) => {
+  const handleCopy = (stockId: string) => {
+    navigator.clipboard.writeText(stockId);
+    alert("Stock ID copied to clipboard!");
+  };
+  const filteredStocks = stocks.filter((stock) => {
     // Search filter
     if (searchTerm) {
       const searchTermLower = searchTerm.toLowerCase()
       if (
-        !item.name.toLowerCase().includes(searchTermLower) &&
-        !item.size.toLowerCase().includes(searchTermLower) &&
-        !item.color.toLowerCase().includes(searchTermLower)
+        !stock.title.toLowerCase().includes(searchTermLower) &&
+        !stock.stock_id.toLowerCase().includes(searchTermLower) &&
+        !stock.availableVariants.sizes.some((size) => size.toLowerCase().includes(searchTermLower)) &&
+        !stock.availableVariants.colors.some((color) => color.toLowerCase().includes(searchTermLower))
       ) {
         return false
       }
-    }
-
-    // Status filter
-    if (filterStatus !== "all") {
-      const status = item.status.toLowerCase().replace(" ", "-")
-      return status === filterStatus
     }
 
     return true
   })
 
   // Apply sorting
-  const sortedData = [...filteredData].sort((a, b) => {
+  const sortedStocks = [...filteredStocks].sort((a, b) => {
     if (!sortConfig.key) return 0
 
     const aValue = a[sortConfig.key]
@@ -314,25 +367,32 @@ function StockTable({
     }
   }
 
+  const getStockStatus = (stock: Stock) => {
+    if (stock.availableQuantity === 0) return "Out of Stock"
+    if (stock.availableQuantity <= stock.totalQuantity * 0.2) return "Low Stock"
+    return "In Stock"
+  }
+
   return (
     <>
       <div className="relative overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8"></TableHead>
               <TableHead className="w-[100px]">
-                <div className="flex items-center cursor-pointer" onClick={() => requestSort("id")}>
+                <div className="flex items-center cursor-pointer" onClick={() => requestSort("stock_id")}>
                   ID
                   <ArrowUpDown className="ml-1 h-3 w-3" />
                 </div>
               </TableHead>
-              <TableHead>Product</TableHead>
               <TableHead>
-                <div className="flex items-center cursor-pointer" onClick={() => requestSort("size")}>
-                  Size/Color
+                <div className="flex items-center cursor-pointer" onClick={() => requestSort("title")}>
+                  Batch Title
                   <ArrowUpDown className="ml-1 h-3 w-3" />
                 </div>
               </TableHead>
+              <TableHead>Variants</TableHead>
               <TableHead className="text-right">
                 <div
                   className="flex items-center justify-end cursor-pointer"
@@ -354,18 +414,18 @@ function StockTable({
               <TableHead className="text-right">On Hold</TableHead>
               <TableHead className="text-right">Used</TableHead>
               <TableHead>
-                <div className="flex items-center cursor-pointer" onClick={() => requestSort("status")}>
+                <div className="flex items-center cursor-pointer">
                   Status
                   <ArrowUpDown className="ml-1 h-3 w-3" />
                 </div>
               </TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Created</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.length === 0 ? (
+            {sortedStocks.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center">
+                <TableCell colSpan={10} className="h-24 text-center">
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
                     <Package2 className="h-8 w-8 mb-2 opacity-40" />
                     <p>No stock items found</p>
@@ -374,87 +434,140 @@ function StockTable({
                 </TableCell>
               </TableRow>
             ) : (
-              sortedData.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-mono text-xs">{item.id.substring(0, 8)}...</TableCell>
-                  <TableCell>
-                    <div className="font-medium">{item.name}</div>
-                    <div className="text-xs text-muted-foreground">ID: {item.productId}</div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="font-normal">
-                        {item.size}
-                      </Badge>
-                      <div
-                        className="h-3 w-3 rounded-full"
-                        style={{
-                          backgroundColor:
-                            item.color === "black"
-                              ? "black"
-                              : item.color === "white"
-                                ? "white"
-                                : item.color === "navy"
-                                  ? "navy"
-                                  : item.color === "gray"
-                                    ? "gray"
-                                    : "#ddd",
-                          border: item.color === "white" ? "1px solid #ddd" : "none",
-                        }}
-                      />
-                      <span className="text-sm capitalize">{item.color}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right font-medium">{item.totalQuantity}</TableCell>
-                  <TableCell className="text-right font-medium">{item.availableQuantity}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{item.onHoldQuantity}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">{item.exhaustedQuantity}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        item.status === "In Stock"
-                          ? "default"
-                          : item.status === "Low Stock"
-                            ? "secondary"
-                            : "destructive"
-                      }
-                      className={
-                        item.status === "In Stock"
-                          ? "bg-green-100 text-green-800 hover:bg-green-200"
-                          : item.status === "Low Stock"
-                            ? "bg-amber-100 text-amber-800 hover:bg-amber-200"
-                            : "bg-red-100 text-red-800 hover:bg-red-200"
-                      }
-                    >
-                      {item.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <History className="h-4 w-4" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>View History</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setRestockDialog({ open: true, variantId: item.id, quantity: "" })}
-                        className="text-xs h-8"
-                      >
-                        Restock
+              sortedStocks.map((stock) => (
+                <>
+                  <TableRow
+                    key={stock.stock_id}
+                    className={`cursor-pointer hover:bg-muted/50 ${expandedStocks[stock.stock_id] ? "bg-muted/30" : ""}`}
+                    onClick={() => toggleStockExpansion(stock.stock_id)}
+                  >
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
+                        {expandedStocks[stock.stock_id] ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
                       </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">
+                      <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span onClick={() => handleCopy(stock.stock_id)}>{stock.stock_id.substring(0, 8)}...</span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <span>Copy</span>
+                        </TooltipContent>
+                      </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                    <TableCell className="font-medium">{stock.title}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {stock.availableVariants.sizes.map((size, i) => (
+                          <Badge key={`size-${i}`} variant="outline" className="text-xs">
+                            {size}
+                          </Badge>
+                        ))}
+                        {stock.availableVariants.colors.map((color, i) => (
+                          <Badge key={`color-${i}`} variant="outline" className="text-xs">
+                            <div
+                              className="h-2 w-2 rounded-full mr-1 inline-block"
+                              style={{
+                                backgroundColor: color, 
+                                border: color.toLowerCase() === "white" ? "1px solid #ddd" : "none",
+                              }}
+                            />
+                            {color}
+                          </Badge>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">{stock.totalQuantity}</TableCell>
+                    <TableCell className="text-right font-medium">{stock.availableQuantity}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{stock.onHoldQuantity}</TableCell>
+                    <TableCell className="text-right text-muted-foreground">{stock.exhaustedQuantity}</TableCell>
+                    <TableCell>
+                      <StockStatusBadge status={getStockStatus(stock)} />
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {format(new Date(stock.createdAt), "MMM d, yyyy")}
+                    </TableCell>
+                  </TableRow>
+
+                  {/* Expanded Variants Table */}
+                  {expandedStocks[stock.stock_id] && (
+                    <TableRow>
+                      <TableCell colSpan={10} className="p-0 border-t-0">
+                        <div className="bg-muted/10 p-4 rounded-b-lg">
+                          <h4 className="text-sm font-medium mb-2">Variants in {stock.title}</h4>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Variant ID</TableHead>
+                                <TableHead>Size</TableHead>
+                                <TableHead>Color</TableHead>
+                                <TableHead className="text-right">Total</TableHead>
+                                <TableHead className="text-right">Available</TableHead>
+                                <TableHead className="text-right">On Hold</TableHead>
+                                <TableHead className="text-right">Used</TableHead>
+                                <TableHead>Actions</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {stock.StockVariants.map((variant) => (
+                                <TableRow key={variant.variantId}>
+                                  <TableCell className="font-mono text-xs">
+                                    {variant.variantId.substring(0, 8)}...
+                                  </TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="font-normal">
+                                      {variant.size}
+                                    </Badge>
+                                  </TableCell>
+                                  <TableCell>
+                                    <div className="flex items-center gap-2">
+                                      <div
+                                        className="h-3 w-3 rounded-full"
+                                        style={{
+                                          backgroundColor: variant.color, // Directly use the color name
+                                          border: variant.color.toLowerCase() === "white" ? "1px solid #ddd" : "none",
+                                        }}
+                                      />
+                                      <span className="text-sm capitalize">{variant.color}</span>
+                                    </div>
+                                  </TableCell>
+                                  <TableCell className="text-right font-medium">{variant.totalQuantity}</TableCell>
+                                  <TableCell className="text-right font-medium">{variant.availableQuantity}</TableCell>
+                                  <TableCell className="text-right text-muted-foreground">
+                                    {variant.onHoldQuantity}
+                                  </TableCell>
+                                  <TableCell className="text-right text-muted-foreground">
+                                    {variant.exhaustedQuantity}
+                                  </TableCell>
+                                  <TableCell>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        setRestockDialog({ open: true, variantId: variant.variantId, quantity: "" })
+                                      }}
+                                      className="text-xs h-8"
+                                    >
+                                      Restock
+                                    </Button>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </>
               ))
             )}
           </TableBody>
@@ -500,6 +613,30 @@ function StockTable({
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+function StockStatusBadge({ status }: { status: string }) {
+  let badgeClass = ""
+
+  switch (status) {
+    case "In Stock":
+      badgeClass = "bg-green-100 text-green-800 hover:bg-green-200"
+      break
+    case "Low Stock":
+      badgeClass = "bg-amber-100 text-amber-800 hover:bg-amber-200"
+      break
+    case "Out of Stock":
+      badgeClass = "bg-red-100 text-red-800 hover:bg-red-200"
+      break
+    default:
+      badgeClass = "bg-slate-100 text-slate-800 hover:bg-slate-200"
+  }
+
+  return (
+    <Badge variant="outline" className={badgeClass}>
+      {status}
+    </Badge>
   )
 }
 

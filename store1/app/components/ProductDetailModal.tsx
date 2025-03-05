@@ -1,18 +1,3 @@
-"use client";
-
-/**
- * ProductDetailModal Wishlist Enhancement
- * Total Time Spent: 1 hour
- * 
- * 1. I completed the wishlist toggle logic for both product types:
- *    - I updated handleWishlistToggle to send product_id for designable products and standard_product_id for standard products.
- *    - I modified fetchWishlist to check for the product's presence in the wishlist using the correct field based on product type.
- * 
- * 2. I completed UI and error handling updates:
- *    - I added logging to debug the request body and wishlist state.
- *    - I ensured the UI (add to cart, customize, selections) remains unchanged.
- */
-
 import type React from "react";
 import { useState, useEffect, useCallback } from "react";
 import { X, Minus, Plus, ShoppingCart, Pencil, Heart } from "lucide-react";
@@ -20,10 +5,18 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useNewCart } from "../hooks/useNewCart";
 import { IDesign } from "@/@types/models";
+import { getHexFromColorName } from "../utils/colorUtils";
 
 interface Color {
   hex: string;
   name: string;
+}
+
+interface Variant {
+  variantId: string;
+  size: string;
+  color: string;
+  availableQuantity: number;
 }
 
 interface Product {
@@ -32,8 +25,6 @@ interface Product {
   description: string;
   price: number;
   brand: string;
-  sizes?: string[];
-  colors?: Color[];
   front_image: string;
   back_image?: string;
   left_image?: string;
@@ -44,6 +35,8 @@ interface Product {
   designstate?: IDesign[];
   propstate?: any;
   designs?: IDesign[];
+  stock_id?: string;
+  stock?: { StockVariants: Variant[] };
 }
 
 interface WishlistItem {
@@ -77,22 +70,16 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   onClose,
 }) => {
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState(
-    product.sizes && product.sizes.length > 0 ? product.sizes[0] : ""
-  );
-  const [selectedColor, setSelectedColor] = useState(() => {
-    if (product.colors && product.colors.length > 0) {
-      return product.colors[0].hex;
-    } else if (product.customizable) {
-      return DEFAULT_COLORS[0].hex;
-    }
-    return "";
-  });
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [mainImage, setMainImage] = useState(product.front_image);
   const [currentSide, setCurrentSide] = useState("front");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
+  const [availableColors, setAvailableColors] = useState<Color[]>([]);
 
   const router = useRouter();
   const {
@@ -101,12 +88,59 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     loading: cartLoading,
   } = useNewCart();
 
-  const colorsToUse =
-    product.customizable && (!product.colors || product.colors.length === 0)
-      ? DEFAULT_COLORS
-      : product.colors || [];
-
   const defaultSizes = ["S", "M", "L", "XL", "2XL"];
+
+  // Extract variants for standard products, use defaults for customizable
+  useEffect(() => {
+    if (product.customizable) {
+      setAvailableSizes(defaultSizes);
+      setAvailableColors(DEFAULT_COLORS);
+      if (defaultSizes.length > 0) setSelectedSize(defaultSizes[0]);
+      if (DEFAULT_COLORS.length > 0) setSelectedColor(DEFAULT_COLORS[0].hex);
+    } else {
+      const fetchedVariants = product.stock?.StockVariants || [];
+      setVariants(fetchedVariants);
+
+      const sizes = [...new Set(fetchedVariants.map((v: Variant) => v.size))];
+      const colors = [
+        ...new Set(
+          fetchedVariants
+            .filter((v: Variant) => v.color)
+            .map((v: Variant) => v.color)
+        ),
+      ].map((color: string) => ({
+        hex: getHexFromColorName(color),
+        name: color,
+      }));
+
+      setAvailableSizes(sizes);
+      setAvailableColors(colors);
+
+      if (sizes.length > 0) setSelectedSize(sizes[0]);
+      if (colors.length > 0) setSelectedColor(colors[0].hex);
+    }
+  }, [product.stock, product.customizable]);
+
+  const getAvailableColorsForSize = (size: string) => {
+    if (!size || product.customizable) return availableColors;
+    const relevantVariants = variants.filter((v) => v.size === size && v.availableQuantity > 0);
+    return availableColors.filter((color) =>
+      relevantVariants.some((v) => v.color === color.name)
+    );
+  };
+
+  const getAvailableSizesForColor = (color: string) => {
+    if (!color || product.customizable) return availableSizes;
+    const relevantVariants = variants.filter(
+      (v) => v.color === (availableColors.find((c) => c.hex === color)?.name || color) && v.availableQuantity > 0
+    );
+    return availableSizes.filter((size) =>
+      relevantVariants.some((v) => v.size === size)
+    );
+  };
+
+  const colorsToUse = product.customizable ? DEFAULT_COLORS : getAvailableColorsForSize(selectedSize);
+  const sizesToUse = product.customizable ? defaultSizes : getAvailableSizesForColor(selectedColor);
 
   const handleQuantityChange = (change: number) => {
     setQuantity((prev) => Math.max(1, prev + change));
@@ -147,24 +181,18 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
           productId: product.id,
           quantity,
           selectedSize,
-          selectedColor: colorObj.hex,
+          selectedColor: colorObj.name,
         });
 
         const success = await addStandardProductToCart(
           product.id,
           quantity,
           selectedSize,
-          colorObj.hex
+          colorObj.name
         );
         if (!success) throw new Error("Failed to add standard product to cart");
       }
 
-      console.log("Added to cart successfully:", {
-        ...product,
-        quantity,
-        selectedSize,
-        selectedColor,
-      });
       onClose();
     } catch (error: any) {
       setError(error.message || "Failed to add to cart");
@@ -270,7 +298,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     }
   };
 
-  // Fetch user's wishlist on mount and when product changes
   const fetchWishlist = useCallback(async () => {
     try {
       const token = sessionStorage.getItem("auth_token");
@@ -311,7 +338,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     fetchWishlist();
   }, [fetchWishlist]);
 
-  // Handle adding/removing from wishlist
   const handleWishlistToggle = async () => {
     setIsLoading(true);
     setError(null);
@@ -323,18 +349,13 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       }
 
       const isCurrentlyInWishlist = isInWishlist;
-      // Optimistic update: toggle the state immediately
       setIsInWishlist(!isCurrentlyInWishlist);
 
       const endpoint = isCurrentlyInWishlist ? "/remove" : "/add";
-      
-      // Determine if the product is designable or standard
       const isDesignable = product.customizable === true;
       const requestBody = isDesignable
         ? { product_id: product.id, standard_product_id: null }
         : { product_id: null, standard_product_id: product.id };
-
-      console.log("Wishlist toggle request body:", requestBody);
 
       const response = await fetch(`http://localhost:5000/api/wishlists${endpoint}`, {
         method: isCurrentlyInWishlist ? "DELETE" : "POST",
@@ -348,21 +369,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
       const data = await response.json();
 
       if (data.status !== 200 && data.status !== 201) {
-        // Revert optimistic update if the API call fails
         setIsInWishlist(isCurrentlyInWishlist);
         throw new Error(data.message || "Failed to update wishlist");
       }
 
-      console.log(
-        `Product ${isCurrentlyInWishlist ? "removed from" : "added to"} wishlist successfully:`,
-        product.id
-      );
-      // Re-fetch wishlist to ensure state is in sync
       await fetchWishlist();
     } catch (error: any) {
       setError(error.message || "Failed to update wishlist");
       console.error("Wishlist update error:", error);
-      // Re-fetch wishlist to restore correct state
       await fetchWishlist();
     } finally {
       setIsLoading(false);
@@ -373,7 +387,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
       <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
         <div className="flex flex-col md:flex-row min-h-[600px]">
-          {/* Left side - Image Gallery */}
           <div className="md:w-1/2 bg-gray-50 p-8">
             <div className="relative aspect-square rounded-xl overflow-hidden mb-6 shadow-lg ring-1 ring-gray-100">
               <Image
@@ -388,7 +401,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                     : undefined,
                 }}
               />
-
               {product.customizable && product.designs && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   {(() => {
@@ -447,7 +459,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                         : undefined,
                     }}
                   />
-
                   {product.customizable && product.designs && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       {(() => {
@@ -489,8 +500,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
               ))}
             </div>
           </div>
-
-          {/* Right side - Product Details */}
           <div className="md:w-1/2 p-8 flex flex-col bg-white">
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -509,13 +518,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 <X className="w-6 h-6 text-gray-500" />
               </button>
             </div>
-
             <p className="text-gray-600 mb-6 leading-relaxed">
               {product.description || "Product description goes here."}
             </p>
-
             {error && <div className="text-red-500 mb-4">{error}</div>}
-
             <div className="space-y-6 flex-grow">
               <div className="flex gap-6 text-sm text-gray-500">
                 <div>
@@ -531,58 +537,62 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   {product.sku || "SKU001"}
                 </div>
               </div>
-
-              {(product.sizes && product.sizes.length > 0) ||
-              (!product.customizable && defaultSizes) ? (
+              {(sizesToUse.length > 0) && (
                 <div>
                   <h3 className="font-medium text-black mb-3">Select Size</h3>
                   <div className="flex flex-wrap gap-2">
-                    {(product.sizes && product.sizes.length > 0
-                      ? product.sizes
-                      : defaultSizes
-                    ).map((size) => (
-                      <button
-                        key={size}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                          ${
-                            selectedSize === size
-                              ? "bg-black text-white shadow-md"
-                              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-                          }`}
-                        onClick={() => setSelectedSize(size)}
-                        disabled={isLoading}
-                      >
-                        {size}
-                      </button>
-                    ))}
+                    {availableSizes.map((size) => {
+                      const isAvailable = getAvailableSizesForColor(selectedColor).includes(size);
+                      return (
+                        <button
+                          key={size}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                            ${
+                              selectedSize === size
+                                ? "bg-black text-white shadow-md"
+                                : isAvailable
+                                ? "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                                : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                            }`}
+                          onClick={() => isAvailable && setSelectedSize(size)}
+                          disabled={!isAvailable || isLoading}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              ) : null}
-
-              {(product.colors && product.colors.length > 0) ||
-              product.customizable ? (
+              )}
+              {(colorsToUse.length > 0) && (
                 <div>
                   <h3 className="font-medium text-black mb-3">Select Color</h3>
                   <div className="flex flex-wrap gap-3">
-                    {colorsToUse.map((color) => (
-                      <button
-                        key={color.hex}
-                        className={`w-10 h-10 rounded-full transition-transform duration-200 hover:scale-110
-                          ${
-                            selectedColor === color.hex
-                              ? "ring-2 ring-offset-2 ring-black scale-110"
-                              : "ring-1 ring-gray-200"
-                          }`}
-                        style={{ backgroundColor: color.hex }}
-                        onClick={() => setSelectedColor(color.hex)}
-                        title={color.name}
-                        disabled={isLoading}
-                      />
-                    ))}
+                    {availableColors.map((color) => {
+                      const isAvailable = getAvailableColorsForSize(selectedSize).some(
+                        (c) => c.hex === color.hex
+                      );
+                      return (
+                        <button
+                          key={color.hex}
+                          className={`w-10 h-10 rounded-full transition-transform duration-200 hover:scale-110
+                            ${
+                              selectedColor === color.hex
+                                ? "ring-2 ring-offset-2 ring-black scale-110"
+                                : isAvailable
+                                ? "ring-1 ring-gray-200"
+                                : "ring-1 ring-gray-200 opacity-50 cursor-not-allowed"
+                            }`}
+                          style={{ backgroundColor: color.hex }}
+                          onClick={() => isAvailable && setSelectedColor(color.hex)}
+                          title={color.name}
+                          disabled={!isAvailable || isLoading}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
-              ) : null}
-
+              )}
               <div className="flex items-center">
                 <button
                   className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -603,7 +613,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                 </button>
               </div>
             </div>
-
             <div className="mt-8 flex flex-col gap-4">
               <button
                 className="flex-1 bg-black text-white py-4 px-6 rounded-xl font-semibold 

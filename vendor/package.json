@@ -23,6 +23,7 @@
     "cloudinary": "^2.4.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
+    "color-name": "^2.0.0",
     "crypto": "^1.0.1",
     "framer-motion": "^11.18.2",
     "i18next": "^24.0.5",

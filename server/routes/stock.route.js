@@ -1,4 +1,3 @@
-// routes/stockRoute.js
 const express = require("express");
 const stockController = require("../controllers/stock.controller");
 
@@ -51,36 +50,6 @@ const router = express.Router();
  *         description: Invalid input
  */
 router.post("/", stockController.createStock);
-
-/**
- * @swagger
- * /api/stock/link:
- *   post:
- *     summary: Link a stock entry to a product
- *     tags: [Stock]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - stockId
- *               - productId
- *             properties:
- *               stockId:
- *                 type: string
- *                 example: uuid-for-stock
- *               productId:
- *                 type: string
- *                 example: uuid-for-product
- *     responses:
- *       200:
- *         description: Stock linked successfully
- *       400:
- *         description: Invalid input
- */
-router.post("/link", stockController.linkStockToProduct);
 
 /**
  * @swagger
@@ -171,27 +140,6 @@ router.post("/cancel-order", stockController.cancelOrder);
  *         description: Insufficient on-hold stock or invalid input
  */
 router.post("/fulfill-order", stockController.fulfillOrder);
-
-/**
- * @swagger
- * /api/stock/product/{productId}:
- *   get:
- *     summary: Get stock details by product ID
- *     tags: [Stock]
- *     parameters:
- *       - in: path
- *         name: productId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Stock details retrieved
- *       404:
- *         description: Stock not found
- */
-router.get("/product/:productId", stockController.getStockByProductId);
-
 
 /**
  * @swagger

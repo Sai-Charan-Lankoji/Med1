@@ -3,27 +3,45 @@ import { useState, useEffect } from "react";
 
 const API_BASE_URL = "http://localhost:5000/api"; // Adjust based on your env
 
+
+
 interface Variant {
-  variantId: string;
-  stockId: string;
-  size: string;
-  color: string | null;
-  totalQuantity: number;
-  availableQuantity: number;
-  onHoldQuantity: number;
-  exhaustedQuantity: number;
+  variantId: string
+  stockId: string
+  size: string
+  color: string
+  totalQuantity: number
+  availableQuantity: number
+  onHoldQuantity: number
+  exhaustedQuantity: number
+  createdAt: string
+  updatedAt: string
+  stock_id: string
 }
 
 interface Stock {
-  stockId: string;
-  productId: string | null;
-  title: string;
-  totalQuantity: number;
-  availableQuantity: number;
-  onHoldQuantity: number;
-  exhaustedQuantity: number;
-  StockVariants: Variant[];
+  stock_id: string
+  title: string
+  totalQuantity: number
+  availableQuantity: number
+  onHoldQuantity: number
+  exhaustedQuantity: number
+  createdAt: string
+  updatedAt: string
+  StockVariants: Variant[]
+  totals: {
+    totalQuantity: number
+    availableQuantity: number
+    onHoldQuantity: number
+    exhaustedQuantity: number
+  }
+  availableVariants: {
+    sizes: string[]
+    colors: string[]
+  }
 }
+
+
 
 interface StockResponse {
   success: boolean;

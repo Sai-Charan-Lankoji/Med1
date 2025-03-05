@@ -1,9 +1,7 @@
-// services/stock.service.js
 const Stock = require("../models/stock.model");
 const StockVariant = require("../models/stockvariant.model");
+const StandardProduct = require("../models/standardProduct.model");
 const { Op } = require("sequelize");
-
-
 
 class StockService {
   // Create stock with variants
@@ -19,7 +17,7 @@ class StockService {
       exhaustedQuantity: 0,
     });
 
-    const variantEntries = variants.map(v => ({
+    const variantEntries = variants.map((v) => ({
       stock_id: stock.stock_id,
       size: v.size,
       color: v.color,
@@ -30,16 +28,6 @@ class StockService {
     }));
     await StockVariant.bulkCreate(variantEntries);
     return stock;
-  }
-
-  // Link stock to product
-  async linkStockToProduct(stock_id, productId) {
-    const updated = await Stock.update(
-      { productId },
-      { where: { stock_id } }
-    );
-    if (!updated[0]) throw new Error("Stock not found");
-    return updated;
   }
 
   // Order placed: Move from available to on-hold
@@ -95,22 +83,54 @@ class StockService {
     return variant;
   }
 
-  // Get available sizes and colors
-  async getAvailableVariants(productId) {
-    const stock = await Stock.findOne({ where: { productId } });
+  // Get stock by stock_id (replacing getStockByProductId)
+  async getStockByStockId(stockId) {
+    const stock = await Stock.findOne({
+      where: { stock_id: stockId },
+      include: [StockVariant],
+    });
+    if (!stock) return null;
+
+    const totals = {
+      totalQuantity: stock.totalQuantity,
+      availableQuantity: stock.availableQuantity,
+      onHoldQuantity: stock.onHoldQuantity,
+      exhaustedQuantity: stock.exhaustedQuantity,
+    };
+
+    const variants = stock.StockVariants || [];
+    const availableVariants = {
+      sizes: [...new Set(variants.map((v) => v.size))].filter((size) =>
+        variants.some((sv) => sv.size === size && sv.availableQuantity > 0)
+      ),
+      colors: [...new Set(variants.map((v) => v.color).filter(Boolean))].filter((color) =>
+        variants.some((sv) => sv.color === color && sv.availableQuantity > 0)
+      ),
+    };
+
+    return {
+      ...stock.toJSON(),
+      totals,
+      availableVariants,
+    };
+  }
+
+  // Get available variants by stock_id
+  async getAvailableVariants(stockId) {
+    const stock = await Stock.findOne({ where: { stock_id: stockId } });
     if (!stock) return { sizes: [], colors: [] };
 
     const variants = await StockVariant.findAll({
       where: { stock_id: stock.stock_id, availableQuantity: { [Op.gt]: 0 } },
     });
-    const sizes = [...new Set(variants.map(v => v.size))];
-    const colors = [...new Set(variants.map(v => v.color).filter(Boolean))];
+    const sizes = [...new Set(variants.map((v) => v.size))];
+    const colors = [...new Set(variants.map((v) => v.color).filter(Boolean))];
     return { sizes, colors };
   }
 
-  // Get stock totals
-  async getProductStockTotals(productId) {
-    const stock = await Stock.findOne({ where: { productId } });
+  // Get stock totals by stock_id
+  async getProductStockTotals(stockId) {
+    const stock = await Stock.findOne({ where: { stock_id: stockId } });
     if (!stock) return {
       totalQuantity: 0,
       availableQuantity: 0,
@@ -125,26 +145,7 @@ class StockService {
     };
   }
 
-  
-
-  // Get stock by product ID
-  async getStockByProductId(productId) {
-    const stock = await Stock.findOne({
-      where: { productId },
-      include: [StockVariant],
-    });
-    if (!stock) return null;
-
-    const totals = await this.getProductStockTotals(productId);
-    const availableVariants = await this.getAvailableVariants(productId);
-
-    return {
-      ...stock.toJSON(),
-      totals,
-      availableVariants,
-    };
-  }
-// Restock variant
+  // Restock variant
   async restockVariant(variantId, quantity) {
     const variant = await StockVariant.findByPk(variantId);
     if (!variant) throw new Error("Variant not found");
@@ -165,7 +166,7 @@ class StockService {
     const stocks = await Stock.findAll({
       include: [StockVariant],
     });
-    return stocks.map(stock => ({
+    return stocks.map((stock) => ({
       ...stock.toJSON(),
       totals: {
         totalQuantity: stock.totalQuantity,
@@ -174,11 +175,11 @@ class StockService {
         exhaustedQuantity: stock.exhaustedQuantity,
       },
       availableVariants: {
-        sizes: [...new Set(stock.StockVariants.map(v => v.size))].filter(v => 
-          stock.StockVariants.some(sv => sv.size === v && sv.availableQuantity > 0)
+        sizes: [...new Set(stock.StockVariants.map((v) => v.size))].filter((v) =>
+          stock.StockVariants.some((sv) => sv.size === v && sv.availableQuantity > 0)
         ),
-        colors: [...new Set(stock.StockVariants.map(v => v.color).filter(Boolean))].filter(c => 
-          stock.StockVariants.some(sv => sv.color === c && sv.availableQuantity > 0)
+        colors: [...new Set(stock.StockVariants.map((v) => v.color).filter(Boolean))].filter((c) =>
+          stock.StockVariants.some((sv) => sv.color === c && sv.availableQuantity > 0)
         ),
       },
     }));

@@ -1,4 +1,3 @@
-// models/StockVariant.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Stock = require("./stock.model");
@@ -18,11 +17,11 @@ const StockVariant = sequelize.define(
     },
     size: {
       type: DataTypes.STRING,
-      allowNull: false, // e.g., "M", "10"
+      allowNull: false,
     },
     color: {
       type: DataTypes.STRING,
-      allowNull: true, // e.g., "Blue", null
+      allowNull: true,
     },
     totalQuantity: {
       type: DataTypes.INTEGER,
@@ -56,8 +55,5 @@ const StockVariant = sequelize.define(
     indexes: [{ unique: true, fields: ["stockId", "size", "color"] }],
   }
 );
-
-Stock.hasMany(StockVariant, { foreignKey: "stockId" });
-StockVariant.belongsTo(Stock, { foreignKey: "stockId" });
 
 module.exports = StockVariant;

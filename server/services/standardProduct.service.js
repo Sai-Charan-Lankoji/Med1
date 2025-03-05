@@ -1,4 +1,6 @@
-const StandardProduct = require("../models/standardProduct.model") 
+const StandardProduct = require("../models/standardProduct.model");
+const Stock = require("../models/stock.model");
+const StockVariant = require("../models/stockvariant.model");
 
 // Create a new non-customized product
 const createStandardProduct = async (data) => {
@@ -13,7 +15,19 @@ const getAllStandardProducts = async () => {
 // Get all standard products by storeId
 const getAllStandardProductsByStoreId = async (storeId) => {
   return await StandardProduct.findAll({
-    where: { store_id: storeId.toString() }, // ✅ Ensure it's treated as a string
+    where: { store_id: storeId.toString() },
+    include: [
+      {
+        model: Stock,
+        as: "Stock",
+        include: [
+          {
+            model: StockVariant,
+            as: "StockVariants",
+          },
+        ],
+      },
+    ],
   });
 };
 
@@ -22,9 +36,21 @@ const getStandardProductById = async (productId) => {
   try {
     const product = await StandardProduct.findOne({
       where: {
-        id: productId,  // ✅ Correctly filter by product ID
-        deleted_at: null, // ✅ Ensure only non-deleted products are fetched
+        id: productId,
+        deleted_at: null,
       },
+      include: [
+        {
+          model: Stock,
+          as: "Stock",
+          include: [
+            {
+              model: StockVariant,
+              as: "StockVariants",
+            },
+          ],
+        },
+      ],
     });
 
     if (!product) {
@@ -37,7 +63,6 @@ const getStandardProductById = async (productId) => {
     throw error;
   }
 };
-
 
 // Update a standard product
 const updateStandardProduct = async (id, data) => {

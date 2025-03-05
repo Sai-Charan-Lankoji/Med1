@@ -161,6 +161,7 @@ export function AddStockDialog({ open, onClose }) {
                           <SelectItem value="white">White</SelectItem>
                           <SelectItem value="navy">Navy</SelectItem>
                           <SelectItem value="gray">Gray</SelectItem>
+                          <SelectItem value="blue">Blue</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -216,4 +217,6 @@ export function AddStockDialog({ open, onClose }) {
     </Dialog>
   )
 }
+
+
 

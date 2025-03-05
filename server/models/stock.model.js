@@ -1,7 +1,5 @@
-// models/Stock.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const StandardProduct = require("./standardProduct.model");
 
 const Stock = sequelize.define(
   "Stock",
@@ -11,10 +9,9 @@ const Stock = sequelize.define(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
-   
     title: {
       type: DataTypes.STRING,
-      allowNull: false, 
+      allowNull: false,
     },
     totalQuantity: {
       type: DataTypes.INTEGER,
@@ -47,8 +44,5 @@ const Stock = sequelize.define(
     underscored: true,
   }
 );
-
-// StandardProduct.hasOne(Stock, { foreignKey: "productId" });
-// Stock.belongsTo(StandardProduct, { foreignKey: "productId" });
 
 module.exports = Stock;

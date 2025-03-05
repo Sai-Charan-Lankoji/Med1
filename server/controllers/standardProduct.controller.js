@@ -16,9 +16,7 @@ exports.createStandardProduct = async (req, res) => {
       description: req.body.description,
       price: parseFloat(req.body.price),
       category: req.body.category,
-      sizes: Array.isArray(req.body.sizes) ? req.body.sizes : JSON.parse(req.body.sizes || "[]"),
-      colors: Array.isArray(req.body.colors) ? req.body.colors : JSON.parse(req.body.colors || "[]"),
-      stockId: req.body.stockId, 
+      stock_id: req.body.stockId, // Map stockId to stock_id
       brand: req.body.brand,
       sku: req.body.sku,
       discount: parseInt(req.body.discount) || 0,
@@ -43,8 +41,6 @@ exports.createStandardProduct = async (req, res) => {
 
     const finalProductData = { ...productData, ...uploadedImages };
     const product = await standardProductService.createStandardProduct(finalProductData);
-
-   
 
     res.status(201).json({ success: true, product });
   } catch (error) {
@@ -75,9 +71,7 @@ exports.getStandardProductById = async (req, res) => {
     const product = await standardProductService.getStandardProductById(id);
 
     if (!product) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
     res.status(200).json({ success: true, product });
@@ -93,49 +87,30 @@ exports.getStandardProductById = async (req, res) => {
 exports.updateStandardProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const existingProduct = await standardProductService.getStandardProductById(
-      id
-    );
+    const existingProduct = await standardProductService.getStandardProductById(id);
     if (!existingProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    // Handle updated images
     const uploadedImages = {};
-    const imageFields = [
-      "front_image",
-      "back_image",
-      "left_image",
-      "right_image",
-    ];
-
+    const imageFields = ["front_image", "back_image", "left_image", "right_image"];
     for (const field of imageFields) {
       if (req.files && req.files[field]) {
         const file = req.files[field][0];
         await fileService.validateFile(file);
         const savedFile = await fileService.saveFile(file);
-        uploadedImages[field] = fileService.generateFileUrl(
-          req,
-          savedFile.filename
-        );
+        uploadedImages[field] = fileService.generateFileUrl(req, savedFile.filename);
 
-        // Delete old image file if exists
         if (existingProduct[field]) {
           await fileService.deleteFile(existingProduct[field]);
         }
       }
     }
 
-    // Merge request body with uploaded images
-    const updatedProduct = await standardProductService.updateStandardProduct(
-      id,
-      {
-        ...req.body,
-        ...uploadedImages,
-      }
-    );
+    const updatedProduct = await standardProductService.updateStandardProduct(id, {
+      ...req.body,
+      ...uploadedImages,
+    });
 
     res.status(200).json({ success: true, product: updatedProduct });
   } catch (error) {
@@ -149,22 +124,12 @@ exports.updateStandardProduct = async (req, res) => {
 exports.deleteStandardProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const existingProduct = await standardProductService.getStandardProductById(
-      id
-    );
+    const existingProduct = await standardProductService.getStandardProductById(id);
     if (!existingProduct) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Product not found" });
+      return res.status(404).json({ success: false, message: "Product not found" });
     }
 
-    // Delete associated images
-    const imageFields = [
-      "front_image",
-      "back_image",
-      "left_image",
-      "right_image",
-    ];
+    const imageFields = ["front_image", "back_image", "left_image", "right_image"];
     for (const field of imageFields) {
       if (existingProduct[field]) {
         await fileService.deleteFile(existingProduct[field]);
@@ -172,9 +137,7 @@ exports.deleteStandardProduct = async (req, res) => {
     }
 
     await standardProductService.deleteStandardProduct(id);
-    res
-      .status(200)
-      .json({ success: true, message: "Product deleted successfully" });
+    res.status(200).json({ success: true, message: "Product deleted successfully" });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }
@@ -188,16 +151,10 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
 
   try {
     if (!storeId) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Store ID is required" });
+      return res.status(400).json({ success: false, message: "Store ID is required" });
     }
 
-
-    const products =
-      await standardProductService.getAllStandardProductsByStoreId(
-        storeId.toString()
-      );
+    const products = await standardProductService.getAllStandardProductsByStoreId(storeId.toString());
 
     res.status(200).json({ success: true, products });
   } catch (error) {
@@ -205,3 +162,5 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+module.exports = exports;

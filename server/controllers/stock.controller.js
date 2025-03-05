@@ -1,6 +1,3 @@
-// controllers/stock.controller.js
-
-
 const stockService = require("../services/stock.service");
 
 /**
@@ -16,7 +13,7 @@ exports.createStock = async (req, res) => {
 
     const stockData = {
       title,
-      variants: variants.map(v => ({
+      variants: variants.map((v) => ({
         size: v.size,
         color: v.color,
         totalQuantity: parseInt(v.totalQuantity),
@@ -27,25 +24,6 @@ exports.createStock = async (req, res) => {
     res.status(201).json({ success: true, stock });
   } catch (error) {
     console.error("Error creating stock:", error);
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-/**
- * Link stock to a product
- */
-exports.linkStockToProduct = async (req, res) => {
-  try {
-    const { stockId, productId } = req.body;
-
-    if (!stockId || !productId) {
-      return res.status(400).json({ success: false, message: "stockId and productId are required" });
-    }
-
-    await stockService.linkStockToProduct(stockId, productId);
-    res.status(200).json({ success: true, message: "Stock linked to product successfully" });
-  } catch (error) {
-    console.error("Error linking stock to product:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -108,25 +86,8 @@ exports.fulfillOrder = async (req, res) => {
 };
 
 /**
- * Get stock details by product ID
+ * Restock a variant
  */
-exports.getStockByProductId = async (req, res) => {
-  try {
-    const { productId } = req.params;
-
-    const stock = await stockService.getStockByProductId(productId);
-    if (!stock) {
-      return res.status(404).json({ success: false, message: "Stock not found for this product" });
-    }
-
-    res.status(200).json({ success: true, stock });
-  } catch (error) {
-    console.error("Error fetching stock:", error);
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
-
-
 exports.restockVariant = async (req, res) => {
   try {
     const { variantId, quantity } = req.body;

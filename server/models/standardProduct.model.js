@@ -1,7 +1,7 @@
 // models/StandardProduct.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const Store = require("./store.model"); // Assuming this exists
+const Store = require("./store.model"); 
 const Stock = require("./stock.model");
 
 const StandardProduct = sequelize.define(
@@ -17,11 +17,11 @@ const StandardProduct = sequelize.define(
     },
     sizes: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true, defaultValue: [] },
     colors: { type: DataTypes.JSONB, allowNull: true, defaultValue: [] },
-    stock: { type: DataTypes.INTEGER, allowNull: true },
-    stockId: {
+    
+    stock_id: {
       type: DataTypes.UUID,
       allowNull: true,
-      references: { model: Stock, key: "stockId" },
+      references: { model: Stock, key: "stock_id" },
     },
     brand: { type: DataTypes.STRING, allowNull: true },
     sku: { type: DataTypes.STRING, allowNull: true, unique: true },

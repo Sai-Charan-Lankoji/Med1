@@ -1,4 +1,3 @@
-// models/relationship.model.js
 const StandardProduct = require("./standardProduct.model");
 const Stock = require("./stock.model");
 const StockVariant = require("./stockvariant.model");
@@ -8,16 +7,16 @@ const Product = require("./product.model");
 
 function defineRelationships() {
   // Stock and StandardProduct (1:1)
-  Stock.hasOne(StandardProduct, { foreignKey: "stock_id" });
-  StandardProduct.belongsTo(Stock, { foreignKey: "stock_id" });
+  Stock.hasOne(StandardProduct, { foreignKey: "stock_id", as: "StandardProduct" });
+  StandardProduct.belongsTo(Stock, { foreignKey: "stock_id", as: "Stock" });
 
   // Stock and StockVariant (1:N)
-  Stock.hasMany(StockVariant, { foreignKey: "stock_id" });
-  StockVariant.belongsTo(Stock, { foreignKey: "stock_id" });
+  Stock.hasMany(StockVariant, { foreignKey: "stock_id", as: "StockVariants" });
+  StockVariant.belongsTo(Stock, { foreignKey: "stock_id", as: "Stock" });
 
   // Store and StandardProduct (1:N)
-  Store.hasMany(StandardProduct, { foreignKey: "store_id" });
-  StandardProduct.belongsTo(Store, { foreignKey: "store_id" });
+  Store.hasMany(StandardProduct, { foreignKey: "store_id", as: "StandardProducts" });
+  StandardProduct.belongsTo(Store, { foreignKey: "store_id", as: "Store" });
 
   // Cart2 Polymorphic Associations
   Cart2.belongsTo(Product, {
@@ -31,7 +30,6 @@ function defineRelationships() {
     as: "standard_product",
   });
 
-  // Reverse relationships (optional, if needed)
   Product.hasMany(Cart2, { foreignKey: "product_id", constraints: false });
   StandardProduct.hasMany(Cart2, { foreignKey: "product_id", constraints: false });
 }
