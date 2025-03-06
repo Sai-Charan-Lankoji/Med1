@@ -120,6 +120,7 @@ export const useNewCart = () => {
       productId: string,
       quantity: number,
       selectedSize?: string,
+      selectedVariantId?: string,
       selectedColor?: string
     ): Promise<boolean> => {
       if (!customerId) return false;
