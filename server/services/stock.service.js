@@ -164,7 +164,12 @@ class StockService {
   // Get all stocks
   async getAllStocks() {
     const stocks = await Stock.findAll({
-      include: [StockVariant],
+      include: [
+        {
+          model: StockVariant,
+          as: "StockVariants", // Specify the alias as defined in relationship.model.js
+        },
+      ],
     });
     return stocks.map((stock) => ({
       ...stock.toJSON(),
@@ -182,8 +187,7 @@ class StockService {
           stock.StockVariants.some((sv) => sv.color === c && sv.availableQuantity > 0)
         ),
       },
-    }));
-  }
+    }));}
 }
 
 module.exports = new StockService();
