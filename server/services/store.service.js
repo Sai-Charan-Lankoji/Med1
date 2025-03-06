@@ -28,20 +28,29 @@ class StoreService {
   }
 
   async updateStore(storeId, updateData) {
-    const store = await this.retrieveById(storeId);
+    const store = await Store.findByPk(storeId);
     return await store.update(updateData);
   }
 
   async deleteStore(storeId) {
-    const store = await this.retrieveById(storeId);
+    const store = await Store.findByPk(storeId);
     await store.destroy({ force: true });
     return { message: "Store deleted successfully." };
   }
 
   async listStoresByVendor(vendorId) {
-    return await Store.findAll({ where: { vendor_id: vendorId } });
+    if (!vendorId) {
+      throw new Error("Vendor ID is required");
+    }
+    try {
+      const stores = await Store.findAll({
+        where: { vendor_id: vendorId },
+      });
+      return stores;
+    } catch (error) {
+      throw new Error(`Failed to fetch stores: ${error.message}`);
+    }
   }
-
   async listStores() {
     return await Store.findAll();
   }
@@ -86,7 +95,7 @@ class StoreService {
   async getStoreByURL(storeUrl) {
     try {
       const store = await Store.findOne({
-        where:{ store_url: storeUrl }
+        where: { store_url: storeUrl },
       });
 
       if (!store) {

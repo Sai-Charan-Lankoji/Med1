@@ -6,11 +6,11 @@ const storeController = require("../controllers/store.controller");
  * @swagger
  * /api/stores:
  *   get:
- *     summary: List stores
+ *     summary: List all stores
  *     tags: [Stores]
  *     responses:
  *       200:
- *         description: List of stores
+ *         description: List of all stores
  *         content:
  *           application/json:
  *             schema:
@@ -24,7 +24,7 @@ router.get("/", storeController.listStores);
  * @swagger
  * /api/stores/add-domain:
  *   post:
- *     summary: Create a new store
+ *     summary: Create a new store with domain
  *     tags: [Stores]
  *     requestBody:
  *       required: true
@@ -33,7 +33,7 @@ router.get("/", storeController.listStores);
  *           schema:
  *             type: object
  *             required:
- *               -storeName
+ *               - storeName
  *             properties:
  *               storeName:
  *                 type: string
@@ -43,7 +43,6 @@ router.get("/", storeController.listStores);
  *       400:
  *         description: Invalid input
  */
-
 router.post("/add-domain", storeController.addDomain);
 
 /**
@@ -82,6 +81,58 @@ router.get("/url/:store_url", storeController.getStoreByUrl);
 
 /**
  * @swagger
+ * /api/stores/vendor:
+ *   get:
+ *     summary: Retrieve a list of stores by vendor
+ *     description: Returns all stores associated with a specific vendor ID. If no vendor_id is provided, an error will be returned.
+ *     tags: [Stores]
+ *     parameters:
+ *       - in: query
+ *         name: vendor_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The unique identifier of the vendor to filter stores by
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved list of stores
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Store'
+ *       400:
+ *         description: Bad request - Invalid or missing vendor_id
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Vendor ID is required"
+ *                 name:
+ *                   type: string
+ *                   example: "Error"
+ *                 stack:
+ *                   type: string
+ *                   example: "Error stack trace (development only)"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to fetch stores: database error"
+ */
+router.get("/vendor", storeController.listStoresByVendor);
+
+/**
+ * @swagger
  * /api/stores/{id}:
  *   get:
  *     summary: Get a store by ID
@@ -102,7 +153,7 @@ router.get("/url/:store_url", storeController.getStoreByUrl);
  *       404:
  *         description: Store not found
  */
-router.get("/:id", storeController.getStore); // Get a store by ID
+router.get("/:id", storeController.getStore);
 
 /**
  * @swagger
@@ -136,7 +187,7 @@ router.get("/:id", storeController.getStore); // Get a store by ID
  *       404:
  *         description: Store not found
  */
-router.put("/:id", storeController.updateStore); // Update a store by ID
+router.put("/:id", storeController.updateStore);
 
 /**
  * @swagger
@@ -156,32 +207,7 @@ router.put("/:id", storeController.updateStore); // Update a store by ID
  *       404:
  *         description: Store not found
  */
-router.delete("/:id", storeController.deleteStore); // Delete a store by ID
-
-/**
- * @swagger
- * /api/stores/vendor:
- *   get:
- *     summary: List stores by vendor
- *     tags: [Stores]
- *     parameters:
- *       - in: query
- *         name: vendor_id
- *         schema:
- *           type: string
- *         required: false
- *         description: Vendor ID to filter stores
- *     responses:
- *       200:
- *         description: List of stores
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Store'
- */
-router.get("/vendor", storeController.listStoresByVendor);
+router.delete("/:id", storeController.deleteStore);
 
 /**
  * @swagger
@@ -213,5 +239,6 @@ router.get("/vendor", storeController.listStoresByVendor);
  *       400:
  *         description: Invalid input
  */
-router.post("/", storeController.createStore); // Create a store
+router.post("/", storeController.createStore);
+
 module.exports = router;

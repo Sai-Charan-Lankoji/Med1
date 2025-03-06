@@ -1,4 +1,4 @@
-const storeService = require('../services/store.service');
+const storeService = require("../services/store.service");
 
 class StoreController {
   async createStore(req, res) {
@@ -21,18 +21,20 @@ class StoreController {
 
   async getStoreByUrl(req, res) {
     try {
-        const storeUrl = req.params.store_url;
-        if (!storeUrl) {
-            return res.status(400).json({ message: "Store URL parameter is required" });
-        }
+      const storeUrl = req.params.store_url;
+      if (!storeUrl) {
+        return res
+          .status(400)
+          .json({ message: "Store URL parameter is required" });
+      }
 
-        const store = await storeService.getStoreByURL(storeUrl);
-        return res.status(200).json(store);
+      const store = await storeService.getStoreByURL(storeUrl);
+      return res.status(200).json(store);
     } catch (error) {
-        console.error('Error in getStoreByUrl:', error);
-        return res.status(500).json({ message: error.message });
+      console.error("Error in getStoreByUrl:", error);
+      return res.status(500).json({ message: error.message });
     }
-}
+  }
 
   async updateStore(req, res) {
     try {
@@ -54,10 +56,17 @@ class StoreController {
 
   async listStoresByVendor(req, res) {
     try {
-      const stores = await storeService.listStoresByVendor(req.query.vendor_id || null);
+      const vendorId = req.query.vendor_id || null;
+      console.log("Vendor ID:", vendorId);
+      const stores = await storeService.listStoresByVendor(vendorId);
       res.status(200).json(stores);
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      console.error("Error:", error);
+      res.status(400).json({
+        error: error.message,
+        name: error.name,
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      });
     }
   }
 
@@ -74,7 +83,7 @@ class StoreController {
     const { storeName } = req.body;
 
     if (!storeName) {
-      return res.status(400).json({ error: 'storeName is required' });
+      return res.status(400).json({ error: "storeName is required" });
     }
 
     try {
