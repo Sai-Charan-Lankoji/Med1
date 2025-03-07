@@ -41,7 +41,7 @@ const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
 const stockRoutes = require("./routes/stock.route.js");
 const notificationRoutes = require("./routes/notification.route.js");
 const transporterRoutes = require("./routes/transport.route.js");
-
+const customerAddressRoutes = require("./routes/customeraddreess.route.js");
 const app = express();
 app.use(cookieParser());
 const server = http.createServer(app);
@@ -129,6 +129,7 @@ app.use(
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Routes
+app.use('/api/address', customerAddressRoutes);
 app.use("/api/vendors", vendorRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/auth", authRoutes);
