@@ -1,3 +1,4 @@
+// hooks/useNewCart.js
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../reducer/rootReducer";
 import { useUserContext } from "@/context/userContext";
@@ -66,7 +67,10 @@ export const useNewCart = () => {
       designs: IDesign[],
       designState: IDesign[],
       propsState: IProps,
-      productId?: string
+      productId?: string,
+      quantity: number = 1, // Added quantity with default value
+      selectedSize?: string,
+      selectedColor?: string
     ): Promise<boolean> => {
       if (!customerId) return false;
 
@@ -91,7 +95,9 @@ export const useNewCart = () => {
             designs: processedDesigns,
             designState,
             propsState,
-            quantity: 1,
+            quantity, // Use provided quantity
+            selected_size: selectedSize || null,
+            selected_color: selectedColor || null,
             email: email || null,
           }),
         });
@@ -99,7 +105,7 @@ export const useNewCart = () => {
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.error?.details || "Failed to add designable product"
+            errorData.error?.details || "Failed to add designable product to cart"
           );
         }
 
@@ -120,8 +126,8 @@ export const useNewCart = () => {
       productId: string,
       quantity: number,
       selectedSize?: string,
-      selectedVariantId?: string,
-      selectedColor?: string
+      selectedColor?: string, // Hex string (e.g., "#FFFFFF")
+      selectedVariantId?: string
     ): Promise<boolean> => {
       if (!customerId) return false;
 
@@ -137,12 +143,18 @@ export const useNewCart = () => {
             product_type: "standard",
             quantity,
             selected_size: selectedSize || null,
-            selected_color: selectedColor || null,
+            selected_color: selectedColor || null, // Hex string
+            selected_variant: selectedVariantId || null,
             email: email || null,
           }),
         });
 
-        if (!response.ok) throw new Error("Failed to add standard product");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error?.details || "Failed to add standard product to cart"
+          );
+        }
 
         await fetchCartData();
         return true;
@@ -219,7 +231,12 @@ export const useNewCart = () => {
           }
         );
 
-        if (!response.ok) throw new Error("Failed to update quantity");
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error?.details || "Failed to update cart quantity"
+          );
+        }
 
         await fetchCartData();
         return true;

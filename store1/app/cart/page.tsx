@@ -30,6 +30,8 @@ interface OrderData {
     designs?: IDesignableCartItem["designs"];
     selected_size?: IStandardCartItem["selected_size"];
     selected_color?: IStandardCartItem["selected_color"];
+    selected_variant?: IStandardCartItem["selected_variant"];
+    product_type?: "designable" | "standard"; // Added for backend differentiation
   }>;
   total_amount: number;
   currency_code: string;
@@ -62,7 +64,7 @@ const CartPage = () => {
   const [itemToRemove, setItemToRemove] = useState<string | null>(null);
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
-  const [isCartLoaded, setIsCartLoaded] = useState(false); // Prevent re-fetching
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
   const { store } = useStore();
 
   const designContext = React.useContext(DesignContext);
@@ -70,21 +72,11 @@ const CartPage = () => {
     designs: [],
     dispatchDesign: () => {},
   };
-  const [selectedDesigns, setSelectedDesigns] = useState<
-    Record<string, number>
-  >({});
-  const [currentImageIndex, setCurrentImageIndex] = useState<
-    Record<string, number>
-  >({});
-  const [imageViewMode, setImageViewMode] = useState<
-    Record<string, "apparel" | "uploaded">
-  >({});
+  const [selectedDesigns, setSelectedDesigns] = useState<Record<string, number>>({});
+  const [currentImageIndex, setCurrentImageIndex] = useState<Record<string, number>>({});
+  const [imageViewMode, setImageViewMode] = useState<Record<string, "apparel" | "uploaded">>({});
 
-  // Combine designable and standard items locally
-  const allCartItems: ICartItem[] = [
-    ...designableCartItems,
-    ...getStandardCartItems(),
-  ];
+  const allCartItems: ICartItem[] = [...designableCartItems, ...getStandardCartItems()];
 
   useEffect(() => {
     if (customerToken && !isCartLoaded && !loading) {
@@ -139,12 +131,10 @@ const CartPage = () => {
   const handleClearCart = async () => {
     setError(null);
     try {
-      const deletePromises = allCartItems.map((item) =>
-        deleteCartItem(item.id)
-      );
+      const deletePromises = allCartItems.map((item) => deleteCartItem(item.id));
       await Promise.all(deletePromises);
       setSelectedItems(new Set());
-      setIsCartLoaded(false); // Allow re-fetch after clear
+      setIsCartLoaded(false);
       toast.success("Cart cleared successfully");
     } catch (err) {
       setError("Failed to clear cart");
@@ -198,9 +188,7 @@ const CartPage = () => {
   };
 
   const calculateSelectedTotals = () => {
-    const selectedCartItems = allCartItems.filter((item) =>
-      selectedItems.has(item.id)
-    );
+    const selectedCartItems = allCartItems.filter((item) => selectedItems.has(item.id));
     const subtotal = selectedCartItems.reduce((total, item) => {
       const pricePerItem =
         item.product_type === "designable" && item.designs?.length
@@ -217,38 +205,26 @@ const CartPage = () => {
     return { subtotal, shippingCost, taxAmount, total };
   };
 
-  // Helper function to extract available sides for standard products
   const getStandardProductSides = (productDetails: any) => {
     const sides = [];
-    if (productDetails?.front_image) {
-      sides.push({ side: "front", url: productDetails.front_image });
-    }
-    if (productDetails?.back_image) {
-      sides.push({ side: "back", url: productDetails.back_image });
-    }
-    if (productDetails?.left_image) {
-      sides.push({ side: "left", url: productDetails.left_image });
-    }
-    if (productDetails?.right_image) {
-      sides.push({ side: "right", url: productDetails.right_image });
-    }
+    if (productDetails?.front_image) sides.push({ side: "front", url: productDetails.front_image });
+    if (productDetails?.back_image) sides.push({ side: "back", url: productDetails.back_image });
+    if (productDetails?.left_image) sides.push({ side: "left", url: productDetails.left_image });
+    if (productDetails?.right_image) sides.push({ side: "right", url: productDetails.right_image });
     return sides;
   };
 
   const handleProceedToOrder = async () => {
     if (isProcessingOrder || selectedItems.size === 0) {
-      setError(
-        selectedItems.size === 0 ? "Please select at least one item" : null
-      );
+      setError(selectedItems.size === 0 ? "Please select at least one item" : null);
+      toast.error(selectedItems.size === 0 ? "Please select at least one item" : "Order already processing");
       return;
     }
 
     setIsProcessingOrder(true);
     setError(null);
 
-    const selectedCartItems = allCartItems.filter((item) =>
-      selectedItems.has(item.id)
-    );
+    const selectedCartItems = allCartItems.filter((item) => selectedItems.has(item.id));
     const { total } = calculateSelectedTotals();
 
     const orderData: OrderData = {
@@ -257,34 +233,25 @@ const CartPage = () => {
         const designItem = item as IDesignableCartItem;
         const standardItem = item as IStandardCartItem;
 
-        // Determine title
         const title = isDesignable
           ? "Custom Designed Product"
           : standardItem.product_details?.title || "Standard Product";
 
-        // Determine images
         const images = isDesignable
-          ? (designItem.designs || []).map((design) => {
-              // Prefer pngImage (designed output), fall back to apparel.url
-              return design.pngImage || design.apparel?.url || "";
-            }).filter((url) => url && url !== "") // Ensure only valid URLs are included
-          : getStandardProductSides(standardItem.product_details)
-              .map((side) => side.url)
-              .filter((url) => url && url !== ""); // Ensure only valid URLs are included
+          ? (designItem.designs || []).map((design) => design.pngImage || design.apparel?.url || "").filter((url) => url && url !== "")
+          : getStandardProductSides(standardItem.product_details).map((side) => side.url).filter((url) => url && url !== "");
 
         return {
-          product_id: item.product_id, // Already included
+          product_id: item.product_id,
           quantity: item.quantity,
-          price:
-            item.price ||
-            (isDesignable && designItem.designs?.length
-              ? designItem.designs.length * 100
-              : 100),
-          title, // Include title
-          images: images.length > 0 ? images : ["/placeholder.svg"], // Fallback to placeholder if no images
+          price: item.price || (isDesignable && designItem.designs?.length ? designItem.designs.length * 100 : 100),
+          title,
+          images: images.length > 0 ? images : ["/placeholder.svg"],
           designs: isDesignable ? designItem.designs : undefined,
           selected_size: !isDesignable ? standardItem.selected_size : undefined,
           selected_color: !isDesignable ? standardItem.selected_color : undefined,
+          selected_variant: !isDesignable ? standardItem.selected_variant : undefined,
+          product_type: item.product_type, // Added for backend to distinguish between designable and standard
         };
       }),
       total_amount: total,
@@ -300,6 +267,8 @@ const CartPage = () => {
       store_id: store?.id,
     };
 
+    console.log("Order Data Payload:", JSON.stringify(orderData, null, 2)); // Debug log
+
     createOrder(orderData, {
       onSuccess: async () => {
         try {
@@ -307,22 +276,29 @@ const CartPage = () => {
             await deleteCartItem(itemId);
           }
           setSelectedItems(new Set());
-          setIsCartLoaded(false); // Allow re-fetch after order
+          setIsCartLoaded(false);
           router.push("./order-confirmation");
           toast.success("Order placed successfully");
         } catch (err) {
           setError("Failed to clear ordered items from cart");
-          toast.error("Failed to clear ordered items");
+          toast.error("Order placed but failed to clear cart");
           console.error("Error clearing cart:", err);
         } finally {
           setIsProcessingOrder(false);
         }
       },
-      onError: (err) => {
-        setError("Failed to place order. Please try again.");
-        toast.error("Failed to place order");
-        console.error("Error placing order:", err);
+      onError: (err: any) => {
         setIsProcessingOrder(false);
+        const errorMessage = err.message || "Failed to place order. Please try again.";
+        
+        if (errorMessage.includes("Insufficient stock")) {
+          toast.error(errorMessage); // Specific stock-related error
+        } else if (errorMessage.includes("Variant not found")) {
+          toast.error("One or more items are no longer available");
+        } else {
+          toast.error(errorMessage); // Generic error
+        }
+        console.error("Error placing order:", err);
       },
     });
   };
@@ -333,9 +309,7 @@ const CartPage = () => {
 
   const getDesignedSidesText = (designs?: IDesignableCartItem["designs"]) => {
     if (!designs || designs.length === 0) return "N/A";
-    const sides = designs.map((design) =>
-      capitalizeFirstLetter(design.apparel.side)
-    );
+    const sides = designs.map((design) => capitalizeFirstLetter(design.apparel.side));
     if (sides.length === 1) return sides[0];
     if (sides.length === 2) return `${sides[0]} & ${sides[1]}`;
     const lastSide = sides.pop();
@@ -376,28 +350,19 @@ const CartPage = () => {
     }));
   };
 
-  const isAllSelected =
-    allCartItems.length > 0 && selectedItems.size === allCartItems.length;
+  const isAllSelected = allCartItems.length > 0 && selectedItems.size === allCartItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-      />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
 
       {!customerToken && (
         <div className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="text-center sm:text-left">
-                <h2 className="text-lg font-semibold">
-                  Already have an account?
-                </h2>
-                <p className="text-blue-100">
-                  Sign in for a better experience.
-                </p>
+                <h2 className="text-lg font-semibold">Already have an account?</h2>
+                <p className="text-blue-100">Sign in for a better experience.</p>
               </div>
               <Link href="/auth">
                 <button className="bg-white text-blue-600 px-6 py-2 rounded-md hover:bg-blue-50 transition duration-200 font-medium">
@@ -414,9 +379,7 @@ const CartPage = () => {
           <div className="flex-1">
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
               <div className="p-6 border-b border-gray-100">
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                  Shopping Cart
-                </h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-4">Shopping Cart</h1>
                 {allCartItems.length > 0 && (
                   <div className="flex justify-between space-x-4">
                     <button
@@ -428,9 +391,7 @@ const CartPage = () => {
                     </button>
                     <button
                       onClick={handleClearCart}
-                      className={`px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 transition-colors ${
-                        loading ? "opacity-50 cursor-not-allowed" : ""
-                      }`}
+                      className={`px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded hover:bg-gray-700 transition-colors ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
                       disabled={loading}
                     >
                       {loading ? "Clearing..." : "Clear Cart"}
@@ -442,12 +403,7 @@ const CartPage = () => {
               {allCartItems.length === 0 ? (
                 <div className="p-12 text-center">
                   <div className="w-24 h-24 mx-auto mb-6 text-gray-300">
-                    <svg
-                      className="w-full h-full"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                    >
+                    <svg className="w-full h-full" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
@@ -456,16 +412,9 @@ const CartPage = () => {
                       />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-medium mb-4 text-gray-900">
-                    Your cart is empty
-                  </h2>
-                  <p className="text-gray-500 mb-8">
-                    Looks like you haven’t added any items to your cart yet.
-                  </p>
-                  <Link
-                    href="/"
-                    className="inline-flex items-center justify-center bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-200"
-                  >
+                  <h2 className="text-xl font-medium mb-4 text-gray-900">Your cart is empty</h2>
+                  <p className="text-gray-500 mb-8">Looks like you haven’t added any items to your cart yet.</p>
+                  <Link href="/" className="inline-flex items-center justify-center bg-black text-white px-8 py-3 rounded-lg hover:bg-gray-800 transition duration-200">
                     Continue Shopping
                   </Link>
                 </div>
@@ -482,25 +431,14 @@ const CartPage = () => {
 
                     const itemTotal = pricePerItem * item.quantity;
                     const mainDesignIndex = selectedDesigns[item.id] || 0;
-                    const currentDesign = isDesignable
-                      ? designItem.designs?.[mainDesignIndex]
-                      : null;
-                    const currentUploadedImageIndex =
-                      currentImageIndex[item.id] || 0;
+                    const currentDesign = isDesignable ? designItem.designs?.[mainDesignIndex] : null;
+                    const currentUploadedImageIndex = currentImageIndex[item.id] || 0;
                     const viewMode = imageViewMode[item.id] || "apparel";
                     const hasUploadedImages =
-                      isDesignable &&
-                      currentDesign?.uploadedImages?.some(
-                        (img) => img?.length > 0
-                      );
+                      isDesignable && currentDesign?.uploadedImages?.some((img) => img?.length > 0);
 
-                    // Get available sides for standard products
-                    const standardSides = !isDesignable
-                      ? getStandardProductSides(standardItem.product_details)
-                      : [];
-                    const currentStandardSide = !isDesignable
-                      ? standardSides[mainDesignIndex] || standardSides[0]
-                      : null;
+                    const standardSides = !isDesignable ? getStandardProductSides(standardItem.product_details) : [];
+                    const currentStandardSide = !isDesignable ? standardSides[mainDesignIndex] || standardSides[0] : null;
 
                     return (
                       <div key={item.id} className="p-6">
@@ -526,19 +464,14 @@ const CartPage = () => {
                                     <>
                                       <div className="absolute inset-0">
                                         <Image
-                                          src={
-                                            currentDesign.apparel.url ||
-                                            "/placeholder.svg"
-                                          }
+                                          src={currentDesign.apparel.url || "/placeholder.svg"}
                                           alt={`Side: ${currentDesign.apparel.side}`}
                                           fill
                                           sizes="100%"
                                           priority
                                           className="rounded-none"
                                           style={{
-                                            backgroundColor:
-                                              currentDesign.apparel?.color ||
-                                              "#ffffff",
+                                            backgroundColor: currentDesign.apparel?.color || "#ffffff",
                                             objectFit: "cover",
                                           }}
                                         />
@@ -548,42 +481,31 @@ const CartPage = () => {
                                           className="relative translate-y-[-10%]"
                                           style={{
                                             top:
-                                              currentDesign.apparel.side ===
-                                              "leftshoulder"
+                                              currentDesign.apparel.side === "leftshoulder"
                                                 ? "35px"
-                                                : currentDesign.apparel.side ===
-                                                  "rightshoulder"
+                                                : currentDesign.apparel.side === "rightshoulder"
                                                 ? "30px"
                                                 : "initial",
                                             left:
-                                              currentDesign.apparel.side ===
-                                              "leftshoulder"
+                                              currentDesign.apparel.side === "leftshoulder"
                                                 ? "-10px"
-                                                : currentDesign.apparel.side ===
-                                                  "rightshoulder"
+                                                : currentDesign.apparel.side === "rightshoulder"
                                                 ? "8px"
                                                 : "initial",
                                             width:
-                                              currentDesign.apparel.side ===
-                                                "leftshoulder" ||
-                                              currentDesign.apparel.side ===
-                                                "rightshoulder"
+                                              currentDesign.apparel.side === "leftshoulder" ||
+                                              currentDesign.apparel.side === "rightshoulder"
                                                 ? "30%"
                                                 : "50%",
                                             height:
-                                              currentDesign.apparel.side ===
-                                                "leftshoulder" ||
-                                              currentDesign.apparel.side ===
-                                                "rightshoulder"
+                                              currentDesign.apparel.side === "leftshoulder" ||
+                                              currentDesign.apparel.side === "rightshoulder"
                                                 ? "30%"
                                                 : "50%",
                                           }}
                                         >
                                           <Image
-                                            src={
-                                              currentDesign.pngImage ||
-                                              "/placeholder.svg"
-                                            }
+                                            src={currentDesign.pngImage || "/placeholder.svg"}
                                             alt="Design"
                                             fill
                                             sizes="100%"
@@ -595,15 +517,9 @@ const CartPage = () => {
                                     </>
                                   ) : (
                                     hasUploadedImages &&
-                                    currentDesign?.uploadedImages?.[
-                                      currentUploadedImageIndex
-                                    ] && (
+                                    currentDesign?.uploadedImages?.[currentUploadedImageIndex] && (
                                       <Image
-                                        src={
-                                          currentDesign.uploadedImages[
-                                            currentUploadedImageIndex
-                                          ] || "/placeholder.svg"
-                                        }
+                                        src={currentDesign.uploadedImages[currentUploadedImageIndex] || "/placeholder.svg"}
                                         alt={`Uploaded image`}
                                         fill
                                         sizes="100%"
@@ -613,14 +529,8 @@ const CartPage = () => {
                                   )
                                 ) : (
                                   <Image
-                                    src={
-                                      currentStandardSide?.url ||
-                                      "/placeholder.svg"
-                                    }
-                                    alt={
-                                      standardItem.product_details?.title ||
-                                      "Standard Product"
-                                    }
+                                    src={currentStandardSide?.url || "/placeholder.svg"}
+                                    alt={standardItem.product_details?.title || "Standard Product"}
                                     fill
                                     sizes="100%"
                                     className="object-cover"
@@ -628,147 +538,106 @@ const CartPage = () => {
                                 )}
                               </div>
 
-                              {/* Thumbnails for both designable and standard products */}
                               {(isDesignable
                                 ? designItem.designs && designItem.designs.length > 0
                                 : standardSides.length > 0) && (
                                 <div className="mt-4 grid grid-cols-4 gap-6">
                                   {isDesignable ? (
                                     viewMode === "apparel" ? (
-                                      designItem.designs?.map(
-                                        (design, index) => (
-                                          <div
-                                            key={index}
-                                            className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
-                                              index === mainDesignIndex
-                                                ? "ring-2 ring-gray-700"
-                                                : "hover:ring-2 hover:ring-gray-300"
-                                            }`}
-                                            onClick={() =>
-                                              handleThumbnailClick(
-                                                item.id,
-                                                index
-                                              )
-                                            }
-                                          >
-                                            <div className="absolute inset-0">
-                                              <Image
-                                                src={
-                                                  design.apparel?.url ||
-                                                  "/placeholder.svg"
-                                                }
-                                                alt={`Side: ${design.apparel.side}`}
-                                                fill
-                                                sizes="100%"
-                                                priority
-                                                className="rounded-none"
-                                                style={{
-                                                  backgroundColor:
-                                                    design.apparel?.color ||
-                                                    "#ffffff",
-                                                  objectFit: "cover",
-                                                }}
-                                              />
-                                            </div>
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                              <div
-                                                className="relative translate-y-[-10%]"
-                                                style={{
-                                                  top:
-                                                    design.apparel.side ===
-                                                    "leftshoulder"
-                                                      ? "12px"
-                                                      : design.apparel.side ===
-                                                        "rightshoulder"
-                                                      ? "12px"
-                                                      : "initial",
-                                                  left:
-                                                    design.apparel.side ===
-                                                    "leftshoulder"
-                                                      ? "-3px"
-                                                      : design.apparel.side ===
-                                                        "rightshoulder"
-                                                      ? "2px"
-                                                      : "initial",
-                                                  width:
-                                                    design.apparel.side ===
-                                                      "leftshoulder" ||
-                                                    design.apparel.side ===
-                                                      "rightshoulder"
-                                                      ? "30%"
-                                                      : "50%",
-                                                  height:
-                                                    design.apparel.side ===
-                                                      "leftshoulder" ||
-                                                    design.apparel.side ===
-                                                      "rightshoulder"
-                                                      ? "30%"
-                                                      : "50%",
-                                                }}
-                                              >
-                                                <Image
-                                                  src={
-                                                    design.pngImage ||
-                                                    "/placeholder.svg"
-                                                  }
-                                                  alt={`Thumbnail ${
-                                                    index + 1
-                                                  }`}
-                                                  fill
-                                                  sizes="100%"
-                                                  className="rounded-md"
-                                                  style={{
-                                                    objectFit: "contain",
-                                                  }}
-                                                />
-                                              </div>
-                                            </div>
-                                          </div>
-                                        )
-                                      )
-                                    ) : (
-                                      currentDesign?.uploadedImages?.map(
-                                        (image, index) => (
-                                          <button
-                                            key={index}
-                                            className={`aspect-square relative rounded-md overflow-hidden ${
-                                              index ===
-                                              currentUploadedImageIndex
-                                                ? "ring-2 ring-black"
-                                                : "ring-1 ring-gray-200 hover:ring-gray-300"
-                                            }`}
-                                            onClick={() =>
-                                              setCurrentImageIndex((prev) => ({
-                                                ...prev,
-                                                [item.id]: index,
-                                              }))
-                                            }
-                                          >
+                                      designItem.designs?.map((design, index) => (
+                                        <div
+                                          key={index}
+                                          className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                            index === mainDesignIndex ? "ring-2 ring-gray-700" : "hover:ring-2 hover:ring-gray-300"
+                                          }`}
+                                          onClick={() => handleThumbnailClick(item.id, index)}
+                                        >
+                                          <div className="absolute inset-0">
                                             <Image
-                                              src={
-                                                image || "/placeholder.svg"
-                                              }
-                                              alt={`Upload ${index + 1}`}
+                                              src={design.apparel?.url || "/placeholder.svg"}
+                                              alt={`Side: ${design.apparel.side}`}
                                               fill
                                               sizes="100%"
-                                              className="object-cover"
+                                              priority
+                                              className="rounded-none"
+                                              style={{
+                                                backgroundColor: design.apparel?.color || "#ffffff",
+                                                objectFit: "cover",
+                                              }}
                                             />
-                                          </button>
-                                        )
-                                      )
+                                          </div>
+                                          <div className="absolute inset-0 flex items-center justify-center">
+                                            <div
+                                              className="relative translate-y-[-10%]"
+                                              style={{
+                                                top:
+                                                  design.apparel.side === "leftshoulder"
+                                                    ? "12px"
+                                                    : design.apparel.side === "rightshoulder"
+                                                    ? "12px"
+                                                    : "initial",
+                                                left:
+                                                  design.apparel.side === "leftshoulder"
+                                                    ? "-3px"
+                                                    : design.apparel.side === "rightshoulder"
+                                                    ? "2px"
+                                                    : "initial",
+                                                width:
+                                                  design.apparel.side === "leftshoulder" ||
+                                                  design.apparel.side === "rightshoulder"
+                                                    ? "30%"
+                                                    : "50%",
+                                                height:
+                                                  design.apparel.side === "leftshoulder" ||
+                                                  design.apparel.side === "rightshoulder"
+                                                    ? "30%"
+                                                    : "50%",
+                                              }}
+                                            >
+                                              <Image
+                                                src={design.pngImage || "/placeholder.svg"}
+                                                alt={`Thumbnail ${index + 1}`}
+                                                fill
+                                                sizes="100%"
+                                                className="rounded-md"
+                                                style={{ objectFit: "contain" }}
+                                              />
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      currentDesign?.uploadedImages?.map((image, index) => (
+                                        <button
+                                          key={index}
+                                          className={`aspect-square relative rounded-md overflow-hidden ${
+                                            index === currentUploadedImageIndex ? "ring-2 ring-black" : "ring-1 ring-gray-200 hover:ring-gray-300"
+                                          }`}
+                                          onClick={() =>
+                                            setCurrentImageIndex((prev) => ({
+                                              ...prev,
+                                              [item.id]: index,
+                                            }))
+                                          }
+                                        >
+                                          <Image
+                                            src={image || "/placeholder.svg"}
+                                            alt={`Upload ${index + 1}`}
+                                            fill
+                                            sizes="100%"
+                                            className="object-cover"
+                                          />
+                                        </button>
+                                      ))
                                     )
                                   ) : (
                                     standardSides.map((side, index) => (
                                       <div
                                         key={index}
                                         className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
-                                          index === mainDesignIndex
-                                            ? "ring-2 ring-gray-700"
-                                            : "hover:ring-2 hover:ring-gray-300"
+                                          index === mainDesignIndex ? "ring-2 ring-gray-700" : "hover:ring-2 hover:ring-gray-300"
                                         }`}
-                                        onClick={() =>
-                                          handleThumbnailClick(item.id, index)
-                                        }
+                                        onClick={() => handleThumbnailClick(item.id, index)}
                                       >
                                         <Image
                                           src={side.url || "/placeholder.svg"}
@@ -788,25 +657,16 @@ const CartPage = () => {
                               <div className="flex justify-between items-start">
                                 <div>
                                   <h3 className="text-lg font-semibold text-gray-900">
-                                    {isDesignable
-                                      ? "Custom Designed Product"
-                                      : standardItem.product_details?.title ||
-                                        "Standard Product"}
+                                    {isDesignable ? "Custom Designed Product" : standardItem.product_details?.title || "Standard Product"}
                                   </h3>
                                   <p className="text-sm text-gray-600 mb-1">
                                     {isDesignable
-                                      ? `Designed Sides: ${getDesignedSidesText(
-                                          designItem.designs
-                                        )}`
-                                      : `Size: ${
-                                          standardItem.selected_size || "N/A"
-                                        }, Color: ${
+                                      ? `Designed Sides: ${getDesignedSidesText(designItem.designs)}`
+                                      : `Size: ${standardItem.selected_size || "N/A"}, Color: ${
                                           standardItem.selected_color
-                                            ? typeof standardItem.selected_color ===
-                                              "string"
+                                            ? typeof standardItem.selected_color === "string"
                                               ? standardItem.selected_color
-                                              : standardItem.selected_color ||
-                                                "N/A"
+                                              : standardItem.selected_color || "N/A"
                                             : "N/A"
                                         }`}
                                   </p>
@@ -816,9 +676,7 @@ const CartPage = () => {
                                       className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                                       disabled={loading}
                                     >
-                                      {viewMode === "apparel"
-                                        ? "View Uploaded Images"
-                                        : "View Design Preview"}
+                                      {viewMode === "apparel" ? "View Uploaded Images" : "View Design Preview"}
                                     </button>
                                   )}
                                 </div>
@@ -837,58 +695,30 @@ const CartPage = () => {
                                   <div className="flex items-center space-x-2">
                                     <button
                                       className="w-8 h-8 rounded-full text-black bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
-                                      onClick={() =>
-                                        handleQuantityChange(
-                                          item.id,
-                                          item.quantity - 1
-                                        )
-                                      }
-                                      disabled={
-                                        updating ||
-                                        loading ||
-                                        item.quantity <= 1
-                                      }
+                                      onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
+                                      disabled={updating || loading || item.quantity <= 1}
                                     >
                                       -
                                     </button>
-                                    <span className="w-8 text-center text-black font-medium">
-                                      {item.quantity}
-                                    </span>
+                                    <span className="w-8 text-center text-black font-medium">{item.quantity}</span>
                                     <button
                                       className="w-8 h-8 rounded-full text-black bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
-                                      onClick={() =>
-                                        handleQuantityChange(
-                                          item.id,
-                                          item.quantity + 1
-                                        )
-                                      }
-                                      disabled={
-                                        updating ||
-                                        loading ||
-                                        item.quantity >= 10
-                                      }
+                                      onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                      disabled={updating || loading || item.quantity >= 10}
                                     >
                                       +
                                     </button>
                                   </div>
                                   <div className="text-right">
-                                    <div className="text-sm text-gray-500">
-                                      Price per item
-                                    </div>
-                                    <div className="font-medium text-black">
-                                      ${pricePerItem.toFixed(2)}
-                                    </div>
+                                    <div className="text-sm text-gray-500">Price per item</div>
+                                    <div className="font-medium text-black">${pricePerItem.toFixed(2)}</div>
                                   </div>
                                 </div>
 
                                 <div className="pt-4 border-t border-gray-100">
                                   <div className="flex justify-between items-center">
-                                    <span className="font-medium text-black">
-                                      Subtotal
-                                    </span>
-                                    <span className="font-medium text-black">
-                                      ${itemTotal.toFixed(2)}
-                                    </span>
+                                    <span className="font-medium text-black">Subtotal</span>
+                                    <span className="font-medium text-black">${itemTotal.toFixed(2)}</span>
                                   </div>
                                 </div>
                               </div>
@@ -906,56 +736,37 @@ const CartPage = () => {
           {allCartItems.length > 0 && (
             <div className="lg:w-[380px] flex-shrink-0">
               <div className="bg-white rounded-xl shadow-sm p-6 lg:sticky lg:top-8">
-                <h2 className="text-xl text-black font-bold mb-6">
-                  Order Summary
-                </h2>
+                <h2 className="text-xl text-black font-bold mb-6">Order Summary</h2>
 
                 {selectedItems.size > 0 ? (
                   <div className="space-y-4">
                     <div className="flex justify-between text-gray-600">
                       <span>Selected Items</span>
-                      <span className="font-medium text-black">
-                        {selectedItems.size}
-                      </span>
+                      <span className="font-medium text-black">{selectedItems.size}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>Subtotal</span>
-                      <span className="font-medium text-black">
-                        ${calculateSelectedTotals().subtotal.toFixed(2)}
-                      </span>
+                      <span className="font-medium text-black">${calculateSelectedTotals().subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
                       <span>Tax (10%)</span>
-                      <span className="font-medium text-black">
-                        ${calculateSelectedTotals().taxAmount.toFixed(2)}
-                      </span>
+                      <span className="font-medium text-black">${calculateSelectedTotals().taxAmount.toFixed(2)}</span>
                     </div>
                     <div className="pt-4 border-t border-gray-100">
                       <div className="flex justify-between">
-                        <span className="text-black text-lg font-bold">
-                          Total
-                        </span>
-                        <span className="text-black text-lg font-bold">
-                          ${calculateSelectedTotals().total.toFixed(2)}
-                        </span>
+                        <span className="text-black text-lg font-bold">Total</span>
+                        <span className="text-black text-lg font-bold">${calculateSelectedTotals().total.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-gray-500 text-center">
-                    Please select items to proceed with order
-                  </p>
+                  <p className="text-gray-500 text-center">Please select items to proceed with order</p>
                 )}
 
                 <button
                   className="w-full mt-6 bg-black text-white py-3 rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
                   onClick={handleProceedToOrder}
-                  disabled={
-                    isOrderLoading ||
-                    loading ||
-                    selectedItems.size === 0 ||
-                    !customerToken
-                  }
+                  disabled={isOrderLoading || loading || selectedItems.size === 0 || !customerToken}
                 >
                   {isOrderLoading || loading
                     ? "Processing..."
@@ -967,9 +778,7 @@ const CartPage = () => {
                 </button>
 
                 {error && (
-                  <p className="text-red-500 text-sm mt-2 text-center">
-                    {error}
-                  </p>
+                  <p className="text-red-500 text-sm mt-2 text-center">{error}</p>
                 )}
               </div>
             </div>
@@ -991,9 +800,7 @@ const CartPage = () => {
               </button>
             </div>
 
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to remove this item from your cart?
-            </p>
+            <p className="text-gray-600 mb-6">Are you sure you want to remove this item from your cart?</p>
 
             <div className="flex justify-end gap-3">
               <button

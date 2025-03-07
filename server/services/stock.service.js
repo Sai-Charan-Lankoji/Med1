@@ -1,3 +1,4 @@
+// services/stock.service.js
 const Stock = require("../models/stock.model");
 const StockVariant = require("../models/stockvariant.model");
 const StandardProduct = require("../models/standardProduct.model");
@@ -31,19 +32,22 @@ class StockService {
   }
 
   // Order placed: Move from available to on-hold
-  async placeOrder(variantId, quantity) {
-    const variant = await StockVariant.findByPk(variantId);
-    if (!variant) throw new Error("Variant not found");
-    if (variant.availableQuantity < quantity) throw new Error("Insufficient stock");
+  async placeOrder(variantId, quantity, transaction) {
+    const variant = await StockVariant.findByPk(variantId, { transaction });
+    if (!variant) throw new Error(`Variant not found: ${variantId}`);
 
-    const stock = await Stock.findByPk(variant.stock_id);
+    if (variant.availableQuantity < quantity) {
+      throw new Error(`Insufficient stock for variant ${variantId}: requested ${quantity}, available ${variant.availableQuantity}`);
+    }
+
+    const stock = await Stock.findByPk(variant.stock_id, { transaction });
 
     variant.availableQuantity -= quantity;
     variant.onHoldQuantity += quantity;
     stock.availableQuantity -= quantity;
     stock.onHoldQuantity += quantity;
 
-    await Promise.all([variant.save(), stock.save()]);
+    await Promise.all([variant.save({ transaction }), stock.save({ transaction })]);
     return variant;
   }
 
@@ -83,11 +87,16 @@ class StockService {
     return variant;
   }
 
-  // Get stock by stock_id (replacing getStockByProductId)
+  // Get stock by stock_id (Fixed alias issue)
   async getStockByStockId(stockId) {
     const stock = await Stock.findOne({
       where: { stock_id: stockId },
-      include: [StockVariant],
+      include: [
+        {
+          model: StockVariant,
+          as: "StockVariants", // Use the alias from defineRelationships
+        },
+      ],
     });
     if (!stock) return null;
 
@@ -112,6 +121,35 @@ class StockService {
       ...stock.toJSON(),
       totals,
       availableVariants,
+    };
+  }
+
+  // New method: Get stock variant by variantId
+  async getStockVariantById(variantId) {
+    const variant = await StockVariant.findByPk(variantId, {
+      include: [
+        {
+          model: Stock,
+          as: "Stock", // Include Stock for consistency
+        },
+      ],
+    });
+    if (!variant) return null;
+
+    const stock = variant.Stock;
+    const totals = stock
+      ? {
+          totalQuantity: stock.totalQuantity,
+          availableQuantity: stock.availableQuantity,
+          onHoldQuantity: stock.onHoldQuantity,
+          exhaustedQuantity: stock.exhaustedQuantity,
+        }
+      : null;
+
+    return {
+      ...variant.toJSON(),
+      stock: stock ? stock.toJSON() : null,
+      totals,
     };
   }
 
@@ -167,7 +205,7 @@ class StockService {
       include: [
         {
           model: StockVariant,
-          as: "StockVariants", // Specify the alias as defined in relationship.model.js
+          as: "StockVariants", // Consistent alias usage
         },
       ],
     });
@@ -187,7 +225,8 @@ class StockService {
           stock.StockVariants.some((sv) => sv.color === c && sv.availableQuantity > 0)
         ),
       },
-    }));}
+    }));
+  }
 }
 
 module.exports = new StockService();

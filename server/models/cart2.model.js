@@ -37,6 +37,10 @@ const Cart2 = sequelize.define(
       type: DataTypes.JSONB,
       allowNull: true,
     },
+    selected_variant: {
+      type: DataTypes.STRING, // Added for variantId
+      allowNull: true,
+    },
     price: {
       type: DataTypes.FLOAT,
       allowNull: true, // Note: Your teammate changed this to allowNull: true

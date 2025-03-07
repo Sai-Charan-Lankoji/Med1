@@ -269,7 +269,7 @@ const OrderDetailsView = () => {
                             alt={`${item.title} view`}
                             fill
                             sizes="100%"
-                            className="object-cover"
+                            className="object-top object-cover"
                           />
                         )}
                       </div>

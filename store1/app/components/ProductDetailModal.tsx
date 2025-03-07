@@ -1,58 +1,58 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect, useCallback } from "react"
-import { X, Minus, Plus, ShoppingCart, Pencil, Heart, AlertCircle, Check, BadgePercent } from "lucide-react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { useNewCart } from "../hooks/useNewCart"
-import type { IDesign } from "@/@types/models"
-import { getHexFromColorName } from "../utils/colorUtils"
+import type React from "react";
+import { useState, useEffect, useCallback } from "react";
+import { X, Minus, Plus, ShoppingCart, Pencil, Heart, AlertCircle, Check, BadgePercent } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useNewCart } from "../hooks/useNewCart";
+import type { IDesign } from "@/@types/models";
+import { getHexFromColorName } from "../utils/colorUtils";
 
 interface Color {
-  hex: string
-  name: string
+  hex: string;
+  name: string;
 }
 
 interface Variant {
-  variantId: string
-  size: string
-  color: string
-  availableQuantity: number
+  variantId: string;
+  size: string;
+  color: string;
+  availableQuantity: number;
 }
 
 interface Product {
-  id: string
-  title: string
-  description: string
-  price: number
-  brand: string
-  front_image: string
-  back_image?: string
-  left_image?: string
-  right_image?: string
-  category: string
-  sku: string
-  customizable?: boolean
-  designstate?: IDesign[]
-  propstate?: any
-  designs?: IDesign[]
-  stock_id?: string
-  Stock?: { StockVariants: Variant[] }
-  sale?: boolean
-  discount?: number
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  brand: string;
+  front_image: string;
+  back_image?: string;
+  left_image?: string;
+  right_image?: string;
+  category: string;
+  sku: string;
+  customizable?: boolean;
+  designstate?: IDesign[];
+  propstate?: any;
+  designs?: IDesign[];
+  stock_id?: string;
+  Stock?: { StockVariants: Variant[] };
+  sale?: boolean;
+  discount?: number;
 }
 
 interface WishlistItem {
-  id: string
-  customer_id: string
-  product_id: string | null
-  standard_product_id: string | null
+  id: string;
+  customer_id: string;
+  product_id: string | null;
+  standard_product_id: string | null;
 }
 
 interface ProductDetailModalProps {
-  product: Product
-  onClose: () => void
+  product: Product;
+  onClose: () => void;
 }
 
 const DEFAULT_COLORS: Color[] = [
@@ -67,299 +67,303 @@ const DEFAULT_COLORS: Color[] = [
   { hex: "#FFC0CB", name: "Pink" },
   { hex: "#A52A2A", name: "Brown" },
   { hex: "#808080", name: "Gray" },
-]
+  { hex: "#000080", name: "Navy" }, // Added for your payload
+];
 
 const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
-  const [quantity, setQuantity] = useState(1)
-  const [selectedSize, setSelectedSize] = useState("")
-  const [selectedColor, setSelectedColor] = useState("")
-  const [hoveredSize, setHoveredSize] = useState("")
-  const [hoveredColor, setHoveredColor] = useState("")
-  const [mainImage, setMainImage] = useState(product.front_image)
-  const [currentSide, setCurrentSide] = useState("front")
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isInWishlist, setIsInWishlist] = useState(false)
-  const [variants, setVariants] = useState<Variant[]>([])
-  const [availableSizes, setAvailableSizes] = useState<string[]>([])
-  const [availableColors, setAvailableColors] = useState<Color[]>([])
-  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null)
+  const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
+  const [hoveredSize, setHoveredSize] = useState("");
+  const [hoveredColor, setHoveredColor] = useState("");
+  const [mainImage, setMainImage] = useState(product.front_image);
+  const [currentSide, setCurrentSide] = useState("front");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [availableSizes, setAvailableSizes] = useState<string[]>([]);
+  const [availableColors, setAvailableColors] = useState<Color[]>([]);
+  const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
-  const router = useRouter()
-  const { addDesignToCart, addStandardProductToCart, loading: cartLoading } = useNewCart()
+  const router = useRouter();
+  const { addDesignToCart, addStandardProductToCart, loading: cartLoading } = useNewCart();
 
-  const defaultSizes = ["S", "M", "L", "XL", "2XL"]
+  const defaultSizes = ["S", "M", "L", "XL", "2XL"];
 
-  // Extract variants for standard products, use defaults for customizable
   useEffect(() => {
     if (product.customizable) {
-      setAvailableSizes(defaultSizes)
-      setAvailableColors(DEFAULT_COLORS)
-      setVariants([])
-      setSelectedSize("")
-      setSelectedColor("")
-      setSelectedVariant(null)
+      setAvailableSizes(defaultSizes);
+      setAvailableColors(DEFAULT_COLORS);
+      setVariants([]);
+      setSelectedSize("");
+      setSelectedColor("");
+      setSelectedVariant(null);
     } else {
-      const fetchedVariants = product.Stock?.StockVariants || []
-      const availableVariants = fetchedVariants.filter((v) => v.availableQuantity > 0)
-      setVariants(availableVariants)
+      const fetchedVariants = product.Stock?.StockVariants || [];
+      const availableVariants = fetchedVariants.filter((v) => v.availableQuantity > 0);
+      setVariants(availableVariants);
 
       const sizes = [...new Set(availableVariants.map((v: Variant) => v.size))].sort((a, b) => {
-        const sizeOrder = { S: 1, M: 2, L: 3, XL: 4, "2XL": 5 }
-        return (sizeOrder[a as keyof typeof sizeOrder] || 99) - (sizeOrder[b as keyof typeof sizeOrder] || 99)
-      })
+        const sizeOrder = { S: 1, M: 2, L: 3, XL: 4, "2XL": 5 };
+        return (sizeOrder[a as keyof typeof sizeOrder] || 99) - (sizeOrder[b as keyof typeof sizeOrder] || 99);
+      });
 
       const colors = [...new Set(availableVariants.filter((v: Variant) => v.color).map((v: Variant) => v.color))].map(
         (color: string) => ({
           hex: getHexFromColorName(color),
           name: color,
-        }),
-      )
+        })
+      );
 
-      setAvailableSizes(sizes)
-      setAvailableColors(colors)
-      setSelectedSize("")
-      setSelectedColor("")
-      setSelectedVariant(null)
+      setAvailableSizes(sizes);
+      setAvailableColors(colors);
+      setSelectedSize("");
+      setSelectedColor("");
+      setSelectedVariant(null);
     }
-  }, [product.Stock, product.customizable])
+  }, [product.Stock, product.customizable]);
 
-  // Update selected variant when size or color changes
   useEffect(() => {
     if (product.customizable) {
-      setSelectedVariant(null)
-      return
+      setSelectedVariant(null);
+      return;
     }
 
     if (!selectedSize || !selectedColor) {
-      setSelectedVariant(null)
-      return
+      setSelectedVariant(null);
+      return;
     }
 
-    const colorName = availableColors.find((c) => c.hex === selectedColor)?.name
+    const colorName = availableColors.find((c) => c.hex === selectedColor)?.name;
     if (!colorName) {
-      setSelectedVariant(null)
-      return
+      setSelectedVariant(null);
+      return;
     }
 
     const matchingVariant = variants.find(
-      (v) => v.size === selectedSize && v.color === colorName && v.availableQuantity > 0,
-    )
+      (v) => v.size === selectedSize && v.color === colorName && v.availableQuantity > 0
+    );
 
     if (matchingVariant) {
-      setSelectedVariant(matchingVariant)
-      setError(null)
+      setSelectedVariant(matchingVariant);
+      setError(null);
     } else {
-      setError("Selected combination is not available")
-      setSelectedVariant(null)
-      // Reset selection to prompt user to choose again
-      setSelectedSize("")
-      setSelectedColor("")
+      setError("Selected combination is not available");
+      setSelectedVariant(null);
+      setSelectedSize("");
+      setSelectedColor("");
     }
-  }, [selectedSize, selectedColor, variants, availableColors, product.customizable])
+  }, [selectedSize, selectedColor, variants, availableColors, product.customizable]);
 
-  // Get available colors for the selected or hovered size
   const getAvailableColorsForSize = (size: string): Color[] => {
-    if (!size || product.customizable) return availableColors
-    const relevantVariants = variants.filter((v) => v.size === size && v.availableQuantity > 0)
-    const availableColorNames = [...new Set(relevantVariants.map((v) => v.color))]
-    return availableColors.filter((color) => availableColorNames.includes(color.name))
-  }
+    if (!size || product.customizable) return availableColors;
+    const relevantVariants = variants.filter((v) => v.size === size && v.availableQuantity > 0);
+    const availableColorNames = [...new Set(relevantVariants.map((v) => v.color))];
+    return availableColors.filter((color) => availableColorNames.includes(color.name));
+  };
 
-  // Get available sizes for the selected or hovered color
   const getAvailableSizesForColor = (colorHex: string): string[] => {
-    if (!colorHex || product.customizable) return availableSizes
-    const colorName = availableColors.find((c) => c.hex === colorHex)?.name
-    if (!colorName) return availableSizes
-    const relevantVariants = variants.filter((v) => v.color === colorName && v.availableQuantity > 0)
+    if (!colorHex || product.customizable) return availableSizes;
+    const colorName = availableColors.find((c) => c.hex === colorHex)?.name;
+    if (!colorName) return availableSizes;
+    const relevantVariants = variants.filter((v) => v.color === colorName && v.availableQuantity > 0);
     return [...new Set(relevantVariants.map((v) => v.size))].sort((a, b) => {
-      const sizeOrder = { S: 1, M: 2, L: 3, XL: 4, "2XL": 5 }
-      return (sizeOrder[a as keyof typeof sizeOrder] || 99) - (sizeOrder[b as keyof typeof sizeOrder] || 99)
-    })
-  }
+      const sizeOrder = { S: 1, M: 2, L: 3, XL: 4, "2XL": 5 };
+      return (sizeOrder[a as keyof typeof sizeOrder] || 99) - (sizeOrder[b as keyof typeof sizeOrder] || 99);
+    });
+  };
 
-  // Determine available colors/sizes for rendering
-  const availableColorsForSize = hoveredSize ? getAvailableColorsForSize(hoveredSize) : getAvailableColorsForSize(selectedSize)
-  const availableSizesForColor = hoveredColor ? getAvailableSizesForColor(hoveredColor) : getAvailableSizesForColor(selectedColor)
+  const availableColorsForSize = hoveredSize ? getAvailableColorsForSize(hoveredSize) : getAvailableColorsForSize(selectedSize);
+  const availableSizesForColor = hoveredColor ? getAvailableSizesForColor(hoveredColor) : getAvailableSizesForColor(selectedColor);
 
   const handleSizeChange = (size: string) => {
     if (size === selectedSize) {
-      setSelectedSize("")
+      setSelectedSize("");
     } else {
-      setSelectedSize(size)
-      // Reset color if the current color is not available for the new size
-      const colorsForNewSize = getAvailableColorsForSize(size)
+      setSelectedSize(size);
+      const colorsForNewSize = getAvailableColorsForSize(size);
       if (selectedColor && !colorsForNewSize.some((c) => c.hex === selectedColor)) {
-        setSelectedColor("")
+        setSelectedColor("");
       }
     }
-  }
+  };
 
   const handleColorChange = (colorHex: string) => {
     if (colorHex === selectedColor) {
-      setSelectedColor("")
+      setSelectedColor("");
     } else {
-      setSelectedColor(colorHex)
-      // Reset size if the current size is not available for the new color
-      const sizesForNewColor = getAvailableSizesForColor(colorHex)
+      setSelectedColor(colorHex);
+      const sizesForNewColor = getAvailableSizesForColor(colorHex);
       if (selectedSize && !sizesForNewColor.includes(selectedSize)) {
-        setSelectedSize("")
+        setSelectedSize("");
       }
     }
-  }
+  };
 
   const handleQuantityChange = (change: number) => {
-    const maxQuantity = selectedVariant?.availableQuantity || 999
-    const newQuantity = Math.max(1, Math.min(maxQuantity, quantity + change))
-    setQuantity(newQuantity)
-  }
+    const maxQuantity = selectedVariant?.availableQuantity || 999; // No limit for designable
+    const newQuantity = Math.max(1, Math.min(maxQuantity, quantity + change));
+    setQuantity(newQuantity);
+  };
 
   const handleAddToCart = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       if (product.customizable) {
-        const designs = product.designs || []
-        const designState = product.designstate || []
-        const propState = product.propstate || {}
+        const designs = product.designs || [];
+        const designState = product.designstate || [];
+        const propState = product.propstate || {};
 
         console.log("Adding designable product:", {
           productId: product.id,
+          quantity,
+          selectedSize,
+          selectedColor,
           designs,
           designState,
           propState,
-        })
+        });
 
-        const success = await addDesignToCart(designs, designState, propState, product.id)
-        if (!success) throw new Error("Failed to add designable product to cart")
+        const success = await addDesignToCart(
+          designs,
+          designState,
+          propState,
+          product.id,
+          quantity,      // Added
+          selectedSize,  // Added
+          selectedColor  // Added
+        );
+        if (!success) throw new Error("Failed to add designable product to cart");
       } else {
         if (!selectedSize || !selectedColor || !selectedVariant) {
-          setError("Please select a valid size and color combination")
-          return
+          setError("Please select a valid size and color combination");
+          return;
         }
 
-        const colorName = availableColors.find((c) => c.hex === selectedColor)?.name || ""
+        const colorName = availableColors.find((c) => c.hex === selectedColor)?.name || "";
 
         console.log("Adding standard product:", {
           productId: product.id,
           quantity,
           selectedSize,
-          selectedColor: colorName,
+          selectedColor: getHexFromColorName(colorName),
           variantId: selectedVariant.variantId,
-        })
+        });
 
         const success = await addStandardProductToCart(
           product.id,
           quantity,
           selectedSize,
-          colorName,
-          selectedVariant.variantId,
-        )
-        if (!success) throw new Error("Failed to add standard product to cart")
+          getHexFromColorName(colorName),
+          selectedVariant.variantId
+        );
+        if (!success) throw new Error("Failed to add standard product to cart");
       }
 
-      onClose()
+      onClose();
     } catch (error: any) {
-      setError(error.message || "Failed to add to cart")
-      console.error("Failed to add to cart:", error)
+      setError(error.message || "Failed to add to cart");
+      console.error("Failed to add to cart:", error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleCustomize = () => {
     if (product.customizable && product.designstate && product.propstate) {
-      localStorage.setItem("savedDesignState", JSON.stringify(product.designstate))
-      localStorage.setItem("savedPropsState", JSON.stringify(product.propstate))
-      localStorage.setItem("product_id", product.id)
-      router.push("/dashboard")
+      localStorage.setItem("savedDesignState", JSON.stringify(product.designstate));
+      localStorage.setItem("savedPropsState", JSON.stringify(product.propstate));
+      localStorage.setItem("product_id", product.id);
+      router.push("/dashboard");
     }
-  }
+  };
 
   const getDesignForSide = (side: string) => {
-    if (!product.designs || product.designs.length === 0) return null
-    const design = product.designs.find((d) => d.apparel && d.apparel.side === side)
-    return design
-  }
+    if (!product.designs || product.designs.length === 0) return null;
+    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    return design;
+  };
 
   const getImageUrlFromDesigns = (side: string) => {
-    if (!product.designs || product.designs.length === 0) return null
-    const design = product.designs.find((d) => d.apparel && d.apparel.side === side)
-    return design?.apparel?.url || null
-  }
+    if (!product.designs || product.designs.length === 0) return null;
+    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    return design?.apparel?.url || null;
+  };
 
   const updateCurrentSide = (imgSrc: string) => {
-    const matchingImage = images.find((img) => img.src === imgSrc)
+    const matchingImage = images.find((img) => img.src === imgSrc);
     if (matchingImage) {
-      setCurrentSide(matchingImage.side)
+      setCurrentSide(matchingImage.side);
     }
-  }
+  };
 
   const getImages = () => {
-    const result: { src: string; alt: string; side: string }[] = []
+    const result: { src: string; alt: string; side: string }[] = [];
 
     if (product.front_image) {
       result.push({
         src: product.front_image,
         alt: "Front View",
         side: "front",
-      })
+      });
     }
     if (product.back_image) {
-      result.push({ src: product.back_image, alt: "Back View", side: "back" })
+      result.push({ src: product.back_image, alt: "Back View", side: "back" });
     }
     if (product.left_image) {
       result.push({
         src: product.left_image,
         alt: "Left View",
         side: "leftshoulder",
-      })
+      });
     }
     if (product.right_image) {
       result.push({
         src: product.right_image,
         alt: "Right View",
         side: "rightshoulder",
-      })
+      });
     }
 
     if (product.customizable && product.designs) {
-      const sides = ["front", "back", "leftshoulder", "rightshoulder"]
+      const sides = ["front", "back", "leftshoulder", "rightshoulder"];
       sides.forEach((side) => {
         if (!result.some((img) => img.side === side)) {
-          const designImgUrl = getImageUrlFromDesigns(side)
+          const designImgUrl = getImageUrlFromDesigns(side);
           if (designImgUrl) {
-            result.push({ src: designImgUrl, alt: `${side} View`, side: side })
+            result.push({ src: designImgUrl, alt: `${side} View`, side: side });
           }
         }
-      })
+      });
     }
 
-    return result
-  }
+    return result;
+  };
 
-  const images = getImages()
+  const images = getImages();
 
   const getPositionForSide = (side: string) => {
     switch (side) {
       case "leftshoulder":
-        return { top: "60%", left: "45%", width: "30%", height: "30%" }
+        return { top: "60%", left: "45%", width: "30%", height: "30%" };
       case "rightshoulder":
-        return { top: "60%", left: "55%", width: "30%", height: "30%" }
+        return { top: "60%", left: "55%", width: "30%", height: "30%" };
       case "front":
       case "back":
       default:
-        return { top: "50%", left: "50%", width: "50%", height: "50%" }
+        return { top: "50%", left: "50%", width: "50%", height: "50%" };
     }
-  }
+  };
 
   const fetchWishlist = useCallback(async () => {
     try {
-      const token = sessionStorage.getItem("auth_token")
+      const token = sessionStorage.getItem("auth_token");
       if (!token) {
-        setIsInWishlist(false)
-        return
+        setIsInWishlist(false);
+        return;
       }
 
       const response = await fetch("http://localhost:5000/api/wishlists", {
@@ -368,50 +372,50 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (data.status === 200 && data.success) {
-        const wishlist = data.data as WishlistItem[]
-        const isDesignable = product.customizable === true
+        const wishlist = data.data as WishlistItem[];
+        const isDesignable = product.customizable === true;
         const isPresent = wishlist.some(
           (item) =>
             (isDesignable && item.product_id === product.id) ||
-            (!isDesignable && item.standard_product_id === product.id),
-        )
-        setIsInWishlist(isPresent)
+            (!isDesignable && item.standard_product_id === product.id)
+        );
+        setIsInWishlist(isPresent);
       } else {
-        setIsInWishlist(false)
-        console.warn("Failed to fetch wishlist:", data.message)
+        setIsInWishlist(false);
+        console.warn("Failed to fetch wishlist:", data.message);
       }
     } catch (error) {
-      console.error("Error fetching wishlist:", error)
-      setIsInWishlist(false)
+      console.error("Error fetching wishlist:", error);
+      setIsInWishlist(false);
     }
-  }, [product.id, product.customizable])
+  }, [product.id, product.customizable]);
 
   useEffect(() => {
-    fetchWishlist()
-  }, [fetchWishlist])
+    fetchWishlist();
+  }, [fetchWishlist]);
 
   const handleWishlistToggle = async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const token = sessionStorage.getItem("auth_token")
+      const token = sessionStorage.getItem("auth_token");
       if (!token) {
-        throw new Error("User not authenticated")
+        throw new Error("User not authenticated");
       }
 
-      const isCurrentlyInWishlist = isInWishlist
-      setIsInWishlist(!isCurrentlyInWishlist)
+      const isCurrentlyInWishlist = isInWishlist;
+      setIsInWishlist(!isCurrentlyInWishlist);
 
-      const endpoint = isCurrentlyInWishlist ? "/remove" : "/add"
-      const isDesignable = product.customizable === true
+      const endpoint = isCurrentlyInWishlist ? "/remove" : "/add";
+      const isDesignable = product.customizable === true;
       const requestBody = isDesignable
         ? { product_id: product.id, standard_product_id: null }
-        : { product_id: null, standard_product_id: product.id }
+        : { product_id: null, standard_product_id: product.id };
 
       const response = await fetch(`http://localhost:5000/api/wishlists${endpoint}`, {
         method: isCurrentlyInWishlist ? "DELETE" : "POST",
@@ -420,27 +424,26 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(requestBody),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.status !== 200 && data.status !== 201) {
-        setIsInWishlist(isCurrentlyInWishlist)
-        throw new Error(data.message || "Failed to update wishlist")
+        setIsInWishlist(isCurrentlyInWishlist);
+        throw new Error(data.message || "Failed to update wishlist");
       }
 
-      await fetchWishlist()
+      await fetchWishlist();
     } catch (error: any) {
-      setError(error.message || "Failed to update wishlist")
-      console.error("Wishlist update error:", error)
-      await fetchWishlist()
+      setError(error.message || "Failed to update wishlist");
+      console.error("Wishlist update error:", error);
+      await fetchWishlist();
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
-  // Calculate original price if on sale
-  const originalPrice = product.sale && product.discount ? product.price * (1 + product.discount / 100) : null
+  const originalPrice = product.sale && product.discount ? product.price * (1 + product.discount / 100) : null;
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
@@ -458,23 +461,18 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   backgroundColor: product.customizable ? selectedColor : undefined,
                 }}
               />
-
-              {/* Sale badge */}
               {product.sale && product.discount && (
                 <div className="absolute top-4 left-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center">
                   <BadgePercent className="w-4 h-4 mr-1" />
                   {product.discount}% OFF
                 </div>
               )}
-
               {product.customizable && product.designs && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   {(() => {
-                    const currentDesign = getDesignForSide(currentSide)
-                    if (!currentDesign || !currentDesign.pngImage) return null
-
-                    const position = getPositionForSide(currentSide)
-
+                    const currentDesign = getDesignForSide(currentSide);
+                    if (!currentDesign || !currentDesign.pngImage) return null;
+                    const position = getPositionForSide(currentSide);
                     return (
                       <div
                         className="absolute flex items-center justify-center pointer-events-none"
@@ -494,7 +492,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                           className="rounded-md"
                         />
                       </div>
-                    )
+                    );
                   })()}
                 </div>
               )}
@@ -510,8 +508,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                         : "hover:ring-2 hover:ring-gray-300 hover:shadow-md"
                     }`}
                   onClick={() => {
-                    setMainImage(img.src!)
-                    updateCurrentSide(img.src)
+                    setMainImage(img.src!);
+                    updateCurrentSide(img.src);
                   }}
                 >
                   <Image
@@ -526,17 +524,15 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   {product.customizable && product.designs && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       {(() => {
-                        const design = getDesignForSide(img.side)
-                        if (!design || !design.pngImage) return null
-
-                        const position = getPositionForSide(img.side)
+                        const design = getDesignForSide(img.side);
+                        if (!design || !design.pngImage) return null;
+                        const position = getPositionForSide(img.side);
                         const thumbnailPosition = {
                           top: position.top,
                           left: position.left,
                           width: position.width,
                           height: position.height,
-                        }
-
+                        };
                         return (
                           <div
                             className="absolute flex items-center justify-center pointer-events-none"
@@ -556,7 +552,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                               className="rounded-md"
                             />
                           </div>
-                        )
+                        );
                       })()}
                     </div>
                   )}
@@ -592,7 +588,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                 <p>{error}</p>
               </div>
             )}
-
             {!product.customizable && selectedVariant && (
               <div className="bg-green-50 text-green-700 p-3 rounded-lg mb-4 flex items-start">
                 <Check className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
@@ -603,7 +598,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                 </p>
               </div>
             )}
-
             <div className="space-y-6 flex-grow">
               <div className="flex gap-6 text-sm text-gray-500">
                 <div>
@@ -624,8 +618,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   <h3 className="font-medium text-black mb-3">Select Size</h3>
                   <div className="flex flex-wrap gap-2">
                     {availableSizes.map((size) => {
-                      const isAvailable = hoveredColor ? availableSizesForColor.includes(size) : true
-                      const isSelected = selectedSize === size
+                      const isAvailable = hoveredColor ? availableSizesForColor.includes(size) : true;
+                      const isSelected = selectedSize === size;
                       return (
                         <button
                           key={size}
@@ -649,7 +643,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                             </span>
                           )}
                         </button>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -659,8 +653,8 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   <h3 className="font-medium text-black mb-3">Select Color</h3>
                   <div className="flex flex-wrap gap-3">
                     {availableColors.map((color) => {
-                      const isAvailable = hoveredSize ? availableColorsForSize.some((c) => c.hex === color.hex) : true
-                      const isSelected = selectedColor === color.hex
+                      const isAvailable = hoveredSize ? availableColorsForSize.some((c) => c.hex === color.hex) : true;
+                      const isSelected = selectedColor === color.hex;
                       return (
                         <button
                           key={color.hex}
@@ -688,7 +682,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                             </span>
                           )}
                         </button>
-                      )
+                      );
                     })}
                   </div>
                 </div>
@@ -717,7 +711,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   hover:bg-gray-900 transition-all duration-300 flex items-center justify-center
                   shadow-lg hover:shadow-xl disabled:bg-gray-500 disabled:cursor-not-allowed"
                 onClick={handleAddToCart}
-                disabled={isLoading || !selectedSize || !selectedColor || !selectedVariant}
+                disabled={isLoading || (!product.customizable && (!selectedSize || !selectedColor))}
               >
                 {isLoading ? (
                   "Adding..."
@@ -763,7 +757,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ProductDetailModal
+export default ProductDetailModal;

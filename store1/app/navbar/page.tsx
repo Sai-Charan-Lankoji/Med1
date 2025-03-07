@@ -110,9 +110,9 @@ const Navbar: React.FC = () => {
     ([url, token]) => fetcher(url, token),
     {
       refreshInterval: POLLING_INTERVAL,
-      revalidateOnFocus: true,
-      revalidateOnReconnect: true,
-      dedupingInterval: 2000,
+      // revalidateOnFocus: true,
+      // revalidateOnReconnect: true,
+      // dedupingInterval: 2000,
     }
   );
 

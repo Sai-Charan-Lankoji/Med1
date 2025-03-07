@@ -95,6 +95,7 @@ export interface IStandardCartItem {
   product_id: string;
   selected_size: string | null;
   selected_color: string | null;
+  selected_variant: string | null;
   quantity: number;
   price: number;
   total_price: number;
