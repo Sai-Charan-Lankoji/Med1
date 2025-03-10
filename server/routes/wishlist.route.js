@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const wishlistController = require("../controllers/wishlist.controller");
-const authMiddleware = require("../middleware/AuthMiddleware"); // Your auth middleware
+const authMiddleware = require("../middleware/AuthMiddleware"); 
 
 /**
  * @swagger
@@ -54,7 +54,7 @@ const authMiddleware = require("../middleware/AuthMiddleware"); // Your auth mid
  *       500:
  *         description: Server error
  */
-router.post("/add", authMiddleware, wishlistController.addToWishlist);
+router.post("/add", wishlistController.addToWishlist);
 
 /**
  * @swagger
@@ -107,7 +107,7 @@ router.post("/add", authMiddleware, wishlistController.addToWishlist);
  *       500:
  *         description: Server error
  */
-router.delete("/remove", authMiddleware, wishlistController.removeFromWishlist);
+router.delete("/remove", wishlistController.removeFromWishlist);
 
 /**
  * @swagger
@@ -148,6 +148,6 @@ router.delete("/remove", authMiddleware, wishlistController.removeFromWishlist);
  *                 error: { type: string }
  *                 message: { type: string }
  */
-router.get("/", authMiddleware, wishlistController.getWishlistByUser);
+router.get("/", wishlistController.getWishlistByUser);
 
 module.exports = router;

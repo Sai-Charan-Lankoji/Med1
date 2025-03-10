@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 const fetchStores = async (vendor_id: string) => {
   
 
-  const url = `${baseUrl}/api/stores?vendor_id=${vendor_id}`;
+  const url = `${baseUrl}/api/stores/vendor?vendor_id=${vendor_id}`;
 
   try {
     const response = await fetch(url, {

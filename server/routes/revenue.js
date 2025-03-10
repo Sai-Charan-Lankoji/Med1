@@ -1,20 +1,15 @@
 const express = require("express");
-const  { getCommissionBreakdownController } = require("../controllers/storeRevenue.controller"); 
+const router = express.Router();
+const { 
+  getCommissionDataController, 
+  getEngagementDataController, 
+  getProductStatsController, 
+  logProductViewController 
+} = require("../controllers/storeRevenue.controller");
 
+router.get("/commission/:vendorId", getCommissionDataController);
+router.get("/engagement/:vendorId", getEngagementDataController);
+router.get("/topSelling-products/:vendorId", getProductStatsController);
+router.post("/product-view", logProductViewController);
 
-const router = express.Router(); 
-
-
-// router.get("/:vendor_id", getVendorRevenueController);  
-// router.get("/monthly/:vendor_id", getMonthlyRevnueController); 
-
-router.get("/commission/:vendor_id", getCommissionBreakdownController);
-
-
-module.exports = router;
-
-
-
-
-
-
+module.exports = router;    

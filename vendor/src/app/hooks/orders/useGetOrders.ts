@@ -7,7 +7,7 @@ const fetchOrders = async () => {
     console.log('No vendor ID found in sessionStorage');
     return []; 
   }
-
+console.log('Praveen vendor_id', vendor_id);
   const url = `${baseUrl}/api/orders/vendor/${vendor_id}`;
 
   try {

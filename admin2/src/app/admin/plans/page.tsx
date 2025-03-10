@@ -19,7 +19,7 @@ import { useDeletePlan } from "../../hooks/plan/useDeletePlan";
 import { EditPlanDialog } from "./edit-plan-dialog";
 import { LoadingDots } from "@/app/components/ui/Loding";
 import { motion } from "framer-motion";
-
+  
 
 interface Plan {
   id: string;
