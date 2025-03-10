@@ -96,24 +96,83 @@ export default function PlansWithSearch({
             {plans.map((plan) => (
               <div
                 key={plan.id}
-                className="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 animate-fade-in-up"
+                className="card bg-base-100 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up border border-base-200"
               >
-                <div className="card-body">
-                  <h3 className="card-title text-primary font-bold">{plan.name}</h3>
-                  <p className="text-sm text-base-content/80 italic">{plan.description || "No description"}</p>
-                  <p><strong>Price:</strong> <span className="text-success">${plan.price}</span></p>
-                  <p><strong>Commission:</strong> <span className="text-warning">{plan.commission_rate}%</span></p>
-                  <p><strong>Stores:</strong> {plan.no_stores}</p>
-                  <p><strong>Discount:</strong> <span className="text-accent">{plan.discount}%</span></p>
-                  <p><strong>Features:</strong> {plan.features.join(", ")}</p>
-                  <p><strong>Status:</strong> <span className={`badge badge-lg ${plan.isActive ? "badge-success" : "badge-error"}`}>{plan.isActive ? "Active" : "Inactive"}</span></p>
-                  <div className="card-actions justify-end mt-4">
+                <div className="card-body p-6">
+                  {/* Pricing Card Header */}
+                  <div className="text-center mb-6">
+                    <h3 className="card-title text-xl font-semibold text-base-content">{plan.name}</h3>
+                    <p className="text-sm text-base-content/70 mt-1">{plan.description || "No description"}</p>
+                    <div className="mt-4">
+                      <span className="text-3xl font-bold" style={{ color: "var(--color-primary)" }}>
+                        ${plan.price}
+                      </span>
+                      <span className="text-base-content/70"> / month</span>
+                    </div>
+                    {plan.discount > 0 && (
+                      <span
+                        className="badge badge-outline badge-md mt-3"
+                        style={{ color: "var(--color-accent)", borderColor: "var(--color-accent)" }}
+                      >
+                        {plan.discount}% Off
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Features List */}
+                  <ul className="space-y-2 text-base-content/80">
+                    <li className="flex items-center gap-2">
+                      <span
+                        className="badge badge-sm"
+                        style={{ backgroundColor: "var(--color-info)", color: "var(--color-info-content)" }}
+                      >
+                        ✓
+                      </span>
+                      {plan.no_stores} Stores
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span
+                        className="badge badge-sm"
+                        style={{ backgroundColor: "var(--color-info)", color: "var(--color-info-content)" }}
+                      >
+                        ✓
+                      </span>
+                      {plan.commission_rate}% Commission
+                    </li>
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-2">
+                        <span
+                          className="badge badge-sm"
+                          style={{ backgroundColor: "var(--color-info)", color: "var(--color-info-content)" }}
+                        >
+                          ✓
+                        </span>
+                        {feature}
+                      </li>
+                    ))}
+                    <li className="flex items-center gap-2">
+                      <span
+                        className="badge badge-sm"
+                        style={{
+                          backgroundColor: plan.isActive ? "var(--color-success)" : "var(--color-error)",
+                          color: plan.isActive ? "var(--color-success-content)" : "var(--color-error-content)",
+                        }}
+                      >
+                        {plan.isActive ? "✓" : "✗"}
+                      </span>
+                      {plan.isActive ? "Active" : "Inactive"}
+                    </li>
+                  </ul>
+
+                  {/* Actions */}
+                  <div className="card-actions justify-end mt-6 flex gap-2">
                     <button
                       onClick={() => {
                         setEditingPlan(plan);
                         setIsPlanModalOpen(true);
                       }}
-                      className="btn btn-sm btn-info text-white hover:scale-110 hover:bg-info/90 transition-all duration-300"
+                      className="btn btn-sm text-white hover:scale-105 transition-all duration-300"
+                      style={{ backgroundColor: "var(--color-primary)" }}
                     >
                       Edit
                     </button>
@@ -123,7 +182,8 @@ export default function PlansWithSearch({
                         setDeletingPlanName(plan.name);
                         setIsDeleteOpen(true);
                       }}
-                      className="btn btn-sm btn-error text-white hover:scale-110 hover:bg-error/90 transition-all duration-300"
+                      className="btn btn-sm text-white hover:scale-105 transition-all duration-300"
+                      style={{ backgroundColor: "var(--color-error)" }}
                     >
                       Delete
                     </button>
@@ -137,15 +197,29 @@ export default function PlansWithSearch({
               <div className="join">
                 <button
                   className="join-item btn btn-outline hover:scale-105 transition-all duration-300"
+                  style={{ color: "var(--color-neutral-content)", borderColor: "var(--color-neutral)" }}
                   onClick={() => handlePageChange(currentPage - 1, section)}
                   disabled={currentPage === 1}
                 >
                   «
                 </button>
-                {Array.from({ length: section === "active" ? activePaginated.totalPages : inactivePaginated.totalPages }, (_, i) => i + 1).map((page) => (
+                {Array.from(
+                  { length: section === "active" ? activePaginated.totalPages : inactivePaginated.totalPages },
+                  (_, i) => i + 1
+                ).map((page) => (
                   <button
                     key={page}
-                    className={`join-item btn btn-outline ${currentPage === page ? "btn-active scale-110" : ""} hover:scale-105 transition-all duration-300`}
+                    className={`join-item btn btn-outline hover:scale-105 transition-all duration-300 ${
+                      currentPage === page ? "btn-active" : ""
+                    }`}
+                    style={{
+                      color: "var(--color-neutral-content)",
+                      borderColor: "var(--color-neutral)",
+                      ...(currentPage === page && {
+                        backgroundColor: "var(--color-neutral)",
+                        color: "var(--color-neutral-content)",
+                      }),
+                    }}
                     onClick={() => handlePageChange(page, section)}
                   >
                     {page}
@@ -153,6 +227,7 @@ export default function PlansWithSearch({
                 ))}
                 <button
                   className="join-item btn btn-outline hover:scale-105 transition-all duration-300"
+                  style={{ color: "var(--color-neutral-content)", borderColor: "var(--color-neutral)" }}
                   onClick={() => handlePageChange(currentPage + 1, section)}
                   disabled={currentPage === (section === "active" ? activePaginated.totalPages : inactivePaginated.totalPages)}
                 >
@@ -171,19 +246,29 @@ export default function PlansWithSearch({
   if (!isMounted) return null;
 
   return (
-    <div className="p-6 min-h-screen bg-gradient-to-br from-base-100 to-base-200 animate-fade-in">
+    <div className="p-6 min-h-screen bg-base-100 animate-fade-in">
       <div className="mb-6 flex justify-between items-center animate-slide-in-left">
-        <h1 className="text-4xl font-extrabold text-primary bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">Subscription Plans</h1>
+        <h1
+          className="text-4xl font-bold"
+          style={{ color: "var(--color-primary)" }}
+        >
+          Subscription Plans
+        </h1>
         <div className="flex gap-4">
           <div className="transform transition-all duration-300 hover:scale-105">
-            <SearchInput value={query} onChange={handleSearch} placeholder="Search plans..." />
+            <SearchInput
+              value={query}
+              onChange={handleSearch}
+              placeholder="Search plans..."
+            />
           </div>
           <button
             onClick={() => {
               setEditingPlan(null);
               setIsPlanModalOpen(true);
             }}
-            className="btn btn-primary btn-md flex items-center gap-2 hover:scale-110 transition-all duration-300 shadow-lg"
+            className="btn btn-md text-white hover:scale-105 transition-all duration-300 shadow-md"
+            style={{ backgroundColor: "var(--color-primary)" }}
           >
             <Plus className="h-6 w-6" /> Add New Plan
           </button>
@@ -191,7 +276,10 @@ export default function PlansWithSearch({
       </div>
 
       {initialError ? (
-        <div className="alert alert-error animate-shake shadow-lg">
+        <div
+          className="alert alert-error animate-shake shadow-md"
+          style={{ backgroundColor: "var(--color-error)", color: "var(--color-error-content)" }}
+        >
           <span>{initialError}</span>
         </div>
       ) : filteredPlans.length === 0 ? (
@@ -206,7 +294,8 @@ export default function PlansWithSearch({
                 setEditingPlan(null);
                 setIsPlanModalOpen(true);
               }}
-              className="mt-6 btn btn-outline btn-primary rounded-full hover:scale-110 transition-all duration-300 shadow-md"
+              className="mt-6 btn btn-outline rounded-full hover:scale-105 transition-all duration-300 shadow-md"
+              style={{ color: "var(--color-primary)", borderColor: "var(--color-primary)" }}
             >
               <Plus className="mr-2 h-6 w-6" /> Add Your First Plan
             </button>

@@ -48,7 +48,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Left Side - Company Banner */}
+      {/* Left Side - Company Banner */}  
       <div className="w-full md:w-1/2 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center p-8">
         <div className="text-center text-white">
           <h1 className="text-4xl font-bold animate-pulse">VendorSync</h1>
