@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-/** withMT = require("@material-tailwind/react/utils/withMT"); */
 module.exports = {
   content: [
     "./node_modules/flowbite-react/lib/**/*.js",
@@ -11,19 +10,20 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      animation: {
+        "fade-in": "fadeIn 0.5s ease-in-out",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+      },
+    },
   },
   plugins: [
     require("flowbite/plugin"),
     require("tailwind-scrollbar")
   ],
-  // withMT({
-  //   content: "./pages/**/*.{js,ts,jsx,tsx}",
-  //   theme: {
-  //     extend: {},
-  //   },
-  //   plugins: [],
-  // }),
 }
-
-

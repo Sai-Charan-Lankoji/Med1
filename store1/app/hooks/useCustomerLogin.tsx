@@ -32,13 +32,12 @@ export const useCustomerLogin = () => {
 
   
 
-  const login = async (email: string, password: string, vendorId: any) => {
+  const login = async (email: string, password: string) => {
     setLoading(true);
     setError(null);
 
     try { 
-      const localUrl = "http://localhost:5000/api/customer/login" 
-      //`${url}/api/customer/login`
+       //`${url}/api/customer/login`
       const url = NEXT_PUBLIC_API_URL;
       const response = await fetch(`${url}/api/customer/login`, {
         method: 'POST',
@@ -46,7 +45,7 @@ export const useCustomerLogin = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ email, password, vendorId }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (!response.ok) {

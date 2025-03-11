@@ -85,10 +85,36 @@ router.post("/", orderController.createOrder); // Create a new order
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Order'
- *       404:
- *         description: Vendor not found or no orders
+ *       400:
+ *         description: Vendor ID required or no orders found
  */
 router.get("/vendor/:vendorId", orderController.listOrdersByVendor); // List orders by vendor
+
+/**
+ * @swagger
+ * /api/orders/customer/{customerId}:
+ *   get:
+ *     summary: List orders by customer
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: customerId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of orders for the customer
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Order'
+ *       400:
+ *         description: Customer ID required or error occurred
+ */
+router.get("/customer/:customerId", orderController.listOrdersByCustomer); // List orders by customer
 
 /**
  * @swagger

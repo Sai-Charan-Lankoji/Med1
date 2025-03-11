@@ -9,7 +9,7 @@ import {
   FaHeart,
 } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
-import { ShirtIcon } from "lucide-react";
+import { ShirtIcon, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { MdDeleteForever } from "react-icons/md";
@@ -109,7 +109,7 @@ const Navbar: React.FC = () => {
     token ? [WISHLIST_API_URL, token] : null,
     ([url, token]) => fetcher(url, token),
     {
-      refreshInterval: POLLING_INTERVAL,
+      // refreshInterval: POLLING_INTERVAL,
       // revalidateOnFocus: true,
       // revalidateOnReconnect: true,
       // dedupingInterval: 2000,
@@ -423,6 +423,13 @@ const Navbar: React.FC = () => {
                     >
                       <FaCog className="text-xl text-gray-700 w-4 h-4" />
                       <span>Settings</span>
+                    </button>
+                    <button
+                      onClick={() => router.push("/myorders")}
+                      className="w-full px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
+                    >
+                      <ShoppingCart className="text-xl text-gray-700 w-4 h-4" />
+                      <span>My Orders</span>
                     </button>
                     <button
                       onClick={handleDesktopLogout}

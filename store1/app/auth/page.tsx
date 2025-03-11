@@ -88,7 +88,7 @@ export default function SignIn() {
     if (isSignup) {
       await signup( email, password, firstName, lastName, phone, has_account, vendor_id );
     } else {
-      await login(email, password, vendorId);
+      await login(email, password);
     }
   };
 

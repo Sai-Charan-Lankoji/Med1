@@ -60,6 +60,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (profile_photo) {
+      sessionStorage.setItem('profile', profile_photo)
       setProfilePhoto(profile_photo); 
     } else {
       setProfilePhoto(null); 
