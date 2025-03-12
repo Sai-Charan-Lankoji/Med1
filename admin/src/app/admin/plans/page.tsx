@@ -4,21 +4,7 @@ import { NEXT_URL } from "@/app/constants";
 import PlansWithSearch from "@/app/components/PlansWithSearch";
 import SuspenseWithFade from "@/app/components/SuspenseWithFade";
 import Loading from "@/app/components/Loading";
-
-type Plan = {
-  id: string;
-  name: string;
-  price: string;
-  features: string[];
-  discount: number;
-  isActive: boolean;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  description?: string;
-  no_stores: string;
-  commission_rate: number;
-};
+import { Plan } from "@/app/api/plan/route";
 
 async function fetchPlans(): Promise<{ plans: Plan[]; error: string | null }> {
   const cookieStore = await cookies();
@@ -43,9 +29,16 @@ async function fetchPlans(): Promise<{ plans: Plan[]; error: string | null }> {
 
 export default async function PlansPage() {
   const { plans, error } = await fetchPlans();
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
+
   return (
     <SuspenseWithFade fallback={<Loading />}>
-      <PlansWithSearch initialPlans={plans} initialError={error} />
+      <PlansWithSearch 
+        initialPlans={plans} 
+        initialError={error}
+        cookieHeader={cookieHeader}
+      />
     </SuspenseWithFade>
   );
 }

@@ -6,30 +6,18 @@ import SearchInput from "@/app/components/SearchInput";
 import { Plus } from "lucide-react";
 import PlanModal from "@/app/components/PlanModal";
 import DeletePlanModal from "@/app/components/DeletePlanModal";
-
-type Plan = {
-  id: string;
-  name: string;
-  price: string;
-  features: string[];
-  discount: number;
-  isActive: boolean;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  description?: string;
-  no_stores: string;
-  commission_rate: number;
-};
+import { Plan } from "@/app/api/plan/route";
 
 export default function PlansWithSearch({
   initialPlans,
   initialError,
+  cookieHeader,
 }: {
   initialPlans: Plan[];
   initialError: string | null;
+  cookieHeader: string;
 }) {
-  const [filteredPlans, setFilteredPlans] = useState(initialPlans);
+  const [filteredPlans, setFilteredPlans] = useState<Plan[]>(initialPlans);
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -42,7 +30,12 @@ export default function PlansWithSearch({
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    setFilteredPlans(initialPlans);
+  }, [initialPlans]);
+
+  const refreshPlans = (updatedPlans: Plan[]) => {
+    setFilteredPlans(updatedPlans);
+  };
 
   const activePlans = filteredPlans.filter((plan) => plan.isActive);
   const inactivePlans = filteredPlans.filter((plan) => !plan.isActive);
@@ -83,10 +76,6 @@ export default function PlansWithSearch({
     }
   };
 
-  const handlePlanChanged = () => {
-    window.location.reload();
-  };
-
   const renderPlanSection = (title: string, plans: Plan[], section: "active" | "inactive") => (
     <div className="mb-10 animate-slide-in-up">
       <h2 className="text-2xl font-semibold text-base-content mb-6 border-b border-base-300 pb-2">{title}</h2>
@@ -99,80 +88,52 @@ export default function PlansWithSearch({
                 className="card bg-base-100 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 animate-fade-in-up border border-base-200"
               >
                 <div className="card-body p-6">
-                  {/* Pricing Card Header */}
                   <div className="text-center mb-6">
                     <h3 className="card-title text-xl font-semibold text-base-content">{plan.name}</h3>
                     <p className="text-sm text-base-content/70 mt-1">{plan.description || "No description"}</p>
                     <div className="mt-4">
-                      <span className="text-3xl font-bold" style={{ color: "var(--color-primary)" }}>
-                        ${plan.price}
-                      </span>
+                      <span className="text-3xl font-bold text-primary">${plan.price}</span>
                       <span className="text-base-content/70"> / month</span>
                     </div>
-                    {plan.discount > 0 && (
-                      <span
-                        className="badge badge-outline badge-md mt-3"
-                        style={{ color: "var(--color-accent)", borderColor: "var(--color-accent)" }}
-                      >
+                    {(plan.discount ?? 0) > 0 && (
+                      <span className="badge badge-outline badge-md mt-3 text-accent border-accent">
                         {plan.discount}% Off
                       </span>
                     )}
                   </div>
-
-                  {/* Features List */}
                   <ul className="space-y-2 text-base-content/80">
                     <li className="flex items-center gap-2">
-                      <span
-                        className="badge badge-sm"
-                        style={{ backgroundColor: "var(--color-info)", color: "var(--color-info-content)" }}
-                      >
-                        ✓
-                      </span>
+                      <span className="badge badge-sm bg-info text-info-content">✓</span>
                       {plan.no_stores} Stores
                     </li>
                     <li className="flex items-center gap-2">
-                      <span
-                        className="badge badge-sm"
-                        style={{ backgroundColor: "var(--color-info)", color: "var(--color-info-content)" }}
-                      >
-                        ✓
-                      </span>
+                      <span className="badge badge-sm bg-info text-info-content">✓</span>
                       {plan.commission_rate}% Commission
                     </li>
-                    {plan.features.map((feature, index) => (
+                    {plan.features?.map((feature, index) => (
                       <li key={index} className="flex items-center gap-2">
-                        <span
-                          className="badge badge-sm"
-                          style={{ backgroundColor: "var(--color-info)", color: "var(--color-info-content)" }}
-                        >
-                          ✓
-                        </span>
+                        <span className="badge badge-sm bg-info text-info-content">✓</span>
                         {feature}
                       </li>
                     ))}
                     <li className="flex items-center gap-2">
                       <span
-                        className="badge badge-sm"
-                        style={{
-                          backgroundColor: plan.isActive ? "var(--color-success)" : "var(--color-error)",
-                          color: plan.isActive ? "var(--color-success-content)" : "var(--color-error-content)",
-                        }}
+                        className={`badge badge-sm ${
+                          plan.isActive ? "bg-success text-success-content" : "bg-error text-error-content"
+                        }`}
                       >
                         {plan.isActive ? "✓" : "✗"}
                       </span>
                       {plan.isActive ? "Active" : "Inactive"}
                     </li>
                   </ul>
-
-                  {/* Actions */}
                   <div className="card-actions justify-end mt-6 flex gap-2">
                     <button
                       onClick={() => {
                         setEditingPlan(plan);
                         setIsPlanModalOpen(true);
                       }}
-                      className="btn btn-sm text-white hover:scale-105 transition-all duration-300"
-                      style={{ backgroundColor: "var(--color-primary)" }}
+                      className="btn btn-sm btn-primary text-primary-content hover:scale-105 transition-all duration-300"
                     >
                       Edit
                     </button>
@@ -182,8 +143,7 @@ export default function PlansWithSearch({
                         setDeletingPlanName(plan.name);
                         setIsDeleteOpen(true);
                       }}
-                      className="btn btn-sm text-white hover:scale-105 transition-all duration-300"
-                      style={{ backgroundColor: "var(--color-error)" }}
+                      className="btn btn-sm btn-error text-error-content hover:scale-105 transition-all duration-300"
                     >
                       Delete
                     </button>
@@ -196,8 +156,7 @@ export default function PlansWithSearch({
             <div className="mt-6 flex justify-center animate-fade-in-up">
               <div className="join">
                 <button
-                  className="join-item btn btn-outline hover:scale-105 transition-all duration-300"
-                  style={{ color: "var(--color-neutral-content)", borderColor: "var(--color-neutral)" }}
+                  className="join-item btn btn-outline text-neutral-content border-neutral hover:scale-105 transition-all duration-300"
                   onClick={() => handlePageChange(currentPage - 1, section)}
                   disabled={currentPage === 1}
                 >
@@ -209,25 +168,16 @@ export default function PlansWithSearch({
                 ).map((page) => (
                   <button
                     key={page}
-                    className={`join-item btn btn-outline hover:scale-105 transition-all duration-300 ${
+                    className={`join-item btn btn-outline text-neutral-content border-neutral hover:scale-105 transition-all duration-300 ${
                       currentPage === page ? "btn-active" : ""
                     }`}
-                    style={{
-                      color: "var(--color-neutral-content)",
-                      borderColor: "var(--color-neutral)",
-                      ...(currentPage === page && {
-                        backgroundColor: "var(--color-neutral)",
-                        color: "var(--color-neutral-content)",
-                      }),
-                    }}
                     onClick={() => handlePageChange(page, section)}
                   >
                     {page}
                   </button>
                 ))}
                 <button
-                  className="join-item btn btn-outline hover:scale-105 transition-all duration-300"
-                  style={{ color: "var(--color-neutral-content)", borderColor: "var(--color-neutral)" }}
+                  className="join-item btn btn-outline text-neutral-content border-neutral hover:scale-105 transition-all duration-300"
                   onClick={() => handlePageChange(currentPage + 1, section)}
                   disabled={currentPage === (section === "active" ? activePaginated.totalPages : inactivePaginated.totalPages)}
                 >
@@ -248,27 +198,17 @@ export default function PlansWithSearch({
   return (
     <div className="p-6 min-h-screen bg-base-100 animate-fade-in">
       <div className="mb-6 flex justify-between items-center animate-slide-in-left">
-        <h1
-          className="text-4xl font-bold"
-          style={{ color: "var(--color-primary)" }}
-        >
-          Subscription Plans
-        </h1>
+        <h1 className="text-4xl font-bold text-primary">Subscription Plans</h1>
         <div className="flex gap-4">
           <div className="transform transition-all duration-300 hover:scale-105">
-            <SearchInput
-              value={query}
-              onChange={handleSearch}
-              placeholder="Search plans..."
-            />
+            <SearchInput value={query} onChange={handleSearch} placeholder="Search plans..." />
           </div>
           <button
             onClick={() => {
               setEditingPlan(null);
               setIsPlanModalOpen(true);
             }}
-            className="btn btn-md text-white hover:scale-105 transition-all duration-300 shadow-md"
-            style={{ backgroundColor: "var(--color-primary)" }}
+            className="btn btn-md btn-primary text-primary-content hover:scale-105 transition-all duration-300 shadow-md"
           >
             <Plus className="h-6 w-6" /> Add New Plan
           </button>
@@ -276,11 +216,8 @@ export default function PlansWithSearch({
       </div>
 
       {initialError ? (
-        <div
-          className="alert alert-error animate-shake shadow-md"
-          style={{ backgroundColor: "var(--color-error)", color: "var(--color-error-content)" }}
-        >
-          <span>{initialError}</span>
+        <div className="alert alert-error animate-shake shadow-md">
+          <span className="text-error-content">{initialError}</span>
         </div>
       ) : filteredPlans.length === 0 ? (
         <div className="text-center py-16 animate-fade-in">
@@ -294,8 +231,7 @@ export default function PlansWithSearch({
                 setEditingPlan(null);
                 setIsPlanModalOpen(true);
               }}
-              className="mt-6 btn btn-outline rounded-full hover:scale-105 transition-all duration-300 shadow-md"
-              style={{ color: "var(--color-primary)", borderColor: "var(--color-primary)" }}
+              className="mt-6 btn btn-outline text-primary border-primary hover:scale-105 transition-all duration-300 shadow-md rounded-full"
             >
               <Plus className="mr-2 h-6 w-6" /> Add Your First Plan
             </button>
@@ -310,13 +246,20 @@ export default function PlansWithSearch({
 
       {isMounted && (
         <>
-          <PlanModal isOpen={isPlanModalOpen} onClose={() => setIsPlanModalOpen(false)} plan={editingPlan} onPlanSaved={handlePlanChanged} />
+          <PlanModal
+            isOpen={isPlanModalOpen}
+            onClose={() => setIsPlanModalOpen(false)}
+            plan={editingPlan}
+            onPlanSaved={refreshPlans}
+            cookieHeader={cookieHeader}
+          />
           <DeletePlanModal
             isOpen={isDeleteOpen}
             onClose={() => setIsDeleteOpen(false)}
             planId={deletingPlanId}
             planName={deletingPlanName}
-            onPlanDeleted={handlePlanChanged}
+            onPlanDeleted={refreshPlans}
+            cookieHeader={cookieHeader}
           />
         </>
       )}

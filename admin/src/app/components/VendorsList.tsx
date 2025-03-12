@@ -34,66 +34,74 @@ type Vendor = {
 
 export default function VendorsList({ vendors, error }: { vendors: Vendor[]; error: string | null }) {
   return (
-    <div className="card bg-base-100 shadow-xl p-6">
-      <h1 className="text-2xl font-bold mb-6 text-base-content">Vendors</h1>
+    <div className="card bg-base-100 shadow-xl p-6 border border-base-200">
       {error ? (
-        <div className="alert alert-error">
+        <div className="alert alert-error text-error-content shadow-md">
           <span>{error}</span>
         </div>
       ) : vendors.length === 0 ? (
-        <p className="text-base-content">No vendors found.</p>
+        <p className="text-base-content/60 text-center">No vendors found.</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="table w-full table-zebra">
             <thead>
-              <tr>
-                <th>Company</th>
-                <th>Contact</th>
-                <th>Status</th>
-                <th>Plan</th>
-                <th>Next Billing</th>
-                <th>Business Type</th>
+              <tr className="text-base-content/80">
+                <th className="text-sm font-semibold">Company</th>
+                <th className="text-sm font-semibold">Contact</th>
+                <th className="text-sm font-semibold">Status</th>
+                <th className="text-sm font-semibold">Plan</th>
+                <th className="text-sm font-semibold">Next Billing</th>
+                <th className="text-sm font-semibold">Business Type</th>
               </tr>
             </thead>
             <tbody>
               {vendors.map((vendor) => (
-                <tr key={vendor.id} className="hover:bg-base-200 transition-colors cursor-pointer">
+                <tr
+                  key={vendor.id}
+                  className="hover:bg-base-200 transition-colors cursor-pointer text-base-content"
+                >
                   <td>
                     <Link href={`/admin/vendors/${vendor.id}`} className="block">
-                      <div className="font-semibold">{vendor.company_name}</div>
-                      <div className="text-sm text-gray-500">{vendor.registered_number || "N/A"}</div>
+                      <div className="font-semibold text-base-content">{vendor.company_name}</div>
+                      <div className="text-sm text-base-content/70">
+                        {vendor.registered_number || "N/A"}
+                      </div>
                     </Link>
                   </td>
                   <td>
-                    <div>{vendor.contact_name}</div>
+                    <div className="text-base-content">{vendor.contact_name}</div>
                     <div className="text-sm">
-                      <a href={`mailto:${vendor.contact_email}`} className="link link-hover">
+                      <a
+                        href={`mailto:${vendor.contact_email}`}
+                        className="link link-hover text-primary hover:text-primary-focus"
+                      >
                         {vendor.contact_email}
                       </a>
                     </div>
-                    <div className="text-sm">{vendor.contact_phone_number}</div>
+                    <div className="text-sm text-base-content/70">{vendor.contact_phone_number}</div>
                   </td>
                   <td>
-                  <Link href={`/admin/vendors/${vendor.id}`} className="block">
-
-                    <span
-                      className={`badge ${
-                        vendor.status === "active" ? "badge-success" : "badge-error"
-                      }`}
-                    >
-                      {vendor.status}
-                    </span>
+                    <Link href={`/admin/vendors/${vendor.id}`} className="block">
+                      <span
+                        className={`badge ${
+                          vendor.status === "active"
+                            ? "bg-success text-success-content"
+                            : "bg-error text-error-content"
+                        }`}
+                      >
+                        {vendor.status}
+                      </span>
                     </Link>
                   </td>
                   <td>
-                  <Link href={`/admin/vendors/${vendor.id}`} className="block">
-
-                    {vendor.plan}
+                    <Link href={`/admin/vendors/${vendor.id}`} className="block">
+                      <span className="text-base-content">{vendor.plan}</span>
                     </Link>
-                    </td>
-                    
-                  <td>{new Date(vendor.next_billing_date).toLocaleDateString()}</td>
-                  <td>{vendor.business_type}</td>
+                  </td>
+                  <td className="text-base-content">
+                    {new Date(vendor.next_billing_date).toLocaleDateString()}
+                  </td>
+                  <td className="text-base-content">{vendor.business_type}</td>
                 </tr>
               ))}
             </tbody>

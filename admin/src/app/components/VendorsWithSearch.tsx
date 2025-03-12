@@ -83,7 +83,7 @@ export default function VendorsWithSearch({
   return (
     <div className="p-6 min-h-screen bg-base-100 animate-fade-in">
       <div className="mb-6 flex justify-between items-center animate-slide-in-left">
-        <h1 className="text-2xl font-bold text-base-content">Vendors</h1>
+        <h1 className="text-2xl font-bold text-primary">Vendors</h1>
         <div className="transform transition-all duration-300 hover:scale-105">
           <SearchInput value={query} onChange={handleSearch} placeholder="Search vendors..." />
         </div>
@@ -97,7 +97,7 @@ export default function VendorsWithSearch({
         <div className="mt-6 flex justify-center animate-fade-in-up">
           <div className="join">
             <button
-              className="join-item btn btn-outline hover:scale-105 transition-all duration-300"
+              className="join-item btn btn-outline text-neutral-content border-neutral hover:scale-105 transition-all duration-300 disabled:opacity-50"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
             >
@@ -106,16 +106,16 @@ export default function VendorsWithSearch({
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
-                className={`join-item btn btn-outline ${
+                className={`join-item btn btn-outline text-neutral-content border-neutral hover:scale-105 transition-all duration-300 ${
                   currentPage === page ? "btn-active" : ""
-                } hover:scale-105 transition-all duration-300`}
+                }`}
                 onClick={() => handlePageChange(page)}
               >
                 {page}
               </button>
             ))}
             <button
-              className="join-item btn btn-outline hover:scale-105 transition-all duration-300"
+              className="join-item btn btn-outline text-neutral-content border-neutral hover:scale-105 transition-all duration-300 disabled:opacity-50"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
             >

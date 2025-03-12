@@ -1,45 +1,21 @@
-// components/SuspenseWithFade.tsx
+// src/app/components/SuspenseWithFade.tsx
 "use client";
-
 import { Suspense, useState, useEffect } from "react";
 
-type SuspenseWithFadeProps = {
-  children: React.ReactNode;
-  fallback: React.ReactNode;
-};
+export default function SuspenseWithFade({ children }: { children: React.ReactNode }) {
+  const [isFading, setIsFading] = useState(true);
 
-export default function SuspenseWithFade({ children, fallback }: SuspenseWithFadeProps) {
-  const [isFading, setIsFading] = useState(false);
+  useEffect(() => {
+    setTimeout(() => {
+      setIsFading(false);
+    }, 100); // Example fade duration
+  }, []); // No dependencies needed; setIsFading is stable
 
   return (
-    <Suspense
-      fallback={
-        <div
-          className={`transition-opacity duration-500 ${
-            isFading ? "opacity-0" : "opacity-100"
-          }`}
-          onTransitionEnd={() => setIsFading(false)} // Hide after fade-out
-        >
-          {fallback}
-        </div>
-      }
-    >
-      <FadeHandler setIsFading={setIsFading}>{children}</FadeHandler>
+    <Suspense fallback={<div className="loading loading-spinner loading-lg"></div>}>
+      <div className={`transition-opacity duration-500 ${isFading ? "opacity-0" : "opacity-100"}`}>
+        {children}
+      </div>
     </Suspense>
   );
-}
-
-function FadeHandler({
-  children,
-  setIsFading,
-}: {
-  children: React.ReactNode;
-  setIsFading: (value: boolean) => void;
-}) {
-  useEffect(() => {
-    // When content is ready, trigger fade-out of the fallback
-    setIsFading(true);
-  }, []);
-
-  return <>{children}</>;
 }

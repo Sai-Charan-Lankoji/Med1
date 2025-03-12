@@ -1,4 +1,3 @@
-// app/admin/vendors/page.tsx
 import { cookies } from "next/headers";
 import { NEXT_URL } from "@/app/constants";
 import VendorsWithSearch from "@/app/components/VendorsWithSearch";
