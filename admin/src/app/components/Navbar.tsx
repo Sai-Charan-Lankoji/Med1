@@ -1,67 +1,96 @@
-// components/Navbar.tsx
+// src/components/Navbar.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { FaBell, FaSun, FaMoon } from "react-icons/fa";
+import { useState } from "react";
+import { FaBell } from "react-icons/fa";
+import { useTheme } from "../lib/ThemeContext";
+
+// List of all DaisyUI 5.0.0 themes (as of March 2025)
+const daisyThemes = [
+  "light", "dark", "cupcake", "bumblebee", "emerald", "corporate", "synthwave",
+  "retro", "cyberpunk", "valentine", "halloween", "garden", "forest", "aqua",
+  "lofi", "pastel", "fantasy", "wireframe", "black", "luxury", "dracula",
+  "cmyk", "autumn", "business", "acid", "lemonade", "night", "coffee",
+  "winter", "dim", "nord", "sunset", "horizon", "twilight",
+];
 
 export default function Navbar() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [theme, setTheme] = useState("light");
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
 
-  // Sync theme with system preference and toggle
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") || "light";
-    setTheme(savedTheme);
-    document.documentElement.setAttribute("data-theme", savedTheme);
-  }, []);
-
-  const toggleTheme = () => {
-    const newTheme = theme === "light" ? "dark" : "light";
-    setTheme(newTheme);
-    localStorage.setItem("theme", newTheme);
-    document.documentElement.setAttribute("data-theme", newTheme);
-  };
+  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
   return (
-    <div className="navbar bg-base-100 shadow-md">
-      <div className="flex-1">
-        <span className="text-xl font-bold pl-4 text-base-content">Admin Dashboard</span>
-      </div>
-      <div className="flex-none gap-2">
-        <button
-          className="btn btn-ghost btn-circle"
-          onClick={() => setIsModalOpen(true)}
-        >
-          <FaBell className="text-xl text-base-content" />
-        </button>
-        <button className="btn btn-ghost btn-circle" onClick={toggleTheme}>
-          {theme === "light" ? (
-            <FaMoon className="text-xl text-base-content" />
-          ) : (
-            <FaSun className="text-xl text-base-content" />
-          )}
-        </button>
+    <div className="navbar bg-base-100 shadow-md border-b border-b-gray-400 px-4 py-2 flex justify-between">
+      {/* Left Side */}
+      <div className="navbar-start flex-shrink-0">
+        <span className="text-xl font-bold text-primary">Admin Dashboard</span>
       </div>
 
-      {/* Right-side Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 flex justify-end z-50">
-          <div className="w-80 bg-base-100 shadow-xl p-4 transform transition-transform duration-300 translate-x-0">
-            <h3 className="text-lg font-semibold mb-4 text-base-content">Notifications</h3>
-            <p className="text-base-content">No new notifications yet!</p>
+      {/* Center (Explicitly Empty) */}
+      <div className="navbar-center flex-grow"></div>
+
+      {/* Right Side */}
+      <div className="navbar-end flex-shrink-0 gap-4">
+        {/* Notifications Button */}
+        <button
+          className="btn btn-ghost btn-circle text-base-content hover:bg-base-200 transition-all duration-300"
+          onClick={toggleDrawer}
+        >
+          <FaBell className="w-5 h-5" />
+        </button>
+
+        {/* Theme Select Dropdown */}
+        <select
+          value={theme}
+          onChange={(e) => setTheme(e.target.value)}
+          className="select select-info w-40 capitalize"
+        >
+          <option disabled>Pick a Theme</option>
+          {daisyThemes.map((themeName) => (
+            <option key={themeName} value={themeName}>
+              {themeName}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Drawer for Notifications */}
+      <div className="drawer drawer-end z-50">
+        <input
+          id="notifications-drawer"
+          type="checkbox"
+          className="drawer-toggle"
+          checked={isDrawerOpen}
+          onChange={toggleDrawer}
+        />
+        <div className="drawer-content">
+          {/* Main content is the navbar itself */}
+        </div>
+        <div className="drawer-side">
+          <label
+            htmlFor="notifications-drawer"
+            aria-label="close drawer"
+            className="drawer-overlay"
+          ></label>
+          <div className="menu bg-base-200 text-base-content min-h-full w-80 p-6 border-l border-base-300">
+            <h3 className="text-lg font-semibold text-primary mb-4">Notifications</h3>
+            <ul className="space-y-2">
+              <li>
+                <span className="text-base-content/70">
+                  No new notifications yet!
+                </span>
+              </li>
+            </ul>
             <button
-              className="btn btn-sm btn-primary mt-4"
-              onClick={() => setIsModalOpen(false)}
+              className="btn btn-sm btn-primary text-primary-content mt-6 hover:scale-105 transition-all duration-300"
+              onClick={toggleDrawer}
             >
               Close
             </button>
           </div>
-          <div
-            className="flex-1 bg-black opacity-50"
-            onClick={() => setIsModalOpen(false)}
-          />
         </div>
-      )}
+      </div>
     </div>
   );
 }

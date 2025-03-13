@@ -21,12 +21,14 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const user = await meResponse.json();
 
   return (
-    <div className="flex min-h-screen"> {/* Set full height here */}
+
+    <div className="flex min-h-screen">
       <Sidebar user={user} />
       <div className="flex-1 flex flex-col">
         <Navbar />
         <main className="p-6">{children}</main>
       </div>
     </div>
+
   );
 }

@@ -12,7 +12,7 @@ export default function Loading() {
     // We’ll rely on CSS transition for the fade-out effect
     const timer = setTimeout(() => {
       setIsFading(true);
-    }, 3000); // Simulate content loading after 3 seconds
+    }, 2000); // Simulate content loading after 3 seconds
 
     return () => clearTimeout(timer);
   }, []);

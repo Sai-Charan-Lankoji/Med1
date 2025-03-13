@@ -3,33 +3,18 @@
 
 import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
-import { NEXT_URL } from "@/app/constants";
-
-type Plan = {
-  id: string;
-  name: string;
-  price: string;
-  features: string[];
-  discount: number;
-  isActive: boolean;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-  description?: string;
-  no_stores: string;
-  commission_rate: number;
-};
+import { createPlan, updatePlan, getAllPlans, Plan, PlanData } from "@/app/api/plan/route"; // Added getAllPlans to imports
 
 type PlanModalProps = {
   isOpen: boolean;
   onClose: () => void;
   plan?: Plan | null;
-  onPlanSaved: () => void;
+  onPlanSaved: (updatedPlans: Plan[]) => void;
+  cookieHeader: string;
 };
 
-export default function PlanModal({ isOpen, onClose, plan, onPlanSaved }: PlanModalProps) {
+export default function PlanModal({ isOpen, onClose, plan, onPlanSaved, cookieHeader }: PlanModalProps) {
   const [formData, setFormData] = useState<Plan>(() => {
-    // Always return a fully defined object
     const defaultPlan: Plan = {
       id: "",
       name: "",
@@ -48,7 +33,6 @@ export default function PlanModal({ isOpen, onClose, plan, onPlanSaved }: PlanMo
   });
 
   useEffect(() => {
-    // Reset formData when plan changes (edit mode) or clears (create mode)
     const defaultPlan: Plan = {
       id: "",
       name: "",
@@ -69,23 +53,24 @@ export default function PlanModal({ isOpen, onClose, plan, onPlanSaved }: PlanMo
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const url = plan ? `${NEXT_URL}/api/plan/${plan.id}` : `${NEXT_URL}/api/plan`;
-      const method = plan ? "PUT" : "POST";
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          features: formData.features,
-          commission_rate: parseFloat(formData.commission_rate.toString()),
-          discount: parseFloat(formData.discount.toString()),
-        }),
-      });
+      const planData: PlanData = {
+        name: formData.name,
+        price: formData.price,
+        description: formData.description,
+        features: formData.features,
+        discount: formData.discount,
+        isActive: formData.isActive,
+        no_stores: formData.no_stores,
+        commission_rate: formData.commission_rate,
+      };
 
-      if (!response.ok) throw new Error(`Failed to ${plan ? "update" : "create"} plan`);
-      onPlanSaved();
+      if (plan) {
+        await updatePlan(plan.id, planData, cookieHeader);
+      } else {
+        await createPlan(planData, cookieHeader);
+      }
+      const updatedPlans = await getAllPlans(cookieHeader); // Now recognized with the import
+      onPlanSaved(updatedPlans);
       onClose();
     } catch (err) {
       console.error(`${plan ? "Update" : "Create"} plan error:`, err);
@@ -114,7 +99,7 @@ export default function PlanModal({ isOpen, onClose, plan, onPlanSaved }: PlanMo
             <label className="label"><span className="label-text font-semibold">Description</span></label>
             <input
               type="text"
-              value={formData.description}
+              value={formData.description || ""}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
             />
@@ -133,7 +118,7 @@ export default function PlanModal({ isOpen, onClose, plan, onPlanSaved }: PlanMo
             <label className="label"><span className="label-text font-semibold">Features (comma-separated)</span></label>
             <input
               type="text"
-              value={formData.features.join(", ")}
+              value={formData.features?.join(", ") || ""}
               onChange={(e) => setFormData({ ...formData, features: e.target.value.split(",").map((f) => f.trim()) })}
               className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
             />
@@ -153,7 +138,7 @@ export default function PlanModal({ isOpen, onClose, plan, onPlanSaved }: PlanMo
             <input
               type="number"
               value={formData.commission_rate}
-              onChange={(e) => setFormData({ ...formData, commission_rate: parseFloat(e.target.value) })}
+              onChange={(e) => setFormData({ ...formData, commission_rate: parseFloat(e.target.value) || 0 })}
               className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
               required
             />
@@ -163,7 +148,7 @@ export default function PlanModal({ isOpen, onClose, plan, onPlanSaved }: PlanMo
             <input
               type="number"
               value={formData.discount}
-              onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) })}
+              onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
               className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
             />
           </div>
