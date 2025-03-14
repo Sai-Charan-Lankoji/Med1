@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 7009",
+    "dev": "next dev --turbopack -p 7008",
     "build": "next build",
-    "start": "next start -p 7009",
+    "start": "next start -p 7008",
     "lint": "next lint"
   },
   "dependencies": {
@@ -14,7 +14,7 @@
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-progress": "^1.1.0",
     "@radix-ui/react-toast": "^1.2.2",
-    "@tanstack/react-query": "^5.67.2",
+    "axios": "^1.8.3",
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "cloudinary": "^2.4.0",

@@ -1,9 +1,10 @@
-const baseUrl = "http://localhost:5000";
+import useSWR from 'swr';
 import { vendor_id } from '@/app/utils/constant';
-import { useQuery } from '@tanstack/react-query';
-const id = vendor_id
-const fetchVendor = async () => { 
-  const url = `${baseUrl}/api/vendors/${id}`;
+
+const baseUrl = "http://localhost:5000";
+const id = vendor_id;
+
+const fetchVendor = async (url: string) => {
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -12,7 +13,6 @@ const fetchVendor = async () => {
       },
       credentials: 'include',
     });
-
 
     const data = await response.json();
 
@@ -33,24 +33,13 @@ const fetchVendor = async () => {
   }
 };
 
-
+// Custom Hook using SWR
 export const useGetVendor = () => {
-  return useQuery(['store',id], () => fetchVendor(), {
-    refetchOnWindowFocus: false,  
-    refetchOnMount: false,        
-    cacheTime: 0,                
-    staleTime: 1000 * 60 * 5,               
-    retry: false, 
-    onError: (error: unknown) => {
-      if (error instanceof Error) {
-        console.error('Error occurred while fetching products:', error.message);
-      } else {
-        console.error('An unknown error occurred:', error);
-      }
-    },
+  return useSWR(`${baseUrl}/api/vendors/${id}`, fetchVendor, {
+    revalidateOnFocus: false, // Prevents auto-refetch on window focus
+    revalidateOnMount: false, // Prevents auto-refetch on mount
+    revalidateIfStale: true,  // Fetches data if stale
+    dedupingInterval: 1000 * 60 * 5, // Cache data for 5 minutes
+    shouldRetryOnError: false, // Disables retry on error
   });
 };
-
-
-
-  

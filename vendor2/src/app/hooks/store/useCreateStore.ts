@@ -1,7 +1,8 @@
 import { StoreFormData } from "@/app/@types/store";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSWRConfig } from "swr";
 
 const baseUrl = "http://localhost:5000";
+
 const createStore = async (storeData: StoreFormData) => {
   const response = await fetch(`${baseUrl}/api/stores`, {
     method: "POST",
@@ -19,15 +20,30 @@ const createStore = async (storeData: StoreFormData) => {
 };
 
 export const useCreateStore = () => {
-  const queryClient = useQueryClient();
+  const { mutate } = useSWRConfig();
 
-  return useMutation({
-    mutationFn: createStore,
-    onSuccess: () => {
-      queryClient.invalidateQueries(['stores']);
-    },
-    onError: (error) => {
+  const createStoreMutation = async (storeData: StoreFormData) => {
+    try {
+      const result = await createStore(storeData);
+      // Invalidate or update the 'stores' cache, similar to queryClient.invalidateQueries(['stores'])
+      mutate(
+        `${baseUrl}/api/stores`,
+        async (currentData: any[] | undefined) => {
+          // Optimistically add the new store to the list
+          return currentData ? [...currentData, result] : [result];
+        },
+        false // Don’t revalidate immediately
+      );
+      // Trigger revalidation after success
+      mutate(`${baseUrl}/api/stores`);
+      return result;
+    } catch (error) {
       console.error('Error creating store:', error);
-    },
-  });
+      throw error;
+    }
+  };
+
+  return {
+    createStore: createStoreMutation,
+  };
 };

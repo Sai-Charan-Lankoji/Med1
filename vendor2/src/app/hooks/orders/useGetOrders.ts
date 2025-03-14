@@ -1,70 +1,78 @@
-const baseUrl = "http://localhost:5000";
-import { vendor_id } from '@/app/utils/constant';
-import { useQuery } from '@tanstack/react-query';
+import useSWR from "swr";
 
-const fetchOrders = async () => {
+const baseUrl = "http://localhost:5000";
+import { vendor_id } from "@/app/utils/constant";
+
+const fetchOrders = async (url: string) => {
   if (!vendor_id) {
-    console.log('No vendor ID found in sessionStorage');
-    return []; 
+    console.log("No vendor ID found in sessionStorage");
+    return [];
   }
-console.log('Praveen vendor_id', vendor_id);
-  const url = `${baseUrl}/api/orders/vendor/${vendor_id}`;
+  console.log("Praveen vendor_id", vendor_id);
 
   try {
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      credentials: 'include',
+      credentials: "include",
     });
 
-
     const data = await response.json();
-     if (!response.ok) {
+    console.log("Praveen data", data);
+
+    if (!response.ok) {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-
       if (response.status === 404 || response.status === 500) {
-        console.log('No orders found or server error. Returning empty array.');
-        return []; 
+        console.log("No orders found or server error. Returning empty array.");
+        return [];
       }
-
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-     
-
-    return data;
+    // Return the nested data array instead of the raw response
+    return Array.isArray(data.data) ? data.data : [];
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.log('Error fetching data:', error.message);
-      return []; 
+      console.log("Error fetching data:", error.message);
+      return [];
     } else {
-      console.error('An unknown error occurred:', error);
+      console.error("An unknown error occurred:", error);
       return [];
     }
   }
 };
 
-
 export const useGetOrders = () => {
-  return useQuery(['orders'], fetchOrders, {
-    refetchOnWindowFocus: false,  
-    refetchOnMount: false,        
-    cacheTime: 0,                
-    staleTime: 1000 * 60 * 5,               
-    retry: false,               
+  const url = vendor_id ? `${baseUrl}/api/orders/vendor/${vendor_id}` : null;
 
-    onError: (error: unknown) => {
-      if (error instanceof Error) {
-        console.error('Error occurred while fetching orders:', error.message);
-      } else {
-        console.error('An unknown error occurred:', error);
-      }
-    },
-  });
+  const { data, error, isLoading, mutate } = useSWR(
+    vendor_id ? ["orders", vendor_id] : null,
+    () => fetchOrders(url!),
+    {
+      revalidateOnFocus: false,
+      revalidateOnMount: true,
+      dedupingInterval: 5 * 60 * 1000, // 5-minute stale time
+      refreshInterval: 0,
+      shouldRetryOnError: false,
+      onError: (error: unknown) => {
+        if (error instanceof Error) {
+          console.error("Error occurred while fetching orders:", error.message);
+        } else {
+          console.error("An unknown error occurred:", error);
+        }
+      },
+    }
+  );
+
+  // No need to normalize here since fetchOrders already returns an array
+  const ordersData = data || [];
+
+  return {
+    data: ordersData,
+    isLoading,
+    error,
+    refetch: mutate,
+  };
 };
-
-
-
-  

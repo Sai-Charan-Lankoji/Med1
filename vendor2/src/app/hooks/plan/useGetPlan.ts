@@ -1,60 +1,44 @@
+import useSWR from 'swr';
+
 const baseUrl = "http://localhost:5000";
-import { useQuery } from '@tanstack/react-query';
 
+const fetchPlan = async (url: string) => {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
 
-// Function to fetch plans
-const fetchPlan = async (id : string) => {
-  const url = `${baseUrl}/api/plan/${id}`;
+  const data = await response.json();
 
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies in the request
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-
-      if (response.status === 404 || response.status === 500) {
-        console.log('No plans found or server error. Returning empty array.');
-        return []; // Return an empty array if no plans found or server error occurs
-      }
-
-      throw new Error(data.error || `HTTP error! Status: ${response.status}`);
-    }
-
-    if (!data || data.length === 0) {
-      console.log('No plans found.');
-      return []; // Return an empty array if the plans list is empty
-    }
-
-    return data;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.log('Error fetching plan:', error.message);
-      return []; // Return an empty array in case of error
-    } else {
-      console.error('An unknown error occurred:', error);
+  if (!response.ok) {
+    console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
+    if (response.status === 404 || response.status === 500) {
+      console.log('No plans found or server error. Returning empty array.');
       return [];
     }
+    throw new Error(data.error || `HTTP error! Status: ${response.status}`);
   }
+
+  if (!data || data.length === 0) {
+    console.log('No plans found.');
+    return [];
+  }
+
+  return data;
 };
 
-// Custom React Query hook for fetching plans
-export const useGetPlan = (id : string) => {
-  return useQuery(['plan',id], () => fetchPlan(id), {
-   refetchOnWindowFocus: false, // Avoid refetching when the window regains focus
-    refetchOnMount: false,      // Avoid refetching when the component mounts
-    cacheTime: 1000 * 60 * 10,  // Cache the response for 10 minutes
-    staleTime: 1000 * 60 * 5,   // Mark data as fresh for 5 minutes
-    retry: false,               // Disable retries on error
- 
-    // Error handling
+export const useGetPlan = (id: string) => {
+  const url = `${baseUrl}/api/plan/${id}`;
+
+  const { data, error, isLoading, mutate } = useSWR(url, fetchPlan, {
+    revalidateOnFocus: false,
+    revalidateOnMount: false,
+    dedupingInterval: 1000 * 60 * 10, // Matches cacheTime: 10 minutes
+    errorRetryCount: 0,
+    revalidateIfStale: false, // Control staleness manually
     onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching plan:', error.message);
@@ -63,4 +47,24 @@ export const useGetPlan = (id : string) => {
       }
     },
   });
+
+  // Enhance data with timestamp for staleness
+  const enhancedData = data
+    ? { plan: data, timestamp: Date.now() }
+    : { plan: [], timestamp: 0 };
+
+  const isFresh = () => {
+    if (!enhancedData.timestamp) return false;
+    const fiveMinutes = 1000 * 60 * 5;
+    return Date.now() - enhancedData.timestamp < fiveMinutes;
+  };
+
+  return {
+    data: enhancedData.plan, // Matches original structure
+    error,
+    isLoading,
+    timestamp: enhancedData.timestamp, // Optional: expose timestamp
+    isFresh: isFresh(),        // Optional: mimic staleTime
+    refetch: mutate,          // Optional: manual refetch
+  };
 };

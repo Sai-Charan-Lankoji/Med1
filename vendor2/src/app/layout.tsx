@@ -2,14 +2,12 @@
 
 import { Inter } from "next/font/google";
 import './styles/globals.css';
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import NavBar from './navbar/page';
 import Sidebar from "./sidebar/page";
 import { usePathname } from "next/navigation";
 import { AuthProvider } from "./context/AuthContext";  
 
 const inter = Inter({ subsets: ["latin"] });
-const queryClient = new QueryClient();
 
 export default function RootLayout({
   children,
@@ -22,21 +20,19 @@ export default function RootLayout({
   const showSidebar = isVendorPath;
 
   return (
-    <html lang="en" suppressHydrationWarning  data-theme="cupcake">
+    <html lang="en" suppressHydrationWarning data-theme="light">
       <body className={`${inter.className} bg-gray-100`}>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <div className="flex h-screen">
-              {showSidebar && <Sidebar />}
-              <div className="flex flex-col flex-1">
-                {showHeader && <NavBar />}
-                <main className="flex-1 overflow-auto">
-                  {children}
-                </main>
-              </div>
+        <AuthProvider>
+          <div className="flex h-screen">
+            {showSidebar && <Sidebar />}
+            <div className="flex flex-col flex-1">
+              {showHeader && <NavBar />}
+              <main className="flex-1 overflow-auto">
+                {children}
+              </main>
             </div>
-          </AuthProvider>
-        </QueryClientProvider>
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );
