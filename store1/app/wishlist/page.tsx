@@ -1,24 +1,4 @@
 "use client";
-
-/**
- * WishlistPage Fix for Designable Product Fetching and Consistent Display
- * Total Time Spent: 1 hour
- * 
- * 1. I completed the fix for fetching designable products:
- *    - I updated fetchDesignableProduct to handle straight JSON objects as the API response, instead of expecting { success: true, product: {...} }.
- *    - I added validation to ensure the response is a valid DesignableProduct.
- *    - I added detailed logging to debug fetching issues.
- * 
- * 2. I ensured consistent fetching and display:
- *    - I verified that both designable and standard products are fetched correctly.
- *    - I ensured both "Designable Products" and "Standard Products" sections render their respective products.
- * 
- * 3. I maintained UI and functionality:
- *    - I preserved the separation of designable and standard products with headers and fallback messages.
- *    - I ensured wishlist management (add to cart, remove) works for both product types.
- *    - I maintained existing UI components (loading, error, empty states, selections, buttons).
- */
-
 import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -27,7 +7,8 @@ import { Minus, Plus } from "lucide-react";
 import { useNewCart } from "../hooks/useNewCart";
 import { toast } from "react-toastify";
 import Link from "next/link";
-import { IDesign, IProps } from "@/@types/models";
+import Cookies from "js-cookie";
+import { IDesign } from "@/@types/models";
 
 interface Color {
   hex: string;
@@ -39,6 +20,7 @@ interface WishlistItem {
   customer_id: string;
   product_id: string | null;
   standard_product_id: string | null;
+  quantity: number;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -53,6 +35,24 @@ interface StandardProduct {
   sizes: string[];
   colors: Color[];
   stock: number;
+  designs: {
+    apparel: {
+      side: string;
+      url: string;
+      color: string;
+      width: number;
+      height: number;
+      selected: boolean;
+    };
+    id: number;
+    items: any[];
+    isactive: boolean;
+    pngImage: string;
+    svgImage: string | null;
+    uploadedImages: string[];
+    active: boolean;
+  }[];
+  quantity?: number;
   brand: string;
   sku: string;
   discount: number;
@@ -71,35 +71,89 @@ interface StandardProduct {
 
 interface DesignableProduct {
   id: string;
-  title: string;
-  description: string;
-  price: number;
-  category: string;
-  sizes: string[];
-  colors: Color[];
-  stock: number;
-  brand: string;
-  sku: string;
-  discount: number;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
   customizable: boolean;
-  sale: boolean;
-  front_image: string;
-  back_image?: string;
-  left_image?: string;
-  right_image?: string;
-  product_type: string;
+  colors: Color[];
   store_id: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  designs?: IDesign[];
-  designstate?: IDesign[];
-  propstate?: IProps;
+  vendor_id: string;
+  designs: {
+    apparel: {
+      side: string;
+      url: string;
+      color: string;
+      width: number;
+      height: number;
+      selected: boolean;
+    };
+    id: number;
+    items: any[];
+    isactive: boolean;
+    pngImage: string;
+    svgImage: string | null;
+    uploadedImages: string[];
+    active: boolean;
+  }[];
+  propstate: {
+    fill: string;
+    underline: boolean;
+    overline: boolean;
+    backgroundColor: string;
+    borderColor: string;
+    fontSize: number;
+    lineHeight: number;
+    charSpacing: number;
+    fontWeight: string;
+    fontStyle: string;
+    textAlign: string;
+    fontFamily: string;
+    textDecoration: string;
+    drawMode: boolean;
+    linethrough: boolean;
+    bgColor: string;
+    fillcolor: string;
+    designId: number;
+  };
+  title: string;
+  sku: string | null;
+  description: string | null;
+  product_type: string | null;
+  sale: boolean | null;
+  category: string | null;
+  price: number;
+  quantity: number;
+  discount: number;
+  stock: number;
+  width: number | null;
+  brand: string | null;
+  origin_country: string | null;
+  mid_code: string | null;
+  material: string | null;
+  metadata: string | null;
+  collection_id: string | null;
+  type_id: string | null;
+  status: string | null;
+  external_id: string | null;
+  discountable: boolean | null;
+  front_image: string;
+  sizes: string[] | null;
 }
 
 interface StandardProductApiResponse {
   success: boolean;
   product: StandardProduct;
+}
+
+interface ProductSelections {
+  quantity: number;
+  selectedSize: string;
+  selectedColor: string;
+  activeDesignIndex: number;
+}
+interface DesignableProductApiResponse {
+  success: boolean;
+  product: DesignableProduct;
 }
 
 interface WishlistApiResponse {
@@ -114,7 +168,6 @@ const WISHLIST_API_URL = "http://localhost:5000/api/wishlists";
 const STANDARD_PRODUCT_API_URL = "http://localhost:5000/api/standardproducts";
 const DESIGNABLE_PRODUCT_API_URL = "http://localhost:5000/api/products";
 
-// Default colors if none are provided for a customizable product
 const DEFAULT_COLORS: Color[] = [
   { hex: "#FFFFFF", name: "White" },
   { hex: "#000000", name: "Black" },
@@ -135,229 +188,152 @@ const WishlistPage: React.FC = () => {
   const [sortedProducts, setSortedProducts] = useState<(StandardProduct | DesignableProduct)[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [productSelections, setProductSelections] = useState<
-    Record<
-      string,
-      { quantity: number; selectedSize: string; selectedColor: string }
-    >
+    Record<string, ProductSelections>
   >({});
 
   const router = useRouter();
   const { addStandardProductToCart, addDesignToCart } = useNewCart();
 
-  useEffect(() => {
-    const authToken =
-      typeof window !== "undefined" ? sessionStorage.getItem("auth_token") : null;
-    setToken(authToken);
-  }, []);
-
-  /**
-   * Fetches wishlist items from the API.
-   * @returns Promise<void>
-   */
+  // Fetch wishlist items
   const fetchWishlist = useCallback(async (): Promise<void> => {
-    if (!token) {
-      setError("User not authenticated");
-      setIsLoading(false);
-      return;
-    }
-
+    setIsLoading(true);
     try {
       const response = await fetch(WISHLIST_API_URL, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
-
-      const data = (await response.json()) as WishlistApiResponse;
-      if (data.status === 200 && data.success && data.data) {
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch wishlist: ${response.status} - ${errorText}`);
+      }
+      const data = await response.json();
+      if (data.data && Array.isArray(data.data)) {
         setWishlistItems(data.data);
-        console.log("Fetched wishlist items:", data.data);
       } else {
-        throw new Error(data.error?.details || data.message || "Failed to fetch wishlist");
+        throw new Error("Invalid wishlist data structure");
       }
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An error occurred while fetching wishlist"
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching wishlist"
       );
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, []);
 
-  /**
-   * Fetches a designable product by ID.
-   * @param id - The designable product ID
-   * @returns Promise<DesignableProduct | null>
-   */
-  const fetchDesignableProduct = useCallback(
-    async (id: string): Promise<DesignableProduct | null> => {
-      if (!token) return null;
-
-      try {
-        const response = await fetch(`${DESIGNABLE_PRODUCT_API_URL}/${id}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log(`Designable product response for ${id}:`, data);
-
-        // Check if the response is a valid DesignableProduct
-        if (data && typeof data === "object" && "id" in data && "customizable" in data) {
-          const designableProduct = data as DesignableProduct;
-          console.log(`Fetched designable product ${id}:`, designableProduct);
-          return designableProduct;
-        }
-        throw new Error(`Failed to fetch designable product ${id}: Invalid response structure`);
-      } catch (err) {
-        console.error(`Error fetching designable product ${id}:`, err);
-        return null;
-      }
-    },
-    [token]
-  );
-
-  /**
-   * Fetches a standard product by ID.
-   * @param id - The standard product ID
-   * @returns Promise<StandardProduct | null>
-   */
+  // Fetch standard product
   const fetchStandardProduct = useCallback(
     async (id: string): Promise<StandardProduct | null> => {
-      if (!token) return null;
-
       try {
         const response = await fetch(`${STANDARD_PRODUCT_API_URL}/${id}`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
         });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = (await response.json()) as StandardProductApiResponse;
-        console.log(`Standard product response for ${id}:`, data);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
         if (data.success && data.product) {
-          const standardProduct = data.product as StandardProduct;
-          console.log(`Fetched standard product ${id}:`, standardProduct);
-          return standardProduct;
+          const product = data.product as StandardProduct;
+          product.customizable = false;
+          return product;
         }
-        throw new Error(`Failed to fetch standard product ${id}: Invalid response structure`);
+        return null;
       } catch (err) {
         console.error(`Error fetching standard product ${id}:`, err);
         return null;
       }
     },
-    [token]
+    []
   );
 
-  /**
-   * Fetches all products (designable and standard) for the wishlist items.
-   * @returns Promise<void>
-   */
+  // Fetch designable product
+  const fetchDesignableProduct = useCallback(
+    async (id: string): Promise<DesignableProduct | null> => {
+      try {
+        const response = await fetch(`${DESIGNABLE_PRODUCT_API_URL}/${id}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        const data = await response.json();
+        if (data.success && data.product) {
+          const product = data.product as DesignableProduct;
+          product.customizable = true;
+          product.colors = product.colors || DEFAULT_COLORS;
+          product.sizes = product.sizes || ["S", "M", "L", "XL", "2XL"];
+          product.stock = product.stock ?? 10;
+          product.quantity = product.quantity ?? 1;
+          return product;
+        }
+        return null;
+      } catch (err) {
+        console.error(`Error fetching designable product ${id}:`, err);
+        return null;
+      }
+    },
+    []
+  );
+
+  // Fetch all products
   const fetchAllProducts = useCallback(async (): Promise<void> => {
     if (!wishlistItems.length) {
-      console.log("No wishlist items to fetch products for.");
       setProducts([]);
       setSortedProducts([]);
       setIsLoading(false);
       return;
     }
-
     setIsLoading(true);
     try {
-      const productPromises: Promise<(StandardProduct | DesignableProduct) | null>[] =
-        wishlistItems.map(async (item) => {
-          if (item.product_id) {
-            const designableProduct = await fetchDesignableProduct(item.product_id);
-            if (!designableProduct) {
-              console.warn(`Failed to fetch designable product with ID ${item.product_id}`);
-            }
-            return designableProduct;
-          } else if (item.standard_product_id) {
-            const standardProduct = await fetchStandardProduct(item.standard_product_id);
-            if (!standardProduct) {
-              console.warn(`Failed to fetch standard product with ID ${item.standard_product_id}`);
-            }
-            return standardProduct;
-          }
-          console.log(`Wishlist item ${item.id} has no product_id or standard_product_id.`);
-          return null;
-        });
-
+      const productPromises = wishlistItems.map((item) =>
+        item.standard_product_id
+          ? fetchStandardProduct(item.standard_product_id)
+          : item.product_id
+          ? fetchDesignableProduct(item.product_id)
+          : null
+      );
       const results = await Promise.all(productPromises);
       const validProducts = results.filter(
-        (product): product is StandardProduct | DesignableProduct => product !== null
+        (p): p is StandardProduct | DesignableProduct => p !== null
       );
-      console.log("All fetched products:", validProducts);
-
-      if (validProducts.length === 0) {
-        console.warn("No valid products fetched from wishlist items.");
-      }
-
-      // Update products state
       setProducts(validProducts);
+      const designable = validProducts.filter((p) => p.customizable);
+      const standard = validProducts.filter((p) => !p.customizable);
+      setSortedProducts([...designable, ...standard]);
 
-      // Sort products: designable first, then standard
-      const designableProducts = validProducts.filter((product) => product.customizable);
-      const standardProducts = validProducts.filter((product) => !product.customizable);
-      const sorted = [...designableProducts, ...standardProducts];
-      setSortedProducts(sorted);
-      console.log("Sorted products (designable first, then standard):", sorted);
-
-      // Initialize selections for each product
-      const initialSelections: Record<
-        string,
-        { quantity: number; selectedSize: string; selectedColor: string }
-      > = {};
-      validProducts.forEach((product) => {
-        const colorsToUse =
-          product.customizable && (!product.colors || product.colors.length === 0)
-            ? DEFAULT_COLORS
-            : product.colors || [];
-        initialSelections[product.id] = {
-          quantity: 1,
-          selectedSize: product.sizes && product.sizes.length > 0 ? product.sizes[0] : "",
-          selectedColor: colorsToUse.length > 0 ? colorsToUse[0].hex : "",
+      const initialSelections = validProducts.reduce((acc, product) => {
+        const colorsToUse = product.colors || DEFAULT_COLORS;
+        acc[product.id] = {
+          quantity: product.quantity || 1,
+          selectedSize: product.sizes?.[0] || "",
+          selectedColor: colorsToUse[0]?.hex || "",
+          activeDesignIndex: 0,
         };
-      });
+        return acc;
+      }, {} as Record<string, ProductSelections>);
       setProductSelections(initialSelections);
-      console.log("Initialized product selections:", initialSelections);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "An error occurred while fetching products"
+        err instanceof Error
+          ? err.message
+          : "An error occurred while fetching products"
       );
-      console.error("Error in fetchAllProducts:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [wishlistItems, fetchDesignableProduct, fetchStandardProduct]);
+  }, [wishlistItems, fetchStandardProduct, fetchDesignableProduct]);
 
   useEffect(() => {
-    if (token !== null) {
-      fetchWishlist();
-    }
-  }, [token, fetchWishlist]);
+    fetchWishlist();
+  }, [fetchWishlist]);
 
   useEffect(() => {
     fetchAllProducts();
   }, [wishlistItems, fetchAllProducts]);
 
+  // Handler functions
   const handleQuantityChange = (productId: string, change: number): void => {
     setProductSelections((prev) => ({
       ...prev,
@@ -371,120 +347,125 @@ const WishlistPage: React.FC = () => {
   const handleSizeChange = (productId: string, size: string): void => {
     setProductSelections((prev) => ({
       ...prev,
-      [productId]: {
-        ...prev[productId],
-        selectedSize: size,
-      },
+      [productId]: { ...prev[productId], selectedSize: size },
     }));
   };
 
-  const handleColorChange = (productId: string, colorHex: string): void => {
+  const handleColorChange = (productId: string, color: string): void => {
     setProductSelections((prev) => ({
       ...prev,
-      [productId]: {
-        ...prev[productId],
-        selectedColor: colorHex,
-      },
+      [productId]: { ...prev[productId], selectedColor: color },
     }));
   };
 
-  const handleAddToCart = async (product: StandardProduct | DesignableProduct): Promise<void> => {
+  const handleDesignChange = (productId: string, index: number): void => {
+    setProductSelections((prev) => ({
+      ...prev,
+      [productId]: { ...prev[productId], activeDesignIndex: index },
+    }));
+  };
+
+  const handleAddToCart = async (
+    product: StandardProduct | DesignableProduct
+  ): Promise<void> => {
     const selections = productSelections[product.id];
-    if (!selections) return;
+    if (!selections) {
+      toast.error("Product selections not found.");
+      return;
+    }
 
     const { quantity, selectedSize, selectedColor } = selections;
-    const colorsToUse =
-      product.customizable && (!product.colors || product.colors.length === 0)
-        ? DEFAULT_COLORS
-        : product.colors || [];
+    const colorsToUse = product.colors || DEFAULT_COLORS;
+    const colorObj = colorsToUse.find((c) => c.hex === selectedColor) || {
+      hex: selectedColor,
+      name: "",
+    };
 
     setIsLoading(true);
     try {
+      let cartSuccess = false;
+
       if (product.customizable) {
-        const designs = (product as DesignableProduct).designs || [];
-        const designState = (product as DesignableProduct).designstate || [];
-        const propState = (product as DesignableProduct).propstate || {};
-
-        console.log("Adding designable product:", {
-          productId: product.id,
-          designs,
-          designState,
-          propState,
-        });
-
-        const success = await addDesignToCart(designs, designState, propState, product.id);
-        if (!success) throw new Error("Failed to add designable product to cart");
+        const designableProduct = product as DesignableProduct;
+        const designs = designableProduct.designs || [];
+        cartSuccess = await addDesignToCart(designs, [], {}, product.id);
+        if (!cartSuccess) {
+          throw new Error("Failed to add designable product to cart");
+        }
       } else {
-        const colorObj = colorsToUse.find((c) => c.hex === selectedColor) || {
-          hex: selectedColor,
-          name: "",
-        };
-
-        console.log("Adding standard product:", {
-          productId: product.id,
-          quantity,
-          selectedSize,
-          selectedColor: colorObj.hex,
-        });
-
-        const success = await addStandardProductToCart(
+        cartSuccess = await addStandardProductToCart(
           product.id,
           quantity,
           selectedSize,
           colorObj.hex
         );
-        if (!success) throw new Error("Failed to add standard product to cart");
+        if (!cartSuccess) {
+          throw new Error("Failed to add standard product to cart");
+        }
       }
 
+      // If cart addition is successful, remove from wishlist
       toast.success("Added to cart successfully!");
       await handleRemoveFromWishlist(product.id, product.customizable);
+
     } catch (err) {
-      toast.error("An error occurred while adding to cart");
-      console.error("Failed to add to cart:", err);
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while adding to cart"
+      );
+      console.error("Error adding to cart:", err);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRemoveFromWishlist = async (productId: string, isDesignable: boolean): Promise<void> => {
-    if (!token) return;
-
+  const handleRemoveFromWishlist = async (
+    productId: string,
+    isDesignable: boolean
+  ): Promise<void> => {
     setIsLoading(true);
     try {
       const requestBody = isDesignable
         ? { product_id: productId, standard_product_id: null }
         : { product_id: null, standard_product_id: productId };
 
-      console.log("Removing from wishlist:", requestBody);
-
       const response = await fetch(`${WISHLIST_API_URL}/remove`, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(requestBody),
       });
-      const data = (await response.json()) as WishlistApiResponse;
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `Failed to remove from wishlist: ${response.status}`
+        );
+      }
+
+      const data = await response.json();
       if (data.status === 200 && data.success) {
         setWishlistItems((prev) =>
-          prev.filter(
-            (item) =>
-              (isDesignable ? item.product_id !== productId : item.standard_product_id !== productId)
+          prev.filter((item) =>
+            isDesignable
+              ? item.product_id !== productId
+              : item.standard_product_id !== productId
           )
         );
         setProducts((prev) => prev.filter((p) => p.id !== productId));
         setSortedProducts((prev) => prev.filter((p) => p.id !== productId));
-        toast.success("Removed from wishlist!");
-        await fetchWishlist();
+        toast.success("Removed from wishlist successfully!");
       } else {
         throw new Error(data.message || "Failed to remove from wishlist");
       }
     } catch (err) {
-      setError(
-        (err as Error).message || "An error occurred while removing from wishlist"
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : "An error occurred while removing from wishlist"
       );
-      toast.error("Failed to remove from wishlist");
+      console.error("Error removing from wishlist:", err);
     } finally {
       setIsLoading(false);
     }
@@ -494,7 +475,9 @@ const WishlistPage: React.FC = () => {
     router.push("/");
   };
 
-  const getDesignedSidesText = (designs: { apparel: { side: string } }[]): string => {
+  const getDesignedSidesText = (
+    designs: { apparel: { side: string } }[]
+  ): string => {
     if (!designs || designs.length === 0) return "";
     const sides = designs.map((design) => design.apparel.side);
     if (sides.length === 1) return sides[0];
@@ -503,7 +486,6 @@ const WishlistPage: React.FC = () => {
     return `${sides.join(", ")} & ${lastSide}`;
   };
 
-  // Separate designable and standard products from sortedProducts
   const designableProducts = sortedProducts.filter((product) => product.customizable);
   const standardProducts = sortedProducts.filter((product) => !product.customizable);
 
@@ -573,17 +555,15 @@ const WishlistPage: React.FC = () => {
           <div className="bg-white rounded-xl shadow-lg p-12 text-center">
             <FaHeart className="text-5xl text-gray-300 mx-auto mb-4" />
             <p className="text-lg text-gray-600 font-medium">
-              Your wishlist is empty.
+              Your wishlist is empty or products failed to load.
             </p>
-            <p className="text-sm text-gray-500 mt-2">
-              Start adding products you love to see them here!
-            </p>
-            <Link
-              href="/"
+             
+            <button
+              onClick={() => router.push("/")}
               className="mt-6 inline-block px-6 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-full hover:from-indigo-600 hover:to-indigo-700 transition-all duration-300 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
             >
               Explore Products
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="space-y-12">
@@ -595,38 +575,19 @@ const WishlistPage: React.FC = () => {
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {designableProducts.map((product) => {
-                    const discountedPrice =
-                      product.discount > 0
-                        ? product.price * (1 - product.discount / 100)
-                        : null;
                     const selections = productSelections[product.id] || {
-                      quantity: 1,
-                      selectedSize:
-                        product.sizes && product.sizes.length > 0
-                          ? product.sizes[0]
-                          : "",
-                      selectedColor:
-                        product.colors && product.colors.length > 0
-                          ? product.colors[0].hex
-                          : "",
+                      quantity: product.quantity || 1,
+                      selectedSize: product.sizes?.[0] || "",
+                      selectedColor: product.colors?.[0]?.hex || DEFAULT_COLORS[0].hex,
+                      activeDesignIndex: 0,
                     };
-                    const colorsToUse =
-                      product.customizable &&
-                      (!product.colors || product.colors.length === 0)
-                        ? DEFAULT_COLORS
-                        : product.colors || [];
-                    const defaultSizes = ["S", "M", "L", "XL", "2XL"];
-                    const sizesToUse =
-                      product.sizes && product.sizes.length > 0
-                        ? product.sizes
-                        : defaultSizes;
-                    const isDesignable = product.customizable === true;
-                    const designItem = product as DesignableProduct;
-                    const mainDesignIndex =
-                      (designItem.designs?.length || 0) > 0 ? 0 : 0;
-                    const currentDesign = isDesignable
-                      ? designItem.designs?.[mainDesignIndex]
-                      : null;
+                    const currentDesign = product.designs?.[selections.activeDesignIndex];
+                    const discountedPrice =
+                      product.discount && product.discount > 0
+                        ? product.price * (1 - (product.discount || 0) / 100)
+                        : null;
+                    const colorsToUse = product.colors || DEFAULT_COLORS;
+                    const sizesToUse = product.sizes || ["S", "M", "L", "XL", "2XL"];
 
                     return (
                       <div
@@ -634,102 +595,164 @@ const WishlistPage: React.FC = () => {
                         className="relative bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
                       >
                         <div className="relative w-full h-56">
-                          {isDesignable && currentDesign ? (
+                          {currentDesign ? (
                             <>
-                              <Image
-                                src={
-                                  currentDesign.apparel?.url || "/placeholder.svg"
-                                }
-                                alt={`Side: ${
-                                  currentDesign.apparel?.side || "Design"
+                              <div className="absolute inset-0">
+                                <Image
+                                  src={currentDesign.apparel?.url || "/placeholder.svg"}
+                                  alt={`Side: ${currentDesign.apparel?.side || "Design"}`}
+                                  fill
+                                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                  priority
+                                  className="rounded-none"
+                                  style={{
+                                    backgroundColor: selections.selectedColor,
+                                    objectFit: "cover",
+                                  }}
+                                />
+                              </div>
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div
+                                  className="relative translate-y-[-10%]"
+                                  style={{
+                                    top:
+                                      currentDesign.apparel?.side === "leftshoulder"
+                                        ? "35px"
+                                        : currentDesign.apparel?.side === "rightshoulder"
+                                        ? "30px"
+                                        : "initial",
+                                    left:
+                                      currentDesign.apparel?.side === "leftshoulder"
+                                        ? "-10px"
+                                        : currentDesign.apparel?.side === "rightshoulder"
+                                        ? "8px"
+                                        : "initial",
+                                    width:
+                                      currentDesign.apparel?.side === "leftshoulder" ||
+                                      currentDesign.apparel?.side === "rightshoulder"
+                                        ? "30%"
+                                        : "50%",
+                                    height:
+                                      currentDesign.apparel?.side === "leftshoulder" ||
+                                      currentDesign.apparel?.side === "rightshoulder"
+                                        ? "30%"
+                                        : "50%",
+                                  }}
+                                >
+                                  <Image
+                                    src={currentDesign.pngImage || "/placeholder.svg"}
+                                    alt="Design"
+                                    fill
+                                    sizes="100%"
+                                    className="rounded-md"
+                                    style={{ objectFit: "contain" }}
+                                  />
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <Image
+                              src="/placeholder.svg"
+                              alt={product.title || "Designable Product"}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              className="object-cover"
+                              style={{ backgroundColor: selections.selectedColor }}
+                            />
+                          )}
+                          <span
+                            className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${
+                              product.stock && product.stock > 0
+                                ? "bg-green-100 text-green-800"
+                                : "bg-red-100 text-red-800"
+                            }`}
+                          >
+                            {product.stock && product.stock > 0 ? "In Stock" : "Out of Stock"}
+                          </span>
+                        </div>
+
+                        {product.designs && product.designs.length > 1 && (
+                          <div className="mt-4 grid grid-cols-4 gap-6 px-4">
+                            {product.designs.map((design, index) => (
+                              <div
+                                key={index}
+                                className={`relative w-16 h-20 cursor-pointer transition-all duration-200 ${
+                                  index === selections.activeDesignIndex
+                                    ? "ring-2 ring-gray-700"
+                                    : "hover:ring-2 hover:ring-gray-300"
                                 }`}
-                                fill
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                className="object-cover transition-opacity duration-300 hover:opacity-90"
-                                priority
-                                style={{
-                                  backgroundColor:
-                                    currentDesign.apparel?.color || "#ffffff",
-                                }}
-                              />
-                              {currentDesign.pngImage && (
+                                onClick={() => handleDesignChange(product.id, index)}
+                              >
+                                <div className="absolute inset-0">
+                                  <Image
+                                    src={design.apparel?.url || "/placeholder.svg"}
+                                    alt={`Side: ${design.apparel?.side}`}
+                                    fill
+                                    sizes="100%"
+                                    priority
+                                    className="rounded-none"
+                                    style={{
+                                      backgroundColor: selections.selectedColor,
+                                      objectFit: "cover",
+                                    }}
+                                  />
+                                </div>
                                 <div className="absolute inset-0 flex items-center justify-center">
                                   <div
                                     className="relative translate-y-[-10%]"
                                     style={{
                                       top:
-                                        currentDesign.apparel?.side ===
-                                        "leftshoulder"
+                                        design.apparel?.side === "leftshoulder"
                                           ? "12px"
-                                          : currentDesign.apparel?.side ===
-                                            "rightshoulder"
+                                          : design.apparel?.side === "rightshoulder"
                                           ? "12px"
                                           : "initial",
                                       left:
-                                        currentDesign.apparel?.side ===
-                                        "leftshoulder"
+                                        design.apparel?.side === "leftshoulder"
                                           ? "-3px"
-                                          : currentDesign.apparel?.side ===
-                                            "rightshoulder"
+                                          : design.apparel?.side === "rightshoulder"
                                           ? "2px"
                                           : "initial",
                                       width:
-                                        currentDesign.apparel?.side ===
-                                          "leftshoulder" ||
-                                        currentDesign.apparel?.side ===
-                                          "rightshoulder"
+                                        design.apparel?.side === "leftshoulder" ||
+                                        design.apparel?.side === "rightshoulder"
                                           ? "30%"
                                           : "50%",
                                       height:
-                                        currentDesign.apparel?.side ===
-                                          "leftshoulder" ||
-                                        currentDesign.apparel?.side ===
-                                          "rightshoulder"
+                                        design.apparel?.side === "leftshoulder" ||
+                                        design.apparel?.side === "rightshoulder"
                                           ? "30%"
                                           : "50%",
                                     }}
                                   >
                                     <Image
-                                      src={currentDesign.pngImage}
-                                      alt="Design"
+                                      src={design.pngImage || "/placeholder.svg"}
+                                      alt={`Thumbnail ${index + 1}`}
                                       fill
-                                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                      className="object-cover rounded-md"
+                                      sizes="100%"
+                                      className="rounded-md"
+                                      style={{ objectFit: "contain" }}
                                     />
                                   </div>
                                 </div>
-                              )}
-                            </>
-                          ) : (
-                            <Image
-                              src={product.front_image || "/placeholder.svg"}
-                              alt={product.title}
-                              fill
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              className="object-cover transition-opacity duration-300 hover:opacity-90"
-                              priority
-                            />
-                          )}
-                          <span
-                            className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${
-                              product.stock > 0
-                                ? "bg-green-100 text-green-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {product.stock > 0 ? "In Stock" : "Out of Stock"}
-                          </span>
-                        </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
                         <div className="p-5">
                           <h3 className="text-lg font-semibold text-gray-900 truncate">
-                            {product.title}
+                            {product.title || "Untitled Designable Product"}
                           </h3>
                           <p className="text-sm text-gray-500 font-medium mb-2">
-                            {product.brand}
+                            {product.brand || "Custom Brand"}
+                          </p>
+                          <p className="text-sm text-gray-600 mb-2">
+                            <span className="font-medium">Designed Sides:</span>{" "}
+                            {getDesignedSidesText(product.designs || [])}
                           </p>
                           <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-                            {product.description}
+                            {product.description || "No description available"}
                           </p>
 
                           <div className="flex items-center mb-3">
@@ -742,17 +765,16 @@ const WishlistPage: React.FC = () => {
                                   ${product.price.toFixed(2)}
                                 </p>
                                 <span className="ml-2 text-xs font-semibold text-green-600">
-                                  {product.discount}% OFF
+                                  {product.discount || 0}% OFF
                                 </span>
                               </>
                             ) : (
                               <p className="text-lg font-bold text-gray-800">
-                                ${product.price}
+                                ${product.price.toFixed(2)}
                               </p>
                             )}
                           </div>
 
-                          {/* Sizes Selection */}
                           <div className="mb-3">
                             <p className="text-sm text-gray-600 mb-2">
                               <span className="font-medium">Sizes:</span>
@@ -775,7 +797,6 @@ const WishlistPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Colors Selection */}
                           <div className="mb-4">
                             <p className="text-sm text-gray-600 mb-2">
                               <span className="font-medium">Colors:</span>
@@ -802,7 +823,6 @@ const WishlistPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Quantity Selector */}
                           <div className="flex items-center mb-4">
                             <button
                               className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -823,29 +843,28 @@ const WishlistPage: React.FC = () => {
                             </button>
                           </div>
 
-                          {/* Buttons */}
                           <div className="flex space-x-3">
                             <button
                               onClick={() => handleAddToCart(product)}
-                              disabled={product.stock === 0 || isLoading}
+                              disabled={!product.stock || product.stock === 0 || isLoading}
                               className={`flex-1 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full font-medium transition-all duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 ${
-                                product.stock === 0 || isLoading
+                                !product.stock || product.stock === 0 || isLoading
                                   ? "opacity-50 cursor-not-allowed"
                                   : "hover:from-green-600 hover:to-green-700 hover:shadow-lg"
                               }`}
                             >
                               <FaShoppingCart className="inline mr-2" />
-                              {isLoading ? "Adding..." : "Add to Cart"}
+                              <span className="hidden lg:inline">
+                                {isLoading ? "Adding..." : "Add to Cart"}
+                              </span>
                             </button>
                             <button
-                              onClick={() =>
-                                handleRemoveFromWishlist(product.id, product.customizable)
-                              }
+                              onClick={() => handleRemoveFromWishlist(product.id, true)}
                               className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full font-medium transition-all duration-300 shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
                               disabled={isLoading}
                             >
                               <FaHeart className="inline mr-2" />
-                              <span className="hidden sm:inline">Remove</span>
+                              <span className="hidden lg:inline">Remove</span>
                             </button>
                           </div>
                         </div>
@@ -859,6 +878,9 @@ const WishlistPage: React.FC = () => {
                 <p className="text-lg text-gray-600 font-medium">
                   No Designable Products in your wishlist.
                 </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Fetched designable products: {JSON.stringify(designableProducts)}
+                </p>
               </div>
             )}
 
@@ -871,37 +893,17 @@ const WishlistPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {standardProducts.map((product) => {
                     const discountedPrice =
-                      product.discount > 0
+                      product.discount && product.discount > 0
                         ? product.price * (1 - product.discount / 100)
                         : null;
                     const selections = productSelections[product.id] || {
-                      quantity: 1,
-                      selectedSize:
-                        product.sizes && product.sizes.length > 0
-                          ? product.sizes[0]
-                          : "",
-                      selectedColor:
-                        product.colors && product.colors.length > 0
-                          ? product.colors[0].hex
-                          : "",
+                      quantity: product.quantity || 1,
+                      selectedSize: product.sizes?.[0] || "",
+                      selectedColor: product.colors?.[0]?.hex || DEFAULT_COLORS[0].hex,
+                      activeDesignIndex: 0,
                     };
-                    const colorsToUse =
-                      product.customizable &&
-                      (!product.colors || product.colors.length === 0)
-                        ? DEFAULT_COLORS
-                        : product.colors || [];
-                    const defaultSizes = ["S", "M", "L", "XL", "2XL"];
-                    const sizesToUse =
-                      product.sizes && product.sizes.length > 0
-                        ? product.sizes
-                        : defaultSizes;
-                    const isDesignable = product.customizable === true;
-                    const designItem = product as DesignableProduct;
-                    const mainDesignIndex =
-                      (designItem.designs?.length || 0) > 0 ? 0 : 0;
-                    const currentDesign = isDesignable
-                      ? designItem.designs?.[mainDesignIndex]
-                      : null;
+                    const colorsToUse = product.colors || DEFAULT_COLORS;
+                    const sizesToUse = product.sizes || ["S", "M", "L", "XL", "2XL"];
 
                     return (
                       <div
@@ -909,90 +911,22 @@ const WishlistPage: React.FC = () => {
                         className="relative bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
                       >
                         <div className="relative w-full h-56">
-                          {isDesignable && currentDesign ? (
-                            <>
-                              <Image
-                                src={
-                                  currentDesign.apparel?.url || "/placeholder.svg"
-                                }
-                                alt={`Side: ${
-                                  currentDesign.apparel?.side || "Design"
-                                }`}
-                                fill
-                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                className="object-cover transition-opacity duration-300 hover:opacity-90"
-                                priority
-                                style={{
-                                  backgroundColor:
-                                    currentDesign.apparel?.color || "#ffffff",
-                                }}
-                              />
-                              {currentDesign.pngImage && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <div
-                                    className="relative translate-y-[-10%]"
-                                    style={{
-                                      top:
-                                        currentDesign.apparel?.side ===
-                                        "leftshoulder"
-                                          ? "12px"
-                                          : currentDesign.apparel?.side ===
-                                            "rightshoulder"
-                                          ? "12px"
-                                          : "initial",
-                                      left:
-                                        currentDesign.apparel?.side ===
-                                        "leftshoulder"
-                                          ? "-3px"
-                                          : currentDesign.apparel?.side ===
-                                            "rightshoulder"
-                                          ? "2px"
-                                          : "initial",
-                                      width:
-                                        currentDesign.apparel?.side ===
-                                          "leftshoulder" ||
-                                        currentDesign.apparel?.side ===
-                                          "rightshoulder"
-                                          ? "30%"
-                                          : "50%",
-                                      height:
-                                        currentDesign.apparel?.side ===
-                                          "leftshoulder" ||
-                                        currentDesign.apparel?.side ===
-                                          "rightshoulder"
-                                          ? "30%"
-                                          : "50%",
-                                    }}
-                                  >
-                                    <Image
-                                      src={currentDesign.pngImage}
-                                      alt="Design"
-                                      fill
-                                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                      className="object-cover rounded-md"
-                                    />
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <Image
-                              src={product.front_image || "/placeholder.svg"}
-                              alt={product.title}
-                              fill
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              className="object-cover transition-opacity duration-300 hover:opacity-90"
-                              priority
-                            />
-                          )}
+                          <Image
+                            src={product.front_image || "/placeholder.svg"}
+                            alt={product.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                            className="object-cover transition-opacity duration-300 hover:opacity-90"
+                            priority
+                          />
                           <span
                             className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-semibold ${
-                              product.stock > 0
+                              product.stock && product.stock > 0
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
                             }`}
                           >
-                            {product.stock > 0 ? "In Stock" : "Out of Stock"}
+                            {product.stock && product.stock > 0 ? "In Stock" : "Out of Stock"}
                           </span>
                         </div>
 
@@ -1027,7 +961,6 @@ const WishlistPage: React.FC = () => {
                             )}
                           </div>
 
-                          {/* Sizes Selection */}
                           <div className="mb-3">
                             <p className="text-sm text-gray-600 mb-2">
                               <span className="font-medium">Sizes:</span>
@@ -1050,7 +983,6 @@ const WishlistPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Colors Selection */}
                           <div className="mb-4">
                             <p className="text-sm text-gray-600 mb-2">
                               <span className="font-medium">Colors:</span>
@@ -1077,7 +1009,6 @@ const WishlistPage: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Quantity Selector */}
                           <div className="flex items-center mb-4">
                             <button
                               className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -1098,29 +1029,28 @@ const WishlistPage: React.FC = () => {
                             </button>
                           </div>
 
-                          {/* Buttons */}
                           <div className="flex space-x-3">
                             <button
                               onClick={() => handleAddToCart(product)}
-                              disabled={product.stock === 0 || isLoading}
+                              disabled={!product.stock || product.stock === 0 || isLoading}
                               className={`flex-1 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full font-medium transition-all duration-300 shadow-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 ${
-                                product.stock === 0 || isLoading
+                                !product.stock || product.stock === 0 || isLoading
                                   ? "opacity-50 cursor-not-allowed"
                                   : "hover:from-green-600 hover:to-green-700 hover:shadow-lg"
                               }`}
                             >
                               <FaShoppingCart className="inline mr-2" />
-                              {isLoading ? "Adding..." : "Add to Cart"}
+                              <span className="hidden lg:inline">
+                                {isLoading ? "Adding..." : "Add to Cart"}
+                              </span>
                             </button>
                             <button
-                              onClick={() =>
-                                handleRemoveFromWishlist(product.id, product.customizable)
-                              }
+                              onClick={() => handleRemoveFromWishlist(product.id, false)}
                               className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full font-medium transition-all duration-300 shadow-md hover:from-red-600 hover:to-red-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
                               disabled={isLoading}
                             >
                               <FaHeart className="inline mr-2" />
-                              <span className="hidden sm:inline">Remove</span>
+                              <span className="hidden lg:inline">Remove</span>
                             </button>
                           </div>
                         </div>
@@ -1133,6 +1063,9 @@ const WishlistPage: React.FC = () => {
               <div className="bg-white rounded-xl shadow-lg p-8 text-center">
                 <p className="text-lg text-gray-600 font-medium">
                   No Standard Products in your wishlist.
+                </p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Fetched standard products: {JSON.stringify(standardProducts)}
                 </p>
               </div>
             )}

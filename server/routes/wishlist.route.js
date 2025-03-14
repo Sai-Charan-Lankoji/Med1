@@ -54,7 +54,7 @@ const authMiddleware = require("../middleware/AuthMiddleware");
  *       500:
  *         description: Server error
  */
-router.post("/add", wishlistController.addToWishlist);
+router.post("/add", authMiddleware, wishlistController.addToWishlist);
 
 /**
  * @swagger
@@ -107,7 +107,7 @@ router.post("/add", wishlistController.addToWishlist);
  *       500:
  *         description: Server error
  */
-router.delete("/remove", wishlistController.removeFromWishlist);
+router.delete("/remove", authMiddleware, wishlistController.removeFromWishlist);
 
 /**
  * @swagger
@@ -148,6 +148,6 @@ router.delete("/remove", wishlistController.removeFromWishlist);
  *                 error: { type: string }
  *                 message: { type: string }
  */
-router.get("/", wishlistController.getWishlistByUser);
+router.get("/", authMiddleware, wishlistController.getWishlistByUser);
 
 module.exports = router;

@@ -1,3 +1,4 @@
+// backend/models/wishlist.model.js
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 
@@ -10,15 +11,15 @@ const Wishlist = sequelize.define(
       primaryKey: true,
     },
     customer_id: {
-      type: DataTypes.UUID, // Changed to UUID for consistency with typical user IDs
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: "users", // Assuming a 'users' table exists
+        model: "users",
         key: "id",
       },
     },
     product_id: {
-      type: DataTypes.STRING(255), // Changed to UUID assuming Product model uses UUID
+      type: DataTypes.STRING(255),
       allowNull: true,
       references: {
         model: "products",
@@ -26,30 +27,33 @@ const Wishlist = sequelize.define(
       },
     },
     standard_product_id: {
-      type: DataTypes.UUID, // Changed to UUID for consistency
+      type: DataTypes.UUID,
       allowNull: true,
       references: {
         model: "standard_products",
         key: "id",
       },
     },
+    quantity: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+    },
   },
   {
     tableName: "wishlists",
     timestamps: true,
     underscored: true,
-    paranoid: true, // Soft deletes are great for recovery
+    paranoid: true,
     indexes: [
-      { fields: ["customer_id"] }, // Speed up queries by customer
+      { fields: ["customer_id"] },
       { fields: ["product_id"] },
       { fields: ["standard_product_id"] },
-      { fields: ["customer_id", "product_id"], unique: true }, // Prevent duplicates
-      { fields: ["customer_id", "standard_product_id"], unique: true },
+      // No unique constraints here
     ],
   }
 );
 
-// Define associations (assuming Product and StandardProduct models exist)
 Wishlist.associate = (models) => {
   Wishlist.belongsTo(models.User, { foreignKey: "customer_id", as: "customer" });
   Wishlist.belongsTo(models.Product, { foreignKey: "product_id", as: "product" });

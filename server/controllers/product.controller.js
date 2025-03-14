@@ -12,10 +12,39 @@ class ProductController {
 
   async getProduct(req, res) {
     try {
-      const product = await productService.getProductById(req.params.id);
-      res.status(200).json(product);
+      let product = await productService.getProductById(req.params.id);
+  
+      if (!product) {
+        return res.status(404).json({ success: false, message: "Product not found" });
+      }
+  
+      // Extract dataValues from the Sequelize model instance
+      const productData = product.dataValues ? product.dataValues : product;
+  
+      // Remove designstate, propstate, and other unwanted fields from the product data
+      const { designstate, propstate, _previousDataValues, ...filteredProduct } = productData;
+  
+      // Remove jsonDesign from each design object, if designs exist
+      if (filteredProduct.designs) {
+        filteredProduct.designs = filteredProduct.designs.map(design => {
+          // Handle case where design might also be a Sequelize instance
+          const designData = design.dataValues ? design.dataValues : design;
+          const { jsonDesign, ...rest } = designData;
+          return rest;
+        });
+      }
+  
+      // Send the filtered product in the response with the expected structure
+      res.status(200).json({
+        success: true,
+        product: filteredProduct
+      });
     } catch (error) {
-      res.status(404).json({ error: error.message });
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while retrieving the product",
+        error: error.message
+      });
     }
   }
 

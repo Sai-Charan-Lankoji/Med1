@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   FaUserCircle,
   FaShoppingCart,
@@ -9,22 +9,21 @@ import {
   FaHeart,
 } from "react-icons/fa";
 import { HiMenu, HiX } from "react-icons/hi";
-import { ShirtIcon, ShoppingCart } from "lucide-react";
+import { ShirtIcon, ShoppingCart as ShoppingCartIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { MdDeleteForever } from "react-icons/md";
 import { useUserContext } from "@/context/userContext";
-import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { useRouter, useParams } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { DesignContext } from "@/context/designcontext";
-import { useNewCart } from "../hooks/useNewCart";
-import { IDesign, IProps, ICartItem, IDesignableCartItem, IStandardCartItem } from "@/@types/models";
-import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 import { useStore } from "@/context/storecontext";
 import useSWR from "swr";
+import { useCustomerLogout } from "../hooks/useCustomerLogout";
+import { useNewCart } from "../hooks/useNewCart";
+import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 
-// Wishlist Interface
+// Types (unchanged from your code)
 interface WishlistItem {
   id: string;
   customer_id: string;
@@ -40,21 +39,67 @@ interface ApiResponse {
   error?: { code: string; details: string };
 }
 
+interface IDesign {
+  apparel: {
+    side: string;
+    url: string;
+    color: string;
+    width: number;
+    height: number;
+    selected: boolean;
+  };
+  pngImage: string;
+  items: any[];
+  isactive: boolean;
+  jsonDesign: string;
+  svgImage: string;
+  uploadedImages: string[];
+}
+
+interface IProps {
+  // Define props as needed
+}
+
+interface IDesignableCartItem {
+  id: string;
+  product_type: "designable";
+  designs: IDesign[];
+  quantity: number;
+  price: number;
+  designState: IDesign;
+  propsState: IProps;
+}
+
+interface IStandardCartItem {
+  id: string;
+  product_type: "standard";
+  product_details: {
+    title: string;
+    front_image?: string;
+    back_image?: string;
+    left_image?: string;
+    right_image?: string;
+  };
+  selected_size: string;
+  selected_color: string | { name: string };
+  quantity: number;
+  price: number;
+}
+
+type ICartItem = IDesignableCartItem | IStandardCartItem;
+
+// Constants
 const WISHLIST_API_URL = "http://localhost:5000/api/wishlists";
-const POLLING_INTERVAL = 5000;
+const POLLING_INTERVAL = 10000; // Poll every 10 seconds (adjust as needed)
 
-// Fetcher function for SWR
-const fetcher = async (url: string, token: string | null) => {
-  if (!token) {
-    throw new Error("No authentication token provided");
-  }
-
+// Fetcher for SWR
+const fetcher = async (url: string) => {
   const response = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
     },
+    credentials: "include",
   });
 
   const data = (await response.json()) as ApiResponse;
@@ -66,11 +111,18 @@ const fetcher = async (url: string, token: string | null) => {
 };
 
 const Navbar: React.FC = () => {
-  const { cartItems: designableCartItems, deleteCartItem, fetchCartData, getStandardCartItems } = useNewCart();
-  const { email, customerToken, profile } = useUserContext();
-  const [username, setUsername] = useState<string>("");
+  const { firstName, email, profilePhoto, isLogin } = useUserContext();
   const { logout } = useCustomerLogout();
+  const {
+    cartItems: designableCartItems,
+    deleteCartItem,
+    fetchCartData,
+    getStandardCartItems,
+  } = useNewCart();
   const router = useRouter();
+  const params = useParams();
+  const { store } = useStore();
+
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -78,71 +130,60 @@ const Navbar: React.FC = () => {
   const [cartTotal, setCartTotal] = useState(0);
   const [wishlistCount, setWishlistCount] = useState<number>(0);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
-  const [token, setToken] = useState<string | null>(null);
-  const params = useParams();
-  const { store } = useStore();
+
   const vendorId = params.vendorId as string;
   const isVendorMode = vendorId === store?.vendor_id;
 
   // Combine designable and standard cart items
-  const allCartItems: ICartItem[] = React.useMemo(() => [
-    ...designableCartItems,
-    ...getStandardCartItems(),
-  ], [designableCartItems, getStandardCartItems]);
-
-  // Fetch token on client-side
-  useEffect(() => {
-    const authToken =
-      typeof window !== "undefined" ? sessionStorage.getItem("auth_token") : null;
-    setToken(authToken);
-  }, []);
-
-  // Fetch cart data on mount
-  useEffect(() => {
-    if (customerToken) {
-      fetchCartData();
-    }
-  }, [customerToken, fetchCartData]);
-
-  // Use SWR to fetch and monitor wishlist items
-  const { data: wishlistData, error: wishlistError } = useSWR(
-    token ? [WISHLIST_API_URL, token] : null,
-    ([url, token]) => fetcher(url, token),
-    {
-      // refreshInterval: POLLING_INTERVAL,
-      // revalidateOnFocus: true,
-      // revalidateOnReconnect: true,
-      // dedupingInterval: 2000,
-    }
+  const allCartItems: any = useMemo(
+    () => [...designableCartItems, ...getStandardCartItems()],
+    [designableCartItems, getStandardCartItems]
   );
 
-  // Update wishlistCount based on SWR data
+  // Fetch wishlist data with SWR and polling
+  const {
+    data: wishlistData,
+    error: wishlistError,
+    isLoading: wishlistLoading,
+    mutate: mutateWishlist,
+  } = useSWR(isLogin ? WISHLIST_API_URL : null, fetcher, {
+    refreshInterval: POLLING_INTERVAL, // Poll every 10 seconds
+    dedupingInterval: 2000, // Avoid duplicate requests within 2 seconds
+    revalidateOnFocus: true, // Revalidate when window regains focus
+    revalidateOnReconnect: true, // Revalidate when network reconnects
+  });
+
+  // Update wishlist count
   useEffect(() => {
-    if (wishlistData) {
+    if (wishlistData && !wishlistLoading) {
       setWishlistCount(wishlistData.length);
-    } else if (wishlistError || !token) {
+    } else if (wishlistError || !isLogin) {
       setWishlistCount(0);
     }
-  }, [wishlistData, wishlistError, token]);
+  }, [wishlistData, wishlistError, wishlistLoading, isLogin]);
 
+  // Fetch cart data on mount if logged in
   useEffect(() => {
-    if (email) {
-      const storedUsername = sessionStorage.getItem("username");
-      if (storedUsername) {
-        setUsername(storedUsername);
-      }
+    if (isLogin) {
+      fetchCartData();
     }
-  }, [email]);
+  }, [isLogin, fetchCartData]);
 
+  // Update cart totals
   useEffect(() => {
-    if (customerToken && Array.isArray(allCartItems)) {
+    if (isLogin && Array.isArray(allCartItems)) {
       try {
         const totalItems = allCartItems.length;
         setCartItemsCount(totalItems);
         const total = allCartItems.reduce((sum, item) => {
           if (!item) return sum;
-          const numberOfSides = item.product_type === "designable" && item.designs?.length ? item.designs.length : 1;
-          return sum + (item.price || 100) * numberOfSides * (item.quantity || 1);
+          const numberOfSides =
+            item.product_type === "designable" && item.designs?.length
+              ? item.designs.length
+              : 1;
+          return (
+            sum + (item.price || 100) * numberOfSides * (item.quantity || 1)
+          );
         }, 0);
         setCartTotal(total);
       } catch (error) {
@@ -154,8 +195,9 @@ const Navbar: React.FC = () => {
       setCartItemsCount(0);
       setCartTotal(0);
     }
-  }, [allCartItems, customerToken]);
+  }, [allCartItems, isLogin]);
 
+  // Design context
   const designContext = React.useContext(DesignContext);
   const { designs, dispatchDesign } = designContext || {
     designs: [],
@@ -164,147 +206,172 @@ const Navbar: React.FC = () => {
 
   const { switchToDesign } = useDesignSwitcher();
 
-  const handleDesignClick = async (
-    designState: IDesign,
-    propsState: IProps,
-    id: any
-  ) => {
-    localStorage.setItem("savedDesignState", JSON.stringify(designState));
-    localStorage.setItem("savedPropsState", JSON.stringify(propsState));
-    localStorage.setItem("cart_id", id);
-    dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
+  // Event Handlers
+  const handleDesignClick = useCallback(
+    async (designState: IDesign, propsState: IProps, id: string) => {
+      localStorage.setItem("savedDesignState", JSON.stringify(designState));
+      localStorage.setItem("savedPropsState", JSON.stringify(propsState));
+      localStorage.setItem("cart_id", id);
+      dispatchDesign({ type: "SWITCH_DESIGN", currentDesign: designState });
 
-    window.location.reload();
+      window.location.reload();
 
-    const success = await switchToDesign(designState);
+      const success = await switchToDesign(designState);
 
-    if (success) {
-      setIsCartOpen(false);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-      const canvasElement = document.querySelector(".canvas-container");
-      if (canvasElement) {
-        canvasElement.scrollIntoView({ behavior: "smooth" });
+      if (success) {
+        setIsCartOpen(false);
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        const canvasElement = document.querySelector(".canvas-container");
+        if (canvasElement) {
+          canvasElement.scrollIntoView({ behavior: "smooth" });
+        }
       }
-    }
-  };
+    },
+    [dispatchDesign, switchToDesign]
+  );
 
-  const toggleItemExpansion = (itemId: string) => {
+  const toggleItemExpansion = useCallback((itemId: string) => {
     setExpandedItems((prev) => ({
       ...prev,
       [itemId]: !prev[itemId],
     }));
-  };
+  }, []);
 
-  const closeAllMenus = () => {
+  const closeAllMenus = useCallback(() => {
     setIsCartOpen(false);
     setIsProfileOpen(false);
     setIsMobileMenuOpen(false);
-  };
+  }, []);
 
-  const handleDeleteCart = async (cartId: string) => {
-    const success = await deleteCartItem(cartId);
-    if (success) {
-      localStorage.removeItem("savedDesignState");
-      localStorage.removeItem("cart_id");
-      router.refresh();
-    } else {
-      console.log("Failed to delete cart item");
-    }
-  };
+  const handleDeleteCart = useCallback(
+    async (cartId: string) => {
+      const success = await deleteCartItem(cartId);
+      if (success) {
+        localStorage.removeItem("savedDesignState");
+        localStorage.removeItem("cart_id");
+        router.refresh();
+      } else {
+        console.log("Failed to delete cart item");
+      }
+    },
+    [deleteCartItem, router]
+  );
 
-  const handleDesktopCartClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!customerToken) {
-      router.push("/auth");
-      closeAllMenus();
-    } else {
-      setIsCartOpen((prev) => !prev);
-      setIsProfileOpen(false);
-    }
-  };
+  const handleDesktopCartClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isLogin) {
+        router.push("/auth");
+        closeAllMenus();
+      } else {
+        setIsCartOpen((prev) => !prev);
+        setIsProfileOpen(false);
+      }
+    },
+    [isLogin, router, closeAllMenus]
+  );
 
-  const handleDesktopProfileClick = (e: React.MouseEvent) => {
+  const handleDesktopProfileClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsProfileOpen((prev) => !prev);
     setIsCartOpen(false);
-  };
+  }, []);
 
-  const handleDesktopLogout = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await logout();
+  const handleDesktopLogout = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        await logout();
+        closeAllMenus();
+        router.push("/");
+      } catch (error) {
+        console.error("Desktop logout failed:", error);
+      }
+    },
+    [logout, closeAllMenus, router]
+  );
+
+  const handleDesktopWishlistClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isLogin) {
+        router.push("/auth");
+      } else {
+        router.push("/wishlist");
+      }
       closeAllMenus();
-      router.push("/");
-    } catch (error) {
-      console.error("Desktop logout failed:", error);
-    }
-  };
+    },
+    [isLogin, router, closeAllMenus]
+  );
 
-  const handleDesktopWishlistClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!customerToken) {
-      router.push("/auth");
-    } else {
-      router.push("/wishlist");
-    }
-    closeAllMenus();
-  };
-
-  const handleMobileMenuToggle = (e: React.MouseEvent) => {
+  const handleMobileMenuToggle = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsMobileMenuOpen((prev) => !prev);
     setIsCartOpen(false);
     setIsProfileOpen(false);
-  };
+  }, []);
 
-  const handleMobileCartClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!customerToken) {
-      router.push("/auth");
-    } else {
-      router.push("/cart");
-    }
-    closeAllMenus();
-  };
-
-  const handleMobileWishlistClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!customerToken) {
-      router.push("/auth");
-    } else {
-      router.push("/wishlist");
-    }
-    closeAllMenus();
-  };
-
-  const handleMobileLogout = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      await logout();
+  const handleMobileCartClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isLogin) {
+        router.push("/auth");
+      } else {
+        router.push("/cart");
+      }
       closeAllMenus();
-      router.push("/");
-    } catch (error) {
-      console.error("Mobile logout failed:", error);
-    }
-  };
+    },
+    [isLogin, router, closeAllMenus]
+  );
 
-  const handleViewCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (customerToken) {
-      router.push("/cart");
-    }
-    closeAllMenus();
-  };
+  const handleMobileWishlistClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!isLogin) {
+        router.push("/auth");
+      } else {
+        router.push("/wishlist");
+      }
+      closeAllMenus();
+    },
+    [isLogin, router, closeAllMenus]
+  );
 
+  const handleMobileLogout = useCallback(
+    async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      try {
+        await logout();
+        closeAllMenus();
+        router.push("/");
+      } catch (error) {
+        console.error("Mobile logout failed:", error);
+      }
+    },
+    [logout, closeAllMenus, router]
+  );
+
+  const handleViewCart = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isLogin) {
+        router.push("/cart");
+      }
+      closeAllMenus();
+    },
+    [isLogin, router, closeAllMenus]
+  );
+
+  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -322,6 +389,7 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Utility Functions
   const capitalizeFirstLetter = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
@@ -337,9 +405,8 @@ const Navbar: React.FC = () => {
     return `${sides.join(", ")} & ${lastSide}`;
   };
 
-  // Helper function to extract available sides for standard products
   const getStandardProductSides = (productDetails: any) => {
-    const sides = [];
+    const sides: { side: string; url: string }[] = [];
     if (productDetails?.front_image) {
       sides.push({ side: "front", url: productDetails.front_image });
     }
@@ -363,7 +430,7 @@ const Navbar: React.FC = () => {
             <div className="flex items-center">
               <ShirtIcon className="h-8 w-8 text-indigo-600" />
               <h1 className="ml-2 sm:text-lg md:text-2xl font-bold text-gray-700 hover:text-gray-900 transition-colors duration-200">
-                {store?.name}
+                {store?.name || "Store Name"}
               </h1>
             </div>
           </Link>
@@ -373,6 +440,7 @@ const Navbar: React.FC = () => {
               <button
                 onClick={handleMobileMenuToggle}
                 className="mobile-menu-button p-2 text-gray-700 hover:bg-gray-100 rounded-md"
+                aria-label={isMobileMenuOpen ? "Close Menu" : "Open Menu"}
               >
                 {isMobileMenuOpen ? (
                   <HiX className="h-6 w-6" />
@@ -387,8 +455,8 @@ const Navbar: React.FC = () => {
           <div className="hidden md:flex items-center space-x-6">
             {!isVendorMode && !email && (
               <Link
-                href="./auth"
-                className="mx-3 px-4 py-2 text-sm font-medium text-white rounded-md text-left bg-purple-700 hover:bg-purple-500 transition-colors duration-200 flex items-center space-x-2"
+                href="/auth"
+                className="mx-3 px-4 py-2 text-sm font-medium text-white rounded-md bg-purple-700 hover:bg-purple-500 transition-colors duration-200 flex items-center space-x-2"
                 onClick={closeAllMenus}
               >
                 <FaUserCircle className="text-xl text-white" />
@@ -401,17 +469,18 @@ const Navbar: React.FC = () => {
                 <button
                   onClick={handleDesktopProfileClick}
                   className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+                  aria-label="Profile Menu"
                 >
                   <div className="relative w-8 h-8 rounded-full overflow-hidden">
                     <Image
-                      src={profile || "/images/profile-sample.jpg"}
+                      src={profilePhoto || "/images/profile-sample.jpg"}
                       alt="Profile Picture"
                       fill
                       className="object-cover"
                     />
                   </div>
                   <span className="hidden md:block text-sm font-medium text-gray-700 truncate max-w-[150px]">
-                    {username || email}
+                    {firstName || email}
                   </span>
                 </button>
 
@@ -428,7 +497,7 @@ const Navbar: React.FC = () => {
                       onClick={() => router.push("/myorders")}
                       className="w-full px-1 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition duration-150 ease-in-out text-left flex items-center space-x-2"
                     >
-                      <ShoppingCart className="text-xl text-gray-700 w-4 h-4" />
+                      <ShoppingCartIcon className="text-xl text-gray-700 w-4 h-4" />
                       <span>My Orders</span>
                     </button>
                     <button
@@ -443,12 +512,13 @@ const Navbar: React.FC = () => {
               </div>
             )}
 
-            {customerToken && (
+            {isLogin && (
               <div className="flex items-center space-x-4">
                 {/* Wishlist Icon */}
                 <button
                   onClick={handleDesktopWishlistClick}
                   className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                  aria-label="Wishlist"
                 >
                   <FaHeart className="text-2xl text-pink-500" />
                   {wishlistCount > 0 && (
@@ -463,6 +533,7 @@ const Navbar: React.FC = () => {
                   <button
                     onClick={handleDesktopCartClick}
                     className="relative p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                    aria-label="Cart"
                   >
                     <FaShoppingCart className="text-2xl text-gray-700" />
                     {cartItemsCount > 0 && (
@@ -489,8 +560,9 @@ const Navbar: React.FC = () => {
                         <div className="mt-4 max-h-[400px] overflow-y-auto">
                           {allCartItems.length > 0 ? (
                             <ul className="space-y-4">
-                              {allCartItems.map((item) => {
-                                const isDesignable = item.product_type === "designable";
+                              {allCartItems.map((item: any) => {
+                                const isDesignable =
+                                  item.product_type === "designable";
                                 const designItem = item as IDesignableCartItem;
                                 const standardItem = item as IStandardCartItem;
 
@@ -500,14 +572,22 @@ const Navbar: React.FC = () => {
                                 const itemTotal = pricePerItem * item.quantity;
 
                                 const standardSides = !isDesignable
-                                  ? getStandardProductSides(standardItem.product_details)
+                                  ? getStandardProductSides(
+                                      standardItem.product_details
+                                    )
                                   : [];
-                                const mainDesignIndex = standardSides.length > 0 ? 0 : (designItem.designs?.length || 0) > 0 ? 0 : 0;
+                                const mainDesignIndex =
+                                  standardSides.length > 0
+                                    ? 0
+                                    : (designItem.designs?.length || 0) > 0
+                                    ? 0
+                                    : 0;
                                 const currentDesign = isDesignable
                                   ? designItem.designs?.[mainDesignIndex]
                                   : null;
                                 const currentStandardSide = !isDesignable
-                                  ? standardSides[mainDesignIndex] || standardSides[0]
+                                  ? standardSides[mainDesignIndex] ||
+                                    standardSides[0]
                                   : null;
 
                                 return (
@@ -525,7 +605,8 @@ const Navbar: React.FC = () => {
                                                 <div className="absolute inset-0">
                                                   <Image
                                                     src={
-                                                      currentDesign.apparel?.url ||
+                                                      currentDesign.apparel
+                                                        ?.url ||
                                                       "/placeholder.svg"
                                                     }
                                                     alt={`Side: ${currentDesign.apparel.side}`}
@@ -535,8 +616,8 @@ const Navbar: React.FC = () => {
                                                     className="rounded-none"
                                                     style={{
                                                       backgroundColor:
-                                                        currentDesign.apparel?.color ||
-                                                        "#ffffff",
+                                                        currentDesign.apparel
+                                                          ?.color || "#ffffff",
                                                       objectFit: "cover",
                                                     }}
                                                   />
@@ -546,34 +627,40 @@ const Navbar: React.FC = () => {
                                                     className="relative translate-y-[-10%]"
                                                     style={{
                                                       top:
-                                                        currentDesign.apparel.side ===
+                                                        currentDesign.apparel
+                                                          .side ===
                                                         "leftshoulder"
                                                           ? "12px"
-                                                          : currentDesign.apparel
-                                                              .side ===
+                                                          : currentDesign
+                                                              .apparel.side ===
                                                             "rightshoulder"
                                                           ? "12px"
                                                           : "initial",
                                                       left:
-                                                        currentDesign.apparel.side ===
+                                                        currentDesign.apparel
+                                                          .side ===
                                                         "leftshoulder"
                                                           ? "-3px"
-                                                          : currentDesign.apparel
-                                                              .side ===
+                                                          : currentDesign
+                                                              .apparel.side ===
                                                             "rightshoulder"
                                                           ? "2px"
                                                           : "initial",
                                                       width:
-                                                        currentDesign.apparel.side ===
+                                                        currentDesign.apparel
+                                                          .side ===
                                                           "leftshoulder" ||
-                                                        currentDesign.apparel.side ===
+                                                        currentDesign.apparel
+                                                          .side ===
                                                           "rightshoulder"
                                                           ? "30%"
                                                           : "50%",
                                                       height:
-                                                        currentDesign.apparel.side ===
+                                                        currentDesign.apparel
+                                                          .side ===
                                                           "leftshoulder" ||
-                                                        currentDesign.apparel.side ===
+                                                        currentDesign.apparel
+                                                          .side ===
                                                           "rightshoulder"
                                                           ? "30%"
                                                           : "50%",
@@ -602,7 +689,8 @@ const Navbar: React.FC = () => {
                                                   "/placeholder.svg"
                                                 }
                                                 alt={
-                                                  standardItem.product_details?.title ||
+                                                  standardItem.product_details
+                                                    ?.title ||
                                                   "Standard Product"
                                                 }
                                                 fill
@@ -617,12 +705,19 @@ const Navbar: React.FC = () => {
                                             </p>
                                             <p className="text-sm text-gray-600 mt-1">
                                               {isDesignable
-                                                ? `Designed Sides: ${getDesignedSidesText(designItem.designs || [])}`
-                                                : `Size: ${standardItem.selected_size || "N/A"}, Color: ${
+                                                ? `Designed Sides: ${getDesignedSidesText(
+                                                    designItem.designs || []
+                                                  )}`
+                                                : `Size: ${
+                                                    standardItem.selected_size ||
+                                                    "N/A"
+                                                  }, Color: ${
                                                     standardItem.selected_color
-                                                      ? typeof standardItem.selected_color === "string"
+                                                      ? typeof standardItem.selected_color ===
+                                                        "string"
                                                         ? standardItem.selected_color
-                                                        : standardItem.selected_color || "N/A"
+                                                        : standardItem.selected_color.name ||
+                                                          "N/A"
                                                       : "N/A"
                                                   }`}
                                             </p>
@@ -638,6 +733,7 @@ const Navbar: React.FC = () => {
                                             }
                                             className="text-red-500 hover:text-red-700 transition duration-200"
                                             title="Remove item"
+                                            aria-label="Delete cart item"
                                           >
                                             <MdDeleteForever className="text-xl" />
                                           </button>
@@ -646,7 +742,9 @@ const Navbar: React.FC = () => {
 
                                       <div
                                         className="cursor-pointer"
-                                        onClick={() => toggleItemExpansion(item.id)}
+                                        onClick={() =>
+                                          toggleItemExpansion(item.id)
+                                        }
                                       >
                                         <div className="flex items-center gap-2 mb-1">
                                           <span className="text-sm text-gray-500">
@@ -654,7 +752,9 @@ const Navbar: React.FC = () => {
                                           </span>
                                           <FaChevronDown
                                             className={`transform transition-transform ${
-                                              expandedItems[item.id] ? "rotate-180" : ""
+                                              expandedItems[item.id]
+                                                ? "rotate-180"
+                                                : ""
                                             }`}
                                           />
                                         </div>
@@ -663,121 +763,144 @@ const Navbar: React.FC = () => {
                                       {expandedItems[item.id] && (
                                         <div className="mt-2">
                                           <div className="grid grid-cols-3 gap-4">
-                                            {isDesignable && designItem.designs ? (
-                                              designItem.designs.map((design, index) => (
-                                                <div
-                                                  key={index}
-                                                  className="flex flex-col items-center"
-                                                >
-                                                  <div className="relative w-24 h-28 mb-2">
-                                                    <div className="absolute inset-0 border rounded-md">
-                                                      <Image
-                                                        src={
-                                                          design.apparel?.url ||
-                                                          "/placeholder.svg"
-                                                        }
-                                                        alt={`Side: ${design.apparel.side}`}
-                                                        fill
-                                                        sizes="100%"
-                                                        priority
-                                                        className="hover:cursor-pointer"
-                                                        style={{
-                                                          backgroundColor:
-                                                            design.apparel?.color ||
-                                                            "#ffffff",
-                                                          objectFit: "cover",
-                                                        }}
-                                                      />
+                                            {isDesignable && designItem.designs
+                                              ? designItem.designs.map(
+                                                  (design, index) => (
+                                                    <div
+                                                      key={index}
+                                                      className="flex flex-col items-center"
+                                                    >
+                                                      <div className="relative w-24 h-28 mb-2">
+                                                        <div className="absolute inset-0 border rounded-md">
+                                                          <Image
+                                                            src={
+                                                              design.apparel
+                                                                ?.url ||
+                                                              "/placeholder.svg"
+                                                            }
+                                                            alt={`Side: ${design.apparel.side}`}
+                                                            fill
+                                                            sizes="100%"
+                                                            priority
+                                                            className="hover:cursor-pointer"
+                                                            style={{
+                                                              backgroundColor:
+                                                                design.apparel
+                                                                  ?.color ||
+                                                                "#ffffff",
+                                                              objectFit:
+                                                                "cover",
+                                                            }}
+                                                          />
+                                                        </div>
+                                                        <div className="absolute inset-0 flex items-center justify-center">
+                                                          <div
+                                                            className="relative translate-y-[-10%]"
+                                                            style={{
+                                                              top:
+                                                                design.apparel
+                                                                  .side ===
+                                                                "leftshoulder"
+                                                                  ? "12px"
+                                                                  : design
+                                                                      .apparel
+                                                                      .side ===
+                                                                    "rightshoulder"
+                                                                  ? "12px"
+                                                                  : "initial",
+                                                              left:
+                                                                design.apparel
+                                                                  .side ===
+                                                                "leftshoulder"
+                                                                  ? "-3px"
+                                                                  : design
+                                                                      .apparel
+                                                                      .side ===
+                                                                    "rightshoulder"
+                                                                  ? "2px"
+                                                                  : "initial",
+                                                              width:
+                                                                design.apparel
+                                                                  .side ===
+                                                                  "leftshoulder" ||
+                                                                design.apparel
+                                                                  .side ===
+                                                                  "rightshoulder"
+                                                                  ? "30%"
+                                                                  : "50%",
+                                                              height:
+                                                                design.apparel
+                                                                  .side ===
+                                                                  "leftshoulder" ||
+                                                                design.apparel
+                                                                  .side ===
+                                                                  "rightshoulder"
+                                                                  ? "30%"
+                                                                  : "50%",
+                                                            }}
+                                                          >
+                                                            <Image
+                                                              src={
+                                                                design.pngImage ||
+                                                                "/placeholder.svg"
+                                                              }
+                                                              alt={`Thumbnail ${
+                                                                index + 1
+                                                              }`}
+                                                              fill
+                                                              sizes="100%"
+                                                              className="rounded-md"
+                                                              style={{
+                                                                objectFit:
+                                                                  "contain",
+                                                              }}
+                                                              onClick={() =>
+                                                                handleDesignClick(
+                                                                  designItem.designState,
+                                                                  designItem.propsState,
+                                                                  designItem.id
+                                                                )
+                                                              }
+                                                            />
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                      <span className="text-xs text-gray-600">
+                                                        Side:{" "}
+                                                        {capitalizeFirstLetter(
+                                                          design.apparel.side
+                                                        )}
+                                                      </span>
                                                     </div>
-                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                      <div
-                                                        className="relative translate-y-[-10%]"
-                                                        style={{
-                                                          top:
-                                                            design.apparel.side ===
-                                                            "leftshoulder"
-                                                              ? "12px"
-                                                              : design.apparel
-                                                                  .side ===
-                                                                "rightshoulder"
-                                                              ? "12px"
-                                                              : "initial",
-                                                          left:
-                                                            design.apparel.side ===
-                                                            "leftshoulder"
-                                                              ? "-3px"
-                                                              : design.apparel
-                                                                  .side ===
-                                                                "rightshoulder"
-                                                              ? "2px"
-                                                              : "initial",
-                                                          width:
-                                                            design.apparel.side ===
-                                                              "leftshoulder" ||
-                                                            design.apparel.side ===
-                                                              "rightshoulder"
-                                                              ? "30%"
-                                                              : "50%",
-                                                          height:
-                                                            design.apparel.side ===
-                                                              "leftshoulder" ||
-                                                            design.apparel.side ===
-                                                              "rightshoulder"
-                                                              ? "30%"
-                                                              : "50%",
-                                                        }}
-                                                      >
+                                                  )
+                                                )
+                                              : standardSides.map(
+                                                  (side, index) => (
+                                                    <div
+                                                      key={index}
+                                                      className="flex flex-col items-center"
+                                                    >
+                                                      <div className="relative w-24 h-28 mb-2">
                                                         <Image
                                                           src={
-                                                            design.pngImage ||
+                                                            side.url ||
                                                             "/placeholder.svg"
                                                           }
-                                                          alt={`Thumbnail ${
-                                                            index + 1
-                                                          }`}
+                                                          alt={`Side: ${side.side}`}
                                                           fill
                                                           sizes="100%"
-                                                          className="rounded-md"
-                                                          style={{
-                                                            objectFit: "contain",
-                                                          }}
-                                                          onClick={() =>
-                                                            handleDesignClick(
-                                                              designItem.designState,
-                                                              designItem.propsState,
-                                                              designItem.id
-                                                            )
-                                                          }
+                                                          className="object-cover rounded-md"
                                                         />
                                                       </div>
+                                                      <span className="text-xs text-gray-600">
+                                                        Side:{" "}
+                                                        {capitalizeFirstLetter(
+                                                          side.side
+                                                        )}
+                                                      </span>
                                                     </div>
-                                                  </div>
-                                                  <span className="text-xs text-gray-600">
-                                                    Side: {capitalizeFirstLetter(design.apparel.side)}
-                                                  </span>
-                                                </div>
-                                              ))
-                                            ) : (
-                                              standardSides.map((side, index) => (
-                                                <div
-                                                  key={index}
-                                                  className="flex flex-col items-center"
-                                                >
-                                                  <div className="relative w-24 h-28 mb-2">
-                                                    <Image
-                                                      src={side.url || "/placeholder.svg"}
-                                                      alt={`Side: ${side.side}`}
-                                                      fill
-                                                      sizes="100%"
-                                                      className="object-cover rounded-md"
-                                                    />
-                                                  </div>
-                                                  <span className="text-xs text-gray-600">
-                                                    Side: {capitalizeFirstLetter(side.side)}
-                                                  </span>
-                                                </div>
-                                              ))
-                                            )}
+                                                  )
+                                                )}
                                           </div>
                                         </div>
                                       )}
@@ -819,7 +942,7 @@ const Navbar: React.FC = () => {
               <div className="flex flex-col space-y-2">
                 {!email ? (
                   <Link
-                    href="./auth"
+                    href="/auth"
                     className="mx-3 px-4 py-2 text-sm font-medium text-gray-700 rounded-md text-left hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
                     onClick={closeAllMenus}
                   >
@@ -830,10 +953,10 @@ const Navbar: React.FC = () => {
                   <>
                     <div className="flex items-center space-x-2 mx-3 px-4 py-2 text-sm text-gray-700">
                       <FaUserCircle className="text-xl text-gray-700" />
-                      <span className="truncate">{username || email}</span>
+                      <span className="truncate">{firstName || email}</span>
                     </div>
 
-                    {customerToken && (
+                    {isLogin && (
                       <>
                         <button
                           onClick={handleMobileWishlistClick}

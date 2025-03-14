@@ -2,7 +2,17 @@
 
 import type React from "react";
 import { useState, useEffect, useCallback } from "react";
-import { X, Minus, Plus, ShoppingCart, Pencil, Heart, AlertCircle, Check, BadgePercent } from "lucide-react";
+import {
+  X,
+  Minus,
+  Plus,
+  ShoppingCart,
+  Pencil,
+  Heart,
+  AlertCircle,
+  Check,
+  BadgePercent,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useNewCart } from "../hooks/useNewCart";
@@ -70,7 +80,10 @@ const DEFAULT_COLORS: Color[] = [
   { hex: "#000080", name: "Navy" }, // Added for your payload
 ];
 
-const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose }) => {
+const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
+  product,
+  onClose,
+}) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
@@ -87,7 +100,11 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
 
   const router = useRouter();
-  const { addDesignToCart, addStandardProductToCart, loading: cartLoading } = useNewCart();
+  const {
+    addDesignToCart,
+    addStandardProductToCart,
+    loading: cartLoading,
+  } = useNewCart();
 
   const defaultSizes = ["S", "M", "L", "XL", "2XL"];
 
@@ -101,20 +118,31 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
       setSelectedVariant(null);
     } else {
       const fetchedVariants = product.Stock?.StockVariants || [];
-      const availableVariants = fetchedVariants.filter((v) => v.availableQuantity > 0);
+      const availableVariants = fetchedVariants.filter(
+        (v) => v.availableQuantity > 0
+      );
       setVariants(availableVariants);
 
-      const sizes = [...new Set(availableVariants.map((v: Variant) => v.size))].sort((a, b) => {
+      const sizes = [
+        ...new Set(availableVariants.map((v: Variant) => v.size)),
+      ].sort((a, b) => {
         const sizeOrder = { S: 1, M: 2, L: 3, XL: 4, "2XL": 5 };
-        return (sizeOrder[a as keyof typeof sizeOrder] || 99) - (sizeOrder[b as keyof typeof sizeOrder] || 99);
+        return (
+          (sizeOrder[a as keyof typeof sizeOrder] || 99) -
+          (sizeOrder[b as keyof typeof sizeOrder] || 99)
+        );
       });
 
-      const colors = [...new Set(availableVariants.filter((v: Variant) => v.color).map((v: Variant) => v.color))].map(
-        (color: string) => ({
-          hex: getHexFromColorName(color),
-          name: color,
-        })
-      );
+      const colors = [
+        ...new Set(
+          availableVariants
+            .filter((v: Variant) => v.color)
+            .map((v: Variant) => v.color)
+        ),
+      ].map((color: string) => ({
+        hex: getHexFromColorName(color),
+        name: color,
+      }));
 
       setAvailableSizes(sizes);
       setAvailableColors(colors);
@@ -135,14 +163,19 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
       return;
     }
 
-    const colorName = availableColors.find((c) => c.hex === selectedColor)?.name;
+    const colorName = availableColors.find(
+      (c) => c.hex === selectedColor
+    )?.name;
     if (!colorName) {
       setSelectedVariant(null);
       return;
     }
 
     const matchingVariant = variants.find(
-      (v) => v.size === selectedSize && v.color === colorName && v.availableQuantity > 0
+      (v) =>
+        v.size === selectedSize &&
+        v.color === colorName &&
+        v.availableQuantity > 0
     );
 
     if (matchingVariant) {
@@ -154,28 +187,49 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
       setSelectedSize("");
       setSelectedColor("");
     }
-  }, [selectedSize, selectedColor, variants, availableColors, product.customizable]);
+  }, [
+    selectedSize,
+    selectedColor,
+    variants,
+    availableColors,
+    product.customizable,
+  ]);
 
   const getAvailableColorsForSize = (size: string): Color[] => {
     if (!size || product.customizable) return availableColors;
-    const relevantVariants = variants.filter((v) => v.size === size && v.availableQuantity > 0);
-    const availableColorNames = [...new Set(relevantVariants.map((v) => v.color))];
-    return availableColors.filter((color) => availableColorNames.includes(color.name));
+    const relevantVariants = variants.filter(
+      (v) => v.size === size && v.availableQuantity > 0
+    );
+    const availableColorNames = [
+      ...new Set(relevantVariants.map((v) => v.color)),
+    ];
+    return availableColors.filter((color) =>
+      availableColorNames.includes(color.name)
+    );
   };
 
   const getAvailableSizesForColor = (colorHex: string): string[] => {
     if (!colorHex || product.customizable) return availableSizes;
     const colorName = availableColors.find((c) => c.hex === colorHex)?.name;
     if (!colorName) return availableSizes;
-    const relevantVariants = variants.filter((v) => v.color === colorName && v.availableQuantity > 0);
+    const relevantVariants = variants.filter(
+      (v) => v.color === colorName && v.availableQuantity > 0
+    );
     return [...new Set(relevantVariants.map((v) => v.size))].sort((a, b) => {
       const sizeOrder = { S: 1, M: 2, L: 3, XL: 4, "2XL": 5 };
-      return (sizeOrder[a as keyof typeof sizeOrder] || 99) - (sizeOrder[b as keyof typeof sizeOrder] || 99);
+      return (
+        (sizeOrder[a as keyof typeof sizeOrder] || 99) -
+        (sizeOrder[b as keyof typeof sizeOrder] || 99)
+      );
     });
   };
 
-  const availableColorsForSize = hoveredSize ? getAvailableColorsForSize(hoveredSize) : getAvailableColorsForSize(selectedSize);
-  const availableSizesForColor = hoveredColor ? getAvailableSizesForColor(hoveredColor) : getAvailableSizesForColor(selectedColor);
+  const availableColorsForSize = hoveredSize
+    ? getAvailableColorsForSize(hoveredSize)
+    : getAvailableColorsForSize(selectedSize);
+  const availableSizesForColor = hoveredColor
+    ? getAvailableSizesForColor(hoveredColor)
+    : getAvailableSizesForColor(selectedColor);
 
   const handleSizeChange = (size: string) => {
     if (size === selectedSize) {
@@ -183,7 +237,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     } else {
       setSelectedSize(size);
       const colorsForNewSize = getAvailableColorsForSize(size);
-      if (selectedColor && !colorsForNewSize.some((c) => c.hex === selectedColor)) {
+      if (
+        selectedColor &&
+        !colorsForNewSize.some((c) => c.hex === selectedColor)
+      ) {
         setSelectedColor("");
       }
     }
@@ -232,18 +289,20 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
           designState,
           propState,
           product.id,
-          quantity,      // Added
-          selectedSize,  // Added
-          selectedColor  // Added
+          quantity, // Added
+          selectedSize, // Added
+          selectedColor // Added
         );
-        if (!success) throw new Error("Failed to add designable product to cart");
+        if (!success)
+          throw new Error("Failed to add designable product to cart");
       } else {
         if (!selectedSize || !selectedColor || !selectedVariant) {
           setError("Please select a valid size and color combination");
           return;
         }
 
-        const colorName = availableColors.find((c) => c.hex === selectedColor)?.name || "";
+        const colorName =
+          availableColors.find((c) => c.hex === selectedColor)?.name || "";
 
         console.log("Adding standard product:", {
           productId: product.id,
@@ -274,8 +333,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
 
   const handleCustomize = () => {
     if (product.customizable && product.designstate && product.propstate) {
-      localStorage.setItem("savedDesignState", JSON.stringify(product.designstate));
-      localStorage.setItem("savedPropsState", JSON.stringify(product.propstate));
+      localStorage.setItem(
+        "savedDesignState",
+        JSON.stringify(product.designstate)
+      );
+      localStorage.setItem(
+        "savedPropsState",
+        JSON.stringify(product.propstate)
+      );
       localStorage.setItem("product_id", product.id);
       router.push("/dashboard");
     }
@@ -283,13 +348,17 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
 
   const getDesignForSide = (side: string) => {
     if (!product.designs || product.designs.length === 0) return null;
-    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    const design = product.designs.find(
+      (d) => d.apparel && d.apparel.side === side
+    );
     return design;
   };
 
   const getImageUrlFromDesigns = (side: string) => {
     if (!product.designs || product.designs.length === 0) return null;
-    const design = product.designs.find((d) => d.apparel && d.apparel.side === side);
+    const design = product.designs.find(
+      (d) => d.apparel && d.apparel.side === side
+    );
     return design?.apparel?.url || null;
   };
 
@@ -360,18 +429,12 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
 
   const fetchWishlist = useCallback(async () => {
     try {
-      const token = sessionStorage.getItem("auth_token");
-      if (!token) {
-        setIsInWishlist(false);
-        return;
-      }
-
       const response = await fetch("http://localhost:5000/api/wishlists", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -403,11 +466,6 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     setError(null);
 
     try {
-      const token = sessionStorage.getItem("auth_token");
-      if (!token) {
-        throw new Error("User not authenticated");
-      }
-
       const isCurrentlyInWishlist = isInWishlist;
       setIsInWishlist(!isCurrentlyInWishlist);
 
@@ -417,14 +475,17 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
         ? { product_id: product.id, standard_product_id: null }
         : { product_id: null, standard_product_id: product.id };
 
-      const response = await fetch(`http://localhost:5000/api/wishlists${endpoint}`, {
-        method: isCurrentlyInWishlist ? "DELETE" : "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
+      const response = await fetch(
+        `http://localhost:5000/api/wishlists${endpoint}`,
+        {
+          method: isCurrentlyInWishlist ? "DELETE" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(requestBody),
+        }
+      );
 
       const data = await response.json();
 
@@ -443,7 +504,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
     }
   };
 
-  const originalPrice = product.sale && product.discount ? product.price * (1 + product.discount / 100) : null;
+  const originalPrice =
+    product.sale && product.discount
+      ? product.price * (1 + product.discount / 100)
+      : null;
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 transition-opacity duration-300">
@@ -458,7 +522,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                 objectFit="cover"
                 className="transition-transform duration-300 hover:scale-105"
                 style={{
-                  backgroundColor: product.customizable ? selectedColor : undefined,
+                  backgroundColor: product.customizable
+                    ? selectedColor
+                    : undefined,
                 }}
               />
               {product.sale && product.discount && (
@@ -518,7 +584,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                     layout="fill"
                     objectFit="cover"
                     style={{
-                      backgroundColor: product.customizable ? selectedColor : undefined,
+                      backgroundColor: product.customizable
+                        ? selectedColor
+                        : undefined,
                     }}
                   />
                   {product.customizable && product.designs && (
@@ -563,12 +631,22 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
           <div className="md:w-1/2 p-8 flex flex-col bg-white">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <h2 className="text-3xl font-bold text-black mb-2">{product.title || "Product Name"}</h2>
+                <h2 className="text-3xl font-bold text-black mb-2">
+                  {product.title || "Product Name"}
+                </h2>
                 <div className="flex items-baseline gap-2">
-                  <p className={`text-2xl font-semibold ${product.sale ? "text-red-600" : "text-black"}`}>
+                  <p
+                    className={`text-2xl font-semibold ${
+                      product.sale ? "text-red-600" : "text-black"
+                    }`}
+                  >
                     ${product.price?.toFixed(2) || "0.00"}
                   </p>
-                  {originalPrice && <p className="text-lg text-gray-500 line-through">${originalPrice.toFixed(2)}</p>}
+                  {originalPrice && (
+                    <p className="text-lg text-gray-500 line-through">
+                      ${originalPrice.toFixed(2)}
+                    </p>
+                  )}
                 </div>
               </div>
               <button
@@ -618,7 +696,9 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   <h3 className="font-medium text-black mb-3">Select Size</h3>
                   <div className="flex flex-wrap gap-2">
                     {availableSizes.map((size) => {
-                      const isAvailable = hoveredColor ? availableSizesForColor.includes(size) : true;
+                      const isAvailable = hoveredColor
+                        ? availableSizesForColor.includes(size)
+                        : true;
                       const isSelected = selectedSize === size;
                       return (
                         <button
@@ -653,7 +733,11 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   <h3 className="font-medium text-black mb-3">Select Color</h3>
                   <div className="flex flex-wrap gap-3">
                     {availableColors.map((color) => {
-                      const isAvailable = hoveredSize ? availableColorsForSize.some((c) => c.hex === color.hex) : true;
+                      const isAvailable = hoveredSize
+                        ? availableColorsForSize.some(
+                            (c) => c.hex === color.hex
+                          )
+                        : true;
                       const isSelected = selectedColor === color.hex;
                       return (
                         <button
@@ -668,9 +752,14 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                             }`}
                           style={{
                             backgroundColor: color.hex,
-                            border: color.hex === "#FFFFFF" ? "1px solid #ddd" : "none",
+                            border:
+                              color.hex === "#FFFFFF"
+                                ? "1px solid #ddd"
+                                : "none",
                           }}
-                          onClick={() => isAvailable && handleColorChange(color.hex)}
+                          onClick={() =>
+                            isAvailable && handleColorChange(color.hex)
+                          }
                           onMouseEnter={() => setHoveredColor(color.hex)}
                           onMouseLeave={() => setHoveredColor("")}
                           title={color.name}
@@ -695,11 +784,19 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                 >
                   <Minus className="w-5 h-5" />
                 </button>
-                <span className="text-black mx-6 font-semibold text-lg">{quantity}</span>
+                <span className="text-black mx-6 font-semibold text-lg">
+                  {quantity}
+                </span>
                 <button
                   className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
                   onClick={() => handleQuantityChange(1)}
-                  disabled={isLoading || !!(selectedVariant && quantity >= selectedVariant.availableQuantity)}
+                  disabled={
+                    isLoading ||
+                    !!(
+                      selectedVariant &&
+                      quantity >= selectedVariant.availableQuantity
+                    )
+                  }
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -711,7 +808,10 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   hover:bg-gray-900 transition-all duration-300 flex items-center justify-center
                   shadow-lg hover:shadow-xl disabled:bg-gray-500 disabled:cursor-not-allowed"
                 onClick={handleAddToCart}
-                disabled={isLoading || (!product.customizable && (!selectedSize || !selectedColor))}
+                disabled={
+                  isLoading ||
+                  (!product.customizable && (!selectedSize || !selectedColor))
+                }
               >
                 {isLoading ? (
                   "Adding..."
@@ -747,7 +847,11 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClos
                   "Updating..."
                 ) : (
                   <>
-                    <Heart className={`w-5 h-5 mr-2 ${isInWishlist ? "fill-white" : "fill-none"}`} />
+                    <Heart
+                      className={`w-5 h-5 mr-2 ${
+                        isInWishlist ? "fill-white" : "fill-none"
+                      }`}
+                    />
                     {isInWishlist ? "Remove from Wishlist" : "Add to Wishlist"}
                   </>
                 )}

@@ -1,40 +1,35 @@
-
 'use client';
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { NEXT_PUBLIC_API_URL } from '@/constants/constants';
 
 interface UserContextType {
-  username: string | null;
+  firstName: string | null;
   email: string | null;
-  customerToken: string | null;
-  profile: string | null;
-  setUser: (username: string | null, email: string | null, profile_photo: string | null, token?: string | null) => void; 
-  logout: () => void;  
-  isLogin: boolean; 
+  profilePhoto: string | null;
+  isLogin: boolean;
+  setUser: (userData: { firstName: string | null; email: string | null; profilePhoto: string | null }) => void;
   setIsLogin: (status: boolean) => void;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [username, setUsername] = useState<string | null>(null);
-  const [email, setEmail] = useState<string | null>(null); 
-  const [customerToken, setCustomerToken] = useState<string | null>(null); 
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [email, setEmail] = useState<string | null>(null);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [isLogin, setIsLogin] = useState<boolean>(false);
-  const [responseData, setResponseData] = useState<string | null>(null);
-  const [ profile, setProfilePhoto] = useState<string | null>(null);
+
   useEffect(() => {
-    const storedUsername = sessionStorage.getItem('username');
+    const storedFirstName = sessionStorage.getItem('firstName');
     const storedEmail = sessionStorage.getItem('email');
-    const storedToken = sessionStorage.getItem('auth_token');
+    const storedProfilePhoto = sessionStorage.getItem('profilePhoto');
 
-    if (storedUsername && storedEmail) {
-      setUsername(storedUsername);
+    if (storedFirstName && storedEmail) {
+      setFirstName(storedFirstName);
       setEmail(storedEmail);
-    }
-
-    if (storedToken) {
-      setCustomerToken(storedToken); 
-      setIsLogin(true); 
+      setProfilePhoto(storedProfilePhoto || null);
+      setIsLogin(true); // If user data exists, assume logged in
     }
 
     const removeCustomerId = () => {
@@ -48,39 +43,56 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const setUser = (username: string | null, email: string | null, profile_photo?: string | null, token?: string | null) => {
-    setUsername(username);
+  const setUser = (userData: { firstName: string | null; email: string | null; profilePhoto: string | null }) => {
+    const { firstName, email, profilePhoto } = userData;
+
+    setFirstName(firstName);
     setEmail(email);
-    if (token) {
-      setCustomerToken(token); 
-      sessionStorage.setItem('auth_token', token);
-    } else {
-      setCustomerToken(null); 
-      sessionStorage.removeItem('auth_token'); 
-    }
+    setProfilePhoto(profilePhoto || null);
 
-    if (profile_photo) {
-      sessionStorage.setItem('profile', profile_photo)
-      setProfilePhoto(profile_photo); 
-    } else {
-      setProfilePhoto(null); 
-    }
-
-    if (username && email) {
-      sessionStorage.setItem('username', username);
+    if (firstName && email) {
+      sessionStorage.setItem('firstName', firstName);
       sessionStorage.setItem('email', email);
+      if (profilePhoto) {
+        sessionStorage.setItem('profilePhoto', profilePhoto);
+      } else {
+        sessionStorage.removeItem('profilePhoto');
+      }
     } else {
-      sessionStorage.removeItem('username');
+      sessionStorage.removeItem('firstName');
       sessionStorage.removeItem('email');
+      sessionStorage.removeItem('profilePhoto');
     }
   };
 
-  const logout = () => {
-    setUser(null, null); 
+  const logout = async () => {
+    try {
+      // Call the backend logout endpoint
+      const url = NEXT_PUBLIC_API_URL;
+      const response = await fetch(`${url}/api/customer/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // Include cookies for auth_token
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to logout');
+      }
+
+      // Clear context and sessionStorage
+      setUser({ firstName: null, email: null, profilePhoto: null });
+      setIsLogin(false);
+      sessionStorage.removeItem('customerId');
+      sessionStorage.removeItem('customerEmail');
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
   };
 
   return (
-    <UserContext.Provider value={{ username, email, customerToken, profile, setUser, logout, isLogin, setIsLogin }}>
+    <UserContext.Provider value={{ firstName, email, profilePhoto, isLogin, setUser, setIsLogin, logout }}>
       {children}
     </UserContext.Provider>
   );
@@ -93,5 +105,3 @@ export const useUserContext = () => {
   }
   return context;
 };
-
-

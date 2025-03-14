@@ -1,16 +1,18 @@
 const express = require("express");
 const multer = require("multer");
 const {
-  getAllCustomers,
-  createCustomer,
-  LoginCustomer,
-  getCustomerDetails,
-  getCustomerByEmail,
-  customerByVendorId,
+  signup,
+  login,
   logout,
-  getLoggedInCustomer,
+  getCurrentUser,
+  getUsers,
+  getCustomerDetails,
+  customerByVendorId,
+  getAllCustomers,
+  getCustomerByEmail,
   updateCustomerDetails,
 } = require("../controllers/customer.controller");
+const authMiddleware = require('../middleware/AuthMiddleware');
 const router = express.Router();
 const upload = multer(); // Initialize Multer for parsing form-data
 
@@ -18,7 +20,7 @@ const upload = multer(); // Initialize Multer for parsing form-data
  * @swagger
  * /api/customer/signup:
  *   post:
- *     summary: Create a new customer
+ *     summary: Customer signup
  *     tags: [Customers]
  *     requestBody:
  *       required: true
@@ -26,61 +28,187 @@ const upload = multer(); // Initialize Multer for parsing form-data
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - first_name
+ *               - last_name
+ *               - password
+ *               - phone
  *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: johndoe@example.com
  *               first_name:
  *                 type: string
- *                 description: First name of the customer
  *                 example: John
  *               last_name:
  *                 type: string
- *                 description: Last name of the customer
  *                 example: Doe
+ *               password:
+ *                 type: string
+ *                 format: password
+ *                 example: securePassword123
  *               phone:
- *                 type: number
- *                 description: Phone number of the customer
- *                 example: 9908798484
+ *                 type: string
+ *                 example: "9908798484"
+ *               vendor_id:
+ *                 type: string
+ *                 example: vendor_123
+ *     responses:
+ *       201:
+ *         description: Customer created successfully, token set in cookie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Customer'
+ *       400:
+ *         description: Invalid input
+ */
+router.post("/signup", signup);
+
+/**
+ * @swagger
+ * /api/customer/login:
+ *   post:
+ *     summary: Customer login
+ *     tags: [Customers]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
  *               email:
  *                 type: string
- *                 description: Email of the customer
+ *                 format: email
  *                 example: johndoe@example.com
  *               password:
  *                 type: string
- *                 description: Password for the customer account
+ *                 format: password
  *                 example: securePassword123
- *               vendor_id:
- *                 type: string
- *                 description: Vendor ID associated with the customer
  *     responses:
- *       201:
- *         description: Customer created successfully
+ *       200:
+ *         description: Login successful, token set in cookie
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 id:
+ *                 message:
  *                   type: string
- *                   description: ID of the created customer
- *                   example: customer_12345
- *                 first_name:
- *                   type: string
- *                   description: First name of the created customer
- *                   example: John
- *                 last_name:
- *                   type: string
- *                   description: Last name of the created customer
- *                   example: Doe
- *                 email:
- *                   type: string
- *                   description: Email of the created customer
- *                   example: johndoe@example.com
- *                 vendor_id:
- *                   type: string
- *                   description: Vendor ID of the customer
- *       400:
- *         description: Invalid input data
+ *                   example: "Login successful"
+ *       401:
+ *         description: Invalid credentials
  */
-router.post("/signup", createCustomer);
+router.post("/login", login);
+
+/**
+ * @swagger
+ * /api/customer/me:
+ *   get:
+ *     summary: Get current authenticated customer
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current customer details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Customer'
+ *       401:
+ *         description: Unauthorized - Token required or invalid
+ *       404:
+ *         description: Customer not found
+ *       500:
+ *         description: Server error
+ */
+router.get("/me", authMiddleware, getCurrentUser);
+
+/**
+ * @swagger
+ * /api/customer/logout:
+ *   post:
+ *     summary: Customer logout
+ *     tags: [Customers]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful, cookie cleared
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Logout successful."
+ *       400:
+ *         description: Token is required for logout
+ *       500:
+ *         description: Server error
+ */
+router.post("/logout", authMiddleware, logout);
+
+/**
+ * @swagger
+ * /api/customer/users:
+ *   get:
+ *     summary: Fetch all customers with pagination
+ *     tags: [Customers]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *         example: 10
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *         description: Filter by role
+ *         example: customer
+ *     responses:
+ *       200:
+ *         description: List of customers
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Customer'
+ *                 total:
+ *                   type: integer
+ *                   example: 100
+ *                 page:
+ *                   type: integer
+ *                   example: 1
+ *                 total_pages:
+ *                   type: integer
+ *                   example: 10
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: No customers found
+ */
+router.get("/users", authMiddleware, getUsers);
 
 /**
  * @swagger
@@ -94,9 +222,17 @@ router.post("/signup", createCustomer);
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Customer'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 customers:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Customer'
+ *       500:
+ *         description: Server error
  */
 router.get("/", getAllCustomers);
 
@@ -113,6 +249,7 @@ router.get("/", getAllCustomers);
  *           type: string
  *         required: true
  *         description: ID of the customer to retrieve
+ *         example: customer_12345
  *     responses:
  *       200:
  *         description: Customer details retrieved successfully
@@ -127,46 +264,6 @@ router.get("/:id", getCustomerDetails);
 
 /**
  * @swagger
- * /api/customer/login:
- *   post:
- *     summary: Customer login
- *     tags: [Customers]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *                 description: Email of the customer
- *                 example: jayaramsai@gmail.com
- *               password:
- *                 type: string
- *                 description: Password for the customer account
- *                 example: securePassword123
- *     responses:
- *       200:
- *         description: Login successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 token:
- *                   type: string
- *                   description: JWT token for authenticated customer
- *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
- *                 customer:
- *                   $ref: '#/components/schemas/Customer'
- *       401:
- *         description: Invalid email or password
- */
-router.post("/login", LoginCustomer);
-
-/**
- * @swagger
  * /api/customer/vendor/{vendor_id}:
  *   get:
  *     summary: Retrieve customers by vendor ID
@@ -178,6 +275,7 @@ router.post("/login", LoginCustomer);
  *           type: string
  *         required: true
  *         description: Vendor ID to filter customers
+ *         example: vendor_123
  *     responses:
  *       200:
  *         description: List of customers retrieved successfully
@@ -190,7 +288,6 @@ router.post("/login", LoginCustomer);
  *       404:
  *         description: No customers found for the given vendor ID
  */
-
 router.get("/vendor/:vendor_id", customerByVendorId);
 
 /**
@@ -206,6 +303,7 @@ router.get("/vendor/:vendor_id", customerByVendorId);
  *           type: string
  *         required: true
  *         description: Email of the customer to retrieve
+ *         example: johndoe@example.com
  *     responses:
  *       200:
  *         description: Customer details retrieved successfully
@@ -220,24 +318,6 @@ router.get("/:email", getCustomerByEmail);
 
 /**
  * @swagger
- * /api/customer/logout:
- *   post:
- *     summary: Customer logout
- *     tags: [Auth]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Logout successful
- *       400:
- *         description: Token is required for logout
- *       500:
- *         description: Server error
- */
-router.post("/logout", logout);
-
-/**
- * @swagger
  * /api/customer/{id}:
  *   put:
  *     summary: Update customer details
@@ -249,6 +329,7 @@ router.post("/logout", logout);
  *           type: string
  *         required: true
  *         description: ID of the customer to update
+ *         example: customer_12345
  *     requestBody:
  *       required: true
  *       content:
@@ -271,7 +352,15 @@ router.post("/logout", logout);
  *               phone:
  *                 type: string
  *                 description: Phone number of the customer
- *                 example: 9908798484
+ *                 example: "9908798484"
+ *               old_password:
+ *                 type: string
+ *                 description: Current password for verification
+ *                 example: oldPassword123
+ *               new_password:
+ *                 type: string
+ *                 description: New password to set
+ *                 example: newPassword123
  *               profile_photo:
  *                 type: string
  *                 format: binary
@@ -294,7 +383,6 @@ router.post("/logout", logout);
  *       404:
  *         description: Customer not found
  */
-
 router.put("/:id", upload.single("profile_photo"), updateCustomerDetails);
 
 module.exports = router;
