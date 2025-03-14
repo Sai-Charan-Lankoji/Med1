@@ -15,7 +15,7 @@ const Pagination = <T extends { [key: string]: any }>({
   totalItems,
   data,
 }: PaginationProps<T>) => {
-  const pageSize = 6;
+  const pageSize = 8;
 
   const pageCount = useMemo(() => {
     return Math.ceil(totalItems / pageSize);
@@ -50,7 +50,7 @@ const Pagination = <T extends { [key: string]: any }>({
     totalItems > 0 ? Math.min((currentPage + 1) * pageSize, totalItems) : 0;
 
   return (
-    <div className="flex justify-between items-center mt-4 text-black text-xs">
+    <div className="flex justify-between items-center mt-4 text-base-content text-xs">
       <div className="mr-4">
         Showing {start} - {end} of {totalItems} items
       </div>

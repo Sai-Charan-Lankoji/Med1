@@ -7,7 +7,7 @@ import { useGetOrder } from "@/app/hooks/orders/useGetOrder";
 import { BackButton } from "@/app/utils/backButton";
 import { FiMail } from "react-icons/fi";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
-import { ChevronDownMini, ChevronUpMini, User, Phone } from "@medusajs/icons";
+import {  User, Phone } from "@medusajs/icons";
 import { Container } from "@medusajs/ui";
 import { motion } from "framer-motion";
 

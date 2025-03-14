@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { useVendorLogout } from "../hooks/auth/useVendorLogout";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTheme } from "@/lib/themeContext";
 
 // Notification interface
 interface Notification {
@@ -23,18 +24,27 @@ interface Notification {
   updatedAt: string;
   deletedAt: string | null;
 }
-
+const daisyThemes = [
+  "light", "dark", "cupcake", "bumblebee", "emerald", "corporate", "synthwave",
+  "retro", "cyberpunk", "valentine", "halloween", "garden", "forest", "aqua",
+  "lofi", "pastel", "fantasy", "wireframe", "black", "luxury", "dracula",
+  "cmyk", "autumn", "business", "acid", "lemonade", "night", "coffee",
+  "winter", "dim", "nord", "sunset", "horizon", "twilight",
+];
 const Navbar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const { logout, loading } = useVendorLogout();
   const { email, contactName } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const vendorId = vendor_id; // Replace with dynamic ID from auth context
+  const { theme, setTheme } = useTheme();
+  const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
+
+  const vendorId = vendor_id;
 
   // WebSocket setup
   useEffect(() => {
@@ -111,200 +121,261 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Navbar */}
-      <nav className="navbar bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50 text-black shadow-md border-b border-gray-300">
+      {/* Modern DaisyUI Navbar */}
+      <div className="navbar bg-base-100 shadow-md border-b border-base-300">
+        {/* Navbar start - Brand/Logo section */}
         <div className="navbar-start">
-          {/* Left side content, e.g., logo */}
-          <div className="flex items-center space-x-4">{/* Add logo or links here if needed */}</div>
+          <div className="flex items-center">
+            {/* You can add your logo here */}
+            <Link href="/dashboard" className="btn btn-ghost normal-case text-xl text-primary">
+              VendorPortal
+            </Link>
+          </div>
         </div>
-        <div className="navbar-end">
-          <div className="flex items-center space-x-4">
-            {/* User Details Dropdown */}
-            <div className="dropdown dropdown-end">
-              <label
-                tabIndex={0}
-                className={`btn btn-ghost flex items-center space-x-3 ${isCollapsed ? "p-0 w-10 h-10" : "p-2 justify-start"}`}
-              >
-                <div className="avatar">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-white font-medium">{contactName?.slice(0, 1).toUpperCase()}</span>
-                  </div>
-                </div>
-                {!isCollapsed && (
-                  <div className="flex flex-col items-start">
-                    <span className="text-sm font-medium text-gray-900">{contactName}</span>
-                    <span className="text-xs text-gray-500 truncate max-w-[150px]">{email}</span>
-                  </div>
-                )}
-              </label>
-              <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-56">
-                <li>
-                  <Link href="/vendor/settings" className="flex items-center">
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Settings</span>
-                  </Link>
-                </li>
-                <li className="divider"></li>
-                <li>
-                  <button
-                    onClick={handleLogout}
-                    disabled={loading}
-                    className="text-red-600 hover:text-red-700 flex items-center"
-                  >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>{loading ? "Logging out..." : "Logout"}</span>
-                  </button>
-                </li>
-              </ul>
+
+        {/* Navbar center - can be used for navigation links */}
+        <div className="navbar-center hidden lg:flex">
+          {/* Add navigation links here if needed */}
+        </div>
+
+        {/* Navbar end - profile and notification elements */}
+        <div className="navbar-end gap-2">
+
+        <select
+          value={theme}
+          onChange={(e) => setTheme(e.target.value)}
+          className="select select-info w-40 capitalize"
+        >
+          <option disabled>Pick a Theme</option>
+          {daisyThemes.map((themeName) => (
+            <option key={themeName} value={themeName}>
+              {themeName}
+            </option>
+          ))}
+        </select>
+          {/* Help/Support button */}
+          <label htmlFor="support-modal" className="btn btn-ghost btn-circle">
+            <div className="indicator">
+              <HelpCircle className="h-5 w-5" />
             </div>
+          </label>
 
-            {/* Support Modal Trigger */}
-            <label htmlFor="support-modal" className="btn btn-ghost p-2">
-              <HelpCircle className="w-6 h-6" />
-            </label>
-
-            {/* Notifications Dropdown */}
-            <div className="dropdown dropdown-end">
-              <label tabIndex={0} className="btn btn-ghost p-2 relative">
-                <Bell className="w-5 h-5" />
+          {/* Notifications dropdown */}
+          <div className="dropdown dropdown-end">
+            <label tabIndex={0} className="btn btn-ghost btn-circle">
+              <div className="indicator">
+                <Bell className="h-5 w-5" />
                 {activeNotificationCount > 0 && (
-                  <span className="badge badge-error absolute -top-1 -right-1 animate-pulse">{activeNotificationCount}</span>
+                  <span className="badge badge-primary badge-sm indicator-item">{activeNotificationCount}</span>
                 )}
-              </label>
-              <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-80 max-h-96 overflow-y-auto">
+              </div>
+            </label>
+            <div tabIndex={0} className="dropdown-content z-[1] card card-compact shadow bg-base-100 w-80 max-h-96 overflow-y-auto">
+              <div className="card-body">
+                <h3 className="card-title font-medium text-base-content">Notifications</h3>
+                <div className="divider my-0"></div>
+                
                 {notifications.length === 0 ? (
-                  <li className="p-4 text-center">
-                    <div className="bg-blue-50 p-4 rounded-full inline-block mb-4">
-                      <Bell className="h-8 w-8 text-blue-400" />
+                  <div className="flex flex-col items-center py-4">
+                    <div className="bg-base-200 p-4 rounded-full mb-2">
+                      <Bell className="h-6 w-6 text-primary" />
                     </div>
-                    <p className="font-medium">You're all caught up!</p>
-                    <p className="text-sm text-gray-500">No new notifications at this time.</p>
-                  </li>
+                    <span className="font-medium">You're all caught up!</span>
+                    <p className="text-sm text-base-content/70">No new notifications at this time.</p>
+                  </div>
                 ) : (
-                  notifications.map((notification) => {
-                    const amountMatch = notification.message.match(/\$(\d+\.\d{2})/);
-                    const amount = amountMatch ? amountMatch[0] : null;
-                    const dateMatch = notification.message.match(/on\s+([A-Za-z]+\s+[A-Za-z]+\s+\d{2}\s+\d{4})/);
-                    const dueDate = dateMatch ? dateMatch[1] : null;
+                  <div className="space-y-2">
+                    {notifications.map((notification) => {
+                      const amountMatch = notification.message.match(/\$(\d+\.\d{2})/);
+                      const amount = amountMatch ? amountMatch[0] : null;
+                      const dateMatch = notification.message.match(/on\s+([A-Za-z]+\s+[A-Za-z]+\s+\d{2}\s+\d{4})/);
+                      const dueDate = dateMatch ? dateMatch[1] : null;
 
-                    return (
-                      <li key={notification.id} className="p-2">
+                      return (
                         <motion.div
+                          key={notification.id}
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.3 }}
-                          className={`rounded-lg border p-3 ${
-                            notification.status === "active" ? "bg-blue-50 border-blue-100" : "bg-gray-50 border-gray-100"
-                          }`}
+                          className={`card ${
+                            notification.status === "active" 
+                              ? "bg-primary/10 border border-primary/20" 
+                              : "bg-base-200"
+                          } shadow-sm`}
                         >
-                          <div className="flex gap-3">
-                            <div className="shrink-0 mt-1">
-                              {notification.status === "active" ? (
-                                <div className="bg-blue-100 p-2 rounded-full">
-                                  <Bell className="h-5 w-5 text-blue-500" />
+                          <div className="card-body p-3">
+                            <div className="flex gap-3">
+                              <div className="avatar">
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                  notification.status === "active" 
+                                    ? "bg-primary/20" 
+                                    : "bg-base-300"
+                                }`}>
+                                  <Bell className={`h-5 w-5 ${
+                                    notification.status === "active" 
+                                      ? "text-primary" 
+                                      : "text-base-content/50"
+                                  }`} />
                                 </div>
-                              ) : (
-                                <div className="bg-gray-200 p-2 rounded-full">
-                                  <Bell className="h-5 w-5 text-gray-500" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between mb-1">
-                                <p
-                                  className={`text-sm font-medium break-words ${
-                                    notification.status === "active" ? "text-gray-900" : "text-gray-500"
-                                  }`}
-                                >
-                                  {amount ? notification.message.replace(amount, "") : notification.message}
-                                </p>
-                                <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
-                                  {new Date(notification.sent_at).toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
-                                </span>
                               </div>
-                              {amount && <p className="text-sm font-semibold text-blue-600 mb-1">Amount: {amount}</p>}
-                              {dueDate && <p className="text-xs text-gray-700 mb-1">Due: {dueDate}</p>}
-                              <p className="text-xs text-gray-500 mb-2">
-                                {new Date(notification.sent_at).toLocaleDateString(undefined, {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </p>
-                              {notification.status === "active" && (
-                                <div className="flex gap-2 mt-2">
-                                  <button
-                                    onClick={() => handleIgnore(notification.id)}
-                                    className="btn btn-xs btn-ghost text-gray-700 border-gray-300 hover:bg-gray-50"
-                                  >
-                                    Dismiss
-                                  </button>
-                                  <button
-                                    onClick={() => handlePayNow(notification)}
-                                    className="btn btn-xs btn-primary text-white"
-                                  >
-                                    Pay Now
-                                  </button>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between gap-2">
+                                  <p className={`text-sm font-medium ${
+                                    notification.status === "active" 
+                                      ? "text-base-content" 
+                                      : "text-base-content/70"
+                                  }`}>
+                                    {amount ? notification.message.replace(amount, "") : notification.message}
+                                  </p>
+                                  <span className="text-xs text-base-content/50 whitespace-nowrap">
+                                    {new Date(notification.sent_at).toLocaleTimeString([], {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
+                                  </span>
                                 </div>
-                              )}
+                                
+                                {amount && <p className="text-sm font-semibold text-primary mt-1">Amount: {amount}</p>}
+                                {dueDate && <p className="text-xs text-base-content/70 mt-1">Due: {dueDate}</p>}
+                                
+                                <p className="text-xs text-base-content/50 mt-1">
+                                  {new Date(notification.sent_at).toLocaleDateString(undefined, {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </p>
+                                
+                                {notification.status === "active" && (
+                                  <div className="flex gap-2 mt-2">
+                                    <button
+                                      onClick={() => handleIgnore(notification.id)}
+                                      className="btn btn-xs btn-ghost"
+                                    >
+                                      Dismiss
+                                    </button>
+                                    <button
+                                      onClick={() => handlePayNow(notification)}
+                                      className="btn btn-xs btn-primary"
+                                    >
+                                      Pay Now
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </motion.div>
-                      </li>
-                    );
-                  })
+                      );
+                    })}
+                  </div>
                 )}
+                
                 {notifications.length > 5 && (
-                  <li className="p-2">
-                    <button className="btn btn-ghost w-full text-blue-600 hover:text-blue-700">
-                      View all notifications
-                    </button>
-                  </li>
+                  <>
+                    <div className="divider my-0"></div>
+                    <div className="card-actions">
+                      <button className="btn btn-ghost btn-sm text-primary btn-block">
+                        View all notifications
+                      </button>
+                    </div>
+                  </>
                 )}
-              </ul>
+              </div>
             </div>
           </div>
-        </div>
-      </nav>
 
-      {/* Support Modal */}
+          {/* User profile dropdown */}
+          <div className="dropdown dropdown-end">
+            <label tabIndex={0} className="btn btn-ghost">
+              <div className="flex items-center gap-2">
+              <div className="avatar avatar-placeholder">
+  <div className="bg-primary text-primary-content rounded-full w-8">
+    <span className="text-xs">{contactName?.slice(0, 1).toUpperCase()}</span>
+  </div>
+</div>
+                <div className="hidden md:flex flex-col items-start">
+                  <span className="text-sm font-medium">{contactName}</span>
+                  <span className="text-xs text-base-content/60 truncate max-w-[150px]">{email}</span>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </label>
+            <ul tabIndex={0} className="dropdown-content z-[1] menu menu-sm p-2 shadow bg-base-100 rounded-box w-52">
+              <li>
+                <Link href="/vendor/profile" className="text-base-content">
+                <div className="avatar avatar-online avatar-placeholder ">
+  <div className="bg-primary text-primary-content rounded-full w-8">
+    <span className="text-xs">{contactName?.slice(0, 1).toUpperCase()}</span>
+  </div>
+</div>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{contactName}</span>
+                    <span className="text-xs text-base-content/60 truncate max-w-[180px]">{email}</span>
+                  </div>
+                </Link>
+              </li>
+              <div className="divider my-0"></div>
+              <li>
+                <Link href="/vendor/settings" className="text-base-content">
+                  <Settings className="h-4 w-4" />
+                  <span>Settings</span>
+                </Link>
+              </li>
+              <div className="divider my-0"></div>
+              <li>
+                <button
+                  onClick={handleLogout}
+                  disabled={loading}
+                  className="text-error"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>{loading ? "Logging out..." : "Logout"}</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Support Modal - Using DaisyUI modal */}
       <input type="checkbox" id="support-modal" className="modal-toggle" />
       <div className="modal">
-        <div className="modal-box relative bg-white text-black">
-          <label className="btn btn-sm btn-circle absolute right-2 top-2" htmlFor="support-modal">
-            ✕
-          </label>
-          <h3 className="text-lg font-bold">Support</h3>
-          <p className="py-4 text-sm text-gray-600">How can we help? We usually respond in a few hours</p>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Subject</span>
-            </label>
-            <input
-              type="text"
-              placeholder="What is it about?"
-              className="input input-bordered w-full rounded-xl bg-transparent border-gray-500"
-            />
-          </div>
-          <div className="form-control">
-            <label className="label">
-              <span className="label-text font-medium">Message</span>
-            </label>
-            <textarea
-              className="textarea textarea-bordered h-24 rounded-xl bg-transparent border-gray-500 focus:ring-2 focus:ring-blue-500 focus:border-blue-800 transition-all duration-300"
-              placeholder="Write your message here..."
-            ></textarea>
-          </div>
-          <div className="modal-action">
-            <button className="btn btn-primary w-full rounded-xl bg-gray-700 hover:bg-gray-800 transition-colors">
-              Send Message
-            </button>
-          </div>
+        <div className="modal-box">
+          <form>
+            <h3 className="font-bold text-lg">Support</h3>
+            <p className="py-2 text-sm text-base-content/70">How can we help? We usually respond in a few hours</p>
+            
+            <div className="form-control w-full">
+              <label className="label">
+                <span className="label-text font-medium">Subject</span>
+              </label>
+              <input 
+                type="text" 
+                placeholder="What is it about?" 
+                className="input input-bordered w-full" 
+              />
+            </div>
+            
+            <div className="form-control w-full">
+              <label className="label">
+                <span className="label-text font-medium">Message</span>
+              </label>
+              <textarea 
+                className="textarea textarea-bordered h-24" 
+                placeholder="Write your message here..."
+              ></textarea>
+            </div>
+            
+            <div className="modal-action">
+              <label htmlFor="support-modal" className="btn btn-outline">Cancel</label>
+              <button type="submit" className="btn btn-primary">Send Message</button>
+            </div>
+          </form>
         </div>
+        <label className="modal-backdrop" htmlFor="support-modal"></label>
       </div>
     </>
   );

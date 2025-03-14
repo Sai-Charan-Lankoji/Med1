@@ -6,6 +6,7 @@ import NavBar from './navbar/page';
 import Sidebar from "./sidebar/page";
 import { usePathname } from "next/navigation";
 import { AuthProvider } from "./context/AuthContext";  
+import { ThemeProvider } from "@/lib/themeContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,9 +21,11 @@ export default function RootLayout({
   const showSidebar = isVendorPath;
 
   return (
-    <html lang="en" suppressHydrationWarning data-theme="light">
-      <body className={`${inter.className} bg-gray-100`}>
+    <html lang="en" suppressHydrationWarning data-theme="forest">
+      <body className={`${inter.className} bg-base-200 text-base-content`}>
+        
         <AuthProvider>
+        <ThemeProvider>
           <div className="flex h-screen">
             {showSidebar && <Sidebar />}
             <div className="flex flex-col flex-1">
@@ -32,7 +35,9 @@ export default function RootLayout({
               </main>
             </div>
           </div>
+          </ThemeProvider>
         </AuthProvider>
+        
       </body>
     </html>
   );

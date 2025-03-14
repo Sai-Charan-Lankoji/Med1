@@ -4,7 +4,7 @@ export const productFormSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(1, "Description is required"),
-    price: z.number().min(0, "Price must be a positive number"),
+    price: z.number().positive("Must be greater than 0").finite(),
     category: z.string().min(1, "Category is required"),
     sizes: z.array(z.string()).optional(),
     colors: z
