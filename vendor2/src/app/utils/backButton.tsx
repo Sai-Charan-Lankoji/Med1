@@ -3,19 +3,18 @@
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-export const BackButton = ({name}: any) => {
+export const BackButton = ({ name }: any) => {
   const router = useRouter();
+  
   return (
-    <div className="p-4 flex items-center  ">
+    <div className="p-4">
       <button
-        className="text-sm border border-gray-300 p-2 rounded-md hover:bg-gray-200  text-indigo-600 hover:text-indigo-800 transition-colors  font-semibold flex items-center"
+        className="btn btn-outline btn-sm gap-2 text-primary hover:bg-base-200"
         onClick={() => {
           router.back();
         }}
       >
-        <span className="mr-2">
-          <ArrowLeft />
-        </span>
+        <ArrowLeft size={16} />
         Back to {name}
       </button>
     </div>

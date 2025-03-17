@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useGetOrder } from "@/app/hooks/orders/useGetOrder";
@@ -8,7 +8,7 @@ import { BackButton } from "@/app/utils/backButton";
 import { FiMail } from "react-icons/fi";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
 import { User, Phone } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 const OrderDetailsView = () => {
   const { id } = useParams();
@@ -19,25 +19,25 @@ const OrderDetailsView = () => {
   const [selectedImageType, setSelectedImageType] = useState<
     Record<string, "apparel" | "uploaded">
   >({});
-  const [currentImageIndex, setCurrentImageIndex] = useState({});
-  const [showRawOrderData, setShowRawOrderData] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState<Record<string, number>>({});
 
-  const matchingCustomers = customers?.filter(
+  const matchingCustomer = customers?.find(
     (customer) => customer?.id === order?.customer_id
   );
   console.log("order", order);
+  console.log("matchingCustomer", matchingCustomer);
 
   if (isLoading) return <OrderDetailsSkeleton />;
   if (!order) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-500 text-lg">Order not found</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg text-base-content">Order not found</p>
       </div>
     );
   }
 
   const taxRate = 0.1;
-  const totalAmount = parseFloat(order.total_amount);
+  const totalAmount = parseFloat(order.total_amount || "0");
   const subtotalAmount = totalAmount / (1 + taxRate);
   const taxAmount = totalAmount - subtotalAmount;
 
@@ -54,77 +54,47 @@ const OrderDetailsView = () => {
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      completed: {
-        bg: "bg-green-400",
-        text: "text-black",
-        ring: "ring-green-400/30",
-        label: "Completed",
-      },
-      pending: {
-        bg: "bg-yellow-400",
-        text: "text-black",
-        ring: "ring-yellow-400/30",
-        label: "Pending",
-      },
-      cancelled: {
-        bg: "bg-red-400/70",
-        text: "text-black",
-        ring: "ring-red-400/30",
-        label: "Cancelled",
-      },
-      default: {
-        bg: "bg-blue-400",
-        text: "text-blue-200",
-        ring: "ring-white",
-        label: status,
-      },
+      completed: { bg: "bg-success", text: "text-success-content", label: "Completed" },
+      pending: { bg: "bg-warning", text: "text-warning-content", label: "Pending" },
+      cancelled: { bg: "bg-error", text: "text-error-content", label: "Cancelled" },
+      default: { bg: "bg-primary", text: "text-primary-content", label: status },
     };
 
     const config = statusConfig[status?.toLowerCase()] || statusConfig.default;
-
     return (
-      <span
-        className={`badge ${config.bg} ${config.text} ring-1 ring-inset ${config.ring} px-3 py-1.5 text-xs font-medium`}
-      >
+      <span className={`badge ${config.bg} ${config.text} px-3 py-1.5 text-xs font-medium`}>
         {config.label}
       </span>
     );
   };
 
   return (
-    <div className="relative min-h-screen overflow-auto">
-      <div className="relative z-10 min-h-screen p-4 md:p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header Section */}
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center space-y-2 mb-8"
-          >
-            <BackButton
-              name="Orders"
-              className="mb-4 text-black hover:text-black transition-colors"
-            />
-            <h1 className="text-3xl md:text-4xl font-bold text-black">
-              Ordered Details
-            </h1>
-            <p className="text-sm text-black text-start">
-              Order ID: {order.id}
-            </p>
-            <div className="mt-4 text-start text-black">
-              <p>Status: {getStatusBadge(order.status)}</p>
-            </div>
-          </motion.div>
+    <div className="min-h-screen p-4 md:p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-8"
+        >
+          <BackButton name="Orders" className="btn btn-ghost mb-4 text-base-content hover:bg-base-200" />
+          <h1 className="text-3xl font-bold text-base-content">Order Details</h1>
+          <p className="text-sm text-base-content/70">Order ID: {order.id}</p>
+          <div className="mt-4">
+            <p>Status: {getStatusBadge(order.status)}</p>
+          </div>
+        </motion.div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content - Left Side */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="lg:col-span-2 space-y-6"
-            >
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content - Left Side */}
+          <motion.div
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="lg:col-span-2 space-y-6"
+          >
+            <AnimatePresence>
               {order.line_items?.map((item, itemIndex) => {
                 const isDesignable = !!item.designs && item.designs.length > 0;
                 const selectedDesignIndex = selectedDesigns[item.product_id] || 0;
@@ -146,25 +116,29 @@ const OrderDetailsView = () => {
                   "/placeholder.svg";
 
                 return (
-                  <div
+                  <motion.div
                     key={item.product_id}
-                    className="card bg-white/10 backdrop-blur-md border border-gray-200 rounded-xl shadow-lg p-6 transition-all duration-300 hover:bg-white/20"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className="card bg-base-100 shadow-md rounded-xl p-6"
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-bold text-black">{item.title}</h3>
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-xl font-bold text-base-content">{item.title}</h3>
                       <div className="flex items-center space-x-4">
-                        <span className="text-sm text-gray-700">
-                          Quantity: {item.quantity}
+                        <span className="text-sm text-base-content/70">
+                          Qty: {item.quantity}
                         </span>
-                        <span className="text-lg font-semibold text-black">
+                        <span className="text-lg font-semibold text-base-content">
                           ${item.price.toFixed(2)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex flex-row justify-between gap-4">
+                    <div className="flex flex-row gap-6">
                       {/* Main Image Display */}
-                      <div className="relative w-[400px] h-[400px] bg-white/10 rounded-xl overflow-hidden ring-1 ring-gray-300">
+                      <div className="relative w-[400px] h-[400px] bg-base-200 rounded-xl overflow-hidden">
                         {isDesignable && selectedDesign ? (
                           imageType === "apparel" ? (
                             <>
@@ -175,7 +149,6 @@ const OrderDetailsView = () => {
                                 alt={`${selectedDesign.apparel.side} view`}
                                 fill
                                 sizes="100%"
-                                priority
                                 className="object-cover"
                                 style={{
                                   backgroundColor:
@@ -250,18 +223,18 @@ const OrderDetailsView = () => {
                         )}
                       </div>
 
-                      {/* Vertical Thumbnails and Controls */}
-                      <div className="flex flex-col space-y-4">
-                        {isDesignable && item.designs && item.designs.length > 0 ? (
-                          <div className="flex flex-col space-y-2">
-                            {item.designs.map((design, index) => (
+                      {/* Thumbnails and Controls */}
+                      <div className="flex flex-col justify-between">
+                        <div className="flex flex-col space-y-4">
+                          {isDesignable && item.designs && item.designs.length > 0 ? (
+                            item.designs.map((design, index) => (
                               <button
                                 key={index}
                                 onClick={() => handleThumbnailClick(item.product_id, index)}
-                                className={`relative w-24 h-24 rounded-lg overflow-hidden transition-all ${
+                                className={`btn btn-ghost w-24 h-24 rounded-lg overflow-hidden relative transition-all ${
                                   selectedDesignIndex === index
-                                    ? "ring-2 ring-indigo-500 shadow-lg"
-                                    : "ring-1 ring-indigo-200 hover:ring-2 hover:ring-indigo-300"
+                                    ? "ring-2 ring-primary"
+                                    : "ring-1 ring-base-300 hover:ring-primary"
                                 }`}
                               >
                                 <Image
@@ -269,14 +242,13 @@ const OrderDetailsView = () => {
                                   alt={`Side: ${design.apparel.side}`}
                                   fill
                                   sizes="100%"
-                                  priority
                                   className="object-cover"
                                   style={{
                                     backgroundColor: design.apparel?.color || "#ffffff",
                                   }}
                                 />
-                                <div className="absolute inset-x-0 bottom-0 bg-indigo-900/80 py-1">
-                                  <span className="text-[10px] text-white text-center block">
+                                <div className="absolute inset-x-0 bottom-0 bg-base-300/80 py-1">
+                                  <span className="text-[10px] text-base-content text-center block">
                                     {design.apparel.side}
                                   </span>
                                 </div>
@@ -308,127 +280,117 @@ const OrderDetailsView = () => {
                                   </div>
                                 )}
                               </button>
-                            ))}
-                          </div>
-                        ) : (
-                          standardImages.length > 0 && (
-                            <div className="flex flex-col space-y-2">
-                              {standardImages.map((image, index) => (
-                                <button
-                                  key={index}
-                                  onClick={() => handleThumbnailClick(item.product_id, index)}
-                                  className={`relative w-24 h-24 rounded-lg overflow-hidden transition-all ${
-                                    selectedStandardImageIndex === index
-                                      ? "ring-2 ring-indigo-500 shadow-lg"
-                                      : "ring-1 ring-indigo-200 hover:ring-2 hover:ring-indigo-300"
-                                  }`}
-                                >
-                                  <Image
-                                    src={image || "/placeholder.svg"}
-                                    alt={`View ${index + 1}`}
-                                    fill
-                                    sizes="100%"
-                                    className="object-cover"
-                                  />
-                                </button>
-                              ))}
-                            </div>
-                          )
+                            ))
+                          ) : standardImages.length > 0 ? (
+                            standardImages.map((image, index) => (
+                              <button
+                                key={index}
+                                onClick={() => handleThumbnailClick(item.product_id, index)}
+                                className={`btn btn-ghost w-24 h-24 rounded-lg overflow-hidden relative transition-all ${
+                                  selectedStandardImageIndex === index
+                                    ? "ring-2 ring-primary"
+                                    : "ring-1 ring-base-300 hover:ring-primary"
+                                }`}
+                              >
+                                <Image
+                                  src={image || "/placeholder.svg"}
+                                  alt={`View ${index + 1}`}
+                                  fill
+                                  sizes="100%"
+                                  className="object-cover"
+                                />
+                              </button>
+                            ))
+                          ) : null}
+                        </div>
+                        {isDesignable && hasUploadedImages && (
+                          <button
+                            onClick={() => toggleImageType(item.product_id)}
+                            className="btn btn-outline btn-primary mt-4"
+                          >
+                            {imageType === "apparel" ? "View Uploaded" : "View on Apparel"}
+                          </button>
                         )}
-
-                        {isDesignable && hasUploadedImages ? (
-                          <div className="space-y-4">
-                            <button
-                              onClick={() => toggleImageType(item.product_id)}
-                              className="btn btn-ghost w-full text-sm font-medium text-black bg-white/20 hover:bg-white/30"
-                            >
-                              {imageType === "apparel" ? "View Uploaded Design" : "View on Apparel"}
-                            </button>
+                        {!isDesignable && (
+                          <div className="text-sm text-base-content/70 mt-4">
+                            <p>Size: {item.selected_size || "N/A"}</p>
+                            <p>Color: {item.selected_color || "N/A"}</p>
                           </div>
-                        ) : (
-                          !isDesignable && (
-                            <div className="text-sm text-gray-700">
-                              <p>Size: {item.selected_size || "N/A"}</p>
-                              <p>Color: {item.selected_color || "N/A"}</p>
-                            </div>
-                          )
                         )}
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
-            </motion.div>
+            </AnimatePresence>
+          </motion.div>
 
-            {/* Sidebar - Right Side */}
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="space-y-6"
-            >
-              {/* Customer Information */}
-              <div className="card bg-white/10 backdrop-blur-md border border-gray-200 rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-black border-b border-gray-200 mb-4 pb-4">
-                  Customer Information
-                </h2>
-                {matchingCustomers?.length > 0 ? (
-                  matchingCustomers.map((customer, index) => (
-                    <div key={index} className="space-y-3">
-                      <div className="flex items-center text-sm text-gray-700">
-                        <User className="w-4 h-4 mr-2" />
-                        <span>{`${customer.first_name} ${customer.last_name}`}</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-700">
-                        <FiMail className="w-4 h-4 mr-2" />
-                        <span>{customer.email}</span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-700">
-                        <Phone className="w-4 h-6 mr-2" />
-                        <span>{customer.phone || "Not provided"}</span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="flex items-center text-sm text-gray-700">
-                    <FiMail className="w-4 h-4 mr-2" />
-                    <span>{order.email}</span>
+          {/* Sidebar - Right Side */}
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="space-y-6"
+          >
+            {/* Customer Information */}
+            <div className="card bg-base-100 shadow-md rounded-xl p-6">
+              <h2 className="text-xl font-bold text-base-content border-b border-base-300 mb-4 pb-4">
+                Customer Information
+              </h2>
+              {matchingCustomer ? (
+                <div className="space-y-3">
+                  <div className="flex items-center text-sm text-base-content">
+                    <User className="w-4 h-4 mr-2" />
+                    <span>{`${matchingCustomer.first_name} ${matchingCustomer.last_name}`}</span>
                   </div>
-                )}
-              </div>
+                  <div className="flex items-center text-sm text-base-content">
+                    <FiMail className="w-4 h-4 mr-2" />
+                    <span>{matchingCustomer.email}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-base-content">
+                    <Phone className="w-4 h-4 mr-2" />
+                    <span>{matchingCustomer.phone || "Not provided"}</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center text-sm text-base-content">
+                  <FiMail className="w-4 h-4 mr-2" />
+                  <span>{order.email}</span>
+                </div>
+              )}
+            </div>
 
-              {/* Order Summary */}
-              <div className="card bg-white/10 backdrop-blur-md border border-gray-200 rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-black border-b border-gray-200 mb-4 pb-4">
-                  Ordered Summary
-                </h2>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">Subtotal</span>
-                      <span className="font-medium text-black">
-                        ${subtotalAmount.toFixed(2)}
+            {/* Order Summary */}
+            <div className="card bg-base-100 shadow-md rounded-xl p-6">
+              <h2 className="text-xl font-bold text-base-content border-b border-base-300 mb-4 pb-4">
+                Order Summary
+              </h2>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-base-content/70">Subtotal</span>
+                    <span className="font-medium text-base-content">
+                      ${subtotalAmount.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-base-content/70">Tax</span>
+                    <span className="font-medium text-base-content">
+                      ${taxAmount.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="pt-4 border-t border-base-300">
+                    <div className="flex justify-between text-lg">
+                      <span className="font-semibold text-base-content">Total</span>
+                      <span className="font-bold text-base-content">
+                        ${totalAmount.toFixed(2)}
                       </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">Tax</span>
-                      <span className="font-medium text-black">
-                        ${taxAmount.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="pt-4 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-semibold text-black">Total</span>
-                        <span className="text-xl font-bold text-black">
-                          ${totalAmount.toFixed(2)}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>
@@ -436,41 +398,39 @@ const OrderDetailsView = () => {
 };
 
 const OrderDetailsSkeleton = () => (
-  <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100">
-    <div className="relative z-10 min-h-screen p-4 md:p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="animate-pulse space-y-8">
-          <div className="text-center space-y-4">
-            <div className="h-8 bg-black/20 rounded-lg w-48 mx-auto"></div>
-            <div className="h-4 bg-black/20 rounded-lg w-32 mx-auto"></div>
+  <div className="min-h-screen p-4 md:p-6">
+    <div className="max-w-7xl mx-auto">
+      <div className="animate-pulse space-y-8">
+        <div className="text-center space-y-4">
+          <div className="h-8 bg-base-200 rounded-lg w-48 mx-auto"></div>
+          <div className="h-4 bg-base-200 rounded-lg w-32 mx-auto"></div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="card bg-base-100 rounded-xl p-6">
+                <div className="h-[400px] bg-base-200 rounded-xl mb-4"></div>
+                <div className="grid grid-cols-4 gap-2">
+                  {[1, 2, 3, 4].map((j) => (
+                    <div key={j} className="h-20 bg-base-200 rounded-lg"></div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              {[1, 2].map((i) => (
-                <div key={i} className="card bg-black/10 backdrop-blur-md rounded-xl p-6">
-                  <div className="h-[400px] bg-black/20 rounded-xl mb-4"></div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[1, 2, 3, 4].map((j) => (
-                      <div key={j} className="h-20 bg-black/20 rounded-lg"></div>
-                    ))}
-                  </div>
+          <div className="space-y-6">
+            {[1, 2].map((i) => (
+              <div key={i} className="card bg-base-100 rounded-xl p-6">
+                <div className="h-5 bg-base-200 rounded-lg w-32 mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-4 bg-base-200 rounded-lg w-full"></div>
+                  <div className="h-4 bg-base-200 rounded-lg w-5/6"></div>
+                  <div className="h-4 bg-base-200 rounded-lg w-4/6"></div>
                 </div>
-              ))}
-            </div>
-
-            <div className="space-y-6">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="card bg-black/10 backdrop-blur-md rounded-xl p-6">
-                  <div className="h-5 bg-black/20 rounded-lg w-32 mb-4"></div>
-                  <div className="space-y-3">
-                    <div className="h-4 bg-black/20 rounded-lg w-full"></div>
-                    <div className="h-4 bg-black/20 rounded-lg w-5/6"></div>
-                    <div className="h-4 bg-black/20 rounded-lg w-4/6"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
