@@ -1,39 +1,42 @@
-import useSWR from 'swr';
-import { vendor_id } from '@/app/utils/constant';
+import useSWR from "swr";
+import { vendor_id } from "@/app/utils/constant";
 
 const baseUrl = "http://localhost:5000";
 
 const fetchSalesChannels = async (url: string) => {
   if (!vendor_id) {
-    console.log('No vendor ID found in sessionStorage');
+    console.log("No vendor ID found in sessionStorage");
     return [];
   }
 
   const response = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
   });
 
   const data = await response.json();
+  console.log("Sales Channels API response:", data); // Debug the raw response
 
   if (!response.ok) {
     console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
     if (response.status === 404 || response.status === 500) {
-      console.log('No sales channels found or server error. Returning empty array.');
+      console.log("No sales channels found or server error. Returning empty array.");
       return [];
     }
     throw new Error(data.error || `HTTP error! Status: ${response.status}`);
   }
 
-  if (!data || data.length === 0) {
-    console.log('No sales channels found for the given vendor.');
+  // Extract the nested data array (assuming { success: true, data: array })
+  const salesChannelsData = data.data || data;
+  if (!salesChannelsData || salesChannelsData.length === 0) {
+    console.log("No sales channels found for the given vendor.");
     return [];
   }
 
-  return data;
+  return Array.isArray(salesChannelsData) ? salesChannelsData : [];
 };
 
 export const useGetSalesChannels = () => {
@@ -41,36 +44,24 @@ export const useGetSalesChannels = () => {
 
   const { data, error, isLoading, mutate } = useSWR(url, fetchSalesChannels, {
     revalidateOnFocus: false,
-    revalidateOnMount: false,
-    dedupingInterval: 0,
+    revalidateOnMount: true, // Fetch on mount
+    dedupingInterval: 5 * 60 * 1000, // 5-minute deduping
     errorRetryCount: 0,
-    revalidateIfStale: false, // Control staleness manually
     onError: (error: unknown) => {
       if (error instanceof Error) {
-        console.error('Error occurred while fetching products:', error.message);
+        console.error("Error occurred while fetching sales channels:", error.message);
       } else {
-        console.error('An unknown error occurred:', error);
+        console.error("An unknown error occurred:", error);
       }
     },
   });
 
-  // Enhance data with timestamp for staleness
-  const enhancedData = data
-    ? { salesChannels: data, timestamp: Date.now() }
-    : { salesChannels: [], timestamp: 0 };
-
-  const isFresh = () => {
-    if (!enhancedData.timestamp) return false;
-    const fiveMinutes = 1000 * 60 * 5;
-    return Date.now() - enhancedData.timestamp < fiveMinutes;
-  };
+  const salesChannelsData = Array.isArray(data) ? data : [];
 
   return {
-    data: enhancedData.salesChannels, // Matches original structure
+    data: salesChannelsData,
     error,
     isLoading,
-    timestamp: enhancedData.timestamp, // Optional: expose timestamp
-    isFresh: isFresh(),        // Optional: mimic staleTime
-    refetch: mutate,          // Optional: manual refetch
+    refetch: mutate,
   };
 };

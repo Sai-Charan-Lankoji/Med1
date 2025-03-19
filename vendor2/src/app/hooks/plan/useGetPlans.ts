@@ -1,33 +1,36 @@
-import useSWR from 'swr';
+import useSWR from "swr";
 
 const baseUrl = "http://localhost:5000";
 
 const fetchPlans = async (url: string) => {
   const response = await fetch(url, {
-    method: 'GET',
+    method: "GET",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
-    credentials: 'include',
+    credentials: "include",
   });
 
   const data = await response.json();
+  console.log("Plans API response:", data); // Debug the raw response
 
   if (!response.ok) {
     console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
     if (response.status === 404 || response.status === 500) {
-      console.log('No plans found or server error. Returning empty array.');
+      console.log("No plans found or server error. Returning empty array.");
       return [];
     }
     throw new Error(data.error || `HTTP error! Status: ${response.status}`);
   }
 
-  if (!data || data.length === 0) {
-    console.log('No plans found.');
+  // Extract the nested data array (assuming { success: true, data: array })
+  const plansData = data.data || data;
+  if (!plansData || plansData.length === 0) {
+    console.log("No plans found.");
     return [];
   }
 
-  return data;
+  return Array.isArray(plansData) ? plansData : [];
 };
 
 export const useGetPlans = () => {
@@ -35,36 +38,24 @@ export const useGetPlans = () => {
 
   const { data, error, isLoading, mutate } = useSWR(url, fetchPlans, {
     revalidateOnFocus: false,
-    revalidateOnMount: false,
-    dedupingInterval: 1000 * 60 * 10, // Matches cacheTime: 10 minutes
+    revalidateOnMount: true, // Fetch on mount
+    dedupingInterval: 10 * 60 * 1000, // 10 minutes
     errorRetryCount: 0,
-    revalidateIfStale: false, // Control staleness manually
     onError: (error: unknown) => {
       if (error instanceof Error) {
-        console.error('Error occurred while fetching plans:', error.message);
+        console.error("Error occurred while fetching plans:", error.message);
       } else {
-        console.error('An unknown error occurred:', error);
+        console.error("An unknown error occurred:", error);
       }
     },
   });
 
-  // Enhance data with timestamp for staleness
-  const enhancedData = data
-    ? { plans: data, timestamp: Date.now() }
-    : { plans: [], timestamp: 0 };
-
-  const isFresh = () => {
-    if (!enhancedData.timestamp) return false;
-    const fiveMinutes = 1000 * 60 * 5;
-    return Date.now() - enhancedData.timestamp < fiveMinutes;
-  };
+  const plansData = Array.isArray(data) ? data : [];
 
   return {
-    data: enhancedData.plans, // Matches original structure
+    data: plansData,
     error,
     isLoading,
-    timestamp: enhancedData.timestamp, // Optional: expose timestamp
-    isFresh: isFresh(),        // Optional: mimic staleTime
-    refetch: mutate,          // Optional: manual refetch
+    refetch: mutate,
   };
 };

@@ -21,8 +21,8 @@ export default function RootLayout({
   const showSidebar = isVendorPath;
 
   return (
-    <html lang="en" suppressHydrationWarning data-theme="forest">
-      <body className={`${inter.className} bg-base-200 text-base-content`}>
+    <html lang="en" suppressHydrationWarning >
+      <body className={`${inter.className} bg-base-300 text-base-content`}>
         
         <AuthProvider>
         <ThemeProvider>

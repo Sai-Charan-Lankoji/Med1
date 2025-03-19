@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipTrigger,TooltipProvider } from "@radix-ui/react-tooltip";
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useStock } from "@/app/hooks/useStock"
@@ -451,17 +451,18 @@ function StockTable({
                       </Button>
                     </TableCell>
                     <TableCell className="font-mono text-xs">
-                      <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span onClick={() => handleCopy(stock.stock_id)}>{stock.stock_id.substring(0, 8)}...</span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <span>Copy</span>
-                        </TooltipContent>
-                      </Tooltip>
-                      </TooltipProvider>
-                    </TableCell>
+                    <div className="tooltip tooltip-bottom" data-tip="Copy">
+                      <span 
+                        className="cursor-pointer hover:text-primary transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopy(stock.stock_id);
+                        }}
+                      >
+                        {stock.stock_id.substring(0, 8)}...
+                      </span>
+                    </div>
+                  </TableCell>
                     <TableCell className="font-medium">{stock.title}</TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import {  CheckCircle } from "lucide-react";
+import { CheckCircle, Package, Store, ShieldCheck, BadgeCheck } from "lucide-react";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { useGetPlans } from "@/app/hooks/plan/useGetPlans";
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan";
@@ -74,116 +74,135 @@ export default function ServicesDashboard() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="p-6 max-w-6xl mx-auto space-y-8 min-h-screen"
-    >
+    <div className="p-6 max-w-6xl mx-auto space-y-8 min-h-screen">
       {/* Header */}
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-        className="text-center"
-      >
-        <h1 className="text-4xl font-bold text-primary mb-2">Service Plans</h1>
-        <p className="text-lg text-base-content/70">
+      <div className="text-center">
+        <h1 className="text-2xl md:text-4xl font-bold text-primary mb-2 flex items-center justify-center gap-2">
+          <ShieldCheck className="h-6 w-6 md:h-8 md:w-8" /> Service Plans
+        </h1>
+        <p className="text-base md:text-lg text-base-content/70">
           Your current plan: <span className="font-semibold">{activePlan?.name || "N/A"}</span>
         </p>
-      </motion.div>
+      </div>
 
-      {/* Active Plan Overview */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <div className="card bg-base-100 shadow-lg rounded-xl">
-          <div className="card-body bg-primary text-primary-content rounded-t-xl">
-            <h2 className="card-title text-2xl">Current Plan Overview</h2>
-            <p className="text-sm opacity-80">{activePlan?.description || "No description available"}</p>
-          </div>
-          <div className="card-body">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="text-center">
-                <h3 className="font-semibold text-lg text-base-content mb-2">Store Usage</h3>
-                <p className="text-3xl font-bold text-primary">
-                  {currentStores}/
-                  {activePlan?.maxStores === "unlimited" ? "∞" : activePlan?.no_stores || 0}
-                </p>
-                <p className="text-sm text-base-content/70">Stores used</p>
+      {/* Current Plan Usage */}
+      <div className="card card-border bg-base-100 overflow-hidden">
+        <div className="card-body bg-primary text-primary-content  p-6">
+          <h2 className="card-title text-xl md:text-2xl flex items-center gap-2">
+            <BadgeCheck className="h-5 w-5" /> Current Plan Overview
+          </h2>
+          <p className="text-sm opacity-80">{activePlan?.description || "No description available"}</p>
+        </div>
+        <div className="card-body p-6">
+          <div className="stats stats-vertical sm:stats-horizontal shadow-none w-full">
+            <div className="stat bg-base-100 px-4">
+              <div className="stat-title text-base-content/70">Current Plan</div>
+              <div className="stat-value text-primary text-2xl">{activePlan?.name}</div>
+              <div className="stat-desc mt-1">
+                <div className="badge badge-primary badge-soft">
+                  ${activePlan?.price}/month
+                </div>
               </div>
-              <div className="text-center">
-                <h3 className="font-semibold text-lg text-base-content mb-2">Remaining Capacity</h3>
-                <p className="text-3xl font-bold text-primary">
-                  {activePlan?.no_stores === "unlimited"
-                    ? "Unlimited"
-                    : Math.max(0, (activePlan?.no_stores || 0) - currentStores)}
-                </p>
-                <p className="text-sm text-base-content/70">Stores remaining</p>
+            </div>
+            <div className="stat bg-base-100 px-4">
+              <div className="stat-title text-base-content/70">Store Usage</div>
+              <div className="stat-value text-2xl">
+                <span className="text-primary">{currentStores}</span>
+                <span className="text-base-content/70 text-xl">/</span>
+                <span>{activePlan?.no_stores === "unlimited" ? "∞" : activePlan?.no_stores || 0}</span>
               </div>
+              <div className="stat-desc mt-1">Stores used</div>
+            </div>
+            <div className="stat bg-base-100 px-4">
+              <div className="stat-figure text-primary">
+                <Store className="w-8 h-8 opacity-80" />
+              </div>
+              <div className="stat-title text-base-content/70">Remaining Capacity</div>
+              <div className="stat-value text-2xl">
+                {activePlan?.no_stores === "unlimited" ? (
+                  <span>∞</span>
+                ) : (
+                  <span className="text-success">
+                    {Math.max(0, (activePlan?.no_stores || 0) - currentStores)}
+                  </span>
+                )}
+              </div>
+              <div className="stat-desc mt-1">Stores available</div>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* Plans Grid */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
+      <div>
+        <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Available Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {plans.map((plan, index) => (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="hover:-translate-y-2 transition-transform duration-300"
-            >
-              <div
-                className={`card shadow-lg rounded-xl overflow-hidden ${
-                  plan.id === activePlan?.id ? "ring-2 ring-primary" : "bg-base-100"
-                }`}
-              >
-                <div
-                  className={`card-body p-6 ${
-                    plan.id === activePlan?.id ? "bg-primary text-primary-content" : "bg-base-200"
-                  } rounded-t-xl`}
-                >
-                  <h2 className="card-title text-xl">{plan.name}</h2>
-                  <p className="text-2xl font-bold">
-                    ${plan.price}/month
-                  </p>
+            <div key={plan.id} className="group h-full">
+              <div className={`card card-border h-full bg-base-100 overflow-hidden transition-all duration-300 ${
+                plan.id === activePlan?.id 
+                  ? "ring-2 ring-primary" 
+                  : "hover:shadow-md"
+              }`}>
+                <div className={`p-6 ${
+                  plan.id === activePlan?.id 
+                    ? "bg-primary text-primary-content" 
+                    : "bg-base-200/50"
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold">{plan.name}</h3>
+                      {plan.id === activePlan?.id && (
+                        <div className="badge badge-sm badge-outline mt-1">CURRENT</div>
+                      )}
+                    </div>
+                    <div className="text-end">
+                      <div className="text-2xl font-bold">${plan.price}</div>
+                      <div className="text-xs opacity-80">per month</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="card-body p-6">
-                  <ul className="space-y-2 max-h-48 overflow-y-auto">
-                    {plan?.features?.map((feature, idx) => (
-                      <li key={idx} className="flex items-center gap-2 text-base-content">
-                        <CheckCircle className="w-5 h-5 text-success" />
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="card-actions p-4">
+                
+                <div className="card-body p-6 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="text-sm text-base-content/70 mb-3">
+                      {plan.no_stores === "unlimited" 
+                        ? "Unlimited stores" 
+                        : `Up to ${plan.no_stores} stores`}
+                    </div>
+                    
+                    <div className="divider my-1"></div>
+                    
+                    <ul className="space-y-3 min-h-44">
+                      {plan?.features?.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-base-content">
+                          <CheckCircle className="w-5 h-5 text-success mt-0.5 shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
                   <button
-                    className={`btn btn-block ${
-                      plan.id === activePlan?.id ? "btn-disabled" : "btn-primary"
+                    className={`btn w-full mt-6 ${
+                      plan.id === activePlan?.id 
+                        ? "btn-disabled" 
+                        : "btn-primary btn-soft"
                     }`}
                     onClick={() => handleUpgradePlan(plan)}
                     disabled={plan.id === activePlan?.id || updateLoading}
                   >
+                    {updateLoading && plan.id !== activePlan?.id ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : null}
                     {plan.id === activePlan?.id ? "Current Plan" : `Upgrade to ${plan.name}`}
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

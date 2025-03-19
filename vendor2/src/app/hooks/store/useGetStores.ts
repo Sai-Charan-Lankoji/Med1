@@ -19,7 +19,7 @@ const fetchStores = async (url: string) => {
     });
 
     const data = await response.json();
-    console.log("Stores API response:", data); // Debug raw response
+    console.log("Stores API response:", data);
 
     if (!response.ok) {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
@@ -30,8 +30,7 @@ const fetchStores = async (url: string) => {
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    // Extract the nested data array (assuming { success: true, data: array })
-    const storesData = data.data || data; // Fallback to data if not nested
+    const storesData = data.data || data;
     if (!storesData || storesData.length === 0) {
       console.log("No stores found for the given vendor.");
       return [];
@@ -54,8 +53,8 @@ export const useGetStores = () => {
 
   const { data, error, isLoading, mutate } = useSWR(url, fetchStores, {
     revalidateOnFocus: false,
-    revalidateOnMount: true, // Changed to true to fetch on mount
-    dedupingInterval: 5 * 60 * 1000, // 5-minute deduping
+    revalidateOnMount: true,
+    dedupingInterval: 5 * 60 * 1000,
     errorRetryCount: 0,
     revalidateIfStale: false,
     onError: (error: unknown) => {
@@ -67,7 +66,6 @@ export const useGetStores = () => {
     },
   });
 
-  // Ensure data is an array
   const storesData = Array.isArray(data) ? data : [];
 
   return {

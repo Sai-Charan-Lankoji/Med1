@@ -1,5 +1,5 @@
-import { useSWRConfig } from 'swr';
-import { useState } from 'react';
+import { useSWRConfig } from "swr";
+import { useState } from "react";
 
 const baseUrl = "http://localhost:5000";
 
@@ -12,17 +12,21 @@ const updateStore = async (storeData: StoreUpdateFormData) => {
   const { storeId, ...updateData } = storeData;
   const id = storeId;
   const response = await fetch(`${baseUrl}/api/stores/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(updateData),
   });
 
+  const data = await response.json();
+  console.log("Update Store API response:", data); // Debug the response
+
   if (!response.ok) {
-    throw new Error(`Failed to update store: ${response.status}`);
+    throw new Error(`Failed to update store: ${response.status} - ${data.error}`);
   }
 
-  return response.json();
+  // Extract the nested data (assuming { success: true, data: storeObject })
+  return data.data || data;
 };
 
 export const useUpdateStore = () => {
@@ -48,7 +52,7 @@ export const useUpdateStore = () => {
     } catch (error) {
       setIsLoading(false);
       setError(error);
-      console.error('Error updating store:', error);
+      console.error("Error updating store:", error);
       throw error;
     }
   };

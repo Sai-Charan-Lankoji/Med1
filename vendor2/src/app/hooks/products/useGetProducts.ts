@@ -18,6 +18,7 @@ const fetchProducts = async (url: string) => {
   });
 
   const data = await response.json();
+  console.log('Products API response:', data); // Debug the raw response
 
   if (!response.ok) {
     console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
@@ -28,12 +29,14 @@ const fetchProducts = async (url: string) => {
     throw new Error(data.error || `HTTP error! Status: ${response.status}`);
   }
 
-  if (!data || data.length === 0) {
+  // Handle nested response (e.g., { success: true, data: [...] }) or direct array
+  const productsData = data.data || data;
+  if (!productsData || productsData.length === 0) {
     console.log('No products found for the given vendor.');
     return [];
   }
 
-  return data;
+  return Array.isArray(productsData) ? productsData : [];
 };
 
 export const useGetProducts = () => {
@@ -41,10 +44,9 @@ export const useGetProducts = () => {
 
   const { data, error, isLoading, mutate } = useSWR(url, fetchProducts, {
     revalidateOnFocus: false,
-    revalidateOnMount: false,
-    dedupingInterval: 0,
+    revalidateOnMount: true, // Fetch data when the component mounts
+    dedupingInterval: 5 * 60 * 1000, // 5-minute deduping (mimics stale time)
     errorRetryCount: 0,
-    revalidateIfStale: false, // Control staleness manually
     onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching products:', error.message);
@@ -54,23 +56,12 @@ export const useGetProducts = () => {
     },
   });
 
-  // Enhance data with timestamp for staleness
-  const enhancedData = data
-    ? { products: data, timestamp: Date.now() }
-    : { products: [], timestamp: 0 };
-
-  const isFresh = () => {
-    if (!enhancedData.timestamp) return false;
-    const fiveMinutes = 1000 * 60 * 5;
-    return Date.now() - enhancedData.timestamp < fiveMinutes;
-  };
+  const productsData = Array.isArray(data) ? data : [];
 
   return {
-    data: enhancedData.products, // Matches original structure
+    data: productsData,
     error,
     isLoading,
-    timestamp: enhancedData.timestamp, // Optional: expose timestamp
-    isFresh: isFresh(),        // Optional: mimic staleTime
-    refetch: mutate,          // Optional: manual refetch
+    refetch: mutate, // Manual refetch trigger
   };
 };

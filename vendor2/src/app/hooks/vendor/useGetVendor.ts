@@ -1,45 +1,60 @@
-import useSWR from 'swr';
-import { vendor_id } from '@/app/utils/constant';
+import useSWR from "swr";
+import { vendor_id } from "@/app/utils/constant";
 
 const baseUrl = "http://localhost:5000";
-const id = vendor_id;
 
 const fetchVendor = async (url: string) => {
   try {
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      credentials: 'include',
+      credentials: "include",
     });
 
     const data = await response.json();
+    console.log("Vendor API response:", data); // Debug the raw response
 
     if (!response.ok) {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    return data;
+    // Extract the nested vendor data (assuming { success: true, data: vendorObject })
+    return data.data || data;
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.log('Error fetching data:', error.message);
-      return []; 
+      console.log("Error fetching vendor:", error.message);
+      return null; // Single vendor, not an array
     } else {
-      console.error('An unknown error occurred:', error);
-      return [];
+      console.error("An unknown error occurred:", error);
+      return null;
     }
   }
 };
 
-// Custom Hook using SWR
 export const useGetVendor = () => {
-  return useSWR(`${baseUrl}/api/vendors/${id}`, fetchVendor, {
-    revalidateOnFocus: false, // Prevents auto-refetch on window focus
-    revalidateOnMount: false, // Prevents auto-refetch on mount
-    revalidateIfStale: true,  // Fetches data if stale
-    dedupingInterval: 1000 * 60 * 5, // Cache data for 5 minutes
-    shouldRetryOnError: false, // Disables retry on error
+  const url = vendor_id ? `${baseUrl}/api/vendors/${vendor_id}` : null;
+
+  const { data, error, isLoading, mutate } = useSWR(url, fetchVendor, {
+    revalidateOnFocus: false,
+    revalidateOnMount: true, // Fetch on mount
+    dedupingInterval: 5 * 60 * 1000, // 5 minutes
+    shouldRetryOnError: false,
+    onError: (error: unknown) => {
+      if (error instanceof Error) {
+        console.error("Error occurred while fetching vendor:", error.message);
+      } else {
+        console.error("An unknown error occurred:", error);
+      }
+    },
   });
+
+  return {
+    data: data || null, // Return null if no vendor is found
+    error,
+    isLoading,
+    refetch: mutate,
+  };
 };

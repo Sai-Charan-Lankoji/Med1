@@ -4,10 +4,9 @@ import { useMemo, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
 import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
-import { getColors } from "@/app/utils/dummyData";
 import { useRouter } from "next/navigation";
 import Pagination from "@/app/utils/pagination";
-import { Search } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import withAuth from "@/lib/withAuth";
 
 const Customer = () => {
@@ -58,44 +57,49 @@ const Customer = () => {
   }
 
   return (
-    <div className="p-6 transition-all duration-300 ease-in-out">
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-6 transition-all duration-300">
-        <h1 className="text-2xl font-bold text-primary mb-4 sm:mb-0">
-          Customers
+    <div className="p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-primary mb-4 sm:mb-0 flex items-center gap-2">
+          <Users className="h-6 w-6" /> Customers
         </h1>
-        <div className="w-full sm:w-72 relative transition-all duration-300">
-          <div className="relative">
+        <div className="w-full sm:w-72 relative">
+          <div className="join w-full">
             <input
               type="search"
               placeholder="Search customers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="input input-bordered w-full pl-10 pr-4 py-2 rounded-full border-primary-content focus:border-primary"
+              className="input join-item w-full pl-10"
             />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-base-content opacity-50" />
+            <button className="btn btn-primary join-item">
+              <Search className="h-5 w-5" />
+            </button>
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <Search className="h-4 w-4 text-base-content opacity-50" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="card bg-base-100 shadow-xl transition-all duration-300">
+      <div className="card card-border bg-base-100  ">
         <div className="card-body p-0">
           <div className="overflow-x-auto">
-            <table className="table w-full">
+            <table className="table table-zebra w-full">
               <thead>
-                <tr className="bg-base-200">
-                  <th className="text-xs font-semibold text-primary uppercase tracking-wider">
+                <tr className="bg-base-200/50 text-base-content">
+                  <th className="text-xs font-semibold uppercase tracking-wider">
                     Customer
                   </th>
-                  <th className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  <th className="text-xs font-semibold uppercase tracking-wider">
                     Date added
                   </th>
-                  <th className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  <th className="text-xs font-semibold uppercase tracking-wider">
                     Name
                   </th>
-                  <th className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  <th className="text-xs font-semibold uppercase tracking-wider">
                     Email
                   </th>
-                  <th className="text-xs font-semibold text-primary uppercase tracking-wider">
+                  <th className="text-xs font-semibold uppercase tracking-wider">
                     Orders
                   </th>
                 </tr>
@@ -106,33 +110,35 @@ const Customer = () => {
                     <tr
                       key={customer.id}
                       onClick={() => router.push(`/vendor/customers/${customer.id}`)}
-                      className="hover:bg-base-200 cursor-pointer transition-all duration-200"
+                      className="hover:bg-base-200/30 cursor-pointer"
                     >
-                      <td className="font-bold text-primary">
+                      <td className="font-bold">
                         #{getRowIndex(index)}
                       </td>
-                      <td className="text-secondary">
+                      <td>
                         {formatDate(customer.created_at)}
                       </td>
                       <td>
-                        <div className="flex items-center">
-                          <div className={`avatar avatar-placeholder`}>
-                            <div className="bg-primary text-primary-content rounded-full w-8">
+                        <div className="flex items-center gap-3">
+                          <div className="avatar avatar-placeholder">
+                            <div className="w-8 rounded-full bg-primary text-primary-content">
                               <span>{customer.first_name.charAt(0).toUpperCase()}</span>
                             </div>
                           </div>
-                          <div className="ml-4">
-                            <div className="font-medium text-base-content">
+                          <div>
+                            <div className="font-medium">
                               {customer.first_name} {customer.last_name}
                             </div>
                           </div>
                         </div>
                       </td>
-                      <td className="text-secondary">
+                      <td className="text-base-content/70">
                         {customer.email}
                       </td>
-                      <td className="font-medium text-primary">
-                        {getOrderCountForCustomer(customer.id)}
+                      <td>
+                        <div className="badge badge-primary badge-soft">
+                          {getOrderCountForCustomer(customer.id)}
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -140,7 +146,7 @@ const Customer = () => {
                   <tr>
                     <td
                       colSpan={5}
-                      className="text-center text-secondary py-10"
+                      className="text-center text-base-content/70 py-10"
                     >
                       No customers found
                     </td>
@@ -152,7 +158,7 @@ const Customer = () => {
         </div>
       </div>
 
-      <div className="mt-6 transition-all duration-300">
+      <div className=" border-t border-base-200">
         <Pagination
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
@@ -169,15 +175,15 @@ const CustomerSkeleton = () => {
     <div className="p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
         <div className="skeleton h-8 w-40 mb-4 sm:mb-0"></div>
-        <div className="skeleton w-full sm:w-72 h-10 rounded-full"></div>
+        <div className="skeleton w-full sm:w-72 h-10"></div>
       </div>
 
-      <div className="card bg-base-100 shadow-xl">
+      <div className="card card-border bg-base-100 shadow-2xl">
         <div className="card-body p-0">
           <div className="overflow-x-auto">
             <table className="table w-full">
               <thead>
-                <tr className="bg-base-200">
+                <tr className="bg-base-200/40">
                   {[...Array(5)].map((_, index) => (
                     <th key={index}>
                       <div className="skeleton h-4 w-full"></div>

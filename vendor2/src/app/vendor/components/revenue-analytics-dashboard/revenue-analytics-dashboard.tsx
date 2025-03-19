@@ -1,34 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useVendorAnalytics } from "@/app/hooks/storeRevenue/useVendorAnalytics";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AnimatedCounter } from "../animated-counter";
-import {
-  Bar,
-  BarChart,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-  Cell,
-  Legend,
-} from "../charts/charts";
-import { Building2, DollarSign, ShoppingCart, TrendingUp, Eye, ShoppingBag, Users } from "lucide-react";
+import { Building2, DollarSign, ShoppingCart, TrendingUp, Eye, ShoppingBag, Users, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { vendor_id } from "@/app/utils/constant";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title } from 'chart.js';
+import { Doughnut, Line, Bar } from 'react-chartjs-2';
 
+// Register Chart.js components
+ChartJS.register(
+  ArcElement, 
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+// Animation variants
 const container = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.1 },
   },
 };
 
@@ -37,473 +35,539 @@ const item = {
   show: { opacity: 1, y: 0 },
 };
 
-const CHART_COLORS = {
-  primary: "#6366f1",
-  secondary: "#ec4899",
-  tertiary: "#06b6d4",
-  quaternary: "#8b5cf6",
-  success: "#22c55e",
-  background: "#1e293b",
-  text: "#f8fafc",
-  muted: "#64748b",
+// Animated counter component
+const AnimatedCounter = ({ value, formatValue = (val) => val.toLocaleString(), duration = 1000 }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime;
+    const startValue = count;
+    const endValue = value;
+    
+    const step = (timestamp) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const current = Math.floor(startValue + progress * (endValue - startValue));
+      setCount(current);
+      
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    
+    window.requestAnimationFrame(step);
+  }, [value, duration]);
+
+  return formatValue(count);
 };
 
-interface RevenueData {
-  name: string;
-  revenue: number;
-  commission: number;
-}
-
-interface MonthlyData {
-  name: string;
-  revenue: number;
-}
-
-interface PieData {
-  name: string;
-  value: number;
-  color: string;
-}
-
-interface ProductData {
-  name: string;
-  revenue?: number;
-  views?: number;
-}
-
 export default function RevenueAnalytics() {
-  const [selectedMonth, setSelectedMonth] = useState<string>("All");
+  const [selectedMonth, setSelectedMonth] = useState("All");
   const { data, isLoading, isError } = useVendorAnalytics(vendor_id, selectedMonth);
+  const months = ["All", "Dec", "Jan", "Feb", "Mar"];
 
-  const months: string[] = ["All", "Dec", "Jan", "Feb", "Mar"];
+  // Define chart colors - using explicit values that work well with Chart.js
+  const chartColors = {
+    // Use fixed colors that match daisyUI theme intent but render reliably
+    primary: '#3b82f6',       // Blue
+    primaryLight: 'rgba(59, 130, 246, 0.2)',
+    secondary: '#f97316',     // Orange
+    secondaryLight: 'rgba(249, 115, 22, 0.2)',
+    accent: '#8b5cf6',        // Purple
+    accentLight: 'rgba(139, 92, 246, 0.2)',
+    success: '#10b981',       // Green
+    successLight: 'rgba(16, 185, 129, 0.2)',
+    warning: '#f59e0b',       // Amber
+    warningLight: 'rgba(245, 158, 11, 0.2)',
+    error: '#ef4444',         // Red
+    errorLight: 'rgba(239, 68, 68, 0.2)',
+    info: '#06b6d4',          // Cyan
+    infoLight: 'rgba(6, 182, 212, 0.2)',
+    neutral: '#6b7280',       // Gray
+    neutralLight: 'rgba(107, 114, 128, 0.2)',
+    background: '#ffffff',
+    text: '#111827',
+    textLight: 'rgba(17, 24, 39, 0.7)',
+    border: 'rgba(229, 231, 235, 0.5)'
+  };
 
+  // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center min-h-[60vh] ">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
       </div>
     );
   }
 
+  // Error state
   if (isError) {
-    return <div className="flex items-center justify-center min-h-screen text-red-500">Error loading data</div>;
+    return (
+      <div className="alert alert-error max-w-xl mx-auto my-8">
+        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <span>Error loading analytics data. Please try again later.</span>
+      </div>
+    );
   }
 
   if (!data) return null;
 
-  const revenueData: RevenueData[] = data.commission.stores.map((store) => ({
-    name: store.store_name,
-    revenue: store.total_revenue,
-    commission: store.total_commission,
-  }));
+  // Prepare chart data with explicit colors
+  const monthlyRevenueData = {
+    labels: data.commission.monthly_revenue.map(item => item.month),
+    datasets: [
+      {
+        label: 'Revenue',
+        data: data.commission.monthly_revenue.map(item => item.revenue),
+        borderColor: chartColors.primary,
+        backgroundColor: chartColors.primaryLight,
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: chartColors.primary,
+        pointBorderColor: chartColors.background,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+      }
+    ]
+  };
+  
+  const revenueDistributionData = {
+    labels: ['Final Revenue', 'Admin Commission', 'Non-commissionable'],
+    datasets: [
+      {
+        data: [
+          Number.parseFloat(data.commission.final_vendor_revenue),
+          Number.parseFloat(data.commission.total_admin_commission),
+          Number.parseFloat(data.commission.non_commissionable_revenue)
+        ],
+        backgroundColor: [
+          chartColors.primary,
+          chartColors.secondary,
+          chartColors.accent
+        ],
+        borderColor: chartColors.background,
+        borderWidth: 2,
+        hoverOffset: 15,
+      }
+    ]
+  };
+  
+  const storeRevenueData = {
+    labels: data.commission.stores.map(store => store.store_name),
+    datasets: [
+      {
+        label: 'Revenue',
+        data: data.commission.stores.map(store => store.total_revenue),
+        backgroundColor: chartColors.primary,
+        borderRadius: 6,
+      },
+      {
+        label: 'Commission',
+        data: data.commission.stores.map(store => store.total_commission),
+        backgroundColor: chartColors.secondary,
+        borderRadius: 6,
+      }
+    ]
+  };
+  
+  const topSellingData = {
+    labels: data.products.top_selling_products.map(p => p.product_name),
+    datasets: [
+      {
+        label: 'Revenue',
+        data: data.products.top_selling_products.map(p => Number.parseFloat(p.total_revenue)),
+        backgroundColor: chartColors.accent,
+        borderRadius: 6,
+      }
+    ]
+  };
 
-  const monthlyData: MonthlyData[] = data.commission.monthly_revenue.map((item) => ({
-    name: item.month,
-    revenue: item.revenue,
-  }));
+  const mostViewedData = {
+    labels: data.products.most_viewed_products.map(p => p.product_name),
+    datasets: [
+      {
+        label: 'Views',
+        data: data.products.most_viewed_products.map(p => p.view_count),
+        backgroundColor: chartColors.success,
+        borderRadius: 6,
+      }
+    ]
+  };
 
-  const pieData: PieData[] = [
-    { name: "Final Revenue", value: Number.parseFloat(data.commission.final_vendor_revenue), color: CHART_COLORS.primary },
-    { name: "Admin Commission", value: Number.parseFloat(data.commission.total_admin_commission), color: CHART_COLORS.secondary },
-    { name: "Non-commissionable", value: Number.parseFloat(data.commission.non_commissionable_revenue), color: CHART_COLORS.tertiary },
-  ];
-
-  const topSellingData: ProductData[] = data.products.top_selling_products.map((p) => ({
-    name: p.product_name,
-    revenue: Number.parseFloat(p.total_revenue),
-  }));
-
-  const mostViewedData: ProductData[] = data.products.most_viewed_products.map((p) => ({
-    name: p.product_name,
-    views: p.view_count,
-  }));
+  // Chart options with explicit colors
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        align: 'end' as const,
+        labels: {
+          boxWidth: 12,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          color: chartColors.text,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          },
+          padding: 16
+        }
+      },
+      tooltip: {
+        backgroundColor: chartColors.neutral,
+        titleColor: chartColors.background,
+        bodyColor: chartColors.background,
+        titleFont: {
+          family: "'Inter', sans-serif",
+          size: 14,
+          weight: 'bold' as const
+        },
+        bodyFont: {
+          family: "'Inter', sans-serif",
+          size: 12
+        },
+        padding: 12,
+        cornerRadius: 8,
+        displayColors: true,
+        boxWidth: 8,
+        boxHeight: 8,
+        usePointStyle: true,
+        borderColor: 'rgba(255, 255, 255, 0.1)'
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+          drawBorder: false
+        },
+        ticks: {
+          color: chartColors.textLight,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11
+          }
+        }
+      },
+      y: {
+        grid: {
+          color: chartColors.border,
+          drawBorder: false
+        },
+        ticks: {
+          color: chartColors.textLight,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 11
+          },
+          callback: (value) => {
+            if (value >= 1000) {
+              return `$${value / 1000}k`;
+            }
+            return `$${value}`;
+          }
+        }
+      }
+    }
+  };
+  
+  const horizontalBarOptions = {
+    ...chartOptions,
+    indexAxis: 'y' as const,
+    scales: {
+      ...chartOptions.scales,
+      x: {
+        ...chartOptions.scales.x,
+        ticks: {
+          ...chartOptions.scales.x.ticks,
+          callback: (value) => {
+            if (value >= 1000) {
+              return `$${value / 1000}k`;
+            }
+            return `$${value}`;
+          }
+        }
+      }
+    },
+    plugins: {
+      ...chartOptions.plugins,
+      legend: {
+        ...chartOptions.plugins.legend,
+        display: false
+      }
+    }
+  };
+  
+  const pieOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'right' as const,
+        labels: {
+          boxWidth: 12,
+          usePointStyle: true,
+          pointStyle: 'circle',
+          color: chartColors.text,
+          font: {
+            family: "'Inter', sans-serif",
+            size: 12
+          },
+          padding: 16
+        }
+      },
+      tooltip: chartOptions.plugins.tooltip
+    }
+  };
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-8 bg-linear-to-br from-gray-50 to-gray-200 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex-1 space-y-6 p-4 md:p-8 bg-base-200">
+      {/* Header with Filter Buttons */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <h2 className="text-3xl font-bold tracking-tight bg-linear-to-r from-indigo-500 to-purple-600 text-transparent bg-clip-text">
+        <h2 className="text-3xl font-bold text-primary flex items-center gap-2">
+          <DollarSign className="w-8 h-8" />
           Revenue & Analytics
         </h2>
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="w-full sm:w-48 p-2.5 border rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 shadow-xs focus:ring-2 focus:ring-indigo-500 transition-all duration-200 hover:bg-gray-50 dark:hover:bg-gray-700"
-        >
-          {months.map((month) => (
-            <option key={month} value={month}>
-              {month}
-            </option>
-          ))}
-        </select>
+        <div className="flex items-center gap-2">
+          <span className="text-base-content/70 flex items-center gap-1">
+            <Calendar className="w-4 h-4" /> Period:
+          </span>
+          <div className="join">
+            {months.map((month) => (
+              <button
+                key={month}
+                className={`btn btn-sm join-item ${selectedMonth === month ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setSelectedMonth(month)}
+              >
+                {month}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Overview Cards */}
+      {/* Main Stats */}
       <motion.div
-        className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
         variants={container}
         initial="hidden"
         animate="show"
       >
         <motion.div variants={item}>
-          <Card className="relative overflow-hidden bg-linear-to-br from-white to-indigo-100 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[150px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">Total Revenue</CardTitle>
-              <div className="p-2 bg-indigo-500/20 rounded-full">
-                <DollarSign className="w-4 h-4 text-indigo-500" />
+          <div className="card card-border bg-base-100">
+            <div className="card-body p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-base-content/70">Total Revenue</h3>
+                <div className="p-2 bg-primary/20 rounded-full">
+                  <DollarSign className="w-5 h-5 text-primary" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
-                $<AnimatedCounter value={Number(data.commission.total_vendor_revenue)} formatValue={(value: number) => value.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
+              <div className="text-3xl font-bold text-primary mt-2">
+                $<AnimatedCounter value={Number(data.commission.total_vendor_revenue)} 
+                  formatValue={(value) => value.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Final: $<AnimatedCounter value={Number(data.commission.final_vendor_revenue)} formatValue={(value: number) => value.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
-              </p>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/10 rounded-full -translate-y-12 translate-x-12"></div>
-          </Card>
+              <div className="text-xs text-base-content/60 mt-2 flex items-center">
+                <span className="badge badge-primary badge-xs mr-1"></span>
+                Final: $<AnimatedCounter value={Number(data.commission.final_vendor_revenue)} 
+                  formatValue={(value) => value.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
+              </div>
+            </div>
+          </div>
         </motion.div>
-
+        
         <motion.div variants={item}>
-          <Card className="relative overflow-hidden bg-linear-to-br from-white to-yellow-100 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[150px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">Total Orders</CardTitle>
-              <div className="p-2 bg-yellow-500/20 rounded-full">
-                <ShoppingCart className="w-4 h-4 text-yellow-500" />
+          <div className="card card-border bg-base-100">
+            <div className="card-body p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-base-content/70">Total Orders</h3>
+                <div className="p-2 bg-warning/20 rounded-full">
+                  <ShoppingCart className="w-5 h-5 text-warning" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              <div className="text-3xl font-bold text-warning mt-2">
                 <AnimatedCounter value={data.commission.total_orders} />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="text-xs text-base-content/60 mt-2 flex items-center">
+                <span className="badge badge-warning badge-xs mr-1"></span>
                 Commission: <AnimatedCounter value={data.commission.commission_total_orders} />
-              </p>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-yellow-500/10 rounded-full -translate-y-12 translate-x-12"></div>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={item}>
-          <Card className="relative overflow-hidden bg-linear-to-br from-white to-teal-100 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[150px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">Commission Rate</CardTitle>
-              <div className="p-2 bg-teal-500/20 rounded-full">
-                <TrendingUp className="w-4 h-4 text-teal-500" />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">{data.commission.commission_rate}</div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Total: $<AnimatedCounter value={Number(data.commission.total_admin_commission)} formatValue={(value: number) => value.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
-              </p>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full -translate-y-12 translate-x-12"></div>
-          </Card>
+            </div>
+          </div>
         </motion.div>
-
+        
         <motion.div variants={item}>
-          <Card className="relative overflow-hidden bg-linear-to-br from-white to-purple-100 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[150px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">Active Stores</CardTitle>
-              <div className="p-2 bg-purple-500/20 rounded-full">
-                <Building2 className="w-4 h-4 text-purple-500" />
+          <div className="card card-border bg-base-100">
+            <div className="card-body p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-base-content/70">Commission Rate</h3>
+                <div className="p-2 bg-success/20 rounded-full">
+                  <TrendingUp className="w-5 h-5 text-success" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+              <div className="text-3xl font-bold text-success mt-2">{data.commission.commission_rate}</div>
+              <div className="text-xs text-base-content/60 mt-2 flex items-center">
+                <span className="badge badge-success badge-xs mr-1"></span>
+                Total: $<AnimatedCounter value={Number(data.commission.total_admin_commission)} 
+                  formatValue={(value) => value.toLocaleString(undefined, { minimumFractionDigits: 2 })} />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+        
+        <motion.div variants={item}>
+          <div className="card card-border bg-base-100">
+            <div className="card-body p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-base-content/70">Active Stores</h3>
+                <div className="p-2 bg-secondary/20 rounded-full">
+                  <Building2 className="w-5 h-5 text-secondary" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-secondary mt-2">
                 <AnimatedCounter value={data.commission.stores.length} />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Contributing to revenue</p>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full -translate-y-12 translate-x-12"></div>
-          </Card>
+              <div className="text-xs text-base-content/60 mt-2 flex items-center">
+                <span className="badge badge-secondary badge-xs mr-1"></span>
+                Contributing to revenue
+              </div>
+            </div>
+          </div>
         </motion.div>
       </motion.div>
 
-      {/* Engagement Cards */}
+      {/* Engagement Stats */}
       <motion.div
-        className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4"
         variants={container}
         initial="hidden"
         animate="show"
       >
         <motion.div variants={item}>
-          <Card className="relative overflow-hidden bg-linear-to-br from-white to-blue-100 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[150px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">Product Views</CardTitle>
-              <div className="p-2 bg-blue-500/20 rounded-full">
-                <Eye className="w-4 h-4 text-blue-500" />
+          <div className="card card-border bg-base-100">
+            <div className="card-body p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-base-content/70">Product Views</h3>
+                <div className="p-2 bg-info/20 rounded-full">
+                  <Eye className="w-5 h-5 text-info" />
+                </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+              <div className="text-3xl font-bold text-info mt-2">
                 <AnimatedCounter value={data.engagement.product_views} />
               </div>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full -translate-y-12 translate-x-12"></div>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={item}>
-          <Card className="relative overflow-hidden bg-linear-to-br from-white to-orange-100 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[150px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">Cart Abandonment</CardTitle>
-              <div className="p-2 bg-orange-500/20 rounded-full">
-                <ShoppingBag className="w-4 h-4 text-orange-500" />
+              <div className="text-xs text-base-content/60 mt-2 flex items-center">
+                <span className="badge badge-info badge-xs mr-1"></span>
+                Total page impressions
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            </div>
+          </div>
+        </motion.div>
+        
+        <motion.div variants={item}>
+          <div className="card card-border bg-base-100">
+            <div className="card-body p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-base-content/70">Cart Abandonment</h3>
+                <div className="p-2 bg-error/20 rounded-full">
+                  <ShoppingBag className="w-5 h-5 text-error" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-error mt-2">
                 {data.engagement.cart_abandonment.abandonment_rate}%
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                Total: <AnimatedCounter value={data.engagement.cart_abandonment.total_carts} />
-              </p>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/10 rounded-full -translate-y-12 translate-x-12"></div>
-          </Card>
-        </motion.div>
-
-        <motion.div variants={item}>
-          <Card className="relative overflow-hidden bg-linear-to-br from-white to-green-100 dark:from-gray-900 dark:to-gray-800 shadow-lg hover:shadow-xl transition-shadow duration-300 min-h-[150px]">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700 dark:text-gray-200">Repeat Customers</CardTitle>
-              <div className="p-2 bg-green-500/20 rounded-full">
-                <Users className="w-4 h-4 text-green-500" />
+              <div className="text-xs text-base-content/60 mt-2 flex items-center">
+                <span className="badge badge-error badge-xs mr-1"></span>
+                Carts: <AnimatedCounter value={data.engagement.cart_abandonment.total_carts} />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+            </div>
+          </div>
+        </motion.div>
+        
+        <motion.div variants={item}>
+          <div className="card card-border bg-base-100">
+            <div className="card-body p-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-medium text-base-content/70">Repeat Customers</h3>
+                <div className="p-2 bg-accent/20 rounded-full">
+                  <Users className="w-5 h-5 text-accent" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-accent mt-2">
                 <AnimatedCounter value={data.engagement.repeat_purchases.repeat_customer_count} />
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              <div className="text-xs text-base-content/60 mt-2 flex items-center">
+                <span className="badge badge-accent badge-xs mr-1"></span>
                 Orders: <AnimatedCounter value={data.engagement.repeat_purchases.total_orders_by_repeat_customers} />
-              </p>
-            </CardContent>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-green-500/10 rounded-full -translate-y-12 translate-x-12"></div>
-          </Card>
+              </div>
+            </div>
+          </div>
         </motion.div>
       </motion.div>
 
       {/* Charts */}
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-7">
-        <Card className="col-span-1 xl:col-span-4 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
-          <CardHeader className="bg-linear-to-r from-indigo-500/10 to-purple-500/10">
-            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">Monthly Revenue</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[350px] p-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={monthlyData}>
-                <defs>
-                  <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.9} />
-                    <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0.2} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} />
-                <YAxis stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "rgba(255, 255, 255, 0.95)",
-                    border: "none",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                    padding: "8px 12px",
-                  }}
-                  itemStyle={{ color: CHART_COLORS.background, fontWeight: "500" }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke={CHART_COLORS.primary}
-                  strokeWidth={3}
-                  dot={{ r: 5, fill: CHART_COLORS.primary, stroke: "#fff", strokeWidth: 2 }}
-                  activeDot={{ r: 8, fill: CHART_COLORS.quaternary, stroke: "#fff", strokeWidth: 2 }}
-                  fill="url(#lineGradient)"
-                  animationDuration={1000}
-                />
-                <Legend verticalAlign="top" height={36} iconType="circle" />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        {/* Monthly Revenue */}
+        <div className="card card-border bg-base-100">
+          <div className="card-body bg-base-200/50 p-4">
+            <h3 className="card-title text-base-content text-lg">Monthly Revenue</h3>
+          </div>
+          <div className="card-body p-6">
+            <div className="h-[300px] w-full">
+              <Line data={monthlyRevenueData} options={chartOptions} />
+            </div>
+          </div>
+        </div>
 
-        <Card className="col-span-1 xl:col-span-3 shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
-          <CardHeader className="bg-linear-to-r from-indigo-500/10 to-purple-500/10">
-            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">Revenue Distribution</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[350px] p-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  innerRadius={60}
-                  paddingAngle={5}
-                  animationDuration={800}
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} stroke="#fff" strokeWidth={2} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "rgba(255, 255, 255, 0.95)",
-                    border: "none",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{ fontSize: "12px" }} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Revenue Distribution */}
+        <div className="card card-border bg-base-100">
+          <div className="card-body bg-base-200/50 p-4">
+            <h3 className="card-title text-base-content text-lg">Revenue Distribution</h3>
+          </div>
+          <div className="card-body p-6 flex items-center justify-center">
+            <div className="h-[300px] w-full max-w-md">
+              <Doughnut data={revenueDistributionData} options={pieOptions} />
+            </div>
+          </div>
+        </div>
       </div>
 
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
-        <CardHeader className="bg-linear-to-r from-indigo-500/10 to-purple-500/10">
-          <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">Store-wise Revenue</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[350px] p-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={revenueData}>
-              <XAxis dataKey="name" stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} />
-              <YAxis stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} />
-              <Tooltip
-                contentStyle={{
-                  background: "rgba(255, 255, 255, 0.95)",
-                  border: "none",
-                  borderRadius: "8px",
-                  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                }}
-              />
-              <Bar
-                dataKey="revenue"
-                fill={CHART_COLORS.primary}
-                name="Revenue"
-                radius={[8, 8, 0, 0]}
-                barSize={40}
-                animationDuration={800}
-              >
-                {revenueData.map((entry, index) => (
-                  <Cell key={`revenue-${index}`} fill={`url(#barGradient${index % 2})`} />
-                ))}
-              </Bar>
-              <Bar
-                dataKey="commission"
-                fill={CHART_COLORS.secondary}
-                name="Commission"
-                radius={[8, 8, 0, 0]}
-                barSize={40}
-                animationDuration={800}
-              >
-                {revenueData.map((entry, index) => (
-                  <Cell key={`commission-${index}`} fill={`url(#barGradient${(index + 1) % 2})`} />
-                ))}
-              </Bar>
-              <defs>
-                <linearGradient id="barGradient0" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={CHART_COLORS.primary} stopOpacity={0.9} />
-                  <stop offset="95%" stopColor={CHART_COLORS.primary} stopOpacity={0.4} />
-                </linearGradient>
-                <linearGradient id="barGradient1" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={CHART_COLORS.secondary} stopOpacity={0.9} />
-                  <stop offset="95%" stopColor={CHART_COLORS.secondary} stopOpacity={0.4} />
-                </linearGradient>
-              </defs>
-              <Legend verticalAlign="top" height={36} iconType="rect" />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      {/* Store Revenue */}
+      <div className="card card-border bg-base-100">
+        <div className="card-body bg-base-200/50 p-4">
+          <h3 className="card-title text-base-content text-lg">Store-wise Revenue</h3>
+        </div>
+        <div className="card-body p-6">
+          <div className="h-[400px] w-full">
+            <Bar data={storeRevenueData} options={chartOptions} />
+          </div>
+        </div>
+      </div>
 
-      {/* Top Products */}
-      <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
-          <CardHeader className="bg-linear-to-r from-indigo-500/10 to-purple-500/10">
-            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">Top Selling Products</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[350px] p-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topSellingData}>
-                <XAxis dataKey="name" stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
-                <YAxis stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "rgba(255, 255, 255, 0.95)",
-                    border: "none",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Bar
-                  dataKey="revenue"
-                  fill={CHART_COLORS.quaternary}
-                  name="Revenue"
-                  radius={[8, 8, 0, 0]}
-                  barSize={30}
-                  animationDuration={800}
-                >
-                  {topSellingData.map((entry, index) => (
-                    <Cell key={`revenue-${index}`} fill={`url(#productGradient${index % 2})`} />
-                  ))}
-                </Bar>
-                <defs>
-                  <linearGradient id="productGradient0" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.quaternary} stopOpacity={0.9} />
-                    <stop offset="95%" stopColor={CHART_COLORS.quaternary} stopOpacity={0.4} />
-                  </linearGradient>
-                  <linearGradient id="productGradient1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={CHART_COLORS.success} stopOpacity={0.9} />
-                    <stop offset="95%" stopColor={CHART_COLORS.success} stopOpacity={0.4} />
-                  </linearGradient>
-                </defs>
-                <Legend verticalAlign="top" height={36} iconType="rect" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+      {/* Product Insights */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-2">
+        {/* Top Selling */}
+        <div className="card card-border bg-base-100">
+          <div className="card-body bg-base-200/50 p-4">
+            <h3 className="card-title text-base-content text-lg">Top Selling Products</h3>
+          </div>
+          <div className="card-body p-6">
+            <div className="h-[300px] w-full">
+              <Bar data={topSellingData} options={horizontalBarOptions} />
+            </div>
+          </div>
+        </div>
 
-        <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
-          <CardHeader className="bg-linear-to-r from-indigo-500/10 to-purple-500/10">
-            <CardTitle className="text-lg font-semibold text-gray-800 dark:text-gray-200">Most Viewed Products</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[350px] p-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={mostViewedData}>
-                <XAxis dataKey="name" stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} angle={-45} textAnchor="end" height={60} />
-                <YAxis stroke={CHART_COLORS.muted} tick={{ fill: CHART_COLORS.muted, fontSize: 12 }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "rgba(255, 255, 255, 0.95)",
-                    border: "none",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Bar
-                  dataKey="views"
-                  fill={CHART_COLORS.success}
-                  name="Views"
-                  radius={[8, 8, 0, 0]}
-                  barSize={30}
-                  animationDuration={800}
-                >
-                  {mostViewedData.map((entry, index) => (
-                    <Cell key={`views-${index}`} fill={`url(#productGradient${(index + 1) % 2})`} />
-                  ))}
-                </Bar>
-                <Legend verticalAlign="top" height={36} iconType="rect" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {/* Most Viewed */}
+        <div className="card card-border bg-base-100">
+          <div className="card-body bg-base-200/50 p-4">
+            <h3 className="card-title text-base-content text-lg">Most Viewed Products</h3>
+          </div>
+          <div className="card-body p-6">
+            <div className="h-[300px] w-full">
+              <Bar data={mostViewedData} options={horizontalBarOptions} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

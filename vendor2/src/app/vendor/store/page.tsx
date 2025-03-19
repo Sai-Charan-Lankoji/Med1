@@ -3,7 +3,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
-import { Search, MoreHorizontal, PencilIcon, TrashIcon } from "lucide-react";
+import { Search, MoreHorizontal, PencilIcon, TrashIcon, Store as StoreIcon } from "lucide-react";
 import withAuth from "@/lib/withAuth";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
@@ -27,16 +27,6 @@ const Store = () => {
 
   const PAGE_SIZE = 6;
 
-  // Log the storesData to debug the structure
-  useEffect(() => {
-    if (storesData) {
-      console.log("Stores Data:", storesData);
-      storesData.forEach((store, index) => {
-        console.log(`Store ${index + 1} - created_at:`, store.created_at, "createdAt:", store.createdAt);
-      });
-    }
-  }, [storesData]);
-
   const storesWithMatchingSalesChannels = useMemo(() => {
     if (!storesData || !saleschannelsData) return [];
     return storesData.map((store) => ({
@@ -52,7 +42,7 @@ const Store = () => {
     const searchLower = searchQuery.toLowerCase();
     return storesWithMatchingSalesChannels.filter((store) => {
       const storeNameMatch = store.name?.toLowerCase().includes(searchLower);
-      const createdDateMatch = store.createdAt?.toLowerCase().includes(searchLower) || // Try both cases
+      const createdDateMatch = store.createdAt?.toLowerCase().includes(searchLower) || 
         store.created_at?.toLowerCase().includes(searchLower);
       const salesChannelNameMatch =
         store.matchingSalesChannel?.name?.toLowerCase().includes(searchLower);
@@ -68,17 +58,17 @@ const Store = () => {
 
   const formatDate = (isoDate) => {
     if (!isoDate || typeof isoDate !== "string") {
-      return "N/A"; // Fallback for undefined or non-string values
+      return "N/A";
     }
     try {
       const date = parseISO(isoDate);
       if (isNaN(date.getTime())) {
-        return "N/A"; // Fallback for invalid dates
+        return "N/A";
       }
       return format(date, "dd MMM yyyy");
     } catch (error) {
       console.error(`Error parsing date: ${isoDate}`, error);
-      return "N/A"; // Fallback for parsing errors
+      return "N/A";
     }
   };
 
@@ -112,123 +102,140 @@ const Store = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="p-6">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
-      </div>
-    );
+    return <StoreSkeleton />;
   }
 
   return (
     <div className="p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary mb-4 sm:mb-0">Store Management</h1>
-        <div className="relative w-full sm:w-72">
-          <input
-            type="search"
-            placeholder="Search stores..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="input input-bordered w-full pl-10 pr-4 py-2 rounded-full"
-          />
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content" size={18} />
+        <h1 className="text-2xl font-bold text-primary mb-4 sm:mb-0 flex items-center gap-2">
+          <StoreIcon className="h-6 w-6" /> Store Management
+        </h1>
+        <div className="w-full sm:w-72 relative">
+          <div className="join w-full">
+            <input
+              type="search"
+              placeholder="Search stores..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input join-item w-full pl-10"
+            />
+            <button className="btn btn-primary join-item">
+              <Search className="h-5 w-5" />
+            </button>
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <Search className="h-4 w-4 text-base-content opacity-50" />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="table table-zebra w-full">
-          <thead>
-            <tr>
-              <th className="text-sm font-semibold text-primary">Store #</th>
-              <th className="text-sm font-semibold text-primary">Date Added</th>
-              <th className="text-sm font-semibold text-primary">Store Name</th>
-              <th className="text-sm font-semibold text-primary">Sales Channel</th>
-              <th className="text-sm font-semibold text-primary">Store Type</th>
-              <th className="text-sm font-semibold text-primary">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedStores.map((store, index) => (
-              <tr key={store.id} className="hover:bg-base-200">
-                <td className="text-sm font-medium">{getRowIndex(index)}</td>
-                <td className="text-sm">{formatDate(store.createdAt || store.created_at)}</td> {/* Try both field names */}
-                <td>
-                  <div className="flex items-center">
-                    <div
-                      className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${getColors(index)}`}
-                    >
-                      {store.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="ml-4">
-                      <Link href={store.store_url} target="_blank" className="link link-hover">
-                        {store.name}
-                      </Link>
-                    </div>
-                  </div>
-                </td>
-                <td className="text-sm">{store.matchingSalesChannel?.name || "N/A"}</td>
-                <td className="text-sm">{store.store_type || "N/A"}</td>
-                <td>
-                  <div className="dropdown dropdown-end">
-                    <label tabIndex={0} className="btn btn-ghost btn-sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </label>
-                    <ul
-                      tabIndex={0}
-                      className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
-                    >
-                      <li>
-                        <Link href={`/vendor/store/${store.id}`} className="flex items-center">
-                          <PencilIcon className="mr-2 h-4 w-4" /> Edit
-                        </Link>
-                      </li>
-                      <li>
-                        <button
-                          className="flex items-center"
-                          onClick={(event) => initiateDelete(store.id, event)}
-                        >
-                          <TrashIcon className="mr-2 h-4 w-4" /> Delete
+      <div className="card card-border bg-base-100">
+        <div className="card-body p-0">
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr className="bg-base-200/50 text-base-content">
+                  <th className="text-xs font-semibold uppercase tracking-wider">Store #</th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">Date Added</th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">Store Name</th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">Sales Channel</th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">Store Type</th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedStores.map((store, index) => (
+                  <tr key={store.id} className="hover:bg-base-200/30 transition-colors duration-200">
+                    <td className="font-medium">{getRowIndex(index)}</td>
+                    <td>{formatDate(store.createdAt || store.created_at)}</td>
+                    <td>
+                      <div className="flex items-center gap-3">
+                        <div className="avatar avatar-placeholder">
+                          <div className={"w-8 rounded-full bg-primary text-primary-content"}>
+                            <span>{store.name.charAt(0).toUpperCase()}</span>
+                          </div>
+                        </div>
+                        <div>
+                          <Link href={store.store_url} target="_blank" className="link link-hover font-medium">
+                            {store.name}
+                          </Link>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="text-base-content/70">
+                      {store.matchingSalesChannel?.name || "N/A"}
+                    </td>
+                    <td>
+                      <span className="badge badge-primary badge-soft">
+                        {store.store_type || "N/A"}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="dropdown dropdown-end">
+                        <button tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+                          <MoreHorizontal className="h-4 w-4" />
                         </button>
-                      </li>
-                    </ul>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                        <ul
+                          tabIndex={0}
+                          className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-[1]"
+                        >
+                          <li>
+                            <Link href={`/vendor/store/${store.id}`} className="flex items-center">
+                              <PencilIcon className="h-4 w-4" /> Edit
+                            </Link>
+                          </li>
+                          <li>
+                            <button
+                              className="flex items-center text-error"
+                              onClick={(event) => initiateDelete(store.id, event)}
+                            >
+                              <TrashIcon className="h-4 w-4" /> Delete
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {paginatedStores.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center text-base-content/70 py-10">
+                      No stores found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          <div className=" border-t border-base-200">
+            <Pagination
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalItems={filteredStores.length}
+              data={filteredStores}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="mt-6">
-        <Pagination
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          totalItems={filteredStores.length}
-          data={filteredStores}
-        />
+        <StoreCreationComponent onStoreCreated={refreshStores} storesData={storesData || []} />
       </div>
 
-      <StoreCreationComponent onStoreCreated={refreshStores} storesData={storesData || []} />
-
-      <input
-        type="checkbox"
-        id="delete-modal"
-        className="modal-toggle"
-        checked={isDeleteModalOpen}
-        onChange={() => setIsDeleteModalOpen(!isDeleteModalOpen)}
-      />
-      <div className="modal" role="dialog">
+      <dialog id="delete-modal" className="modal" open={isDeleteModalOpen}>
         <div className="modal-box">
           <h3 className="text-lg font-bold text-primary">Confirm Delete</h3>
           {isDeletingStore ? (
             <div className="flex flex-col items-center justify-center py-8">
-              <span className="loading loading-spinner loading-md text-primary"></span>
-              <p className="text-lg text-base-content">Deleting store...</p>
+              <span className="loading loading-spinner loading-md"></span>
+              <p className="text-lg text-base-content/70">Deleting store...</p>
             </div>
           ) : (
             <>
               <div className="py-4">
-                <p className="text-center text-base-content">
+                <p className="text-center text-base-content/70">
                   Are you sure you want to delete this store? This action cannot be undone.
                 </p>
               </div>
@@ -236,14 +243,17 @@ const Store = () => {
                 <button className="btn btn-outline" onClick={() => setIsDeleteModalOpen(false)}>
                   Cancel
                 </button>
-                <button className="btn btn-error" onClick={handleDelete}>
+                <button className="btn btn-error btn-soft" onClick={handleDelete}>
                   Delete
                 </button>
               </div>
             </>
           )}
+          <form method="dialog" className="modal-backdrop">
+            <button onClick={() => setIsDeleteModalOpen(false)}>Close</button>
+          </form>
         </div>
-      </div>
+      </dialog>
     </div>
   );
 };
@@ -251,33 +261,40 @@ const Store = () => {
 const StoreSkeleton = () => (
   <div className="p-6">
     <div className="flex flex-col sm:flex-row justify-between items-center mb-6">
-      <div className="h-8 bg-base-200 rounded w-40 mb-4 sm:mb-0 animate-pulse"></div>
-      <div className="w-full sm:w-72 h-10 bg-base-200 rounded animate-pulse"></div>
+      <div className="skeleton h-8 w-56 mb-4 sm:mb-0"></div>
+      <div className="skeleton w-full sm:w-72 h-10"></div>
     </div>
 
-    <div className="overflow-x-auto bg-base-100 rounded-lg shadow">
-      <table className="table w-full">
-        <thead>
-          <tr>
-            {[...Array(6)].map((_, index) => (
-              <th key={index} className="bg-base-200 h-4 animate-pulse"></th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {[...Array(5)].map((_, rowIndex) => (
-            <tr key={rowIndex}>
-              {[...Array(6)].map((_, cellIndex) => (
-                <td key={cellIndex} className="bg-base-200 h-4 animate-pulse"></td>
+    <div className="card card-border bg-base-100">
+      <div className="card-body p-0">
+        <div className="overflow-x-auto">
+          <table className="table w-full">
+            <thead>
+              <tr className="bg-base-200/40">
+                {[...Array(6)].map((_, index) => (
+                  <th key={index}>
+                    <div className="skeleton h-4 w-full"></div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[...Array(5)].map((_, rowIndex) => (
+                <tr key={rowIndex}>
+                  {[...Array(6)].map((_, cellIndex) => (
+                    <td key={cellIndex}>
+                      <div className="skeleton h-4 w-full"></div>
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-
-    <div className="mt-6 flex justify-center">
-      <div className="h-8 bg-base-200 rounded w-64 animate-pulse"></div>
+            </tbody>
+          </table>
+        </div>
+        <div className="p-4 border-t border-base-200">
+          <div className="skeleton h-8 w-full"></div>
+        </div>
+      </div>
     </div>
   </div>
 );

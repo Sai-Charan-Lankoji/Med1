@@ -1,54 +1,45 @@
-import useSWR from 'swr';
+import useSWR from "swr";
 
 const baseUrl = "http://localhost:5000";
 
 const fetcher = async (url: string) => {
   const response = await fetch(url, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch order details: ${response.status}`);
+    const errorData = await response.json();
+    throw new Error(`Failed to fetch order details: ${response.status} - ${errorData.error || "Unknown error"}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log("Order API response:", data); // Debug the raw response
+
+  // Extract the nested order data (assuming { success: true, data: orderObject })
+  return data.data || data; // Fallback to data if not nested
 };
 
 export const useGetOrder = (id: string) => {
-  const url = `${baseUrl}/api/orders/${id}`;
+  const url = id ? `${baseUrl}/api/orders/${id}` : null;
 
   const { data, error, isLoading, mutate } = useSWR(url, fetcher, {
     revalidateOnFocus: false,
-    revalidateOnMount: false,
-    dedupingInterval: 0,
-    // To approximate staleTime behavior
-    revalidateIfStale: true, // Revalidate only if data is considered stale by your logic
-    // Custom stale check can be implemented via a wrapper if needed
+    revalidateOnMount: true, // Fetch on mount
+    dedupingInterval: 5 * 60 * 1000, // 5-minute deduping
     errorRetryCount: 0,
     onError: (error) => {
-      console.error('Error fetching order details:', error);
+      console.error("Error fetching order details:", error);
     },
   });
 
-  // Optional: Mimic staleTime by wrapping data with a timestamp check
-  const isDataFresh = () => {
-    if (!data || !data.timestamp) return false;
-    const fiveMinutes = 1000 * 60 * 5;
-    return Date.now() - data.timestamp < fiveMinutes;
-  };
-
-  // Wrap data to include timestamp if needed
-  const enhancedData = data
-    ? { ...data, timestamp: data.timestamp || Date.now() }
-    : undefined;
+  const orderData = data || undefined; // Ensure data is an object or undefined
 
   return {
-    data: enhancedData,
+    data: orderData,
     error,
     isLoading,
-    isFresh: isDataFresh(), // Custom helper to mimic staleTime
-    refetch: mutate, // Manual refetch if needed
+    refetch: mutate,
   };
 };

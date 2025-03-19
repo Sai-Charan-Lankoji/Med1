@@ -11,11 +11,16 @@ const deleteStore = async (id: string) => {
     credentials: "include",
   });
 
+  const data = await response.json();
+  console.log("Delete Store API response:", data); // Debug the response
+
   if (!response.ok) {
     const errorDetails = await response.json();
-    throw new Error(`Failed to delete store: ${response.status} - ${errorDetails.error}`);
+    throw new Error(`Failed to delete store: ${response.status} - ${data.error || errorDetails.error}`);
   }
-  return response;
+
+  // Extract the nested data (assuming { success: true, data: {...} })
+  return data.data || data;
 };
 
 export const useDeleteStore = () => {
@@ -24,19 +29,18 @@ export const useDeleteStore = () => {
   const deleteStoreMutation = async (id: string) => {
     try {
       const result = await deleteStore(id);
-      // Invalidate or update the 'stores' cache, similar to queryClient.invalidateQueries(['stores'])
+      // Optimistic update
       mutate(
         `${baseUrl}/api/stores`,
         async (currentData: any[] | undefined) => {
-          // Optimistically remove the store from the list
           if (currentData) {
             return currentData.filter((store) => store.id !== id);
           }
           return currentData;
         },
-        false // Don’t revalidate immediately
+        false
       );
-      // Trigger revalidation after success
+      // Trigger revalidation
       mutate(`${baseUrl}/api/stores`);
       return result;
     } catch (error) {

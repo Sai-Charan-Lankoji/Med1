@@ -13,11 +13,17 @@ const createSalesChannel = async (saleschannelData: SalesChannelFormData) => {
     credentials: "include",
     body: JSON.stringify(saleschannelData),
   });
+
+  const data = await response.json();
+  console.log("Create Sales Channel API response:", data); // Debug the response
+
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to create sales channel: ${response.status} - ${errorText}`);
+    throw new Error(`Failed to create sales channel: ${response.status} - ${data.error || errorText}`);
   }
-  return response.json();
+
+  // Extract the nested data (assuming { success: true, data: salesChannelObject })
+  return data.data || data;
 };
 
 export const useCreateSalesChannel = () => {
@@ -44,7 +50,7 @@ export const useCreateSalesChannel = () => {
     } catch (error) {
       setIsLoading(false);
       setError(error);
-      console.error('Error creating sales channel:', error);
+      console.error("Error creating sales channel:", error);
       throw error;
     }
   };
