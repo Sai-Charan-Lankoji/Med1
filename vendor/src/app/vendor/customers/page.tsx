@@ -21,8 +21,11 @@ const Customer = () => {
   const pageSize = 6;
 
   const getOrderCountForCustomer = (customerId) => {
-    if (!orders) return 0;
-    return orders.filter((order) => order.customer_id === customerId).length;
+    // Check if orders exists and has a data property that's an array
+    if (!orders || !Array.isArray(orders.data)) return 0;
+    
+    // Use orders.data instead of orders directly
+    return orders.data.filter((order) => order.customer_id === customerId).length;
   };
 
   const formatDate = (timestamp) => {

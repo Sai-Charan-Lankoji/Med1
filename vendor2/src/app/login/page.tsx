@@ -98,7 +98,7 @@ const LoginForm = () => {
               className="mb-8"
             >
               <Image
-                src=""
+                src="/medusaLogo.png"
                 alt="Logo"
                 className="h-20 w-20 mx-auto rounded-full shadow-lg"
                 width={80}

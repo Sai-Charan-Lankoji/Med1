@@ -1,64 +1,61 @@
+import useSWR from "swr";
+
 const baseUrl = "http://localhost:5000";
-import { useQuery } from '@tanstack/react-query';
 
-// Function to fetch plans
-const fetchPlans = async () => {
-  const url = `${baseUrl}/api/plan`;
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // Include cookies in the request
-    });
+const fetchPlans = async (url: string) => {
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
 
-    const data = await response.json();
+  const data = await response.json();
+  console.log("Plans API response:", data); // Debug the raw response
 
-    if (!response.ok) {
-      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-
-      if (response.status === 404 || response.status === 500) {
-        console.log('No plans found or server error. Returning empty array.');
-        return []; // Return an empty array if no plans found or server error occurs
-      }
-
-      throw new Error(data.error || `HTTP error! Status: ${response.status}`);
-    }
-
-    if (!data || data.length === 0) {
-      console.log('No plans found.');
-      return []; // Return an empty array if the plans list is empty
-    }
-
-    return data;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.log('Error fetching plans:', error.message);
-      return []; // Return an empty array in case of error
-    } else {
-      console.error('An unknown error occurred:', error);
+  if (!response.ok) {
+    console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
+    if (response.status === 404 || response.status === 500) {
+      console.log("No plans found or server error. Returning empty array.");
       return [];
     }
+    throw new Error(data.error || `HTTP error! Status: ${response.status}`);
   }
+
+  // Extract the nested data array (assuming { success: true, data: array })
+  const plansData = data.data || data;
+  if (!plansData || plansData.length === 0) {
+    console.log("No plans found.");
+    return [];
+  }
+
+  return Array.isArray(plansData) ? plansData : [];
 };
 
-// Custom React Query hook for fetching plans
 export const useGetPlans = () => {
-  return useQuery(['plans'], fetchPlans, {
-    refetchOnWindowFocus: false, // Avoid refetching when the window regains focus
-    refetchOnMount: false,      // Avoid refetching when the component mounts
-    cacheTime: 1000 * 60 * 10,  // Cache the response for 10 minutes
-    staleTime: 1000 * 60 * 5,   // Mark data as fresh for 5 minutes
-    retry: false,               // Disable retries on error
+  const url = `${baseUrl}/api/plan`;
 
-    // Error handling
+  const { data, error, isLoading, mutate } = useSWR(url, fetchPlans, {
+    revalidateOnFocus: false,
+    revalidateOnMount: true, // Fetch on mount
+    dedupingInterval: 10 * 60 * 1000, // 10 minutes
+    errorRetryCount: 0,
     onError: (error: unknown) => {
       if (error instanceof Error) {
-        console.error('Error occurred while fetching plans:', error.message);
+        console.error("Error occurred while fetching plans:", error.message);
       } else {
-        console.error('An unknown error occurred:', error);
+        console.error("An unknown error occurred:", error);
       }
     },
   });
+
+  const plansData = Array.isArray(data) ? data : [];
+
+  return {
+    data: plansData,
+    error,
+    isLoading,
+    refetch: mutate,
+  };
 };

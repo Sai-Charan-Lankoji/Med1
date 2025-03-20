@@ -1,15 +1,13 @@
+import useSWR from "swr";
+
 const baseUrl = "http://localhost:5000";
 import { vendor_id } from '@/app/utils/constant';
-import { useQuery } from '@tanstack/react-query';
 
-const fetchCustomers = async () => {
-  
+const fetchCustomers = async (url: string) => {
   if (!vendor_id) {
     console.log('No vendor ID found in sessionStorage');
-    return []; 
+    return [];
   }
-
-  const url = `${baseUrl}/api/customer/vendor/${vendor_id}`;
 
   try {
     const response = await fetch(url, {
@@ -20,24 +18,21 @@ const fetchCustomers = async () => {
       credentials: 'include',
     });
 
-
     const data = await response.json();
     if (!response.ok) {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-
       if (response.status === 404 || response.status === 500) {
         console.log('No customers found or server error. Returning empty array.');
-        return []; 
+        return [];
       }
-
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    return data;
+    return data; // Array of customers
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching data:', error.message);
-      return []; 
+      return [];
     } else {
       console.error('An unknown error occurred:', error);
       return [];
@@ -45,25 +40,34 @@ const fetchCustomers = async () => {
   }
 };
 
-
 export const useGetCustomers = () => {
-  return useQuery(['customers'], fetchCustomers, {
-    refetchOnWindowFocus: false,  
-    refetchOnMount: false,        
-    cacheTime: 0,                
-    staleTime: 1000 * 60 * 5,               
-    retry: false,               
+  const url = vendor_id ? `${baseUrl}/api/customer/vendor/${vendor_id}` : null;
 
-    onError: (error: unknown) => {
-      if (error instanceof Error) {
-        console.error('Error occurred while fetching customers:', error.message);
-      } else {
-        console.error('An unknown error occurred:', error);
-      }
-    },
-  });
+  const { data, error, isLoading, mutate } = useSWR(
+    vendor_id ? ['customers', vendor_id] : null,
+    () => fetchCustomers(url!),
+    {
+      revalidateOnFocus: false,
+      revalidateOnMount: true,
+      dedupingInterval: 5 * 60 * 1000, // 5-minute stale time
+      refreshInterval: 0,
+      shouldRetryOnError: false,
+      onError: (error: unknown) => {
+        if (error instanceof Error) {
+          console.error('Error occurred while fetching customers:', error.message);
+        } else {
+          console.error('An unknown error occurred:', error);
+        }
+      },
+    }
+  );
+
+  const customersData = Array.isArray(data) ? data : [];
+
+  return {
+    data: customersData,
+    isLoading,
+    error,
+    refetch: mutate,
+  };
 };
-
-
-
-  

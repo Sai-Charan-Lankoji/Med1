@@ -1,56 +1,60 @@
+import useSWR from "swr";
+import { vendor_id } from "@/app/utils/constant";
+
 const baseUrl = "http://localhost:5000";
-import { vendor_id } from '@/app/utils/constant';
-import { useQuery } from '@tanstack/react-query';
-const id = vendor_id
-const fetchVendor = async () => { 
-  const url = `${baseUrl}/api/vendors/${id}`;
+
+const fetchVendor = async (url: string) => {
   try {
     const response = await fetch(url, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      credentials: 'include',
+      credentials: "include",
     });
 
-
     const data = await response.json();
+    console.log("Vendor API response:", data); // Debug the raw response
 
     if (!response.ok) {
       console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    return data;
+    // Extract the nested vendor data (assuming { success: true, data: vendorObject })
+    return data.data || data;
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.log('Error fetching data:', error.message);
-      return []; 
+      console.log("Error fetching vendor:", error.message);
+      return null; // Single vendor, not an array
     } else {
-      console.error('An unknown error occurred:', error);
-      return [];
+      console.error("An unknown error occurred:", error);
+      return null;
     }
   }
 };
 
-
 export const useGetVendor = () => {
-  return useQuery(['store',id], () => fetchVendor(), {
-    refetchOnWindowFocus: false,  
-    refetchOnMount: false,        
-    cacheTime: 0,                
-    staleTime: 1000 * 60 * 5,               
-    retry: false, 
+  const url = vendor_id ? `${baseUrl}/api/vendors/${vendor_id}` : null;
+
+  const { data, error, isLoading, mutate } = useSWR(url, fetchVendor, {
+    revalidateOnFocus: false,
+    revalidateOnMount: true, // Fetch on mount
+    dedupingInterval: 5 * 60 * 1000, // 5 minutes
+    shouldRetryOnError: false,
     onError: (error: unknown) => {
       if (error instanceof Error) {
-        console.error('Error occurred while fetching products:', error.message);
+        console.error("Error occurred while fetching vendor:", error.message);
       } else {
-        console.error('An unknown error occurred:', error);
+        console.error("An unknown error occurred:", error);
       }
     },
   });
+
+  return {
+    data: data || null, // Return null if no vendor is found
+    error,
+    isLoading,
+    refetch: mutate,
+  };
 };
-
-
-
-  

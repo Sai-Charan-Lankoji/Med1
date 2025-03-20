@@ -1,45 +1,35 @@
+import useSWR from 'swr';
+
 const baseUrl = "http://localhost:5000";
-import { useQuery } from '@tanstack/react-query';
 
-const fetchStore = async (id: string) => {
-  const url = `${baseUrl}/api/stores/${id}`;
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+const fetchStore = async (url: string) => {
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  });
 
+  const data = await response.json();
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-      throw new Error(data.error || `HTTP error! Status: ${response.status}`);
-    }
-
-    return data;
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.log('Error fetching data:', error.message);
-      return []; 
-    } else {
-      console.error('An unknown error occurred:', error);
-      return [];
-    }
+  if (!response.ok) {
+    console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
+    throw new Error(data.error || `HTTP error! Status: ${response.status}`);
   }
+
+  return data;
 };
 
-
 export const useGetStore = (id: string) => {
-  return useQuery(['store',id], () => fetchStore(id), {
-    refetchOnWindowFocus: false,  
-    refetchOnMount: false,        
-    cacheTime: 0,                
-    staleTime: 1000 * 60 * 5,               
-    retry: false, 
+  const url = `${baseUrl}/api/stores/${id}`;
+
+  const { data, error, isLoading, mutate } = useSWR(url, fetchStore, {
+    revalidateOnFocus: false,
+    revalidateOnMount: false,
+    dedupingInterval: 0,
+    errorRetryCount: 0,
+    revalidateIfStale: false, // Control staleness manually
     onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching products:', error.message);
@@ -48,8 +38,24 @@ export const useGetStore = (id: string) => {
       }
     },
   });
+
+  // Enhance data with timestamp for staleness
+  const enhancedData = data
+    ? { store: data, timestamp: Date.now() }
+    : { store: [], timestamp: 0 };
+
+  const isFresh = () => {
+    if (!enhancedData.timestamp) return false;
+    const fiveMinutes = 1000 * 60 * 5;
+    return Date.now() - enhancedData.timestamp < fiveMinutes;
+  };
+
+  return {
+    data: enhancedData.store, // Matches original structure
+    error,
+    isLoading,
+    timestamp: enhancedData.timestamp, // Optional: expose timestamp
+    isFresh: isFresh(),        // Optional: mimic staleTime
+    refetch: mutate,          // Optional: manual refetch
+  };
 };
-
-
-
-  

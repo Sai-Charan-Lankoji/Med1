@@ -225,13 +225,13 @@ export function ProductUploadForm({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-            {hasErrors && (
+            {/* {hasErrors && (
               <Alert variant="destructive" className="mb-6">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Error</AlertTitle>
-                <AlertDescription>Please fix the errors in the form before submitting.</AlertDescription>
+                <AlertDescription>Please fix the errors in the form before submitting. {formerr}</AlertDescription>
               </Alert>
-            )}
+            )} */}
 
             <TabsContent value="basic" className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
@@ -249,26 +249,26 @@ export function ProductUploadForm({
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="price"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Price</FormLabel>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          placeholder="0.00"
-                          {...field}
-                          value={field.value === 0 && field.name === document.activeElement?.id ? "" : field.value}
-                          onChange={(e) => {
-                            const value = e.target.value === "" ? 0 : Number(e.target.value)
-                            field.onChange(value)
-                          }}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
+                  <FormField
+                    control={form.control}
+                    name="price"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Price</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            placeholder="0.00"
+                            {...field}
+                            value={field.value === 0 ? "" : field.value}
+                            onChange={(e) => {
+                              const value = e.target.value === "" ? undefined : Number(e.target.value)
+                              field.onChange(value)
+                            }}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                   )}
                 />
               </div>

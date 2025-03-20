@@ -1,74 +1,67 @@
+import useSWR from "swr";
+import { vendor_id } from "@/app/utils/constant";
+
 const baseUrl = "http://localhost:5000";
-import { vendor_id } from '@/app/utils/constant';
-import { useQuery } from '@tanstack/react-query';
 
-const fetchSalesChannels = async () => {
-  
-
+const fetchSalesChannels = async (url: string) => {
   if (!vendor_id) {
-    console.log('No vendor ID found in sessionStorage');
-    return []; 
+    console.log("No vendor ID found in sessionStorage");
+    return [];
   }
 
-  const url = `${baseUrl}/api/saleschannels/vendor/${vendor_id}`;
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+  });
 
-  try {
-    const response = await fetch(url, { 
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    });
+  const data = await response.json();
+  console.log("Sales Channels API response:", data); // Debug the raw response
 
-
-    const data = await response.json();
- 
-    if (!response.ok) {
-      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-
-      if (response.status === 404 || response.status === 500) {
-        console.log('No sales channels found or server error. Returning empty array.');
-        return []; 
-      }
-
-      throw new Error(data.error || `HTTP error! Status: ${response.status}`);
-    }
-    if (!data || data.length === 0) {
-        console.log('No sales channels found for the given vendor.');
-        return []; 
-      }
-    return data; 
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.log('Error fetching data:', error.message);
-      return []; 
-    } else {
-      console.error('An unknown error occurred:', error);
+  if (!response.ok) {
+    console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
+    if (response.status === 404 || response.status === 500) {
+      console.log("No sales channels found or server error. Returning empty array.");
       return [];
     }
+    throw new Error(data.error || `HTTP error! Status: ${response.status}`);
   }
+
+  // Extract the nested data array (assuming { success: true, data: array })
+  const salesChannelsData = data.data || data;
+  if (!salesChannelsData || salesChannelsData.length === 0) {
+    console.log("No sales channels found for the given vendor.");
+    return [];
+  }
+
+  return Array.isArray(salesChannelsData) ? salesChannelsData : [];
 };
 
-
 export const useGetSalesChannels = () => {
-  return useQuery(['salesChannels'], fetchSalesChannels, {
-    refetchOnWindowFocus: false,  
-    refetchOnMount: false,        
-    cacheTime: 0,                
-    staleTime: 1000 * 60 * 5,               
-    retry: false,               
+  const url = vendor_id ? `${baseUrl}/api/saleschannels/vendor/${vendor_id}` : null;
 
+  const { data, error, isLoading, mutate } = useSWR(url, fetchSalesChannels, {
+    revalidateOnFocus: false,
+    revalidateOnMount: true, // Fetch on mount
+    dedupingInterval: 5 * 60 * 1000, // 5-minute deduping
+    errorRetryCount: 0,
     onError: (error: unknown) => {
       if (error instanceof Error) {
-        console.error('Error occurred while fetching products:', error.message);
+        console.error("Error occurred while fetching sales channels:", error.message);
       } else {
-        console.error('An unknown error occurred:', error);
+        console.error("An unknown error occurred:", error);
       }
     },
   });
+
+  const salesChannelsData = Array.isArray(data) ? data : [];
+
+  return {
+    data: salesChannelsData,
+    error,
+    isLoading,
+    refetch: mutate,
+  };
 };
-
-
-
-  

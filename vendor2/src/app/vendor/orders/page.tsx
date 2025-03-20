@@ -6,47 +6,44 @@ import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
 import { useRouter } from "next/navigation";
-import { getColors } from "@/app/utils/dummyData";
 import Pagination from "@/app/utils/pagination";
-import { FiSearch } from "react-icons/fi";
+import { Search, Eye, RefreshCw, Filter, Package, User, CreditCard, Store, Calendar, DollarSign } from "lucide-react";
 import { parseISO, format, parse, isValid } from "date-fns";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
-import { motion, AnimatePresence } from "framer-motion";
-import { TbReload } from "react-icons/tb";
-import { Eye } from "lucide-react";
 
 const Order = () => {
-  const { data: OrdersData, isLoading } = useGetOrders();
+  const { data: OrdersData, isLoading: ordersLoading, refetch: refetchOrders } = useGetOrders();
   const { data: saleschannelsData } = useGetSalesChannels();
-  const { data: customersData } = useGetCustomers();
-  const { data: stores } = useGetStores();
+  const { data: customersData, isLoading: customersLoading } = useGetCustomers();
+  const { data: stores, isLoading: storesLoading } = useGetStores();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedStore, setSelectedStore] = useState("all");
+  const [selectedStatus, setSelectedStatus] = useState("all");
   const router = useRouter();
-  const pageSize = 6;
+  const pageSize = 8;
 
   const getCustomerFirstName = useCallback(
-    (customerId: any) => {
+    (customerId) => {
       const customer = customersData?.find(
-        (customer: { id: any }) => customer.id === customerId
+        (customer) => customer.id === customerId
       );
       return customer ? `${customer.first_name} ${customer.last_name}` : "N/A";
     },
     [customersData]
   );
 
-  const formatTimestamp = (timestamp: string) => {
+  const formatTimestamp = (timestamp) => {
     const date = parseISO(timestamp);
     return format(date, "dd MMM yyyy hh:mm a").toLocaleString();
   };
 
-  const formatDate = (timestamp: string) => {
+  const formatDate = (timestamp) => {
     const date = parseISO(timestamp);
     return format(date, "dd-MM-yyyy");
   };
 
-  const parseDateString = (dateString: string) => {
+  const parseDateString = (dateString) => {
     const formats = ["dd-MM-yyyy", "yyyy-MM-dd", "MM-dd-yyyy"];
     for (const formatString of formats) {
       const parsedDate = parse(dateString, formatString, new Date());
@@ -58,26 +55,35 @@ const Order = () => {
   };
 
   const filteredOrders = useMemo(() => {
-    if (!OrdersData) return [];
+    if (!OrdersData || !customersData || !stores) return [];
 
     const searchLower = searchQuery.toLowerCase();
     const searchDate = parseDateString(searchQuery);
 
-    return OrdersData?.filter((order) => {
+    return OrdersData.filter((order) => {
       const orderDate = parseISO(order.createdAt);
       const matchesSearch =
-        getCustomerFirstName(order.customer_id).toLowerCase().includes(searchLower) ||
+        getCustomerFirstName(order.customer_id)
+          .toLowerCase()
+          .includes(searchLower) ||
         order.payment_status.toLowerCase().includes(searchLower) ||
         order.status.toLowerCase().includes(searchLower) ||
         order.id.toLowerCase().includes(searchLower) ||
         order.email.toLowerCase().includes(searchLower) ||
-        (searchDate && format(orderDate, "dd-MM-yyyy") === format(searchDate, "dd-MM-yyyy"));
+        (searchDate &&
+          format(orderDate, "dd-MM-yyyy") === format(searchDate, "dd-MM-yyyy"));
 
-      const matchesStore = selectedStore === "all" || order.store_id === selectedStore;
+      const matchesStore =
+        selectedStore === "all" || order.store_id === selectedStore;
 
-      return matchesSearch && matchesStore;
+      const matchesStatus =
+        selectedStatus === "all" || 
+        (selectedStatus === "payment" && order.payment_status === "captured") ||
+        (selectedStatus === "pending" && order.payment_status !== "captured");
+
+      return matchesSearch && matchesStore && matchesStatus;
     });
-  }, [OrdersData, searchQuery, selectedStore, getCustomerFirstName]);
+  }, [OrdersData, customersData, stores, searchQuery, selectedStore, selectedStatus, getCustomerFirstName]);
 
   const paginatedOrders = useMemo(() => {
     const startIndex = currentPage * pageSize;
@@ -85,260 +91,362 @@ const Order = () => {
     return filteredOrders.slice(startIndex, endIndex);
   }, [filteredOrders, currentPage, pageSize]);
 
-  const getRowIndex = (index: number) => {
+  const getRowIndex = (index) => {
     return currentPage * pageSize + index + 1;
   };
 
-  const getStoreName = (storeId: string) => {
-    const store = stores?.find((s: any) => s.id === storeId);
+  const getStoreName = (storeId) => {
+    const store = stores?.find((s) => s.id === storeId);
     return store ? store.name : "N/A";
   };
 
-  const handlefetchOrders = () => {
-    window.location.reload();
+  const handleFetchOrders = () => {
+    refetchOrders();
   };
-
-  if (isLoading) {
+  
+  const OrderSkeleton = () => {
+    return (
+      <div className="p-4 md:p-6 container mx-auto max-w-7xl">
+        <div className="animate-pulse">
+          {/* Header Skeleton */}
+          <div className="flex justify-between mb-6">
+            <div>
+              <div className="h-8 w-48 bg-base-200 rounded-lg mb-2"></div>
+              <div className="h-4 w-64 bg-base-200 rounded-lg"></div>
+            </div>
+            <div className="h-10 w-24 bg-base-200 rounded-lg"></div>
+          </div>
+          
+          {/* Stats Cards Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="bg-base-100 p-6 rounded-lg">
+                <div className="h-5 w-24 mb-2 bg-base-200 rounded"></div>
+                <div className="h-8 w-16 mb-2 bg-base-200 rounded"></div>
+                <div className="h-4 w-20 bg-base-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Filters Skeleton */}
+          <div className="bg-base-100 p-4 rounded-lg mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="h-10 w-48 bg-base-200 rounded-lg"></div>
+              <div className="h-10 flex-1 bg-base-200 rounded-lg"></div>
+            </div>
+          </div>
+          
+          {/* Table Skeleton */}
+          <div className="bg-base-100 rounded-lg overflow-hidden">
+            <div className="flex p-4 bg-base-200">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="h-6 flex-1 bg-base-300 rounded mx-2"></div>
+              ))}
+            </div>
+            
+            {[...Array(6)].map((_, rowIndex) => (
+              <div key={rowIndex} className="flex p-4 border-b border-base-200">
+                {[...Array(8)].map((_, colIndex) => (
+                  <div key={colIndex} className="h-10 flex-1 bg-base-200 rounded mx-2"></div>
+                ))}
+              </div>
+            ))}
+            
+            <div className="p-4 border-t border-base-200">
+              <div className="h-8 w-full bg-base-200 rounded-lg"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  if (ordersLoading || customersLoading || storesLoading) {
     return <OrderSkeleton />;
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="p-4"
-    >
-      <motion.div
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
-          Orders
-        </h2>
-      </motion.div>
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="flex flex-col sm:flex-row justify-between items-center mb-8"
-      >
-        <div className="flex flex-col sm:flex-row items-center justify-between flex-wrap space-x-0 sm:space-x-4 space-y-4 sm:space-y-0 w-full">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-            className="flex flex-row items-center space-x-4 w-full sm:w-auto"
-          >
+    <div className="p-4 md:p-6 container mx-auto max-w-9xl bg-base-200 rounded-box">
+      {/* Header */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-2">
+            <Package className="h-6 w-6" /> Orders
+          </h2>
+          <p className="text-base-content/70 text-sm mt-1">
+            Manage and track your orders efficiently
+          </p>
+        </div>
+
+        <button
+          onClick={handleFetchOrders}
+          className="btn btn-sm btn-primary btn-soft mt-4 sm:mt-0 self-start sm:self-auto gap-2"
+        >
+          <RefreshCw className="w-4 h-4" /> Refresh
+        </button>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="stats stats-vertical sm:stats-horizontal bg-base-100">
+          <div className="stat">
+            <div className="stat-figure text-primary">
+              <Package className="w-6 h-6" />
+            </div>
+            <div className="stat-title">Total Orders</div>
+            <div className="stat-value text-primary">{OrdersData?.length || 0}</div>
+            <div className="stat-desc">All time orders</div>
+          </div>
+        </div>
+
+        <div className="stats stats-vertical sm:stats-horizontal bg-base-100">
+          <div className="stat">
+            <div className="stat-figure text-secondary">
+              <CreditCard className="w-6 h-6" />
+            </div>
+            <div className="stat-title">Completed</div>
+            <div className="stat-value text-secondary">
+              {OrdersData?.filter(o => o.payment_status === "captured").length || 0}
+            </div>
+            <div className="stat-desc">Captured payments</div>
+          </div>
+        </div>
+
+        <div className="stats stats-vertical sm:stats-horizontal bg-base-100">
+          <div className="stat">
+            <div className="stat-figure text-accent">
+              <User className="w-6 h-6" />
+            </div>
+            <div className="stat-title">Customers</div>
+            <div className="stat-value text-accent">{customersData?.length || 0}</div>
+            <div className="stat-desc">Unique customers</div>
+          </div>
+        </div>
+
+        <div className="stats stats-vertical sm:stats-horizontal bg-base-100">
+          <div className="stat">
+            <div className="stat-figure text-neutral">
+              <Store className="w-6 h-6" />
+            </div>
+            <div className="stat-title">Stores</div>
+            <div className="stat-value text-neutral">{stores?.length || 0}</div>
+            <div className="stat-desc">Active stores</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-base-100 p-4 rounded-lg card-border mb-6">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex items-center gap-2 mb-2 md:mb-0">
+            <Filter className="w-4 h-4 text-base-content/70" />
+            <span className="font-medium text-sm">Filters:</span>
+          </div>
+          
+          <div className="flex-1 flex flex-col sm:flex-row gap-4">
+            {/* Updated to use join component */}
+            <div className="join flex-1">
+              <input
+                type="text"
+                placeholder="Search by customer, ID, status..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="input join-item flex-grow"
+              />
+              <button className="btn btn-primary join-item">
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+            
             <select
               value={selectedStore}
               onChange={(e) => setSelectedStore(e.target.value)}
-              className="select select-bordered bg-white border-indigo-200 rounded-xl w-full sm:w-48"
+              className="select w-full md:w-48"
             >
               <option value="all">All Stores</option>
-              {stores?.map((store: any) => (
+              {stores?.map((store) => (
                 <option key={store.id} value={store.id}>
                   {store.name}
                 </option>
               ))}
             </select>
-          </motion.div>
-
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3, delay: 0.5 }}
-            className="flex flex-row items-center space-x-4 w-full sm:w-auto"
-          >
-            <div className="relative w-full sm:w-64">
-              <input
-                type="text"
-                placeholder="Search Orders"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="input input-bordered w-full text-sm pl-11 py-4 bg-white/50 border-indigo-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-              />
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-indigo-400" />
-            </div>
-          </motion.div>
-        </div>
-      </motion.div>
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="flex flex-col gap-4"
-      >
-        {filteredOrders.length === 0 ? (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.3 }}
-            className="text-center text-indigo-500 py-8 bg-white rounded-lg shadow-sm"
-          >
-            <p>No Orders found.</p>
-            <button
-              onClick={handlefetchOrders}
-              className="btn btn-primary mt-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold py-2 px-4 hover:from-blue-600 hover:to-purple-600 transition duration-300 flex items-center gap-2"
+            
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="select w-full md:w-48"
             >
-              <span>Retry</span>
-              <TbReload className="w-5 h-5" />
-            </button>
-          </motion.div>
+              <option value="all">All Payment Status</option>
+              <option value="payment">Payment Captured</option>
+              <option value="pending">Payment Pending</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Orders Table or No Data */}
+      <div className="flex flex-col gap-6 shadow-2xl">
+        {filteredOrders.length === 0 ? (
+          <div className="card card-border bg-base-100 shadow-2xl rounded-full">
+            <div className="card-body items-center text-center">
+              <div className="bg-base-200 p-8 rounded-full mb-4">
+                <Package className="w-12 h-12 text-base-content/40" />
+              </div>
+              <h2 className="card-title text-xl">No Orders Found</h2>
+              <p className="text-base-content/70 mb-4">
+                No orders match your current search criteria
+              </p>
+              <div className="card-actions">
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSelectedStore("all");
+                    setSelectedStatus("all");
+                  }}
+                  className="btn btn-outline btn-primary"
+                >
+                  Clear Filters
+                </button>
+                <button
+                  onClick={handleFetchOrders}
+                  className="btn btn-primary btn-soft"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" /> Retry
+                </button>
+              </div>
+            </div>
+          </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl shadow-md">
-            <table className="table w-full">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-800">
-                    Order
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-800">
-                    Date Added
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-semibold text-indigo-800">
-                    Customer
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-800">
-                    Fulfillment
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-800">
-                    Payment Status
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-800">
-                    Store
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-indigo-800">
-                    Total
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <AnimatePresence>
-                  {paginatedOrders.map((order: any, index: any) => (
-                    <motion.tr
+          <div className="card card-border bg-base-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="table table-zebra w-full">
+                <thead>
+                  <tr className="bg-base-200 text-base-content">
+                    <th className="text-center">
+                      <div className="flex items-center justify-center">
+                        <span>#</span>
+                      </div>
+                    </th>
+                    <th className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>Date</span>
+                      </div>
+                    </th>
+                    <th>
+                      <div className="flex items-center gap-1">
+                        <User className="w-4 h-4" />
+                        <span>Customer</span>
+                      </div>
+                    </th>
+                    <th className="text-center">Fulfillment</th>
+                    <th className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <CreditCard className="w-4 h-4" />
+                        <span>Payment</span>
+                      </div>
+                    </th>
+                    <th className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <Store className="w-4 h-4" />
+                        <span>Store</span>
+                      </div>
+                    </th>
+                    <th className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <DollarSign className="w-4 h-4" />
+                        <span>Total</span>
+                      </div>
+                    </th>
+                    <th className="text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedOrders.map((order, index) => (
+                    <tr
                       key={order.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      className="hover:bg-indigo-50 transition-colors duration-150 ease-in-out"
+                      className="hover:bg-base-200/50 transition-colors duration-200"
                     >
-                      <td className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            className="btn btn-ghost btn-sm text-indigo-600 hover:text-indigo-800 tooltip"
-                            data-tip="View Order"
-                            onClick={() => router.push(`/vendor/orders/${order.id}`)}
-                          >
-                            <Eye className="w-5 h-5" />
-                          </button>
-                          <span>{getRowIndex(index)}</span>
+                      <td className="text-center font-medium">{getRowIndex(index)}</td>
+                      <td className="text-center">
+                        <div className="flex flex-col">
+                          <span className="font-medium">{formatDate(order.createdAt)}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center tooltip" data-tip={formatTimestamp(order.createdAt)}>
-                        <span className="cursor-help">{formatDate(order.createdAt)}</span>
+                      <td>
+                        <div className="flex items-center gap-3">
+                          <div className="avatar avatar-placeholder">
+                            <div className="w-8 rounded-full bg-primary text-primary-content">
+                              <span>
+                                {getCustomerFirstName(order.customer_id).charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <div className="font-medium">{getCustomerFirstName(order.customer_id)}</div>
+                            <div className="text-xs text-base-content/70">{order.email}</div>
+                          </div>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center space-x-2">
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ type: "spring", stiffness: 260, damping: 20 }}
-                          className={`w-8 h-8 flex items-center justify-center rounded-full text-white ${getColors(index)}`}
-                        >
-                          {getCustomerFirstName(order.customer_id).charAt(0).toUpperCase()}
-                        </motion.div>
-                        <span>{getCustomerFirstName(order.customer_id)}</span>
-                      </td>
-                      <td className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                        <span className="badge badge-outline bg-indigo-100 text-indigo-800">
+                      <td className="text-center">
+                        <span className={`badge ${
+                          order.fulfillment_status === "fulfilled" 
+                            ? "badge-success badge-soft" 
+                            : "badge-secondary badge-soft"
+                        }`}>
                           {order.fulfillment_status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                        <span
-                          className={`badge ${
-                            order.payment_status === "captured"
-                              ? "badge-success"
-                              : "badge-warning"
-                          }`}
-                        >
+                      <td className="text-center">
+                        <span className={`badge ${
+                          order.payment_status === "captured" 
+                            ? "badge-success badge-soft" 
+                            : "badge-warning badge-soft"
+                        }`}>
                           {order.payment_status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                        {getStoreName(order.store_id)}
-                      </td>
-                      <td className="px-4 py-3 text-sm bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent text-center">
-                        <span className="font-medium">{order.total_amount}</span>{" "}
-                        <span className="text-xs text-indigo-500">
-                          {order.currency_code.toUpperCase()}
+                      <td className="text-center">
+                        <span className="badge badge-outline">
+                          {getStoreName(order.store_id)}
                         </span>
                       </td>
-                    </motion.tr>
+                      <td className="text-center">
+                        <div className="font-medium">
+                          {order.total_amount}
+                          <span className="text-xs ml-1 text-base-content/70">
+                            {order.currency_code.toUpperCase()}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="text-center">
+                        <button
+                          onClick={() => router.push(`/vendor/orders/${order.id}`)}
+                          className="btn btn-sm btn-circle btn-primary btn-soft"
+                          title="View Order Details"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
                   ))}
-                </AnimatePresence>
-              </tbody>
-            </table>
+                </tbody>
+              </table>
+            </div>
+            
+            <div className="p-4 border-t border-base-200">
+              <Pagination
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                totalItems={filteredOrders.length}
+                data={filteredOrders}
+              />
+            </div>
           </div>
         )}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Pagination
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            totalItems={filteredOrders.length}
-            data={filteredOrders}
-          />
-        </motion.div>
-      </motion.div>
-    </motion.div>
-  );
-};
-
-const OrderSkeleton = () => {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-lg"
-    >
-      <div className="animate-pulse">
-        <div className="bg-indigo-200 h-8 w-32 rounded-lg mb-6"></div>
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
-          <div className="bg-indigo-200 h-10 w-48 rounded-lg"></div>
-          <div className="bg-indigo-200 h-10 w-64 rounded-lg"></div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="grid grid-cols-7 gap-4 p-4 bg-indigo-50">
-            {[...Array(7)].map((_, index) => (
-              <div key={index} className="bg-indigo-200 h-6 rounded-md"></div>
-            ))}
-          </div>
-          {[...Array(6)].map((_, rowIndex) => (
-            <div
-              key={rowIndex}
-              className="grid grid-cols-7 gap-4 p-4 border-t border-indigo-100"
-            >
-              {[...Array(7)].map((_, colIndex) => (
-                <div key={colIndex} className="bg-indigo-100 h-8 rounded-md"></div>
-              ))}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex justify-center mt-6">
-          <div className="bg-indigo-200 h-10 w-48 rounded-lg"></div>
-        </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
-
-export default Order;
+    
+export default withAuth(Order);

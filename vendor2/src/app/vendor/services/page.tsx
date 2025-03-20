@@ -1,53 +1,46 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Activity, ShoppingBag, CheckCircle } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { CheckCircle, Package, Store, ShieldCheck, BadgeCheck } from "lucide-react";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { useGetPlans } from "@/app/hooks/plan/useGetPlans";
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan";
-import { useUpdateVendorPlan } from "@/app/hooks/vendor/useUpdateVendorPlan"; 
+import { useUpdateVendorPlan } from "@/app/hooks/vendor/useUpdateVendorPlan";
 import { useGetVendor } from "@/app/hooks/vendor/useGetVendor";
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast";
 import { plan_id } from "@/app/utils/constant";
- 
+import { motion } from "framer-motion";
+
 export default function ServicesDashboard() {
   const { toast } = useToast();
   const { data: stores, isLoading: storesLoading } = useGetStores();
   const { data: plans, isLoading: plansLoading } = useGetPlans();
   const { data: vendor, isLoading: vendorLoading } = useGetVendor();
-  const { data: currentPlan, isLoading: planLoading, refetch: refetchPlan } = useGetPlan(plan_id);
+  const { data: currentPlan, isLoading: planLoading, refetch: refetchPlan } = useGetPlan(
+    plan_id || vendor?.plan_id || ""
+  );
 
-  const updatePlanMutation = useUpdateVendorPlan();
+  const { mutateAsync: updatePlanMutation, isLoading: updateLoading } = useUpdateVendorPlan();
   const [activePlan, setActivePlan] = useState(null);
   const currentStores = stores?.length || 0;
+
   useEffect(() => {
-     
-        setActivePlan(currentPlan);
-     
-  }, [currentPlan, plans]);
+    if (currentPlan) {
+      setActivePlan(currentPlan);
+    } else if (vendor?.plan_id && plans) {
+      const vendorPlan = plans.find((plan) => plan.id === vendor.plan_id);
+      setActivePlan(vendorPlan || null);
+    }
+  }, [currentPlan, vendor, plans]);
 
   const handleUpgradePlan = async (plan) => {
     try {
-      await updatePlanMutation.mutateAsync({
+      await updatePlanMutation({
         plan_id: plan.id,
         plan: plan.name,
       });
-      
-      // Immediately update the active plan
+
       setActivePlan(plan);
-      
-      // Refetch the current plan data
       await refetchPlan();
 
       toast({
@@ -64,158 +57,152 @@ export default function ServicesDashboard() {
     }
   };
 
-  if (planLoading) {
+  if (storesLoading || plansLoading || vendorLoading || planLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.5 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="text-2xl font-bold text-indigo-600"
-        >
-          Loading...
-        </motion.div>
+      <div className="flex justify-center items-center min-h-screen">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
+  }
+
+  if (!activePlan || !plans) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p className="text-lg text-base-content">No plans available</p>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="p-6 max-w-6xl mx-auto space-y-8 bg-linear-to-br from-indigo-50 to-purple-50 min-h-screen">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h1 className="text-5xl font-bold text-indigo-700 mb-2">
-            Service Plans
-          </h1>
-          <p className="text-xl text-purple-600">
-            Your current plan:{" "}
-            <span className="font-semibold">{activePlan?.name}</span>
-          </p>
-        </motion.div>
+    <div className="p-6 max-w-6xl mx-auto space-y-8 min-h-screen">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-2xl md:text-4xl font-bold text-primary mb-2 flex items-center justify-center gap-2">
+          <ShieldCheck className="h-6 w-6 md:h-8 md:w-8" /> Service Plans
+        </h1>
+        <p className="text-base md:text-lg text-base-content/70">
+          Your current plan: <span className="font-semibold">{activePlan?.name || "N/A"}</span>
+        </p>
+      </div>
 
-        {/* Active Plan */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card className="shadow-lg rounded-lg bg-white border-2 border-indigo-200">
-            <CardHeader className="bg-linear-to-r from-indigo-500 to-purple-500 text-white rounded-t-lg">
-              <CardTitle className="text-3xl">Current Plan Overview</CardTitle>
-              <p className="text-indigo-100">{activePlan?.description}</p>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="flex justify-between items-center">
-                <div className="text-center">
-                  <h3 className="font-semibold text-xl text-indigo-700 mb-2">
-                    Store Usage
-                  </h3>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {currentStores}/
-                    {activePlan?.maxStores === "unlimited"
-                      ? "∞"
-                      : activePlan?.no_stores}
-                  </p>
-                  <p className="text-sm text-gray-600">stores used</p>
-                </div>
-                <div className="text-center">
-                  <h3 className="font-semibold text-xl text-indigo-700 mb-2">
-                    Remaining Capacity
-                  </h3>
-                  <p className="text-3xl font-bold text-purple-600">
-                    {activePlan?.no_stores === "unlimited"
-                      ? "Unlimited"
-                      : Math.max(0, activePlan?.no_stores - currentStores)}
-                  </p>
-                  <p className="text-sm text-gray-600">stores remaining</p>
+      {/* Current Plan Usage */}
+      <div className="card card-border bg-base-100 overflow-hidden">
+        <div className="card-body bg-primary text-primary-content  p-6">
+          <h2 className="card-title text-xl md:text-2xl flex items-center gap-2">
+            <BadgeCheck className="h-5 w-5" /> Current Plan Overview
+          </h2>
+          <p className="text-sm opacity-80">{activePlan?.description || "No description available"}</p>
+        </div>
+        <div className="card-body p-6">
+          <div className="stats stats-vertical sm:stats-horizontal shadow-none w-full">
+            <div className="stat bg-base-100 px-4">
+              <div className="stat-title text-base-content/70">Current Plan</div>
+              <div className="stat-value text-primary text-2xl">{activePlan?.name}</div>
+              <div className="stat-desc mt-1">
+                <div className="badge badge-primary badge-soft">
+                  ${activePlan?.price}/month
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Plans */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {plans?.map((plan, index) => (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
-            >
-              <Card
-                className={cn(
-                  "shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-2",
-                  plan.id === activePlan?.id
-                    ? "bg-linear-to-br from-indigo-100 to-purple-100 border-2 border-indigo-400"
-                    : "bg-white"
+            </div>
+            <div className="stat bg-base-100 px-4">
+              <div className="stat-title text-base-content/70">Store Usage</div>
+              <div className="stat-value text-2xl">
+                <span className="text-primary">{currentStores}</span>
+                <span className="text-base-content/70 text-xl">/</span>
+                <span>{activePlan?.no_stores === "unlimited" ? "∞" : activePlan?.no_stores || 0}</span>
+              </div>
+              <div className="stat-desc mt-1">Stores used</div>
+            </div>
+            <div className="stat bg-base-100 px-4">
+              <div className="stat-figure text-primary">
+                <Store className="w-8 h-8 opacity-80" />
+              </div>
+              <div className="stat-title text-base-content/70">Remaining Capacity</div>
+              <div className="stat-value text-2xl">
+                {activePlan?.no_stores === "unlimited" ? (
+                  <span>∞</span>
+                ) : (
+                  <span className="text-success">
+                    {Math.max(0, (activePlan?.no_stores || 0) - currentStores)}
+                  </span>
                 )}
-              >
-                <CardHeader
-                  className={cn(
-                    "rounded-t-lg",
-                    plan?.id === activePlan?.id
-                      ? "bg-linear-to-r from-indigo-500 to-purple-500 text-white"
-                      : "bg-gray-100"
-                  )}
-                >
-                  <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                  <p
-                    className={cn(
-                      "text-2xl font-bold",
-                      plan?.id === activePlan?.id
-                        ? "text-indigo-100"
-                        : "text-indigo-600"
-                    )}
-                  >
-                    ${plan?.price}/month
-                  </p>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ScrollArea className="h-48">
-                    <ul className="space-y-3">
-                      {plan?.features?.map((feature, index) => (
-                        <motion.li
-                          key={index}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.3, delay: 0.1 * index }}
-                          className="flex items-center gap-2"
-                        >
-                          <CheckCircle className="text-green-500" />
-                          <span className="text-gray-700">{feature}</span>
-                        </motion.li>
+              </div>
+              <div className="stat-desc mt-1">Stores available</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Plans Grid */}
+      <div>
+        <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Available Plans</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {plans.map((plan, index) => (
+            <div key={plan.id} className="group h-full">
+              <div className={`card card-border h-full bg-base-100 overflow-hidden transition-all duration-300 ${
+                plan.id === activePlan?.id 
+                  ? "ring-2 ring-primary" 
+                  : "hover:shadow-md"
+              }`}>
+                <div className={`p-6 ${
+                  plan.id === activePlan?.id 
+                    ? "bg-primary text-primary-content" 
+                    : "bg-base-200/50"
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold">{plan.name}</h3>
+                      {plan.id === activePlan?.id && (
+                        <div className="badge badge-sm badge-outline mt-1">CURRENT</div>
+                      )}
+                    </div>
+                    <div className="text-end">
+                      <div className="text-2xl font-bold">${plan.price}</div>
+                      <div className="text-xs opacity-80">per month</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="card-body p-6 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="text-sm text-base-content/70 mb-3">
+                      {plan.no_stores === "unlimited" 
+                        ? "Unlimited stores" 
+                        : `Up to ${plan.no_stores} stores`}
+                    </div>
+                    
+                    <div className="divider my-1"></div>
+                    
+                    <ul className="space-y-3 min-h-44">
+                      {plan?.features?.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-base-content">
+                          <CheckCircle className="w-5 h-5 text-success mt-0.5 shrink-0" />
+                          <span>{feature}</span>
+                        </li>
                       ))}
                     </ul>
-                  </ScrollArea>
-                </CardContent>
-                <CardFooter>
+                  </div>
+                  
                   <button
-                    className={cn(
-                      "w-full text-lg py-2 transition-colors duration-300",
-                      plan?.id === activePlan?.id
-                        ? "bg-gray-300 text-gray-700 cursor-not-allowed"
-                        : "bg-indigo-600 hover:bg-indigo-700 text-white"
-                    )}
+                    className={`btn w-full mt-6 ${
+                      plan.id === activePlan?.id 
+                        ? "btn-disabled" 
+                        : "btn-primary btn-soft"
+                    }`}
                     onClick={() => handleUpgradePlan(plan)}
-                    disabled={plan?.id === activePlan?.id || updatePlanMutation.isLoading}
+                    disabled={plan.id === activePlan?.id || updateLoading}
                   >
-                    {plan?.id === activePlan?.id
-                      ? "Current Plan"
-                      : `Upgrade to ${plan?.name}`}
+                    {updateLoading && plan.id !== activePlan?.id ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : null}
+                    {plan.id === activePlan?.id ? "Current Plan" : `Upgrade to ${plan.name}`}
                   </button>
-                </CardFooter>
-              </Card>
-            </motion.div>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>
-    
-    </>
+    </div>
   );
 }

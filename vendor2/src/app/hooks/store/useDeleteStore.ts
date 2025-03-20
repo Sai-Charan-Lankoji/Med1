@@ -1,4 +1,5 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSWRConfig } from "swr";
+
 const baseUrl = "http://localhost:5000";
 
 const deleteStore = async (id: string) => {
@@ -10,22 +11,45 @@ const deleteStore = async (id: string) => {
     credentials: "include",
   });
 
+  const data = await response.json();
+  console.log("Delete Store API response:", data); // Debug the response
+
   if (!response.ok) {
     const errorDetails = await response.json();
-    throw new Error(`Failed to delete store: ${response.status} - ${errorDetails.error}`);
+    throw new Error(`Failed to delete store: ${response.status} - ${data.error || errorDetails.error}`);
   }
-  return response
+
+  // Extract the nested data (assuming { success: true, data: {...} })
+  return data.data || data;
 };
 
 export const useDeleteStore = () => {
-  const queryClient = useQueryClient();
+  const { mutate } = useSWRConfig();
 
-  return useMutation(deleteStore, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(["stores"]);
-    },
-    onError: (error) => {
+  const deleteStoreMutation = async (id: string) => {
+    try {
+      const result = await deleteStore(id);
+      // Optimistic update
+      mutate(
+        `${baseUrl}/api/stores`,
+        async (currentData: any[] | undefined) => {
+          if (currentData) {
+            return currentData.filter((store) => store.id !== id);
+          }
+          return currentData;
+        },
+        false
+      );
+      // Trigger revalidation
+      mutate(`${baseUrl}/api/stores`);
+      return result;
+    } catch (error) {
       console.error("Error occurred while deleting store:", error);
-    },
-  });
+      throw error;
+    }
+  };
+
+  return {
+    deleteStore: deleteStoreMutation,
+  };
 };

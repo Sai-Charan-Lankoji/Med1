@@ -1,59 +1,45 @@
+import useSWR from 'swr';
 import { vendor_id } from '@/app/utils/constant';
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 const baseUrl = "http://localhost:5000";
+const id = vendor_id;
 
-const updateUser = async (userData: { id: string; [key: string]: any }) => {
-
-  if (!vendor_id) {
-    console.warn('No vendor ID found in sessionStorage')
-    throw new Error('Vendor ID not found')
-  }
-
-  const { id, ...updateData } = userData
-  const url = `${baseUrl}/api/vendor-users/${id}`
-
+const fetchVendor = async (url: string) => {
   try {
     const response = await fetch(url, {
-      method: 'PUT',
+      method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ ...updateData, vendor_id: vendor_id }),
-    })
+    });
+
+    const data = await response.json();
 
     if (!response.ok) {
-      const errorData = await response.json()
-      console.error(`HTTP error! Status: ${response.status}, ${errorData.error}`)
-      throw new Error(errorData.error || `HTTP error! Status: ${response.status}`)
+      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
+      throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    const data = await response.json()
-    return data
-  } catch (error) {
+    return data;
+  } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error('Error updating user:', error.message)
+      console.log('Error fetching data:', error.message);
+      return []; 
     } else {
-      console.error('An unknown error occurred:', error)
+      console.error('An unknown error occurred:', error);
+      return [];
     }
-    throw error
   }
-}
+};
 
-export const useUpdateUser = () => {
-  const queryClient = useQueryClient()
-
-  return useMutation(updateUser, {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['users'])
-    },
-    onError: (error: unknown) => {
-      if (error instanceof Error) {
-        console.error('Error occurred while updating user:', error.message)
-      } else {
-        console.error('An unknown error occurred:', error)
-      }
-    },
-  })
-}
+// Custom Hook using SWR
+export const useGetVendor = () => {
+  return useSWR(`${baseUrl}/api/vendors/${id}`, fetchVendor, {
+    revalidateOnFocus: false, // Prevents auto-refetch on window focus
+    revalidateOnMount: false, // Prevents auto-refetch on mount
+    revalidateIfStale: true,  // Fetches data if stale
+    dedupingInterval: 1000 * 60 * 5, // Cache data for 5 minutes
+    shouldRetryOnError: false, // Disables retry on error
+  });
+};

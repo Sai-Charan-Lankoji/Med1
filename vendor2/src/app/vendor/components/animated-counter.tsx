@@ -5,6 +5,7 @@ import { motion, useSpring, useTransform } from "framer-motion"
 
 interface AnimatedCounterProps {
   value: number
+  decimal?: number
   duration?: number
   formatValue?: (value: number) => string
 }

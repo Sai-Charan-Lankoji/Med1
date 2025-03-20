@@ -63,12 +63,16 @@ const Order = () => {
   };
 
   const filteredOrders = useMemo(() => {
-    if (!OrdersData) return [];
-
+    // Check if OrdersData exists and is in the expected format
+    if (!OrdersData || !Array.isArray(OrdersData.data || OrdersData)) return [];
+  
+    // Get the actual orders array from either OrdersData.data (if it exists) or OrdersData (if it's already an array)
+    const ordersArray = OrdersData.data || OrdersData;
+    
     const searchLower = searchQuery.toLowerCase();
     const searchDate = parseDateString(searchQuery);
-
-    return OrdersData?.filter((order) => {
+  
+    return ordersArray.filter((order) => {
       const orderDate = parseISO(order.createdAt);
       const matchesSearch = 
         getCustomerFirstName(order.customer_id).toLowerCase().includes(searchLower) ||
@@ -77,9 +81,9 @@ const Order = () => {
         order.id.toLowerCase().includes(searchLower) ||
         order.email.toLowerCase().includes(searchLower) ||
         (searchDate && format(orderDate, 'dd-MM-yyyy') === format(searchDate, 'dd-MM-yyyy'));
-
+  
       const matchesStore = selectedStore === "all" || order.store_id === selectedStore;
-
+  
       return matchesSearch && matchesStore;
     });
   }, [OrdersData, searchQuery, selectedStore, getCustomerFirstName]);
