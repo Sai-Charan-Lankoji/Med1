@@ -74,9 +74,7 @@ const Customer = sequelize.define(
       beforeValidate: (customer) => {
         // Generate ID before validation (ensures field is set before any Sequelize action)
         if (!customer.id) {
-          console.log('Generating ID for customer...');
           customer.id = generateEntityId('customer');
-          console.log('Generated ID:', customer.id);
         }
       },
     },

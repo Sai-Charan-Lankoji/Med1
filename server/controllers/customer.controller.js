@@ -7,6 +7,18 @@ const upload = multer(); // Use Multer to parse multipart form-data
 const signup = async (req, res) => {
   try {
     const { email, first_name, last_name, password, phone, vendor_id } = req.body;
+
+    // Validate required fields
+    if (!email || !first_name || !last_name || !password || !phone) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "All fields (email, first_name, last_name, password, phone) are required" },
+      });
+    }
+
     const { user, token } = await customerService.signup({
       email,
       first_name,
@@ -16,7 +28,7 @@ const signup = async (req, res) => {
       vendor_id,
     });
 
-    // Set encrypted token in cookie (matching admin)
+    // Set encrypted token in cookie
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -24,18 +36,50 @@ const signup = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    res.status(201).json(user); // Return user only, no token
+    res.status(201).json({
+      status: 201,
+      success: true,
+      message: "Resource created successfully",
+      data: user,
+    });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    if (error.message.includes("already registered")) {
+      return res.status(409).json({
+        status: 409,
+        success: false,
+        message: "Conflict detected",
+        data: null,
+        error: { code: "RESOURCE_EXISTS", details: "Email already registered" },
+      });
+    }
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const { token } = await customerService.login({ email, password }); // Only need token
 
-    // Set encrypted token in cookie (matching admin)
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "Email and password are required" },
+      });
+    }
+
+    const { token } = await customerService.login({ email, password });
+
+    // Set encrypted token in cookie
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -43,99 +87,290 @@ const login = async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
-    res.status(200).json({ message: "Login successful" }); // Minimal response
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: { message: "Login successful" },
+    });
   } catch (error) {
-    res.status(401).json({ error: error.message });
+    if (error.message.includes("Invalid credentials")) {
+      return res.status(401).json({
+        status: 401,
+        success: false,
+        message: "Unauthorized access",
+        data: null,
+        error: { code: "AUTH_ERROR", details: "Invalid email or password" },
+      });
+    }
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
 const logout = async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1]; // Extract token from Authorization header
-    if (!token) {
-      return res.status(400).json({ error: "Token is required for logout." });
+    const token = req.cookies.auth_token || 
+                  (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
+                    ? req.headers.authorization.split(" ")[1]
+                    : null);
+
+    // If token is present, blacklist it
+    if (token) {
+      await customerService.logout(token);
     }
 
-    await customerService.logout(token);
-    res.clearCookie("auth_token");
-    res.status(200).json({ message: "Logout successful." });
+    // Clear the auth_token cookie
+    res.clearCookie("auth_token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+    });
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: { message: "Logout successful" },
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
 const getCurrentUser = async (req, res) => {
   try {
-    const userId = req.user?.id; // Safely access req.user.id
+    const userId = req.user?.id;
     if (!userId) {
-      return res.status(401).json({ error: "User ID not found in token" });
+      return res.status(401).json({
+        status: 401,
+        success: false,
+        message: "Unauthorized access",
+        data: null,
+        error: { code: "AUTH_ERROR", details: "User ID not found in token" },
+      });
     }
 
-    const customer = await customerService.getCustomerDetails(userId); // Reuse getCustomerDetails
+    const customer = await customerService.getCustomerDetails(userId);
     if (!customer) {
-      return res.status(404).json({ error: "Customer not found" });
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "Customer not found" },
+      });
     }
 
-    res.json(customer);
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: customer,
+    });
   } catch (error) {
-    console.error("Error in getCurrentUser:", error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
 const getUsers = async (req, res) => {
   try {
-    const { page, limit, role } = req.query; // Optional query params
+    const { page, limit, role } = req.query;
     const customers = await customerService.getUsers(parseInt(page) || 1, parseInt(limit) || 10, role);
-    res.status(200).json(customers);
+
+    if (!customers || customers.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "No users found" },
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: customers,
+    });
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
-// Retain unique customer endpoints
 const getCustomerDetails = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "Customer ID is required" },
+      });
+    }
+
     const customer = await customerService.getCustomerDetails(id);
-    res.status(200).json(customer);
+    if (!customer) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "Customer not found" },
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: customer,
+    });
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
 const customerByVendorId = async (req, res) => {
   try {
     const { vendor_id } = req.params;
-    console.log("Vendor ID received:", vendor_id);
+    if (!vendor_id) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "Vendor ID is required" },
+      });
+    }
+
     const customers = await customerService.getCustomerByVendorId(vendor_id);
-    res.status(200).json(customers);
+    if (!customers || customers.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "No customers found for this vendor ID" },
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: customers,
+    });
   } catch (error) {
-    console.error("Error fetching customers by vendor ID:", error.message);
-    res.status(404).json({ error: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
 const getAllCustomers = async (req, res) => {
   try {
     const customers = await customerService.list();
-    res.status(200).json({ success: true, customers });
+    if (!customers || customers.length === 0) {
+      return res.status(204).json({
+        status: 204,
+        success: true,
+        message: "No content available",
+        data: null,
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: customers,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
 const getCustomerByEmail = async (req, res) => {
   try {
-    const { email } = req.params; // Extract email from path parameters
+    const { email } = req.params;
     if (!email) {
-      throw new Error("Email query parameter is required.");
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "Email is required" },
+      });
     }
 
     const customer = await customerService.getCustomerByEmail(email);
-    res.status(200).json(customer);
+    if (!customer) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "Customer not found with this email" },
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: customer,
+    });
   } catch (error) {
-    res.status(404).json({ error: error.message });
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 
@@ -143,8 +378,18 @@ const updateCustomerDetails = async (req, res) => {
   try {
     const { id } = req.params;
     const { email, first_name, last_name, phone, old_password, new_password } = req.body;
-    let profile_photo = null;
 
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "Customer ID is required" },
+      });
+    }
+
+    let profile_photo = null;
     if (req.file) {
       const fileData = await fileService.saveBase64File(req.file.buffer.toString("base64"), req);
       profile_photo = fileData.url;
@@ -160,10 +405,29 @@ const updateCustomerDetails = async (req, res) => {
       new_password,
     });
 
-    res.status(200).json({ message: "Profile updated successfully", data: updatedCustomer });
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Request successful",
+      data: updatedCustomer,
+    });
   } catch (error) {
-    console.error("❌ Controller Error updating customer:", error);
-    res.status(400).json({ error: error.message });
+    if (error.message.includes("Invalid old password")) {
+      return res.status(401).json({
+        status: 401,
+        success: false,
+        message: "Unauthorized access",
+        data: null,
+        error: { code: "AUTH_ERROR", details: "Invalid old password" },
+      });
+    }
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
   }
 };
 

@@ -1,9 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 const crypto = require('crypto');
-const Customer = require('./customer.model'); // Customer model import cheyyali for relation
+const Customer = require('./customer.model');
 
-// Function to generate a unique ID
 const generateEntityId = (prefix) => {
   return `${prefix}_${crypto.randomBytes(8).toString('hex')}`;
 };
@@ -20,8 +19,8 @@ const CustomerAddress = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
       references: {
-        model: Customer, // Links to Customer model
-        key: 'id',      // References Customer's id field
+        model: Customer,
+        key: 'id',
       },
     },
     customer_email: {
@@ -47,6 +46,11 @@ const CustomerAddress = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    address_type: { // New field to distinguish billing vs shipping
+      type: DataTypes.ENUM('billing', 'shipping'),
+      allowNull: true, // Nullable for backward compatibility
+      defaultValue: null, // Default to null if not specified
+    },
     created_at: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -61,13 +65,13 @@ const CustomerAddress = sequelize.define(
       allowNull: true,
     },
     metadata: {
-      type: DataTypes.JSONB, // Extra info store cheyyadaniki (optional)
+      type: DataTypes.JSONB,
       allowNull: true,
     },
   },
   {
     tableName: 'CustomerAddress',
-    timestamps: false, // Manual ga created_at, updated_at handle chestam
+    timestamps: false,
     hooks: {
       beforeValidate: (address) => {
         if (!address.id) {

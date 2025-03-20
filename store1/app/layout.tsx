@@ -11,6 +11,7 @@ import { store } from "../reducer/store";
 import { Provider } from "react-redux";
 import { LoadingProvider } from "./loadingProvider";
 import { StoreProvider } from "@/context/storecontext";
+import { WishlistProvider } from "@/context/wishlistContext";
 
 const queryClient = new QueryClient();
 const inter = Inter({ subsets: ["latin"] });
@@ -31,6 +32,7 @@ export default function RootLayout({
                 baseUrl="http://localhost:5000"
                 publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
               >
+                <WishlistProvider>
                 <StoreProvider> 
                   <UserProvider>
                     <SvgProvider>
@@ -43,6 +45,7 @@ export default function RootLayout({
                     </SvgProvider>
                   </UserProvider>
                 </StoreProvider>
+                </WishlistProvider>
               </MedusaProvider>
             </QueryClientProvider>
           </Provider>

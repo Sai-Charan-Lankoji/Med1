@@ -70,6 +70,48 @@ export interface IDesign {
   uploadedImages: string[];
   textProps?: IProps;
 }
+export interface Address {
+  id: string;
+  customer_id: string;
+  customer_email: string;
+  street: string;
+  city: string;
+  state: string;
+  pincode: string;
+  created_at: string;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+  metadata?: any;
+}
+
+export interface OrderData {
+  line_items: Array<{
+  product_id: string | undefined;
+  quantity: number;
+  price: number;
+  title: string;
+  images: string[];
+  designs?: IDesignableCartItem["designs"];
+  selected_size?: IStandardCartItem["selected_size"];
+  selected_color?: IStandardCartItem["selected_color"];
+  selected_variant?: IStandardCartItem["selected_variant"];
+  product_type?: "designable" | "standard";
+  }>;
+  total_amount: number;
+  currency_code: string;
+  status: string;
+  fulfillment_status: string;
+  payment_status: string;
+  customer_id: string | null;
+  email: string | null;
+  region_id: string;
+  vendor_id: string | null;
+  public_api_key: string | null;
+  store_id: string | null;
+  shipping_address?: Address;
+  billing_address?: Address;
+  payment_method?: string;
+  }
 
 // Cart-related interfaces
 export interface IDesignableCartItem {

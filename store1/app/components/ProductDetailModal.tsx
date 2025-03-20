@@ -18,6 +18,7 @@ import { useRouter } from "next/navigation";
 import { useNewCart } from "../hooks/useNewCart";
 import type { IDesign } from "@/@types/models";
 import { getHexFromColorName } from "../utils/colorUtils";
+import { useWishlist } from "@/context/wishlistContext";
 
 interface Color {
   hex: string;
@@ -91,14 +92,58 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   const [hoveredColor, setHoveredColor] = useState("");
   const [mainImage, setMainImage] = useState(product.front_image);
   const [currentSide, setCurrentSide] = useState("front");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isInWishlist, setIsInWishlist] = useState(false);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [availableSizes, setAvailableSizes] = useState<string[]>([]);
   const [availableColors, setAvailableColors] = useState<Color[]>([]);
   const [selectedVariant, setSelectedVariant] = useState<Variant | null>(null);
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { wishlist, addToWishlist, removeFromWishlist, refreshWishlist } = useWishlist();
 
+  // Check if product is in wishlist on mount
+  useEffect(() => {
+    const isDesignable = product.customizable === true;
+    const isPresent = wishlist.some(
+      (item) =>
+        (isDesignable && item.product_id === product.id) ||
+        (!isDesignable && item.standard_product_id === product.id)
+    );
+    setIsInWishlist(isPresent);
+  }, [wishlist, product.id, product.customizable]);
+
+  const handleWishlistToggle = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const isDesignable = product.customizable === true;
+      const requestBody = isDesignable
+        ? { product_id: product.id, standard_product_id: null }
+        : { product_id: null, standard_product_id: product.id };
+
+      if (isInWishlist) {
+        const wishlistItem = wishlist.find(
+          (item) =>
+            (isDesignable && item.product_id === product.id) ||
+            (!isDesignable && item.standard_product_id === product.id)
+        );
+        if (wishlistItem) {
+          await removeFromWishlist(wishlistItem.id);
+          setIsInWishlist(false);
+        }
+      } else {
+        await addToWishlist(requestBody);
+        setIsInWishlist(true);
+      }
+    } catch (error: any) {
+      setError(error.message || "Failed to update wishlist");
+      console.error("Wishlist update error:", error);
+      await refreshWishlist(); // Ensure state consistency
+    } finally {
+      setIsLoading(false);
+    }
+  };
   const router = useRouter();
   const {
     addDesignToCart,
@@ -461,48 +506,48 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
     fetchWishlist();
   }, [fetchWishlist]);
 
-  const handleWishlistToggle = async () => {
-    setIsLoading(true);
-    setError(null);
+  // const handleWishlistToggle = async () => {
+  //   setIsLoading(true);
+  //   setError(null);
 
-    try {
-      const isCurrentlyInWishlist = isInWishlist;
-      setIsInWishlist(!isCurrentlyInWishlist);
+  //   try {
+  //     const isCurrentlyInWishlist = isInWishlist;
+  //     setIsInWishlist(!isCurrentlyInWishlist);
 
-      const endpoint = isCurrentlyInWishlist ? "/remove" : "/add";
-      const isDesignable = product.customizable === true;
-      const requestBody = isDesignable
-        ? { product_id: product.id, standard_product_id: null }
-        : { product_id: null, standard_product_id: product.id };
+  //     const endpoint = isCurrentlyInWishlist ? "/remove" : "/add";
+  //     const isDesignable = product.customizable === true;
+  //     const requestBody = isDesignable
+  //       ? { product_id: product.id, standard_product_id: null }
+  //       : { product_id: null, standard_product_id: product.id };
 
-      const response = await fetch(
-        `http://localhost:5000/api/wishlists${endpoint}`,
-        {
-          method: isCurrentlyInWishlist ? "DELETE" : "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(requestBody),
-        }
-      );
+  //     const response = await fetch(
+  //       `http://localhost:5000/api/wishlists${endpoint}`,
+  //       {
+  //         method: isCurrentlyInWishlist ? "DELETE" : "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         credentials: "include",
+  //         body: JSON.stringify(requestBody),
+  //       }
+  //     );
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (data.status !== 200 && data.status !== 201) {
-        setIsInWishlist(isCurrentlyInWishlist);
-        throw new Error(data.message || "Failed to update wishlist");
-      }
+  //     if (data.status !== 200 && data.status !== 201) {
+  //       setIsInWishlist(isCurrentlyInWishlist);
+  //       throw new Error(data.message || "Failed to update wishlist");
+  //     }
 
-      await fetchWishlist();
-    } catch (error: any) {
-      setError(error.message || "Failed to update wishlist");
-      console.error("Wishlist update error:", error);
-      await fetchWishlist();
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     await fetchWishlist();
+  //   } catch (error: any) {
+  //     setError(error.message || "Failed to update wishlist");
+  //     console.error("Wishlist update error:", error);
+  //     await fetchWishlist();
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   const originalPrice =
     product.sale && product.discount

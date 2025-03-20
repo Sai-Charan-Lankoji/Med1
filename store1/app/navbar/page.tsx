@@ -18,10 +18,9 @@ import { useRouter, useParams } from "next/navigation";
 import { FaChevronDown } from "react-icons/fa";
 import { DesignContext } from "@/context/designcontext";
 import { useStore } from "@/context/storecontext";
-import useSWR from "swr";
-import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { useNewCart } from "../hooks/useNewCart";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
+import { useWishlist } from "@/context/wishlistContext";
 
 // Types (unchanged from your code)
 interface WishlistItem {
@@ -90,29 +89,10 @@ type ICartItem = IDesignableCartItem | IStandardCartItem;
 
 // Constants
 const WISHLIST_API_URL = "http://localhost:5000/api/wishlists";
-const POLLING_INTERVAL = 10000; // Poll every 10 seconds (adjust as needed)
-
-// Fetcher for SWR
-const fetcher = async (url: string) => {
-  const response = await fetch(url, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-  });
-
-  const data = (await response.json()) as ApiResponse;
-  if (data.status !== 200 || !data.success) {
-    throw new Error(data.message || "Failed to fetch wishlist");
-  }
-
-  return data.data as WishlistItem[];
-};
 
 const Navbar: React.FC = () => {
-  const { firstName, email, profilePhoto, isLogin } = useUserContext();
-  const { logout } = useCustomerLogout();
+  const { firstName, email, profilePhoto, isLogin, logout } = useUserContext();
+  const { wishlistCount } = useWishlist();
   const {
     cartItems: designableCartItems,
     deleteCartItem,
@@ -128,7 +108,6 @@ const Navbar: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [cartItemsCount, setCartItemsCount] = useState(0);
   const [cartTotal, setCartTotal] = useState(0);
-  const [wishlistCount, setWishlistCount] = useState<number>(0);
   const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>({});
 
   const vendorId = params.vendorId as string;
@@ -139,28 +118,6 @@ const Navbar: React.FC = () => {
     () => [...designableCartItems, ...getStandardCartItems()],
     [designableCartItems, getStandardCartItems]
   );
-
-  // Fetch wishlist data with SWR and polling
-  const {
-    data: wishlistData,
-    error: wishlistError,
-    isLoading: wishlistLoading,
-    mutate: mutateWishlist,
-  } = useSWR(isLogin ? WISHLIST_API_URL : null, fetcher, {
-    refreshInterval: POLLING_INTERVAL, // Poll every 10 seconds
-    dedupingInterval: 2000, // Avoid duplicate requests within 2 seconds
-    revalidateOnFocus: true, // Revalidate when window regains focus
-    revalidateOnReconnect: true, // Revalidate when network reconnects
-  });
-
-  // Update wishlist count
-  useEffect(() => {
-    if (wishlistData && !wishlistLoading) {
-      setWishlistCount(wishlistData.length);
-    } else if (wishlistError || !isLogin) {
-      setWishlistCount(0);
-    }
-  }, [wishlistData, wishlistError, wishlistLoading, isLogin]);
 
   // Fetch cart data on mount if logged in
   useEffect(() => {
@@ -283,15 +240,10 @@ const Navbar: React.FC = () => {
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      try {
-        await logout();
-        closeAllMenus();
-        router.push("/");
-      } catch (error) {
-        console.error("Desktop logout failed:", error);
-      }
+      await logout();
+      closeAllMenus();
     },
-    [logout, closeAllMenus, router]
+    [logout, closeAllMenus]
   );
 
   const handleDesktopWishlistClick = useCallback(
@@ -348,15 +300,10 @@ const Navbar: React.FC = () => {
     async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      try {
-        await logout();
-        closeAllMenus();
-        router.push("/");
-      } catch (error) {
-        console.error("Mobile logout failed:", error);
-      }
+      await logout();
+      closeAllMenus();
     },
-    [logout, closeAllMenus, router]
+    [logout, closeAllMenus]
   );
 
   const handleViewCart = useCallback(
@@ -716,8 +663,9 @@ const Navbar: React.FC = () => {
                                                       ? typeof standardItem.selected_color ===
                                                         "string"
                                                         ? standardItem.selected_color
-                                                        : standardItem.selected_color.name ||
-                                                          "N/A"
+                                                        : standardItem
+                                                            .selected_color
+                                                            .name || "N/A"
                                                       : "N/A"
                                                   }`}
                                             </p>
