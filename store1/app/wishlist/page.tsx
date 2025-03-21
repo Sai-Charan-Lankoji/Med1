@@ -388,7 +388,11 @@ const WishlistPage: React.FC = () => {
       if (product.customizable) {
         const designableProduct = product as DesignableProduct;
         const designs = designableProduct.designs || [];
-        cartSuccess = await addDesignToCart(designs, [], {}, product.id);
+        const updatedDesigns = designs.map(design => ({
+          ...design,
+          id: design.id.toString()
+        }));
+        cartSuccess = await addDesignToCart(updatedDesigns, [], {}, product.id);
         if (!cartSuccess) {
           throw new Error("Failed to add designable product to cart");
         }

@@ -59,10 +59,165 @@ router.get("/:id", orderController.getOrderById); // Get an order by ID
  *     responses:
  *       201:
  *         description: Order created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Order'
+ *                 message:
+ *                   type: string
  *       400:
  *         description: Invalid input
  */
 router.post("/", orderController.createOrder); // Create a new order
+
+/**
+ * @swagger
+ * /api/orders/phonepe/initiate:
+ *   post:
+ *     summary: Initiate a PhonePe payment
+ *     tags: [PhonePe]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - orderData
+ *               - amount
+ *             properties:
+ *               orderData:
+ *                 type: object
+ *                 properties:
+ *                   customer_id:
+ *                     type: string
+ *                     description: Unique ID of the customer
+ *                   email:
+ *                     type: string
+ *                     description: Customer's email address
+ *                   line_items:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         product_id:
+ *                           type: string
+ *                         quantity:
+ *                           type: integer
+ *                         price:
+ *                           type: number
+ *                   total_amount:
+ *                     type: number
+ *                   shipping_address:
+ *                     type: object
+ *                   billing_address:
+ *                     type: object
+ *               amount:
+ *                 type: integer
+ *                 description: Amount in paise (e.g., 10000 for 100 INR)
+ *     responses:
+ *       200:
+ *         description: Payment initiation successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     instrumentResponse:
+ *                       type: object
+ *                       properties:
+ *                         redirectInfo:
+ *                           type: object
+ *                           properties:
+ *                             url:
+ *                               type: string
+ *                 merchantTransactionId:
+ *                   type: string
+ *       500:
+ *         description: Failed to initiate payment
+ */
+router.post("/phonepe/initiate", orderController.initiatePhonePePayment);
+
+/**
+ * @swagger
+ * /api/orders/phonepe/callback:
+ *   post:
+ *     summary: Handle PhonePe payment callback
+ *     tags: [PhonePe]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/x-www-form-urlencoded:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - merchantTransactionId
+ *               - responseCode
+ *             properties:
+ *               merchantTransactionId:
+ *                 type: string
+ *                 description: Unique transaction ID from PhonePe
+ *               responseCode:
+ *                 type: string
+ *                 description: Response code from PhonePe (e.g., SUCCESS)
+ *     responses:
+ *       302:
+ *         description: Redirects to order confirmation or failure page
+ *       400:
+ *         description: Invalid or missing transaction ID
+ *       500:
+ *         description: Callback processing failed
+ */
+router.post("/phonepe/callback", orderController.handlePhonePeCallback);
+
+/**
+ * @swagger
+ * /api/orders/phonepe/status:
+ *   post:
+ *     summary: Check PhonePe payment status
+ *     tags: [PhonePe]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - merchantTransactionId
+ *             properties:
+ *               merchantTransactionId:
+ *                 type: string
+ *                 description: Unique transaction ID from PhonePe
+ *     responses:
+ *       200:
+ *         description: Payment status retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     code:
+ *                       type: string
+ *                       description: Status code (e.g., PAYMENT_SUCCESS)
+ *       500:
+ *         description: Failed to check payment status
+ */
+router.post("/phonepe/status", orderController.checkPhonePeStatus);
 
 /**
  * @swagger

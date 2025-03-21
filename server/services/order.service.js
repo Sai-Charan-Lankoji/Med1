@@ -1,4 +1,5 @@
 const Order = require("../models/order.model");
+const Customer = require("../models/customer.model"); // Add this
 const crypto = require("crypto");
 const sequelize = require("../config/db");
 const stockService = require("../services/stock.service");
@@ -8,6 +9,20 @@ const generateEntityId = (prefix) => {
 };
 
 class OrderService {
+  /**
+   * Validate that a customer_id exists in the customers table.
+   */
+  async validateCustomerId(customerId) {
+    if (!customerId) {
+      throw new Error("Customer ID is required.");
+    }
+    const customer = await Customer.findOne({ where: { id: customerId } });
+    if (!customer) {
+      throw new Error(`Customer with ID ${customerId} not found in the database.`);
+    }
+    return true;
+  }
+
   /**
    * Retrieve an order by ID.
    */
@@ -23,15 +38,15 @@ class OrderService {
   }
 
   /**
-   * Create a new order.
+   * Create a new order with customer_id validation.
    */
   async createOrder(orderData) {
-    if (!orderData.vendor_id) {
-      throw new Error("Vendor ID is required to create an order.");
+    if (!orderData.customer_id) {
+      throw new Error("Customer ID is required to create an order.");
     }
-    if (!orderData.store_id) {
-      throw new Error("Store ID is required to create an order.");
-    }
+
+    // Validate customer_id exists
+    await this.validateCustomerId(orderData.customer_id);
 
     const transaction = await sequelize.transaction();
     try {
@@ -39,24 +54,25 @@ class OrderService {
       const newOrder = await Order.create(
         {
           id: orderId,
-          vendor_id: orderData.vendor_id,
-          store_id: orderData.store_id,
+          vendor_id: orderData.vendor_id || null,
+          store_id: orderData.store_id || null,
           status: orderData.status || "pending",
           fulfillment_status: orderData.fulfillment_status || "not_fulfilled",
           payment_status: orderData.payment_status || "awaiting",
-          total_amount: orderData.total_amount,
-          line_items: orderData.line_items,
-          currency_code: orderData.currency_code,
+          total_amount: orderData.total_amount || 0,
+          line_items: orderData.line_items || [],
+          currency_code: orderData.currency_code || "INR",
           customer_id: orderData.customer_id,
-          email: orderData.email,
+          email: orderData.email || null,
           public_api_key: orderData.public_api_key || null,
           shipping_address: orderData.shipping_address || null,
+          billing_address: orderData.billing_address || null,
+          merchant_transaction_id: orderData.merchant_transaction_id || null,
         },
         { transaction }
       );
 
-      // Update stock for each standard product's variant
-      for (const item of orderData.line_items) {
+      for (const item of orderData.line_items || []) {
         if (item.product_type === "standard" && item.selected_variant && item.quantity) {
           await stockService.placeOrder(item.selected_variant, item.quantity, transaction);
         }
@@ -66,13 +82,20 @@ class OrderService {
       return newOrder;
     } catch (error) {
       await transaction.rollback();
-      throw error;
+      throw new Error(`Failed to create order: ${error.message}`);
     }
   }
 
   /**
-   * List all orders for a vendor.
+   * Retrieve an order by merchant_transaction_id.
    */
+  async retrieveByTransactionId(merchantTransactionId) {
+    if (!merchantTransactionId) {
+      throw new Error("Merchant Transaction ID is required.");
+    }
+    return await Order.findOne({ where: { merchant_transaction_id: merchantTransactionId } });
+  }
+
   async listOrdersByVendor(vendorId) {
     if (!vendorId) {
       throw new Error("Vendor ID is required.");
@@ -80,16 +103,10 @@ class OrderService {
     return await Order.findAll({ where: { vendor_id: vendorId } });
   }
 
-  /**
-   * List all orders.
-   */
   async getAllOrders() {
     return await Order.findAll();
   }
 
-  /**
-   * Delete an order by ID.
-   */
   async deleteOrder(orderId) {
     if (!orderId) {
       throw new Error("Order ID is required.");
@@ -98,15 +115,11 @@ class OrderService {
     await order.destroy();
   }
 
-  /**
-   * List all orders for a customer.
-   */
   async listOrdersByCustomer(customerId) {
     if (!customerId) {
       throw new Error("Customer ID is required.");
     }
-    const orders = await Order.findAll({ where: { customer_id: customerId } });
-    return orders;
+    return await Order.findAll({ where: { customer_id: customerId } });
   }
 }
 

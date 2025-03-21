@@ -80,7 +80,7 @@ export const useCustomerSignup = () => {
         sessionStorage.setItem("customerId", data.customer.id);
         sessionStorage.setItem("customerEmail", data.customer.email);
 
-        setUser(first_name, email, decryptedToken);
+        setUser({ firstName: first_name, email: email, profilePhoto: null });
 
        
 

@@ -77,27 +77,26 @@ export const useAddresses = (customerId: string | null): UseAddressesReturn => {
   }, [customerId, selectedAddressId]);
 
   const handleAddAddress = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+    async () => {  
       if (!customerId) {
         setAddressError("Customer ID not found. Please log in again.");
         toast.error("Customer ID not found");
         return;
       }
-
+  
       const customerEmail = sessionStorage.getItem("customerEmail");
       if (!customerEmail) {
         setAddressError("Customer Email not found. Please log in again.");
         toast.error("Customer Email not found");
         return;
       }
-
+  
       const addressData: Partial<Address> = {
         ...newAddress,
         customer_id: customerId,
         customer_email: customerEmail,
       };
-
+  
       try {
         const response = await fetch(`${BASE_URL}/api/address/create`, {
           method: "POST",
@@ -105,12 +104,12 @@ export const useAddresses = (customerId: string | null): UseAddressesReturn => {
           credentials: "include",
           body: JSON.stringify(addressData),
         });
-
+  
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.message || "Failed to add address");
         }
-
+  
         const result = await response.json();
         if (result.success && result.data) {
           setAddresses((prev) => [...prev, result.data]);

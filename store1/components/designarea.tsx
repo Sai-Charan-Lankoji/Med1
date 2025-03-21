@@ -6,18 +6,8 @@ import { IconContext } from "react-icons/lib";
 import { fabric } from "fabric";
 import { DesignContext, TextPropsContext } from "../context/designcontext";
 import { FiShoppingBag } from "react-icons/fi";
-import {
-  initControls,
-  extractFillColorsSelectedObject,
-} from "@/shared/controlutils";
-import {
-  IBgcolor,
-  bgColours,
-  designApparels,
-  IApparel,
-  IDesign,
-  IProps,
-} from "../@types/models";
+import { initControls, extractFillColorsSelectedObject } from "@/shared/controlutils";
+import { IBgcolor, bgColours, designApparels, IApparel, IDesign, IProps } from "../@types/models";
 import { useDispatch, useSelector } from "react-redux";
 import { ColorPickerContext } from "../context/colorpickercontext";
 import { MenuContext } from "../context/menucontext";
@@ -54,28 +44,21 @@ export default function DesignArea({
       initialState: any;
     };
   }
-const baseurl = process.env.NEXT_PUBLIC_API_URL;
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
-    null
-  );
+
+  const baseurl = process.env.NEXT_PUBLIC_API_URL;
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [lastSavedDesign, setLastSavedDesign] = useState<string | null>(null);
   const canvasState = useSelector((state: RootState) => state.setReducer);
-  const {
-    addDesignToCart,
-    updateCartItem,
-    loading: cartLoading,
-  } = useNewCart();
-  const { customerToken } = useUserContext();
-  const isAuthorized = isVendorMode || customerToken;
+  const { addDesignToCart, updateCartItem, loading: cartLoading } = useNewCart();
+  const { isLogin } = useUserContext(); // Replaced customerToken with isLogin
+  const isAuthorized = isVendorMode || isLogin; // Use isLogin here
   const router = useRouter();
   const { svgUrl } = useSvgContext();
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
-  const { svgcolors, dispatchColorPicker } =
-    React.useContext(ColorPickerContext)!;
+  const { svgcolors, dispatchColorPicker } = React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
-  const { designs, dispatchDesign, currentBgColor, updateColor } =
-    React.useContext(DesignContext)!;
+  const { designs, dispatchDesign, currentBgColor, updateColor } = React.useContext(DesignContext)!;
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
@@ -93,8 +76,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
   const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const { store } = useStore();
 
-  const customerId =
-    typeof window !== "undefined" ? sessionStorage.getItem("customerId") : null;
+  const customerId = typeof window !== "undefined" ? sessionStorage.getItem("customerId") : null;
 
   const autoSaveDesign = React.useCallback(() => {
     if (!canvas || !design) return;
@@ -182,9 +164,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
         currentDesign: design,
         selectedApparal: { ...apparel, color: currentBgColor },
         jsonDesign: canvas?.toJSON(),
-        pngImage: canvas?.toJSON().objects.length
-          ? canvas?.toDataURL({ multiplier: 4 })
-          : null,
+        pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
         svgImage: canvas?.toSVG(),
       });
     }
@@ -334,10 +314,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
   };
 
   const downloadPNG = () => {
-    const pngImage =
-      canvas?.toDataURL({
-        multiplier: 4,
-      }) ?? "";
+    const pngImage = canvas?.toDataURL({ multiplier: 4 }) ?? "";
     const link = document.createElement("a");
     link.href = pngImage;
 
@@ -405,7 +382,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
       designId: design?.id,
     };
 
-    if (!customerToken) {
+    if (!isLogin) { // Replaced customerToken with isLogin
       saveStateToLocalStorage();
       router.push("/auth");
       return;
@@ -433,12 +410,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
       const currentDesignState = designs.map((design) => ({
         ...design,
         svgImage: design.id === design?.id ? svgUrl : design.svgImage,
-        pngImage:
-          design.id === design?.id
-            ? canvas?.toJSON().objects.length
-              ? pngImage
-              : null
-            : design.pngImage,
+        pngImage: design.id === design?.id ? (canvas?.toJSON().objects.length ? pngImage : null) : design.pngImage,
       }));
 
       const currentPropsState = {
@@ -487,30 +459,20 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
   };
 
   const handleAddToCart = async () => {
-    // Get the current design state for saving
     const currentDesignState = designs.map((design) => ({
       ...design,
       svgImage: design.id === design?.id ? svgUrl : design.svgImage,
     }));
 
-    // Get the current text props state for saving
     const currentPropsState = {
       ...props,
       designId: design?.id,
     };
 
-    // If user is not logged in, save states and redirect
-    if (!customerToken) {
-      // Save design states to localStorage
+    if (!isLogin) { // Replaced customerToken with isLogin
       localStorage.setItem("pendingCartAdd", "true");
-      localStorage.setItem(
-        "pendingDesignState",
-        JSON.stringify(currentDesignState)
-      );
-      localStorage.setItem(
-        "pendingPropsState",
-        JSON.stringify(currentPropsState)
-      );
+      localStorage.setItem("pendingDesignState", JSON.stringify(currentDesignState));
+      localStorage.setItem("pendingPropsState", JSON.stringify(currentPropsState));
       saveStateToLocalStorage();
       router.push("/auth");
       return;
@@ -524,14 +486,11 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
     );
 
     if (success) {
-      const response = await fetch(
-        `${baseurl}/api/carts/customer/${customerId}`
-      );
+      const response = await fetch(`${baseurl}/api/carts/customer/${customerId}`);
       if (response.ok) {
         const cartData = await response.json();
         const addedItem = cartData.data.designable_products.find(
-          (item: any) =>
-            JSON.stringify(item.designs) === JSON.stringify(currentDesignState)
+          (item: any) => JSON.stringify(item.designs) === JSON.stringify(currentDesignState)
         );
         if (addedItem) {
           setCartId(addedItem.id);
@@ -554,9 +513,8 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
     const checkPendingCartAdd = async () => {
       const hasPendingAdd = localStorage.getItem("pendingCartAdd");
 
-      if (customerToken && hasPendingAdd === "true") {
-        const pendingDesignStateStr =
-          localStorage.getItem("pendingDesignState");
+      if (isLogin && hasPendingAdd === "true") { // Replaced customerToken with isLogin
+        const pendingDesignStateStr = localStorage.getItem("pendingDesignState");
         const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
 
         if (!pendingDesignStateStr || !pendingPropsStateStr) {
@@ -575,15 +533,11 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
           );
 
           if (success) {
-            const response = await fetch(
-              `${baseurl}/api/carts/customer/${customerId}`
-            );
+            const response = await fetch(`${baseurl}/api/carts/customer/${customerId}`);
             if (response.ok) {
               const cartData = await response.json();
               const addedItem = cartData.data.designable_products.find(
-                (item: any) =>
-                  JSON.stringify(item.designs) ===
-                  JSON.stringify(pendingDesignState)
+                (item: any) => JSON.stringify(item.designs) === JSON.stringify(pendingDesignState)
               );
               if (addedItem) {
                 setCartId(addedItem.id);
@@ -612,9 +566,8 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
     const checkPendingCartUpdate = async () => {
       const hasPendingUpdate = localStorage.getItem("pendingCartUpdate");
 
-      if (customerToken && hasPendingUpdate === "true") {
-        const pendingDesignStateStr =
-          localStorage.getItem("pendingDesignState");
+      if (isLogin && hasPendingUpdate === "true") { // Replaced customerToken with isLogin
+        const pendingDesignStateStr = localStorage.getItem("pendingDesignState");
         const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
         const pendingCartId = localStorage.getItem("pendingCartId");
 
@@ -623,11 +576,8 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
         }
 
         try {
-          const pendingDesignState: IDesign[] = JSON.parse(
-            pendingDesignStateStr
-          );
-          const pendingPropsState: IProps & { designId?: string } =
-            JSON.parse(pendingPropsStateStr);
+          const pendingDesignState: IDesign[] = JSON.parse(pendingDesignStateStr);
+          const pendingPropsState: IProps & { designId?: string } = JSON.parse(pendingPropsStateStr);
 
           const success = await updateCartItem(
             pendingCartId,
@@ -660,7 +610,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
     checkPendingCartAdd();
     checkPendingCartUpdate();
   }, [
-    customerToken,
+    isLogin, // Replaced customerToken with isLogin
     addDesignToCart,
     updateCartItem,
     svgUrl,
@@ -673,19 +623,14 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
   return (
     <div>
       <div className="flex justify-between mb-1">
-        {(isVendorMode || customerToken) && (
+        {(isVendorMode || isLogin) && ( // Replaced customerToken with isLogin
           <>
             <button
               type="button"
               onClick={downloadDesignJson}
               className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800"
             >
-              <IconContext.Provider
-                value={{
-                  size: "18px",
-                  className: "btn-download-design inline-block",
-                }}
-              >
+              <IconContext.Provider value={{ size: "18px", className: "btn-download-design inline-block" }}>
                 <FaDownload />
               </IconContext.Provider>
               <span className="ml-3">Download Json</span>
@@ -695,12 +640,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
               onClick={downloadZip}
               className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
             >
-              <IconContext.Provider
-                value={{
-                  size: "24px",
-                  className: "btn-zip-design inline-block",
-                }}
-              >
+              <IconContext.Provider value={{ size: "24px", className: "btn-zip-design inline-block" }}>
                 <VscBriefcase />
               </IconContext.Provider>
               <span className="ml-3">Download Zip</span>
@@ -711,16 +651,11 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
 
       <div className="flex justify-between pt-2 bg-white p-2 pb-0 border border-b-0 border-zinc-300">
         <div>
-          {(isVendorMode || customerToken) && (
+          {(isVendorMode || isLogin) && ( // Replaced customerToken with isLogin
             <>
               <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
                 <button onClick={downloadSVG}>
-                  <IconContext.Provider
-                    value={{
-                      size: "10px",
-                      className: "btn-download-design inline-block",
-                    }}
-                  >
+                  <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
                     <FaDownload />
                   </IconContext.Provider>
                   <p className="px-2 text-[10px]">SVG</p>
@@ -728,12 +663,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
               </div>
               <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
                 <button onClick={() => downloadPNG()}>
-                  <IconContext.Provider
-                    value={{
-                      size: "10px",
-                      className: "btn-download-design inline-block",
-                    }}
-                  >
+                  <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
                     <FaDownload />
                   </IconContext.Provider>
                   <p className="px-2 text-[10px]">PNG</p>
@@ -746,12 +676,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
         <div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={handleRedo}>
-              <IconContext.Provider
-                value={{
-                  size: "10px",
-                  className: "btn-download-design inline-block",
-                }}
-              >
+              <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
                 <FaRedo />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">Redo</p>
@@ -759,12 +684,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={handleUndo}>
-              <IconContext.Provider
-                value={{
-                  size: "10px",
-                  className: "btn-download-design inline-block",
-                }}
-              >
+              <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
                 <FaUndo />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">Undo</p>
@@ -772,12 +692,7 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={() => reset()}>
-              <IconContext.Provider
-                value={{
-                  size: "10px",
-                  className: "btn-download-design inline-block",
-                }}
-              >
+              <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
                 <FaSync />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">Reset</p>
@@ -794,22 +709,18 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
             alt="Current Background"
             style={{ backgroundColor: currentBgColor }}
           />
-          <div
-            className={`canvas_div none text-gray-400 border-1 top-20 absolute border-stone-600 ${getCanvasClass()}`}
-          >
+          <div className={`canvas_div none text-gray-400 border-1 top-20 absolute border-stone-600 ${getCanvasClass()}`}>
             <canvas id="canvas"></canvas>
           </div>
         </div>
       </div>
       <div className="grid grid-cols-12 gap-3 mt-3 items-center">
-        <div className="col-span-12 sm:col-span-12  md:col-span-6 lg:col-span-4">
+        <div className="col-span-12 sm:col-span-12 md:col-span-6 lg:col-span-4">
           <div className="columns-4 gap-5">
             {apparels.map((apparel) => (
               <div
                 key={apparel.url}
-                className={`w-full p-1 rounded-lg border hover:bg-zinc-200 hover:border-zinc-400 ${
-                  apparel.selected ? "border border-zinc-500" : ""
-                }`}
+                className={`w-full p-1 rounded-lg border hover:bg-zinc-200 hover:border-zinc-400 ${apparel.selected ? "border border-zinc-500" : ""}`}
               >
                 <img
                   src={apparel.url}
@@ -821,15 +732,13 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
             ))}
           </div>
         </div>
-        <div className="col-span-12 sm:col-span-12  md:col-span-6 lg:col-span-4">
+        <div className="col-span-12 sm:col-span-12 md:col-span-6 lg:col-span-4">
           <p className="text-purple-800">Color:</p>
           <div className="columns-5 sm:gap-3 md:gap-5">
             {colors.map((color) => (
               <div
                 key={color.value}
-                className={`sm:p-4 sm:w-4 sm:h-4 md:p-3 lg:p-[12px] sm:rounded-full cursor-pointer border hover:bg-zinc-800 hover:border-zinc-400 ${
-                  color.selected ? "border border-zinc-500" : ""
-                }`}
+                className={`sm:p-4 sm:w-4 sm:h-4 md:p-3 lg:p-[12px] sm:rounded-full cursor-pointer border hover:bg-zinc-800 hover:border-zinc-400 ${color.selected ? "border border-zinc-500" : ""}`}
                 style={{ backgroundColor: color.value }}
                 onClick={() => handleColorClick(color.value)}
               ></div>
@@ -837,33 +746,16 @@ const baseurl = process.env.NEXT_PUBLIC_API_URL;
           </div>
         </div>
 
-        <div className="col-span-12 sm:col-span-12  md:col-span-12 lg:col-span-4 text-right">
+        <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-4 text-right">
           <button
             type="button"
-            onClick={() =>
-              isVendorMode
-                ? addProduct()
-                : cartId
-                ? handleUpdateCart()
-                : handleAddToCart()
-            }
+            onClick={() => (isVendorMode ? addProduct() : cartId ? handleUpdateCart() : handleAddToCart())}
             className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
           >
-            <IconContext.Provider
-              value={{
-                size: "24px",
-                className: "btn-add-to-cart inline-block",
-              }}
-            >
+            <IconContext.Provider value={{ size: "24px", className: "btn-add-to-cart inline-block" }}>
               <FiShoppingBag />
             </IconContext.Provider>
-            <span className="ml-3">
-              {isVendorMode
-                ? "Add Product"
-                : cartId
-                ? `Update Cart`
-                : `Add to Cart`}
-            </span>
+            <span className="ml-3">{isVendorMode ? "Add Product" : cartId ? `Update Cart` : `Add to Cart`}</span>
           </button>
         </div>
       </div>

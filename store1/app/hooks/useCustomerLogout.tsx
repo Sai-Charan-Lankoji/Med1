@@ -30,7 +30,7 @@ export const useCustomerLogout = () => {
     sessionStorage.removeItem('customerId');
     sessionStorage.removeItem('customerEmail');
     
-    setUser(null, null);
+    setUser({ firstName: null, email: null, profilePhoto: null });
     setIsLogin(false);
     
   };

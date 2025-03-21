@@ -47,7 +47,7 @@ export interface IProps {
   fillcolor?: string;
 }
 
-export interface IItem {
+export interface Item {
   id?: string;
   designItem?: DesignEnums;
   url?: string;
@@ -58,14 +58,16 @@ export interface IItem {
   uploadedDesignBlob?: any;
   isNew?: boolean;
 }
+export type PropsAction = { type: "SELECTED_PROPS"; payload: IProps };
+
 
 export interface IDesign {
   apparel: IApparel;
   id?: string; // Changed from `any` for better typing
-  items: IItem[];
+  items: Item[];
   pngImage: any; // Consider specifying type if possible (e.g., string for URL)
   isactive: boolean;
-  jsonDesign: any; // Consider specifying type if known
+  jsonDesign?: any; // Consider specifying type if known
   svgImage: any; // Consider specifying type if known
   uploadedImages: string[];
   textProps?: IProps;
@@ -178,14 +180,14 @@ export interface ICartState {
 export type DesignAction =
   | { type: "ADD_DESIGN"; payload: IApparel }
   | { type: "UPDATE_DESIGN"; payload: IApparel }
-  | { type: "ADD_SVG"; payload: IItem }
-  | { type: "DELETE_SVG"; payload: IItem }
-  | { type: "ADD_TEST"; payload: IItem } // Consider renaming to ADD_TEXT if it’s for text
-  | { type: "DELETE_TEST"; payload: IItem }
-  | { type: "ADD_UPLOAD_DESIGN"; payload: IItem }
-  | { type: "DELETE_UPLOAD_DESIGN"; payload: IItem }
-  | { type: "ADD_UPLOAD_IAMGE"; payload: IItem } // Typo: should be ADD_UPLOAD_IMAGE
-  | { type: "DELETE_UPLOAD_IAMGE"; payload: IItem } // Typo: should be DELETE_UPLOAD_IMAGE
+  | { type: "ADD_SVG"; payload: Item }
+  | { type: "DELETE_SVG"; payload: Item }
+  | { type: "ADD_TEST"; payload: Item } // Consider renaming to ADD_TEXT if it’s for text
+  | { type: "DELETE_TEST"; payload: Item }
+  | { type: "ADD_UPLOAD_DESIGN"; payload: Item }
+  | { type: "DELETE_UPLOAD_DESIGN"; payload: Item }
+  | { type: "ADD_UPLOAD_IAMGE"; payload: Item } // Typo: should be ADD_UPLOAD_IMAGE
+  | { type: "DELETE_UPLOAD_IAMGE"; payload: Item } // Typo: should be DELETE_UPLOAD_IMAGE
   | { type: "UPDATE_SELECTED_SVG_COLORS"; payload: IsvgColor[] }
   | { type: "UPDATE_APPAREL_COLOR"; payload: string }
   | {

@@ -1,4 +1,3 @@
-// index.js
 require("dotenv").config();
 const express = require("express");
 const path = require("path");
@@ -12,36 +11,9 @@ const { swaggerSpecs } = require("./swagger/swagger");
 const { listStores } = require("./services/store.service.js");
 const { startBillingScheduler } = require("./schedulers/billingScheduler");
 const notificationService = require("./services/notification.service.js");
-const defineRelationships = require("./models/relationship.model.js"); 
-const cookieParser = require('cookie-parser');
+const defineRelationships = require("./models/relationship.model.js");
+const cookieParser = require("cookie-parser");
 
-
-// Import routes
-const vendorRoutes = require("./routes/vendor.route.js");
-const authRoutes = require("./routes/adminRoutes/auth.route.js");
-const planRoutes = require("./routes/plan.route.js");
-const orderRoutes = require("./routes/order.route.js");
-const vendorauthRoutes = require("./routes/vendorauth.route.js");
-const ProductRoutes = require("./routes/product.route.js");
-const CustomerRoutes = require("./routes/customer.route.js");
-const vendoruserRoutes = require("./routes/vendoruser.route.js");
-const storeRoutes = require("./routes/store.route.js");
-const cartRoutes = require("./routes/cart.route.js");
-const saleschannelRoutes = require("./routes/saleschannel.route.js");
-const tokenBlacklistRoutes = require("./routes/tokenBlacklist.route.js");
-const publishableApiKeyRoutes = require("./routes/publishableapikey.route.js");
-const fileRoutes = require("./routes/file.route.js");
-const standardProductRoutes = require("./routes/standardProduct.route.js");
-const wishlistRoutes = require("./routes/wishlist.route.js");
-const revenueRoutes = require("./routes/revenue.js");
-const admindiscountRouters = require("./routes/admindiscount.route.js");
-const supplierRoutes = require("./routes/supplier.route.js");
-const consignmentRoutes = require("./routes/consignment.route.js");
-const stockTransactionRoutes = require("./routes/stocktransaction.route.js");
-const stockRoutes = require("./routes/stock.route.js");
-const notificationRoutes = require("./routes/notification.route.js");
-const transporterRoutes = require("./routes/transport.route.js");
-const customerAddressRoutes = require("./routes/customeraddreess.route.js");
 const app = express();
 app.use(cookieParser());
 const server = http.createServer(app);
@@ -129,31 +101,31 @@ app.use(
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
 
 // Routes
-app.use('/api/address', customerAddressRoutes);
-app.use("/api/vendors", vendorRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/auth", authRoutes);
-app.use("/api", planRoutes);
-app.use("/api/vendor", vendorauthRoutes);
-app.use("/api", vendoruserRoutes);
-app.use("/api/products", ProductRoutes);
-app.use("/api/customer", CustomerRoutes);
-app.use("/api/stores", storeRoutes);
-app.use("/api/carts", cartRoutes);
-app.use("/api/saleschannels", saleschannelRoutes);
-app.use("/api/token-blacklist", tokenBlacklistRoutes);
-app.use("/api/publishibleapikey", publishableApiKeyRoutes);
-app.use("/api", fileRoutes);
-app.use("/api/standardproducts", standardProductRoutes);
-app.use("/api/wishlists", wishlistRoutes);
-app.use("/api", revenueRoutes);
-app.use("/api/admin", admindiscountRouters);
-app.use("/api/suppliers", supplierRoutes);
-app.use("/consignments", consignmentRoutes);
-app.use("/stock-transactions", stockTransactionRoutes);
-app.use("/api/stock", stockRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/transporters", transporterRoutes);
+app.use("/api/address", require("./routes/customeraddreess.route.js"));
+app.use("/api/vendors", require("./routes/vendor.route.js"));
+app.use("/api/orders", require("./routes/order.route.js")); // Corrected mount path
+app.use("/api/auth", require("./routes/adminRoutes/auth.route.js"));
+app.use("/api", require("./routes/plan.route.js"));
+app.use("/api/vendor", require("./routes/vendorauth.route.js"));
+app.use("/api", require("./routes/vendoruser.route.js"));
+app.use("/api/products", require("./routes/product.route.js"));
+app.use("/api/customer", require("./routes/customer.route.js"));
+app.use("/api/stores", require("./routes/store.route.js"));
+app.use("/api/carts", require("./routes/cart.route.js"));
+app.use("/api/saleschannels", require("./routes/saleschannel.route.js"));
+app.use("/api/token-blacklist", require("./routes/tokenBlacklist.route.js"));
+app.use("/api/publishibleapikey", require("./routes/publishableapikey.route.js"));
+app.use("/api", require("./routes/file.route.js"));
+app.use("/api/standardproducts", require("./routes/standardProduct.route.js"));
+app.use("/api/wishlists", require("./routes/wishlist.route.js"));
+app.use("/api", require("./routes/revenue.js"));
+app.use("/api/admin", require("./routes/admindiscount.route.js"));
+app.use("/api/suppliers", require("./routes/supplier.route.js"));
+app.use("/consignments", require("./routes/consignment.route.js"));
+app.use("/stock-transactions", require("./routes/stocktransaction.route.js"));
+app.use("/api/stock", require("./routes/stock.route.js"));
+app.use("/api/notifications", require("./routes/notification.route.js"));
+app.use("/api/transporters", require("./routes/transport.route.js"));
 
 // WebSocket connection handling
 io.on("connection", (socket) => {

@@ -22,7 +22,7 @@ export const designReducer = (
           ...action.payload,
           side: action.payload.side || ' ', 
         },
-        id: designs.length + 1,
+        id: (designs.length + 1).toString(),
         items: [],
         jsonDesign: null,
         isactive: true,
@@ -108,7 +108,7 @@ export const designReducer = (
             apparel: {
               ...action.selectedApparal,
             },
-            id: designs.length + 1,
+            id: (designs.length + 1).toString(),
             items: [],
             jsonDesign: null,
             isactive: true,

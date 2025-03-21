@@ -20,7 +20,7 @@ const defaultDesignState: IDesign[] = [{
     height: designApparels[0].height,
     selected: designApparels[0].selected,
   },
-  id: 1,
+  id: "1",
   items: [],
   jsonDesign: null,
   isactive: true,

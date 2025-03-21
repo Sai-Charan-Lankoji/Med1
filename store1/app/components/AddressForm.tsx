@@ -1,11 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { cn } from "../lib/utils";
 
-export default function AddressForm({ customerId, customerEmail, onSubmit }) {
+interface AddressFormProps {
+  customerId: string;
+  customerEmail: string;
+  onSubmit: (address: { customer_id: string; customer_email: string; street: string; city: string; state: string; pincode: string }) => Promise<void>;
+}
+
+export default function AddressForm({ customerId, customerEmail, onSubmit }: AddressFormProps) {
   const [address, setAddress] = useState({
     customer_id: customerId || "",
     customer_email: customerEmail || "",
@@ -16,11 +22,11 @@ export default function AddressForm({ customerId, customerEmail, onSubmit }) {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setAddress({ ...address, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     try {

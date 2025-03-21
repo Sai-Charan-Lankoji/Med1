@@ -51,7 +51,7 @@ export function Template() {
                   ${design.isactive ? 'ring-2 ring-purple-500 ring-offset-2' : 'ring-1 ring-gray-200'}
                   ${hoveredDesign === design.id ? 'transform scale-105' : ''}
                 `}
-                onMouseEnter={() => setHoveredDesign(design.id)}
+                onMouseEnter={() => design.id && setHoveredDesign(design.id)}
                 onMouseLeave={() => setHoveredDesign(null)}
               >
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10" />

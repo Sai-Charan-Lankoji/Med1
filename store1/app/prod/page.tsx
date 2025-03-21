@@ -324,7 +324,7 @@ const ProductGallery: React.FC = () => {
           Standard Products
         </h2>
         {standardProducts?.length ? (
-          <StandardProducts products={standardProducts} logProductView={(productId) => logProductView(productId, store_id)} />        ) : (
+          <StandardProducts products={standardProducts} />        ) : (
           <p className="text-gray-600">No standard products found.</p>
         )}
       </div>

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNewCart } from "../hooks/useNewCart";
-import { useCreateOrder } from "../hooks/useCreateOrder";
 import { useRouter } from "next/navigation";
 import { useAddresses } from "../hooks/useGetAddress";
-import { ICartItem, IDesignableCartItem, IStandardCartItem, Address, OrderData } from "@/@types/models";
+import type { ICartItem, IDesignableCartItem, IStandardCartItem, OrderData } from "@/@types/models";
 import { useStore } from "@/context/storecontext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -13,13 +12,30 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { RadioGroup, RadioGroupItem } from "../components/ui/radio-group";
 import { Label } from "../components/ui/label";
-import { FaPlus } from "react-icons/fa";
+import { Separator } from "../components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Tabs, TabsList, TabsTrigger } from "../components/ui/tabs";
+import { Badge } from "../components/ui/badge";
+import {
+  Plus,
+  CreditCard,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  ImageIcon,
+  MapPin,
+  Home,
+  Building,
+  ShoppingBag,
+  Check,
+  AlertCircle,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 const OrderPage = () => {
   const { cartItems: designableCartItems, getStandardCartItems, fetchCartData, loading, deleteCartItem } = useNewCart();
-  const { mutate: createOrder, isLoading: isOrderLoading } = useCreateOrder();
   const router = useRouter();
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<ICartItem[]>([]);
@@ -34,7 +50,6 @@ const OrderPage = () => {
     setIsAddingAddress,
     newAddress,
     setNewAddress,
-    addressError,
     handleAddAddress,
     fetchAddresses,
   } = useAddresses(customerId);
@@ -47,8 +62,14 @@ const OrderPage = () => {
   const [imageViewMode, setImageViewMode] = useState<Record<string, "apparel" | "uploaded">>({});
   const [isAddingShipping, setIsAddingShipping] = useState(false);
   const [isAddingBilling, setIsAddingBilling] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"phonepe" | "">("");
+  const [activeStep, setActiveStep] = useState<"items" | "shipping" | "payment">("items");
+  const [addressFormErrors, setAddressFormErrors] = useState<Record<string, string>>({});
 
-  const allCartItems: ICartItem[] = [...designableCartItems, ...getStandardCartItems()];
+  const allCartItems: ICartItem[] = useMemo(
+    () => [...designableCartItems, ...getStandardCartItems()],
+    [designableCartItems, getStandardCartItems]
+  );
 
   useEffect(() => {
     const fetchAuthToken = async () => {
@@ -61,7 +82,12 @@ const OrderPage = () => {
 
     if (typeof window !== "undefined") {
       const id = sessionStorage.getItem("customerId");
-      setCustomerId(id);
+      if (!id) {
+        setError("Customer ID not found. Please log in.");
+        toast.error("Please log in to place an order.");
+      } else {
+        setCustomerId(id);
+      }
     }
   }, []);
 
@@ -82,6 +108,22 @@ const OrderPage = () => {
         });
     }
   }, [authToken, fetchCartData, loading, isLoadingCart, allCartItems, customerId]);
+
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedShippingAddressId) {
+      const shippingAddresses = addresses.filter((addr) => addr.address_type === "shipping");
+      if (shippingAddresses.length > 0) {
+        setSelectedShippingAddressId(shippingAddresses[0].id);
+      }
+    }
+
+    if (addresses.length > 0 && !selectedBillingAddressId) {
+      const billingAddresses = addresses.filter((addr) => addr.address_type === "billing");
+      if (billingAddresses.length > 0) {
+        setSelectedBillingAddressId(billingAddresses[0].id);
+      }
+    }
+  }, [addresses, selectedShippingAddressId, selectedBillingAddressId]);
 
   const calculateTotals = () => {
     const subtotal = selectedItems.reduce((total, item) => {
@@ -128,10 +170,35 @@ const OrderPage = () => {
     return sides.length === 1 ? sides[0] : sides.slice(0, -1).join(", ") + " & " + sides.slice(-1);
   };
 
+  const validateAddressForm = () => {
+    const errors: Record<string, string> = {};
+    if (!newAddress.street || newAddress.street.trim() === "") errors.street = "Street address is required";
+    if (!newAddress.city || newAddress.city.trim() === "") errors.city = "City is required";
+    if (!newAddress.state || newAddress.state.trim() === "") errors.state = "State is required";
+    if (!newAddress.pincode || newAddress.pincode.trim() === "") {
+      errors.pincode = "Pincode is required";
+    } else if (!/^\d{6}$/.test(newAddress.pincode)) {
+      errors.pincode = "Pincode must be 6 digits";
+    }
+    setAddressFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleOrderSubmit = async () => {
     if (!selectedShippingAddressId) {
       setError("Please select a shipping address");
       toast.error("Please select a shipping address");
+      setActiveStep("shipping");
+      return;
+    }
+    if (!paymentMethod) {
+      setError("Please select a payment method");
+      toast.error("Please select a payment method");
+      return;
+    }
+    if (!customerId) {
+      setError("Customer ID not found. Please log in.");
+      toast.error("Customer ID not found. Please log in.");
       return;
     }
 
@@ -142,10 +209,10 @@ const OrderPage = () => {
     const shippingAddress = addresses.find((addr) => addr.id === selectedShippingAddressId);
     const billingAddress = addresses.find((addr) => addr.id === selectedBillingAddressId) || shippingAddress;
 
-    if (!customerId || !customerEmail || !shippingAddress) {
-      setError("Missing customer or address details");
-      setIsProcessingOrder(false);
+    if (!customerEmail || !shippingAddress) {
+      setError("Missing customer email or address details");
       toast.error("Order failed: Missing details");
+      setIsProcessingOrder(false);
       return;
     }
 
@@ -156,9 +223,7 @@ const OrderPage = () => {
         const isDesignable = item.product_type === "designable";
         const designItem = item as IDesignableCartItem;
         const standardItem = item as IStandardCartItem;
-        const title = isDesignable
-          ? "Custom Designed Product"
-          : standardItem.product_details?.title || "Standard Product";
+        const title = isDesignable ? "Custom Designed Product" : standardItem.product_details?.title || "Standard Product";
         const images = isDesignable
           ? (designItem.designs || []).map((design) => design.pngImage || design.apparel?.url || "").filter(Boolean)
           : getStandardProductSides(standardItem.product_details).map((side) => side.url).filter(Boolean);
@@ -166,9 +231,7 @@ const OrderPage = () => {
         return {
           product_id: item.product_id,
           quantity: item.quantity,
-          price:
-            item.price ||
-            (isDesignable && designItem.designs?.length ? designItem.designs.length * 100 : 100),
+          price: item.price || (isDesignable && designItem.designs?.length ? designItem.designs.length * 100 : 100),
           title,
           images: images.length > 0 ? images : ["/placeholder.svg"],
           designs: isDesignable ? designItem.designs : undefined,
@@ -179,7 +242,7 @@ const OrderPage = () => {
         };
       }),
       total_amount: total,
-      currency_code: "usd",
+      currency_code: "INR",
       status: "pending",
       fulfillment_status: "not_fulfilled",
       payment_status: "awaiting",
@@ -193,47 +256,173 @@ const OrderPage = () => {
       billing_address: billingAddress,
     };
 
-    createOrder(orderData, {
-      onSuccess: async () => {
-        try {
-          // Delete each selected item from the cart
-          const deletePromises = selectedItems.map((item) => deleteCartItem(item.id));
-          await Promise.all(deletePromises);
+    if (paymentMethod === "phonepe") {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/phonepe/initiate`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ orderData, amount: total * 100 }),
+        });
+
+        const paymentData = await response.json();
+
+        if (response.status === 429) {
+          const retryAfter = paymentData.retryAfter || 60;
+          setError(
+            `Order ${paymentData.orderId} placed, but payment failed due to too many requests. Retry after ${retryAfter} seconds.`
+          );
+          toast.warn(`Order ${paymentData.orderId} placed, but payment failed. Retry after ${retryAfter}s.`);
+          await Promise.all(selectedItems.map((item) => deleteCartItem(item.id)));
           localStorage.removeItem("selectedCartItems");
-          setSelectedItems([]); // Clear selected items from state
-          router.push("/order-confirmation");
-          toast.success("Order placed successfully and cart updated");
-        } catch (err) {
-          setError("Order placed but failed to update cart");
-          toast.error("Order placed but failed to update cart");
-          console.error("Error deleting cart items:", err);
-        } finally {
+          setSelectedItems([]);
           setIsProcessingOrder(false);
+          router.push(`/order-confirmation?orderId=${paymentData.orderId}`);
+          return;
         }
-      },
-      onError: (err: any) => {
-        setError(err.message || "Failed to place order");
-        toast.error(err.message || "Failed to place order");
+
+        if (!paymentData.success) {
+          setError(
+            `Order ${paymentData.orderId} placed, but payment failed: ${paymentData.message || "Unknown error"}`
+          );
+          toast.warn(`Order ${paymentData.orderId} placed, but payment failed. Please try paying again.`);
+          await Promise.all(selectedItems.map((item) => deleteCartItem(item.id)));
+          localStorage.removeItem("selectedCartItems");
+          setSelectedItems([]);
+          setIsProcessingOrder(false);
+          router.push(`/order-confirmation?orderId=${paymentData.orderId}`);
+          return;
+        }
+
+        if (paymentData.success && paymentData.data.instrumentResponse.redirectInfo) {
+          sessionStorage.setItem("pendingOrderId", paymentData.orderId);
+          window.location.href = paymentData.data.instrumentResponse.redirectInfo.url;
+        } else {
+          throw new Error("Redirect URL missing in payment response");
+        }
+      } catch (err: any) {
+        setError(err.message || "Payment initiation failed");
+        toast.error(err.message || "Payment initiation failed");
         setIsProcessingOrder(false);
-      },
-    });
+      }
+    }
   };
+
+  const renderAddressForm = (type: "shipping" | "billing") => (
+    <form
+      onSubmit={handleAddAddress}
+      className="space-y-6 p-6 bg-white rounded-xl shadow-md border border-gray-200 transition-all duration-300 ease-in-out"
+    >
+      <div className="space-y-2">
+        <Label htmlFor={`${type}-street`} className="text-sm font-semibold text-gray-700">
+          Street Address <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-street`}
+          name="street"
+          value={newAddress.street || ""}
+          onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value, address_type: type })}
+          placeholder="Enter your street address"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+            addressFormErrors.street ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          required
+        />
+        {addressFormErrors.street && <p className="text-sm text-red-500">{addressFormErrors.street}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${type}-city`} className="text-sm font-semibold text-gray-700">
+          City <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-city`}
+          name="city"
+          value={newAddress.city || ""}
+          onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
+          placeholder="Enter your city"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+            addressFormErrors.city ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          required
+        />
+        {addressFormErrors.city && <p className="text-sm text-red-500">{addressFormErrors.city}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${type}-state`} className="text-sm font-semibold text-gray-700">
+          State <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-state`}
+          name="state"
+          value={newAddress.state || ""}
+          onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
+          placeholder="Enter your state"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+            addressFormErrors.state ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          required
+        />
+        {addressFormErrors.state && <p className="text-sm text-red-500">{addressFormErrors.state}</p>}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor={`${type}-pincode`} className="text-sm font-semibold text-gray-700">
+          Pincode <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-pincode`}
+          name="pincode"
+          value={newAddress.pincode || ""}
+          onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
+          placeholder="Enter 6-digit pincode"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 ${
+            addressFormErrors.pincode ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          maxLength={6}
+          required
+        />
+        {addressFormErrors.pincode && <p className="text-sm text-red-500">{addressFormErrors.pincode}</p>}
+      </div>
+      <div className="flex space-x-4 pt-4">
+        <Button
+          variant="outline"
+          onClick={() => (type === "shipping" ? setIsAddingShipping(false) : setIsAddingBilling(false))}
+          className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200 rounded-lg"
+          type="button"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 rounded-lg"
+        >
+          Save Address
+        </Button>
+      </div>
+    </form>
+  );
 
   if (isLoadingCart) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Loading your order...</p>
+      <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+        <Loader2 className="animate-spin text-blue-600 h-12 w-12 mb-4" />
+        <p className="text-gray-700 text-lg font-medium">Loading your order details...</p>
       </div>
     );
   }
 
   if (selectedItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">No items selected for order.</p>
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-8 rounded-xl shadow-lg max-w-md w-full border border-gray-200">
+          <ShoppingBag className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Cart is Empty</h2>
+          <p className="text-gray-600 mb-6">No items selected for checkout.</p>
           <Link href="/cart">
-            <Button>Back to Cart</Button>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white transition-all duration-200 rounded-lg">
+              Return to Cart
+            </Button>
           </Link>
         </div>
       </div>
@@ -241,40 +430,110 @@ const OrderPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12">
+    <div className="min-h-screen bg-gray-100 py-10 px-4 sm:px-6 lg:px-8">
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold text-gray-900 mb-10">Place Your Order</h1>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-10">
+          <Link href="/cart" className="flex items-center text-gray-600 hover:text-blue-600 transition-colors duration-200">
+            <ChevronLeft className="h-5 w-5 mr-1" />
+            <span className="text-sm font-medium">Back to Cart</span>
+          </Link>
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Checkout</h1>
+          <div className="w-24"></div>
+        </div>
+
+        {/* Checkout Progress */}
+        <div className="mb-10 hidden sm:block">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t-2 border-gray-200"></div>
+            </div>
+            <div className="relative flex justify-between">
+              {["items", "shipping", "payment"].map((step, index) => (
+                <div key={step} className="flex flex-col items-center">
+                  <div
+                    className={`flex items-center justify-center w-12 h-12 rounded-full transition-all duration-300 ease-in-out ${
+                      activeStep === step
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "bg-white text-gray-500 border-2 border-gray-200"
+                    } text-lg font-semibold`}
+                  >
+                    {index + 1}
+                  </div>
+                  <span
+                    className={`mt-2 text-sm font-medium transition-colors duration-300 ${
+                      activeStep === step ? "text-blue-600" : "text-gray-600"
+                    }`}
+                  >
+                    {step === "items" ? "Review Items" : step === "shipping" ? "Shipping" : "Payment"}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Step Indicator */}
+        <div className="mb-8 sm:hidden">
+          <Tabs value={activeStep} className="w-full">
+            <TabsList className="grid w-full grid-cols-3 gap-2 bg-gray-200 p-2 rounded-lg">
+              {["items", "shipping", "payment"].map((step) => (
+                <TabsTrigger
+                  key={step}
+                  value={step}
+                  onClick={() => setActiveStep(step as "items" | "shipping" | "payment")}
+                  className={`capitalize py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                    activeStep === step ? "bg-blue-600 text-white shadow" : "bg-white text-gray-700"
+                  }`}
+                >
+                  {step}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Order Items Summary */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md overflow-hidden transition-all duration-300">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-2xl font-semibold text-gray-800">Order Items</h2>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {selectedItems.map((item) => {
-                  const isDesignable = item.product_type === "designable";
-                  const designItem = item as IDesignableCartItem;
-                  const standardItem = item as IStandardCartItem;
-                  const pricePerItem = isDesignable
-                    ? (designItem.designs?.length || 0) * 100
-                    : standardItem.price || 100;
-                  const itemTotal = pricePerItem * item.quantity;
-                  const mainDesignIndex = selectedDesigns[item.id] || 0;
-                  const currentDesign = isDesignable ? designItem.designs?.[mainDesignIndex] : null;
-                  const currentUploadedImageIndex = currentImageIndex[item.id] || 0;
-                  const viewMode = imageViewMode[item.id] || "apparel";
-                  const hasUploadedImages = isDesignable && currentDesign?.uploadedImages?.some((img) => img?.length > 0);
-                  const standardSides = !isDesignable ? getStandardProductSides(standardItem.product_details) : [];
-                  const currentStandardSide = !isDesignable ? standardSides[mainDesignIndex] || standardSides[0] : null;
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Review Items Section */}
+            <Card
+              className={`transition-all duration-300 ease-in-out ${
+                activeStep !== "items" ? "hidden lg:block opacity-50" : "opacity-100"
+              } bg-white rounded-xl shadow-lg border border-gray-200`}
+            >
+              <CardHeader className="p-6 border-b border-gray-100">
+                <CardTitle className="text-2xl font-semibold text-gray-900 flex items-center">
+                  <ShoppingBag className="h-6 w-6 mr-3 text-blue-600" />
+                  Order Items
+                  <Badge variant="outline" className="ml-auto border-gray-300 text-gray-700">
+                    {selectedItems.length} {selectedItems.length === 1 ? "item" : "items"}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  {selectedItems.map((item) => {
+                    const isDesignable = item.product_type === "designable";
+                    const designItem = item as IDesignableCartItem;
+                    const standardItem = item as IStandardCartItem;
+                    const pricePerItem = isDesignable ? (designItem.designs?.length || 0) * 100 : standardItem.price || 100;
+                    const itemTotal = pricePerItem * item.quantity;
+                    const mainDesignIndex = selectedDesigns[item.id] || 0;
+                    const currentDesign = isDesignable ? designItem.designs?.[mainDesignIndex] : null;
+                    const currentUploadedImageIndex = currentImageIndex[item.id] || 0;
+                    const viewMode = imageViewMode[item.id] || "apparel";
+                    const hasUploadedImages = isDesignable && currentDesign?.uploadedImages?.some((img) => img?.length > 0);
+                    const standardSides = !isDesignable ? getStandardProductSides(standardItem.product_details) : [];
+                    const currentStandardSide = !isDesignable ? standardSides[mainDesignIndex] || standardSides[0] : null;
 
-                  return (
-                    <div key={item.id} className="p-6 flex items-start space-x-6">
-                      <div className="flex flex-col md:flex-row gap-6 flex-1">
-                        <div className="md:w-1/2">
-                          <div className="relative w-48 h-56 rounded-lg overflow-hidden bg-gray-100 shadow-sm">
+                    return (
+                      <div
+                        key={item.id}
+                        className="flex flex-col sm:flex-row gap-6 border-b border-gray-100 pb-6 last:border-b-0 last:pb-0"
+                      >
+                        <div className="sm:w-1/3 flex-shrink-0">
+                          <div className="relative w-full aspect-square rounded-lg overflow-hidden bg-gray-50 shadow-sm border border-gray-200">
                             {isDesignable && currentDesign ? (
                               viewMode === "apparel" ? (
                                 <>
@@ -282,9 +541,11 @@ const OrderPage = () => {
                                     src={currentDesign.apparel.url || "/placeholder.svg"}
                                     alt={`Side: ${currentDesign.apparel.side}`}
                                     fill
-                                    sizes="100%"
-                                    priority
-                                    style={{ backgroundColor: currentDesign.apparel?.color || "#ffffff", objectFit: "cover" }}
+                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                    style={{
+                                      backgroundColor: currentDesign.apparel?.color || "#ffffff",
+                                      objectFit: "cover",
+                                    }}
                                   />
                                   <div className="absolute inset-0 flex items-center justify-center">
                                     <div
@@ -300,19 +561,20 @@ const OrderPage = () => {
                                         src={currentDesign.pngImage || "/placeholder.svg"}
                                         alt="Design"
                                         fill
-                                        sizes="100%"
+                                        sizes="50vw"
                                         style={{ objectFit: "contain" }}
                                       />
                                     </div>
                                   </div>
                                 </>
                               ) : (
-                                hasUploadedImages && currentDesign?.uploadedImages?.[currentUploadedImageIndex] && (
+                                hasUploadedImages &&
+                                currentDesign?.uploadedImages?.[currentUploadedImageIndex] && (
                                   <Image
                                     src={currentDesign.uploadedImages[currentUploadedImageIndex] || "/placeholder.svg"}
                                     alt="Uploaded image"
                                     fill
-                                    sizes="100%"
+                                    sizes="(max-width: 768px) 100vw, 33vw"
                                     style={{ objectFit: "contain" }}
                                   />
                                 )
@@ -322,341 +584,509 @@ const OrderPage = () => {
                                 src={currentStandardSide?.url || "/placeholder.svg"}
                                 alt={standardItem.product_details?.title || "Standard Product"}
                                 fill
-                                sizes="100%"
+                                sizes="(max-width: 768px) 100vw, 33vw"
                                 style={{ objectFit: "cover" }}
                               />
                             )}
                           </div>
                           {(isDesignable ? designItem.designs && designItem.designs.length > 0 : standardSides.length > 0) && (
-                            <div className="mt-4 grid grid-cols-4 gap-4">
-                              {isDesignable ? (
-                                viewMode === "apparel" ? (
-                                  designItem.designs?.map((design, index) => (
-                                    <div
-                                      key={index}
-                                      className={`relative w-16 h-20 cursor-pointer transition-all duration-200 rounded-md overflow-hidden shadow-sm ${index === mainDesignIndex ? "ring-2 ring-indigo-500" : "hover:ring-2 hover:ring-gray-300"}`}
-                                      onClick={() => handleThumbnailClick(item.id, index)}
-                                    >
-                                      <Image
-                                        src={design.apparel?.url || "/placeholder.svg"}
-                                        alt={`Side: ${design.apparel.side}`}
-                                        fill
-                                        sizes="100%"
-                                        priority
-                                        style={{ backgroundColor: design.apparel?.color || "#ffffff", objectFit: "cover" }}
-                                      />
-                                      <div className="absolute inset-0 flex items-center justify-center">
-                                        <div
-                                          className="relative translate-y-[-10%]"
-                                          style={{
-                                            top: design.apparel.side === "leftshoulder" ? "12px" : design.apparel.side === "rightshoulder" ? "12px" : "initial",
-                                            left: design.apparel.side === "leftshoulder" ? "-3px" : design.apparel.side === "rightshoulder" ? "2px" : "initial",
-                                            width: design.apparel.side === "leftshoulder" || design.apparel.side === "rightshoulder" ? "30%" : "50%",
-                                            height: design.apparel.side === "leftshoulder" || design.apparel.side === "rightshoulder" ? "30%" : "50%",
-                                          }}
-                                        >
-                                          <Image
-                                            src={design.pngImage || "/placeholder.svg"}
-                                            alt={`Thumbnail ${index + 1}`}
-                                            fill
-                                            sizes="100%"
-                                            style={{ objectFit: "contain" }}
-                                          />
+                            <div className="mt-4 grid grid-cols-4 gap-2">
+                              {isDesignable
+                                ? viewMode === "apparel"
+                                  ? designItem.designs?.map((design, index) => (
+                                      <button
+                                        key={index}
+                                        className={`relative w-full aspect-square cursor-pointer rounded-md overflow-hidden shadow-sm border border-gray-200 transition-transform duration-200 hover:scale-105 ${
+                                          index === mainDesignIndex ? "ring-2 ring-blue-500" : ""
+                                        }`}
+                                        onClick={() => handleThumbnailClick(item.id, index)}
+                                        aria-label={`View ${design.apparel.side} design`}
+                                      >
+                                        <Image
+                                          src={design.apparel?.url || "/placeholder.svg"}
+                                          alt={`Side: ${design.apparel.side}`}
+                                          fill
+                                          sizes="25vw"
+                                          style={{ backgroundColor: design.apparel?.color || "#ffffff", objectFit: "cover" }}
+                                        />
+                                        <div className="absolute inset-0 flex items-center justify-center">
+                                          <div
+                                            className="relative translate-y-[-10%]"
+                                            style={{
+                                              top: design.apparel.side === "leftshoulder" ? "12px" : design.apparel.side === "rightshoulder" ? "12px" : "initial",
+                                              left: design.apparel.side === "leftshoulder" ? "-3px" : design.apparel.side === "rightshoulder" ? "2px" : "initial",
+                                              width: design.apparel.side === "leftshoulder" || design.apparel.side === "rightshoulder" ? "30%" : "50%",
+                                              height: design.apparel.side === "leftshoulder" || design.apparel.side === "rightshoulder" ? "30%" : "50%",
+                                            }}
+                                          >
+                                            <Image
+                                              src={design.pngImage || "/placeholder.svg"}
+                                              alt={`Thumbnail ${index + 1}`}
+                                              fill
+                                              sizes="25vw"
+                                              style={{ objectFit: "contain" }}
+                                            />
+                                          </div>
                                         </div>
-                                      </div>
-                                    </div>
-                                  ))
-                                ) : (
-                                  currentDesign?.uploadedImages?.map((image, index) => (
+                                      </button>
+                                    ))
+                                  : currentDesign?.uploadedImages?.map((image, index) => (
+                                      <button
+                                        key={index}
+                                        className={`relative w-full aspect-square rounded-md overflow-hidden shadow-sm border border-gray-200 transition-transform duration-200 hover:scale-105 ${
+                                          index === currentUploadedImageIndex ? "ring-2 ring-blue-500" : ""
+                                        }`}
+                                        onClick={() => setCurrentImageIndex((prev) => ({ ...prev, [item.id]: index }))}
+                                        aria-label={`View uploaded image ${index + 1}`}
+                                      >
+                                        <Image
+                                          src={image || "/placeholder.svg"}
+                                          alt={`Upload ${index + 1}`}
+                                          fill
+                                          sizes="25vw"
+                                          style={{ objectFit: "cover" }}
+                                        />
+                                      </button>
+                                    ))
+                                : standardSides.map((side, index) => (
                                     <button
                                       key={index}
-                                      className={`aspect-square relative rounded-md overflow-hidden shadow-sm transition-all duration-200 ${index === currentUploadedImageIndex ? "ring-2 ring-indigo-500" : "ring-1 ring-gray-200 hover:ring-2 hover:ring-gray-300"}`}
-                                      onClick={() => setCurrentImageIndex((prev) => ({ ...prev, [item.id]: index }))}
+                                      className={`relative w-full aspect-square cursor-pointer rounded-md overflow-hidden shadow-sm border border-gray-200 transition-transform duration-200 hover:scale-105 ${
+                                        index === mainDesignIndex ? "ring-2 ring-blue-500" : ""
+                                      }`}
+                                      onClick={() => handleThumbnailClick(item.id, index)}
+                                      aria-label={`View ${side.side} side`}
                                     >
-                                      <Image src={image || "/placeholder.svg"} alt={`Upload ${index + 1}`} fill sizes="100%" style={{ objectFit: "cover" }} />
+                                      <Image
+                                        src={side.url || "/placeholder.svg"}
+                                        alt={`Side: ${side.side}`}
+                                        fill
+                                        sizes="25vw"
+                                        style={{ objectFit: "cover" }}
+                                      />
                                     </button>
-                                  ))
-                                )
-                              ) : (
-                                standardSides.map((side, index) => (
-                                  <div
-                                    key={index}
-                                    className={`relative w-16 h-20 cursor-pointer transition-all duration-200 rounded-md overflow-hidden shadow-sm ${index === mainDesignIndex ? "ring-2 ring-indigo-500" : "hover:ring-2 hover:ring-gray-300"}`}
-                                    onClick={() => handleThumbnailClick(item.id, index)}
-                                  >
-                                    <Image src={side.url || "/placeholder.svg"} alt={`Side: ${side.side}`} fill sizes="100%" style={{ objectFit: "cover" }} />
-                                  </div>
-                                ))
-                              )}
+                                  ))}
                             </div>
                           )}
                         </div>
-                        <div className="md:w-1/2 flex flex-col">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-800">
-                                {isDesignable ? "Custom Designed Product" : standardItem.product_details?.title || "Standard Product"}
-                              </h3>
-                              <p className="text-sm text-gray-600 mb-2">
-                                {isDesignable
-                                  ? `Designed Sides: ${getDesignedSidesText(designItem.designs)}`
-                                  : `Size: ${standardItem.selected_size || "N/A"}, Color: ${
-                                      standardItem.selected_color
-                                        ? typeof standardItem.selected_color === "string"
-                                          ? standardItem.selected_color
-                                          : standardItem.selected_color || "N/A"
-                                        : "N/A"
-                                    }`}
-                              </p>
-                              {isDesignable && hasUploadedImages && (
-                                <Button
-                                  variant="link"
-                                  className="text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-                                  onClick={() => toggleViewMode(item.id)}
-                                  disabled={loading}
-                                >
-                                  {viewMode === "apparel" ? "View Uploaded Images" : "View Design Preview"}
-                                </Button>
-                              )}
-                            </div>
+
+                        <div className="sm:w-2/3 flex flex-col">
+                          <h3 className="text-lg font-semibold text-gray-900">{isDesignable ? "Custom Designed Product" : standardItem.product_details?.title || "Standard Product"}</h3>
+                          <div className="mt-2 space-y-2 text-sm text-gray-600">
+                            <p>
+                              {isDesignable
+                                ? `Designed Sides: ${getDesignedSidesText(designItem.designs)}`
+                                : `Size: ${standardItem.selected_size || "N/A"}, Color: ${
+                                    standardItem.selected_color
+                                      ? typeof standardItem.selected_color === "string"
+                                        ? standardItem.selected_color
+                                        : standardItem.selected_color || "N/A"
+                                      : "N/A"
+                                  }`}
+                            </p>
+                            <p>Quantity: {item.quantity}</p>
                           </div>
-                          <div className="mt-auto pt-6">
-                            <div className="flex justify-between items-center mb-4">
-                              <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-600">Quantity: {item.quantity}</span>
-                              </div>
-                              <div className="text-right">
-                                <div className="text-sm text-gray-500">Price per item</div>
-                                <div className="font-medium text-gray-800">${pricePerItem.toFixed(2)}</div>
-                              </div>
+                          {isDesignable && hasUploadedImages && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="mt-3 w-fit border-blue-500 text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-lg"
+                              onClick={() => toggleViewMode(item.id)}
+                            >
+                              {viewMode === "apparel" ? (
+                                <>
+                                  <ImageIcon className="h-4 w-4 mr-2" />
+                                  View Uploaded Images
+                                </>
+                              ) : (
+                                <>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  View Design Preview
+                                </>
+                              )}
+                            </Button>
+                          )}
+                          <div className="mt-auto pt-4 flex flex-wrap justify-between items-end gap-4">
+                            <div>
+                              <p className="text-sm text-gray-500">Price per item</p>
+                              <p className="text-lg font-semibold text-gray-900">₹{pricePerItem.toFixed(2)}</p>
                             </div>
-                            <div className="pt-4 border-t border-gray-200">
-                              <div className="flex justify-between items-center">
-                                <span className="font-medium text-gray-800">Subtotal</span>
-                                <span className="font-medium text-gray-800">${itemTotal.toFixed(2)}</span>
-                              </div>
+                            <div className="text-right">
+                              <p className="text-sm text-gray-500">Subtotal</p>
+                              <p className="text-lg font-bold text-blue-600">₹{itemTotal.toFixed(2)}</p>
                             </div>
                           </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-8 flex justify-end">
+                  <Button
+                    onClick={() => setActiveStep("shipping")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-200 shadow-md"
+                  >
+                    Continue to Shipping <ChevronRight className="h-5 w-5 ml-2" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Shipping Section */}
+            <Card
+              className={`transition-all duration-300 ease-in-out ${
+                activeStep !== "shipping" ? "hidden lg:block opacity-50" : "opacity-100"
+              } bg-white rounded-xl shadow-lg border border-gray-200`}
+            >
+              <CardHeader className="p-6 border-b border-gray-100">
+                <CardTitle className="text-2xl font-semibold text-gray-900 flex items-center">
+                  <MapPin className="h-6 w-6 mr-3 text-blue-600" />
+                  Shipping Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {isAddingShipping ? (
+                  renderAddressForm("shipping")
+                ) : (
+                  <div className="space-y-6">
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-700">Select a Shipping Address</h3>
+                      {addresses.filter((addr) => addr.address_type === "shipping").length === 0 ? (
+                        <div className="bg-gray-50 p-6 rounded-lg text-center border border-gray-200">
+                          <p className="text-gray-600 mb-4">No shipping addresses found</p>
+                          <Button
+                            variant="outline"
+                            onClick={() => setIsAddingShipping(true)}
+                            className="border-blue-500 text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-lg"
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Add Shipping Address
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <RadioGroup
+                            value={selectedShippingAddressId}
+                            onValueChange={setSelectedShippingAddressId}
+                            className="space-y-4"
+                          >
+                            {addresses
+                              .filter((addr) => addr.address_type === "shipping")
+                              .map((addr) => (
+                                <div
+                                  key={addr.id}
+                                  className={`flex items-start space-x-4 p-4 rounded-lg border-2 transition-all duration-200 ${
+                                    selectedShippingAddressId === addr.id
+                                      ? "border-blue-500 bg-blue-50 shadow-md"
+                                      : "border-gray-200 hover:border-gray-300 bg-white"
+                                  }`}
+                                >
+                                  <RadioGroupItem
+                                    value={addr.id}
+                                    id={`shipping-${addr.id}`}
+                                    className="mt-1 text-blue-600"
+                                  />
+                                  <div className="flex-1">
+                                    <Label
+                                      htmlFor={`shipping-${addr.id}`}
+                                      className={`flex items-center text-base font-semibold ${
+                                        selectedShippingAddressId === addr.id ? "text-blue-600" : "text-gray-900"
+                                      }`}
+                                    >
+                                      <Home className="h-5 w-5 mr-2" />
+                                      Shipping Address
+                                      {selectedShippingAddressId === addr.id && (
+                                        <Badge className="ml-2 bg-blue-100 text-blue-600 border-blue-200">Selected</Badge>
+                                      )}
+                                    </Label>
+                                    <p className="mt-1 text-gray-700 text-sm">
+                                      {addr.street}, {addr.city}, {addr.state} - {addr.pincode}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                          </RadioGroup>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsAddingShipping(true)}
+                            className="mt-2 border-blue-500 text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-lg"
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Add New Address
+                          </Button>
+                        </>
+                      )}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
+
+                    <Separator className="my-6 bg-gray-200" />
+
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-700">Billing Address</h3>
+                      {isAddingBilling ? (
+                        renderAddressForm("billing")
+                      ) : (
+                        <>
+                          <div className="flex items-center mb-4">
+                            <input
+                              type="checkbox"
+                              id="same-as-shipping"
+                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 transition-all duration-200"
+                              checked={!selectedBillingAddressId || selectedBillingAddressId === selectedShippingAddressId}
+                              onChange={() => {
+                                if (selectedBillingAddressId === selectedShippingAddressId) {
+                                  const billingAddr = addresses.find(
+                                    (addr) => addr.address_type === "billing" && addr.id !== selectedShippingAddressId
+                                  );
+                                  setSelectedBillingAddressId(billingAddr?.id);
+                                } else {
+                                  setSelectedBillingAddressId(selectedShippingAddressId);
+                                }
+                              }}
+                            />
+                            <label htmlFor="same-as-shipping" className="ml-2 text-sm text-gray-700 font-medium">
+                              Same as shipping address
+                            </label>
+                          </div>
+                          {selectedBillingAddressId !== selectedShippingAddressId && (
+                            <RadioGroup
+                              value={selectedBillingAddressId}
+                              onValueChange={setSelectedBillingAddressId}
+                              className="space-y-4"
+                            >
+                              {addresses
+                                .filter((addr) => addr.address_type === "billing")
+                                .map((addr) => (
+                                  <div
+                                    key={addr.id}
+                                    className={`flex items-start space-x-4 p-4 rounded-lg border-2 transition-all duration-200 ${
+                                      selectedBillingAddressId === addr.id
+                                        ? "border-blue-500 bg-blue-50 shadow-md"
+                                        : "border-gray-200 hover:border-gray-300 bg-white"
+                                    }`}
+                                  >
+                                    <RadioGroupItem
+                                      value={addr.id}
+                                      id={`billing-${addr.id}`}
+                                      className="mt-1 text-blue-600"
+                                    />
+                                    <div className="flex-1">
+                                      <Label
+                                        htmlFor={`billing-${addr.id}`}
+                                        className={`flex items-center text-base font-semibold ${
+                                          selectedBillingAddressId === addr.id ? "text-blue-600" : "text-gray-900"
+                                        }`}
+                                      >
+                                        <Building className="h-5 w-5 mr-2" />
+                                        Billing Address
+                                        {selectedBillingAddressId === addr.id && (
+                                          <Badge className="ml-2 bg-blue-100 text-blue-600 border-blue-200">Selected</Badge>
+                                        )}
+                                      </Label>
+                                      <p className="mt-1 text-gray-700 text-sm">
+                                        {addr.street}, {addr.city}, {addr.state} - {addr.pincode}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                            </RadioGroup>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setIsAddingBilling(true)}
+                            className="mt-2 border-blue-500 text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-lg"
+                          >
+                            <Plus className="h-4 w-4 mr-2" /> Add New Billing Address
+                          </Button>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="mt-8 flex justify-between">
+                      <Button
+                        variant="outline"
+                        onClick={() => setActiveStep("items")}
+                        className="border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200 rounded-lg px-6 py-2"
+                      >
+                        <ChevronLeft className="h-5 w-5 mr-2" /> Back to Items
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (!selectedShippingAddressId) {
+                            toast.error("Please select a shipping address");
+                            return;
+                          }
+                          setActiveStep("payment");
+                        }}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-200 shadow-md"
+                      >
+                        Continue to Payment <ChevronRight className="h-5 w-5 ml-2" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Payment Section */}
+            <Card
+              className={`transition-all duration-300 ease-in-out ${
+                activeStep !== "payment" ? "hidden lg:block opacity-50" : "opacity-100"
+              } bg-white rounded-xl shadow-lg border border-gray-200`}
+            >
+              <CardHeader className="p-6 border-b border-gray-100">
+                <CardTitle className="text-2xl font-semibold text-gray-900 flex items-center">
+                  <CreditCard className="h-6 w-6 mr-3 text-blue-600" />
+                  Payment Method
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold text-gray-700">Select a Payment Method</h3>
+                    <RadioGroup
+                      value={paymentMethod}
+                      onValueChange={(value) => setPaymentMethod(value as "phonepe")}
+                      className="space-y-4"
+                    >
+                      <div
+                        className={`flex items-center space-x-4 p-4 rounded-lg border-2 transition-all duration-200 ${
+                          paymentMethod === "phonepe" ? "border-blue-500 bg-blue-50 shadow-md" : "border-gray-200 hover:border-gray-300 bg-white"
+                        }`}
+                      >
+                        <RadioGroupItem value="phonepe" id="phonepe" className="text-blue-600" />
+                        <Label
+                          htmlFor="phonepe"
+                          className={`flex items-center text-base font-semibold ${
+                            paymentMethod === "phonepe" ? "text-blue-600" : "text-gray-900"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center shadow-sm">
+                              <CreditCard className="h-6 w-6 text-purple-600" />
+                            </div>
+                            <div>
+                              <span className="block text-gray-900 font-medium">PhonePe (UAT)</span>
+                              <span className="text-xs text-gray-500">Test payment gateway</span>
+                            </div>
+                            {paymentMethod === "phonepe" && <Check className="ml-auto h-5 w-5 text-blue-600" />}
+                          </div>
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                    {!paymentMethod && (
+                      <div className="flex items-center mt-2 text-amber-600 bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0" />
+                        <p className="text-sm font-medium">Please select a payment method to continue</p>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-8 flex justify-between">
+                    <Button
+                      variant="outline"
+                      onClick={() => setActiveStep("shipping")}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200 rounded-lg px-6 py-2"
+                    >
+                      <ChevronLeft className="h-5 w-5 mr-2" /> Back to Shipping
+                    </Button>
+                    <Button
+                      onClick={handleOrderSubmit}
+                      disabled={isProcessingOrder || !selectedShippingAddressId || !paymentMethod || !customerId}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-all duration-200 shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      {isProcessingOrder ? (
+                        <>
+                          <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          Complete Order <ChevronRight className="h-5 w-5 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Address Section */}
+          {/* Order Summary Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-md p-6 sticky top-8 transition-all duration-300">
-              <h2 className="text-xl font-semibold text-gray-800 mb-6">Order Details</h2>
-
-              {/* Shipping Address */}
-              <div className="mb-8">
-                <h3 className="text-lg font-medium text-gray-800 mb-3">Shipping Address</h3>
-                {isAddingShipping ? (
-                  <div className="space-y-4 animate-fade-in">
-                    <Input
-                      name="street"
-                      value={newAddress.street || ""}
-                      onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value, address_type: "shipping" })}
-                      placeholder="Street Address"
-                      className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                      required
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        name="city"
-                        value={newAddress.city || ""}
-                        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                        placeholder="City"
-                        className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                        required
-                      />
-                      <Input
-                        name="state"
-                        value={newAddress.state || ""}
-                        onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
-                        placeholder="State"
-                        className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                        required
-                      />
-                    </div>
-                    <Input
-                      name="pincode"
-                      value={newAddress.pincode || ""}
-                      onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
-                      placeholder="Pincode"
-                      className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                      required
-                    />
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        className="border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200"
-                        onClick={() => setIsAddingShipping(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        className="bg-indigo-600 text-white hover:bg-indigo-700 transition-all duration-200"
-                        onClick={handleAddAddress}
-                      >
-                        Save
-                      </Button>
-                    </div>
+            <Card className="sticky top-10 bg-white rounded-xl shadow-lg border border-gray-200">
+              <CardHeader className="p-6 border-b border-gray-100">
+                <CardTitle className="text-2xl font-semibold text-gray-900">Order Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Items ({selectedItems.length})</span>
+                    <span className="font-medium text-gray-900">₹{calculateTotals().subtotal.toFixed(2)}</span>
                   </div>
-                ) : (
-                  <>
-                    <RadioGroup value={selectedShippingAddressId} onValueChange={setSelectedShippingAddressId} className="space-y-2">
-                      {addresses.filter((addr) => addr.address_type === "shipping").map((addr) => (
-                        <div
-                          key={addr.id}
-                          className="flex items-center space-x-2 p-3 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 transition-all duration-200"
-                        >
-                          <RadioGroupItem value={addr.id} id={addr.id} className="text-indigo-600" />
-                          <Label htmlFor={addr.id} className="text-gray-700">
-                            {addr.street}, {addr.city}, {addr.state} - {addr.pincode}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                    <Button
-                      variant="link"
-                      className="mt-3 text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-                      onClick={() => setIsAddingShipping(true)}
-                    >
-                      <FaPlus className="mr-2" /> Add New Shipping Address
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {/* Billing Address */}
-              <div className="mb-8">
-                <h3 className="text-lg font-medium text-gray-800 mb-3">Billing Address</h3>
-                {isAddingBilling ? (
-                  <div className="space-y-4 animate-fade-in">
-                    <Input
-                      name="street"
-                      value={newAddress.street || ""}
-                      onChange={(e) => setNewAddress({ ...newAddress, street: e.target.value, address_type: "billing" })}
-                      placeholder="Street Address"
-                      className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                      required
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                      <Input
-                        name="city"
-                        value={newAddress.city || ""}
-                        onChange={(e) => setNewAddress({ ...newAddress, city: e.target.value })}
-                        placeholder="City"
-                        className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                        required
-                      />
-                      <Input
-                        name="state"
-                        value={newAddress.state || ""}
-                        onChange={(e) => setNewAddress({ ...newAddress, state: e.target.value })}
-                        placeholder="State"
-                        className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                        required
-                      />
-                    </div>
-                    <Input
-                      name="pincode"
-                      value={newAddress.pincode || ""}
-                      onChange={(e) => setNewAddress({ ...newAddress, pincode: e.target.value })}
-                      placeholder="Pincode"
-                      className="border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 rounded-md shadow-sm transition-all duration-200"
-                      required
-                    />
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        className="border-gray-300 text-gray-700 hover:bg-gray-100 transition-all duration-200"
-                        onClick={() => setIsAddingBilling(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        className="bg-indigo-600 text-white hover:bg-indigo-700 transition-all duration-200"
-                        onClick={handleAddAddress}
-                      >
-                        Save
-                      </Button>
-                    </div>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Shipping</span>
+                    <span className="font-medium text-gray-900">₹{calculateTotals().shippingCost.toFixed(2)}</span>
                   </div>
-                ) : (
-                  <>
-                    <RadioGroup value={selectedBillingAddressId} onValueChange={setSelectedBillingAddressId} className="space-y-2">
-                      {addresses.filter((addr) => addr.address_type === "billing").map((addr) => (
-                        <div
-                          key={addr.id}
-                          className="flex items-center space-x-2 p-3 border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 transition-all duration-200"
-                        >
-                          <RadioGroupItem value={addr.id} id={addr.id} className="text-indigo-600" />
-                          <Label htmlFor={addr.id} className="text-gray-700">
-                            {addr.street}, {addr.city}, {addr.state} - {addr.pincode}
-                          </Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                    <Button
-                      variant="link"
-                      className="mt-3 text-indigo-600 hover:text-indigo-800 transition-colors duration-200"
-                      onClick={() => setIsAddingBilling(true)}
-                    >
-                      <FaPlus className="mr-2" /> Add New Billing Address
-                    </Button>
-                  </>
-                )}
-              </div>
-
-              {/* Order Summary and Submit */}
-              <div className="border-t border-gray-200 pt-6">
-                <div className="flex justify-between text-gray-600 mb-2">
-                  <span>Subtotal</span>
-                  <span>${calculateTotals().subtotal.toFixed(2)}</span>
+                  <div className="flex justify-between text-sm text-gray-600">
+                    <span>Tax (10%)</span>
+                    <span className="font-medium text-gray-900">₹{calculateTotals().taxAmount.toFixed(2)}</span>
+                  </div>
+                  <Separator className="bg-gray-200" />
+                  <div className="flex justify-between">
+                    <span className="text-base font-semibold text-gray-900">Total</span>
+                    <span className="text-xl font-bold text-blue-600">₹{calculateTotals().total.toFixed(2)}</span>
+                  </div>
+                  <div className="pt-4">
+                    {activeStep === "items" && (
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-all duration-200 shadow-md"
+                        onClick={() => setActiveStep("shipping")}
+                      >
+                        Continue to Shipping
+                      </Button>
+                    )}
+                    {activeStep === "shipping" && (
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-all duration-200 shadow-md"
+                        onClick={() => {
+                          if (!selectedShippingAddressId) {
+                            toast.error("Please select a shipping address");
+                            return;
+                          }
+                          setActiveStep("payment");
+                        }}
+                      >
+                        Continue to Payment
+                      </Button>
+                    )}
+                    {activeStep === "payment" && (
+                      <Button
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition-all duration-200 shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        onClick={handleOrderSubmit}
+                        disabled={isProcessingOrder || !selectedShippingAddressId || !paymentMethod || !customerId}
+                      >
+                        {isProcessingOrder ? (
+                          <>
+                            <Loader2 className="animate-spin h-5 w-5 mr-2" />
+                            Processing...
+                          </>
+                        ) : (
+                          "Complete Order"
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                  
                 </div>
-                <div className="flex justify-between text-gray-600 mb-2">
-                  <span>Tax (10%)</span>
-                  <span>${calculateTotals().taxAmount.toFixed(2)}</span>
+                <div className="mt-6 text-xs text-gray-500 space-y-2">
+                  <p>By placing your order, you agree to our Terms of Service and Privacy Policy.</p>
+                  <p>All prices are inclusive of applicable taxes.</p>
                 </div>
-                <div className="flex justify-between text-lg font-semibold text-gray-800 mb-4">
-                  <span>Total</span>
-                  <span>${calculateTotals().total.toFixed(2)}</span>
-                </div>
-                <Button
-                  className="w-full bg-indigo-600 text-white hover:bg-indigo-700 rounded-md shadow-md transition-all duration-200"
-                  onClick={handleOrderSubmit}
-                  disabled={isOrderLoading || isProcessingOrder || !selectedShippingAddressId}
-                >
-                  {isProcessingOrder || isOrderLoading ? "Placing Order..." : "Place Order"}
-                </Button>
-                {error && <p className="text-red-500 text-sm mt-2 text-center">{error}</p>}
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
-
-      {/* Custom CSS for Smooth Animation */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.3s ease-out forwards;
-        }
-      `}</style>
     </div>
   );
 };
