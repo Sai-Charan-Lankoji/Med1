@@ -111,49 +111,49 @@ const Order = () => {
           {/* Header Skeleton */}
           <div className="flex justify-between mb-6">
             <div>
-              <div className="h-8 w-48 bg-base-200 rounded-lg mb-2"></div>
-              <div className="h-4 w-64 bg-base-200 rounded-lg"></div>
+              <div className="h-8 w-48 bg-base-200  mb-2"></div>
+              <div className="h-4 w-64 bg-base-200 "></div>
             </div>
-            <div className="h-10 w-24 bg-base-200 rounded-lg"></div>
+            <div className="h-10 w-24 bg-base-200 "></div>
           </div>
           
           {/* Stats Cards Skeleton */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-base-100 p-6 rounded-lg">
-                <div className="h-5 w-24 mb-2 bg-base-200 rounded"></div>
-                <div className="h-8 w-16 mb-2 bg-base-200 rounded"></div>
-                <div className="h-4 w-20 bg-base-200 rounded"></div>
+              <div key={i} className="bg-base-100 p-6 ">
+                <div className="h-5 w-24 mb-2 bg-base-200 "></div>
+                <div className="h-8 w-16 mb-2 bg-base-200 "></div>
+                <div className="h-4 w-20 bg-base-200 "></div>
               </div>
             ))}
           </div>
           
           {/* Filters Skeleton */}
-          <div className="bg-base-100 p-4 rounded-lg mb-6">
+          <div className="bg-base-100 p-4  mb-6">
             <div className="flex flex-col md:flex-row gap-4">
-              <div className="h-10 w-48 bg-base-200 rounded-lg"></div>
-              <div className="h-10 flex-1 bg-base-200 rounded-lg"></div>
+              <div className="h-10 w-48 bg-base-200 "></div>
+              <div className="h-10 flex-1 bg-base-200 "></div>
             </div>
           </div>
           
           {/* Table Skeleton */}
-          <div className="bg-base-100 rounded-lg overflow-hidden">
+          <div className="bg-base-100  overflow-hidden">
             <div className="flex p-4 bg-base-200">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="h-6 flex-1 bg-base-300 rounded mx-2"></div>
+                <div key={i} className="h-6 flex-1 bg-base-300  mx-2"></div>
               ))}
             </div>
             
             {[...Array(6)].map((_, rowIndex) => (
               <div key={rowIndex} className="flex p-4 border-b border-base-200">
                 {[...Array(8)].map((_, colIndex) => (
-                  <div key={colIndex} className="h-10 flex-1 bg-base-200 rounded mx-2"></div>
+                  <div key={colIndex} className="h-10 flex-1 bg-base-200  mx-2"></div>
                 ))}
               </div>
             ))}
             
             <div className="p-4 border-t border-base-200">
-              <div className="h-8 w-full bg-base-200 rounded-lg"></div>
+              <div className="h-8 w-full bg-base-200 "></div>
             </div>
           </div>
         </div>
@@ -166,7 +166,7 @@ const Order = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 container mx-auto max-w-9xl bg-base-200 rounded-box">
+    <div className="p-4 md:p-6 container mx-auto max-w-9xl bg-base-200 ">
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -236,7 +236,7 @@ const Order = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-base-100 p-4 rounded-lg card-border mb-6">
+      <div className="bg-base-100 p-4  card-border mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex items-center gap-2 mb-2 md:mb-0">
             <Filter className="w-4 h-4 text-base-content/70" />
@@ -287,10 +287,10 @@ const Order = () => {
       {/* Orders Table or No Data */}
       <div className="flex flex-col gap-6 shadow-2xl">
         {filteredOrders.length === 0 ? (
-          <div className="card card-border bg-base-100 shadow-2xl rounded-full">
+          <div className="card card-border bg-base-100 shadow-2xl ">
             <div className="card-body items-center text-center">
-              <div className="bg-base-200 p-8 rounded-full mb-4">
-                <Package className="w-12 h-12 text-base-content/40" />
+              <div className="bg-neutral p-8  mb-4 rounded-full">
+                <Package className="w-12 h-12 text-neutral-content " />
               </div>
               <h2 className="card-title text-xl">No Orders Found</h2>
               <p className="text-base-content/70 mb-4">
@@ -374,9 +374,9 @@ const Order = () => {
                         </div>
                       </td>
                       <td>
-                        <div className="flex items-center gap-3">
-                          <div className="avatar avatar-placeholder">
-                            <div className="w-8 rounded-full bg-primary text-primary-content">
+                        <div className="flex items-center gap-3 ">
+                          <div className="avatar avatar-placeholder ">
+                            <div className="w-8  bg-primary text-primary-content rounded-full">
                               <span>
                                 {getCustomerFirstName(order.customer_id).charAt(0).toUpperCase()}
                               </span>

@@ -11,13 +11,14 @@ import { AddressSection } from "./AddressSection";
 import { PasswordField } from "./passwordfield";
 import { PhoneInput } from "./phoneinput";
 import { CountryCode } from "@/app/@types/phonevalidation";
-
+import { Next_server } from "@/constant";
 const VendorForm = ({ plan }: { plan: { name: string; id: string } }) => {
   const [isPhoneValid, setIsPhoneValid] = useState(false);
   const router = useRouter();
   const [sameAsVendorAddress, setSameAsVendorAddress] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [countryCode, setCountryCode] = useState("");
+  const baseUrl=Next_server;
 
   const {
     register,
@@ -87,7 +88,7 @@ const VendorForm = ({ plan }: { plan: { name: string; id: string } }) => {
 
     try {
       const submissionData = { ...data, plan_id: plan.id };
-      const response = await fetch("http://localhost:5000/api/vendors", {
+      const response = await fetch(`${baseUrl}/api/vendors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

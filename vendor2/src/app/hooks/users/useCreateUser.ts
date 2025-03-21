@@ -2,8 +2,9 @@ import { UserFormData } from '@/app/@types/user';
 import { useSWRConfig } from 'swr';
 import { useState } from 'react';
 import { vendor_id } from '@/app/utils/constant'; // Import if needed
+import { Next_server } from '@/constant';
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const createUser = async (newUser: UserFormData) => {
   const response = await fetch(`${baseUrl}/api/vendor-users`, {

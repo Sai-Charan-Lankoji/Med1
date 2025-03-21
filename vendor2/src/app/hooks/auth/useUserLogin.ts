@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from '@/app/context/AuthContext';
 import { TokenEncryption } from "@/app/utils/encryption";
+import { Next_server } from "@/constant";
 
 export const useUserLogin = () => {
   const [loading, setLoading] = useState(false);
@@ -14,8 +15,8 @@ export const useUserLogin = () => {
     setError(null);
 
     try { 
-      const localUrl = "http://localhost:5000/api/vendor-users"
-        const url = 'http://localhost:5000'; 
+      
+        const url = Next_server; 
         //`${url}/vendor/login`
         const response = await fetch(`${url}/vendor/login`, {
         method: "POST",

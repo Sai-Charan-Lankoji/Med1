@@ -1,8 +1,9 @@
 import { SalesChannelFormData } from "@/app/@types/saleschannel";
 import { useSWRConfig } from "swr";
 import { useState } from "react";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const createSalesChannel = async (saleschannelData: SalesChannelFormData) => {
   const response = await fetch(`${baseUrl}/api/saleschannels`, {

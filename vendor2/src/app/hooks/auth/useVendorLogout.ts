@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
 import { set } from 'lodash';
 import { auth_token } from '@/app/utils/constant';
+import { Next_server } from '@/constant';
 
 export const useVendorLogout = () => {
   const [loading, setLoading] = useState(false);
@@ -13,7 +14,7 @@ export const useVendorLogout = () => {
   const logout = async () => {
     setLoading(true);
     setError(null); 
-    const url = 'http://localhost:5000';
+    const url = Next_server;
     try {
       const response = await fetch(`${url}/api/vendor/logout`, {
         method: 'POST',

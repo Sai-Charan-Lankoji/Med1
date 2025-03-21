@@ -56,7 +56,7 @@ const AnimatedCounter = ({ value, formatValue = (val) => val.toLocaleString(), d
     };
     
     window.requestAnimationFrame(step);
-  }, [value, duration]);
+  }, [value, duration,count]);
 
   return formatValue(count);
 };

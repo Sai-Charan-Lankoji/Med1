@@ -1,5 +1,6 @@
 import useSWR from "swr";
 import axios from "axios";
+import { Next_server } from "@/constant";
 
 // Define types for API responses
 interface Store {
@@ -69,7 +70,7 @@ const fetcher = async (url: string) => {
 
 export const useVendorAnalytics = (vendorId: string, selectedMonth: string = "All") => {
   // Build URL with filters
-  const baseUrl = `http://localhost:5000/api`;
+  const baseUrl = `${Next_server}/api`;
 
   // Filters are only applied when a specific month is selected
   const filters = selectedMonth === "All"

@@ -10,20 +10,37 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import toast from "react-hot-toast";
 
+// Define the shape of the product data
+interface Product {
+  id: string;
+  title: string;
+  thumbnail: string;
+}
+
+// Define the shape of the form data to match useUpdateProduct's ProductUpdateData
+interface ProductFormData {
+  title: string;
+  thumbnail: string;
+}
+
 const Thumbnail = () => {
   const router = useRouter();
   const { id } = useParams();
   const [isProductImageDelete, setIsProductDeleteImage] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const openImageModal = () => setIsImageModalOpen(true);
-  const closeImageModal = () => setIsImageModalOpen(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [originalFileName, setOriginalFileName] = useState("");
   const { data: product, refetch: refetchProduct } = useGetProduct(id as string);
-  const { mutate: uploadImage } = useUploadImage();
-  const { mutate: deleteImage } = useDeleteImage();
-  const { mutate: updateProduct } = useUpdateProduct(id as string);
-  const [productFormData, setProductFormData] = useState<any>({});
+  const { uploadImage, isLoading: isUploadingImage } = useUploadImage();
+  const { deleteImage, isLoading: isDeletingImage } = useDeleteImage();
+  const { updateProduct, isLoading: isUpdatingProduct } = useUpdateProduct(id as string);
+  const [productFormData, setProductFormData] = useState<ProductFormData>({
+    title: "",
+    thumbnail: "",
+  });
 
   useEffect(() => {
     const isDeleted = sessionStorage.getItem(`isProductImageDelete_${id}`);
@@ -42,61 +59,84 @@ const Thumbnail = () => {
   }, [product]);
 
   const handleImageUpload = async (files: FileList) => {
+    setIsUploading(true);
     setIsProductDeleteImage(false);
     sessionStorage.setItem(`isProductImageDelete_${id}`, "false");
+
     const uploadedFilePaths: string[] = [];
-    for (const file of Array.from(files)) {
+    const uploadPromises = Array.from(files).map((file) => {
       setOriginalFileName(file.name);
-      uploadImage(file, {
-        onSuccess: (fileUrl) => {
-          uploadedFilePaths.push(fileUrl);
-          if (uploadedFilePaths.length === files.length) {
-            setUploadedImages((prev) => [...prev, ...uploadedFilePaths]);
-            setProductFormData((prev: any) => ({
-              ...prev,
-              thumbnail: uploadedFilePaths[0],
-            }));
-          }
-        },
-        onError: (error) => {
-          console.error("Error uploading image:", error);
-        },
-      });
+      return uploadImage(file);
+    });
+
+    try {
+      const results = await Promise.all(uploadPromises);
+      uploadedFilePaths.push(...results);
+      setUploadedImages((prev) => [...prev, ...uploadedFilePaths]);
+      setProductFormData((prev) => ({
+        ...prev,
+        thumbnail: uploadedFilePaths[0], // Use the first uploaded image as the thumbnail
+      }));
+      toast.success("Image uploaded successfully", { duration: 1000 });
+    } catch (error) {
+      console.error("Error uploading images:", error);
+      toast.error("Failed to upload image", { duration: 1000 });
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProduct(productFormData, {
-      onSuccess: () => {
-        toast.success("Product updated successfully", { duration: 1000 });
-        setTimeout(() => {
-          router.push("/vendor/products");
-        }, 3000);
-      },
-      onError: () => {
-        toast.error("Failed to update product", { duration: 1000 });
-      },
-    });
+    setIsUpdating(true);
+    try {
+      await updateProduct(productFormData);
+      toast.success("Product updated successfully", { duration: 1000 });
+      setTimeout(() => {
+        router.push("/vendor/products");
+      }, 3000);
+    } catch (error) {
+      console.error("Error updating product:", error);
+      toast.error("Failed to update product", { duration: 1000 });
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
-  const handleDeleteThumbnail = () => {
-    deleteImage(id, {
-      onSuccess: () => {
-        toast.success("Image deleted successfully", { duration: 1000 });
-        setIsProductDeleteImage(true);
-        sessionStorage.setItem(`isProductImageDelete_${id}`, "true");
-      },
-      onError: () => {
-        toast.error("Failed to delete image", { duration: 1000 });
-      },
-    });
+  const handleDeleteThumbnail = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteImage(id as string);
+      toast.success("Image deleted successfully", { duration: 1000 });
+      setIsProductDeleteImage(true);
+      sessionStorage.setItem(`isProductImageDelete_${id}`, "true");
+      setProductFormData((prev) => ({
+        ...prev,
+        thumbnail: "",
+      }));
+      setUploadedImages([]);
+      refetchProduct(); // Refetch product data to ensure UI is in sync
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      toast.error("Failed to delete image", { duration: 1000 });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const restoreImageState = () => {
     setIsProductDeleteImage(false);
     sessionStorage.removeItem(`isProductImageDelete_${id}`);
+    setUploadedImages([]);
+    setProductFormData((prev) => ({
+      ...prev,
+      thumbnail: product?.thumbnail || "",
+    }));
+    closeImageModal();
   };
+
+  const openImageModal = () => setIsImageModalOpen(true);
+  const closeImageModal = () => setIsImageModalOpen(false);
 
   return (
     <>
@@ -108,6 +148,7 @@ const Thumbnail = () => {
               <button
                 onClick={openImageModal}
                 className="btn btn-outline btn-sm"
+                disabled={isDeleting || isUploading || isUpdating || isDeletingImage || isUploadingImage || isUpdatingProduct}
               >
                 Upload
               </button>
@@ -116,6 +157,7 @@ const Thumbnail = () => {
                 <button
                   onClick={openImageModal}
                   className="btn btn-outline btn-sm"
+                  disabled={isDeleting || isUploading || isUpdating || isDeletingImage || isUploadingImage || isUpdatingProduct}
                 >
                   Edit
                 </button>
@@ -123,8 +165,13 @@ const Thumbnail = () => {
                   <button
                     onClick={handleDeleteThumbnail}
                     className="btn btn-ghost btn-sm"
+                    disabled={isDeleting || isUploading || isUpdating || isDeletingImage || isUploadingImage || isUpdatingProduct}
                   >
-                    <Trash2 className="h-5 w-5 text-gray-500" />
+                    {isDeleting || isDeletingImage ? (
+                      <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                      <Trash2 className="h-5 w-5 text-gray-500" />
+                    )}
                   </button>
                 </div>
               </>
@@ -179,17 +226,22 @@ const Thumbnail = () => {
                         handleImageUpload(e.target.files);
                       }
                     }}
+                    disabled={isUploading || isDeleting || isUpdating || isDeletingImage || isUploadingImage || isUpdatingProduct}
                   />
                   <label
                     htmlFor="thumbnailUpload"
                     className="cursor-pointer flex flex-col items-center justify-center text-center"
                   >
-                    <p className="text-gray-500">
-                      Drag and drop an image here or{" "}
-                      <span className="text-violet-500">Click to upload</span>
-                      <br />
-                      12 x 1600 (3:4) recommended, Up to 10MB each
-                    </p>
+                    {isUploading || isUploadingImage ? (
+                      <span className="loading loading-spinner loading-lg text-violet-500"></span>
+                    ) : (
+                      <p className="text-gray-500">
+                        Drag and drop an image here or{" "}
+                        <span className="text-violet-500">Click to upload</span>
+                        <br />
+                        12 x 1600 (3:4) recommended, Up to 10MB each
+                      </p>
+                    )}
                   </label>
                 </div>
 
@@ -228,6 +280,7 @@ const Thumbnail = () => {
                               <button
                                 onClick={handleDeleteThumbnail}
                                 className="flex items-center text-red-500"
+                                disabled={isDeleting || isUploading || isUpdating || isDeletingImage || isUploadingImage || isUpdatingProduct}
                               >
                                 <Trash2 className="mr-2 h-5 w-5" />
                                 Delete
@@ -241,11 +294,23 @@ const Thumbnail = () => {
                 )}
 
                 <div className="flex justify-end pt-4 space-x-2">
-                  <button onClick={restoreImageState} className="btn btn-secondary">
+                  <button
+                    onClick={restoreImageState}
+                    className="btn btn-secondary"
+                    disabled={isUploading || isDeleting || isUpdating || isDeletingImage || isUploadingImage || isUpdatingProduct}
+                  >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
-                    Save
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={isUploading || isDeleting || isUpdating || isDeletingImage || isUploadingImage || isUpdatingProduct}
+                  >
+                    {isUpdating || isUpdatingProduct ? (
+                      <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                      "Save"
+                    )}
                   </button>
                 </div>
               </div>

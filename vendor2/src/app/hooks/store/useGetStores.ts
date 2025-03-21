@@ -1,7 +1,8 @@
 import useSWR from "swr";
 import { vendor_id } from "@/app/utils/constant";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const fetchStores = async (url: string) => {
   if (!vendor_id) {
@@ -49,7 +50,7 @@ const fetchStores = async (url: string) => {
 };
 
 export const useGetStores = () => {
-  const url = vendor_id ? `${baseUrl}/api/stores?vendor_id=${vendor_id}` : null;
+  const url = vendor_id ? `${baseUrl}/api/stores/vendor?vendor_id=${vendor_id}` : null;
 
   const { data, error, isLoading, mutate } = useSWR(url, fetchStores, {
     revalidateOnFocus: false,

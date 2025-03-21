@@ -1,7 +1,8 @@
 import useSWR from "swr";
 import { vendor_id } from "@/app/utils/constant";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const fetchSalesChannels = async (url: string) => {
   if (!vendor_id) {

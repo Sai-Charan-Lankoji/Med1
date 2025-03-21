@@ -1,18 +1,34 @@
-import { useSWRConfig } from 'swr';
-import { useState } from 'react';
+"use client";
 
-const baseUrl = "http://localhost:5000";
+import { useSWRConfig } from "swr";
+import { useState } from "react";
+import { Next_server } from "@/constant";
 
-const updateProduct = async (id: string, productData: any) => {
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || Next_server;
+
+// Define ProductUpdateData type for better type safety
+interface ProductUpdateData {
+  weight?: number;
+  length?: number;
+  height?: number;
+  width?: number;
+  hs_code?: string;
+  origin_country?: string;
+  mid_code?: string;
+  [key: string]: any; // Allow additional fields if needed
+}
+
+const updateProduct = async (id: string, productData: ProductUpdateData) => {
   const response = await fetch(`${baseUrl}/vendor/products/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(productData),
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to update product: ${response.status}`);
+    const errorText = await response.text();
+    throw new Error(`Failed to update product: ${response.status} - ${errorText}`);
   }
 
   return response.json();
@@ -23,7 +39,7 @@ export const useUpdateProduct = (id: string) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
-  const updateProductMutation = async (productData: any) => {
+  const updateProductMutation = async (productData: ProductUpdateData) => {
     setIsLoading(true);
     setError(null);
     try {
@@ -32,17 +48,16 @@ export const useUpdateProduct = (id: string) => {
       mutate(
         `${baseUrl}/vendor/products/${id}`,
         result,
-        false
+        { revalidate: false }
       );
       // Revalidate
-      mutate(`${baseUrl}/vendor/products/${id}`);
+      mutate(`${baseUrl}/vendor/products/${id}`, undefined, { revalidate: true });
       setIsLoading(false);
       return result;
     } catch (error) {
       setIsLoading(false);
       setError(error);
-      console.error('Error updating product:', error);
-      throw error;
+      throw error; // Re-throw to allow the component to handle the error
     }
   };
 

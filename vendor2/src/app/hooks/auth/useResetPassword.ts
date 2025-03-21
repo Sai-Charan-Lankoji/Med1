@@ -1,5 +1,8 @@
-import useSWRMutation from 'swr/mutation';
-import { useSWRConfig } from 'swr';
+"use client";
+
+import useSWRMutation from "swr/mutation";
+import { useSWRConfig } from "swr";
+import { Next_server } from "@/constant";
 
 interface ResetPasswordPayload {
   email: string;
@@ -11,10 +14,10 @@ interface ResetPasswordResponse {
 }
 
 const resetPasswordFetcher = async (
-  url: string,
+  key: string,
   { arg }: { arg: ResetPasswordPayload }
 ): Promise<ResetPasswordResponse> => {
-  const response = await fetch(url, {
+  const response = await fetch(key, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -27,34 +30,37 @@ const resetPasswordFetcher = async (
     throw new Error(error.error || "Failed to reset password");
   }
 
-  return await response.json();
+  return response.json();
 };
 
 export const useResetPassword = () => {
-  const url = "http://localhost:5000/vendor/resetpassword";
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || Next_server;
+  const url = `${baseUrl}/vendor/resetpassword`;
+  const key = ["reset-password", url]; // Use an array key for better specificity
   const { mutate } = useSWRConfig();
 
   const { trigger, isMutating, data, error } = useSWRMutation<
     ResetPasswordResponse,
     Error,
-    string,
+    string[],
     ResetPasswordPayload
   >(
-    url, // Using the URL directly as the key
-    resetPasswordFetcher,
+    key,
+    (key: string[], { arg }) => resetPasswordFetcher(key[1], { arg }), // Use the URL from the key array
     {
       onSuccess: (data: ResetPasswordResponse) => {
-        mutate('user-data', undefined, { revalidate: true });
-        mutate('vendor-data', undefined, { revalidate: true });
+        // Invalidate related caches
+        mutate("user-data", undefined, { revalidate: true });
+        mutate("vendor-data", undefined, { revalidate: true });
       },
-      onError: (error: Error) => {
-        console.error("Password reset failed:", error.message);
+      onError: (err: Error) => {
+        // Expose the error to the UI; no need for console.error since the UI will handle it
       },
     }
   );
 
   return {
-    mutate: (data: ResetPasswordPayload) => trigger(data),
+    resetPassword: (data: ResetPasswordPayload) => trigger(data),
     isLoading: isMutating,
     data,
     error,

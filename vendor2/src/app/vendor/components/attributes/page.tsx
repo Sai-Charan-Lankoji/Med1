@@ -1,4 +1,5 @@
 "use client";
+
 import { useGetProduct } from "@/app/hooks/products/useGetProduct";
 import { useUpdateProduct } from "@/app/hooks/products/useUpdateProduct";
 import { countries } from "@/app/utils/countries";
@@ -7,17 +8,24 @@ import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
+interface ProductUpdateData {
+  weight?: number;
+  length?: number;
+  height?: number;
+  width?: number;
+  hs_code?: string;
+  origin_country?: string;
+  mid_code?: string;
+  [key: string]: any;
+}
+
 const Attributes = () => {
   const router = useRouter();
   const { id } = useParams();
-
   const [isAttributeModalOpen, setIsAttributeModalOpen] = useState(false);
-  const openAttributeModal = () => setIsAttributeModalOpen(true);
-  const closeAttributeModal = () => setIsAttributeModalOpen(false);
-
-  const { data: product, refetch: refetchProduct } = useGetProduct(id as string);
-  const { mutate: updateProduct } = useUpdateProduct(id as string);
-  const [productFormData, setProductFormData] = useState<any>({});
+  const { data: product, isLoading: isProductLoading, error: productError } = useGetProduct(id as string);
+  const { updateProduct, isLoading: isUpdating, error: updateError } = useUpdateProduct(id as string);
+  const [productFormData, setProductFormData] = useState<ProductUpdateData>({});
 
   useEffect(() => {
     if (product) {
@@ -33,26 +41,28 @@ const Attributes = () => {
     }
   }, [product]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const openAttributeModal = () => setIsAttributeModalOpen(true);
+  const closeAttributeModal = () => setIsAttributeModalOpen(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProduct(productFormData, {
-      onSuccess: () => {
-        toast.success("Product updated successfully", { duration: 1000 });
-        setTimeout(() => {
-          router.push("/vendor/products");
-        }, 3000);
-      },
-      onError: () => {
-        toast.error("Failed to update product", { duration: 1000 });
-      },
-    });
+    try {
+      await updateProduct(productFormData);
+      toast.success("Product updated successfully", { duration: 1000 });
+      setTimeout(() => {
+        router.push("/vendor/products");
+      }, 2000);
+    } catch (error) {
+      toast.error("Failed to update product", { duration: 1000 });
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setProductFormData((prevData: any) => ({
+    const parsedValue = ["weight", "length", "height", "width"].includes(name) ? parseFloat(value) || 0 : value;
+    setProductFormData((prevData) => ({
       ...prevData,
-      [name]: value,
+      [name]: parsedValue,
     }));
   };
 
@@ -68,7 +78,7 @@ const Attributes = () => {
     <div className="form-control">
       <label htmlFor={id} className="label">
         <span className="label-text">
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-error">*</span>}
         </span>
       </label>
       <input
@@ -78,21 +88,49 @@ const Attributes = () => {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="input input-bordered w-full"
+        className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
         required={required}
       />
     </div>
   );
 
+  if (isProductLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
+  }
+
+  if (productError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="alert alert-error shadow-lg">
+          <span>Error loading product data</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="alert alert-warning shadow-lg">
+          <span>Product not found</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Toaster />
-      <div className="p-6 mt-4 bg-white shadow-md rounded-lg sm:w-[398px] md:w-[532px] lg:w-[800px]">
+      <div className="p-6 mt-4 bg-base-100 shadow-md rounded-lg sm:w-[398px] md:w-[532px] lg:w-[800px]">
         <div className="flex flex-row justify-between items-center">
-          <h2 className="text-2xl font-semibold mb-2">Attributes</h2>
+          <h2 className="text-2xl font-semibold mb-2 text-base-content">Attributes</h2>
           <div className="dropdown dropdown-end">
             <label tabIndex={0} className="btn btn-ghost btn-circle">
-              <MoreHorizontal className="w-6 h-6 text-gray-500" />
+              <MoreHorizontal className="w-6 h-6 text-base-content/70" />
             </label>
             <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
               <li>
@@ -104,30 +142,41 @@ const Attributes = () => {
             </ul>
           </div>
         </div>
+
         {isAttributeModalOpen && (
-          <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-white rounded-lg p-6 sm:w-[372px] sm:h-[476px] md:w-[572px] md:h-[516px]">
+          <div className="modal modal-open">
+            <div className="modal-box max-w-lg bg-base-100">
               <div className="flex flex-row justify-between items-center">
-                <h2 className="text-xl font-semibold mb-4">Edit Attributes</h2>
+                <h2 className="text-xl font-semibold mb-4 text-base-content">Edit Attributes</h2>
                 <button onClick={closeAttributeModal} className="btn btn-ghost btn-circle">
                   <X className="h-6 w-6" />
                 </button>
               </div>
-              <hr className="my-4" />
-              <h3 className="font-semibold text-lg pt-4">Dimensions</h3>
-              <p className="text-sm text-gray-500">Configure to calculate the most accurate shipping rates</p>
-              <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-4 gap-4 my-4">
-                  {renderInputField("width", "Width", "0", "number", false, productFormData.width, handleInputChange)}
-                  {renderInputField("length", "Length", "0", "number", false, productFormData.length, handleInputChange)}
-                  {renderInputField("height", "Height", "0", "number", false, productFormData.height, handleInputChange)}
-                  {renderInputField("weight", "Weight", "0", "number", false, productFormData.weight, handleInputChange)}
+              <hr className="my-4 border-base-300" />
+              {isUpdating && (
+                <div className="flex justify-center mb-4">
+                  <span className="loading loading-spinner text-primary"></span>
                 </div>
-                <h3 className="font-semibold text-lg pt-4">Customs</h3>
-                <p className="text-sm text-gray-500 mb-4">Configure to calculate the most accurate shipping rates</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {renderInputField("mid_code", "MID Code", "123456", "number", false, productFormData.mid_code, handleInputChange)}
-                  {renderInputField("hs_code", "HS Code", "654321", "number", false, productFormData.hs_code, handleInputChange)}
+              )}
+              {updateError && (
+                <div className="alert alert-error shadow-lg mb-4">
+                  <span>Failed to update product</span>
+                </div>
+              )}
+              <form onSubmit={handleSubmit}>
+                <h3 className="font-semibold text-lg text-base-content pt-4">Dimensions</h3>
+                <p className="text-sm text-base-content/70">Configure to calculate the most accurate shipping rates</p>
+                <div className="grid grid-cols-4 gap-4 my-4">
+                  {renderInputField("width", "Width", "0", "number", false, productFormData.width || 0, handleInputChange)}
+                  {renderInputField("length", "Length", "0", "number", false, productFormData.length || 0, handleInputChange)}
+                  {renderInputField("height", "Height", "0", "number", false, productFormData.height || 0, handleInputChange)}
+                  {renderInputField("weight", "Weight", "0", "number", false, productFormData.weight || 0, handleInputChange)}
+                </div>
+                <h3 className="font-semibold text-lg text-base-content pt-4">Customs</h3>
+                <p className="text-sm text-base-content/70 mb-4">Configure to calculate the most accurate shipping rates</p>
+                <div className="grid grid-cols-2 gap-4">
+                  {renderInputField("mid_code", "MID Code", "123456", "number", false, productFormData.mid_code || "", handleInputChange)}
+                  {renderInputField("hs_code", "HS Code", "654321", "number", false, productFormData.hs_code || "", handleInputChange)}
                 </div>
                 <div className="form-control w-52 mt-4">
                   <label htmlFor="origin_country" className="label">
@@ -136,10 +185,11 @@ const Attributes = () => {
                   <select
                     id="origin_country"
                     name="origin_country"
-                    className="select select-bordered w-full"
-                    value={productFormData.origin_country}
+                    className="select select-bordered w-full bg-base-100 text-base-content"
+                    value={productFormData.origin_country || ""}
                     onChange={handleInputChange}
                   >
+                    <option value="">Select a country</option>
                     {countries.map((country) => (
                       <option key={country.value} value={country.value}>
                         {country.label}
@@ -151,7 +201,7 @@ const Attributes = () => {
                   <button type="button" className="btn btn-ghost" onClick={closeAttributeModal}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary ml-2">
+                  <button type="submit" className="btn btn-primary ml-2" disabled={isUpdating}>
                     Save
                   </button>
                 </div>
@@ -159,38 +209,40 @@ const Attributes = () => {
             </div>
           </div>
         )}
-        <h3 className="text-lg font-semibold mt-4">Dimensions</h3>
+
+        <h3 className="text-lg font-semibold mt-4 text-base-content">Dimensions</h3>
         <div className="grid grid-cols-1 gap-1 mt-2">
           <div className="mb-2 flex flex-row justify-between">
-            <p className="text-[14px] font-normal text-gray-500">Height:</p>
-            <p className="mt-1 text-gray-500 text-[14px] pr-6">{productFormData.height || "-"}</p>
+            <p className="text-[14px] font-normal text-base-content/70">Height:</p>
+            <p className="text-[14px] text-base-content pr-6">{productFormData.height || "-"}</p>
           </div>
           <div className="mb-2 flex flex-row justify-between">
-            <p className="text-[14px] font-normal text-gray-500">Width:</p>
-            <p className="mt-1 text-gray-500 text-[14px] pr-6">{productFormData.width || "-"}</p>
+            <p className="text-[14px] font-normal text-base-content/70">Width:</p>
+            <p className="text-[14px] text-base-content pr-6">{productFormData.width || "-"}</p>
           </div>
           <div className="mb-2 flex flex-row justify-between">
-            <p className="text-[14px] font-normal text-gray-500">Length:</p>
-            <p className="mt-1 text-gray-500 text-[14px] pr-6">{productFormData.length || "-"}</p>
+            <p className="text-[14px] font-normal text-base-content/70">Length:</p>
+            <p className="text-[14px] text-base-content pr-6">{productFormData.length || "-"}</p>
           </div>
           <div className="mb-2 flex flex-row justify-between">
-            <p className="text-[14px] font-normal text-gray-500">Weight:</p>
-            <p className="mt-1 text-gray-500 text-[14px] pr-6">{productFormData.weight || "-"}</p>
+            <p className="text-[14px] font-normal text-base-content/70">Weight:</p>
+            <p className="text-[14px] text-base-content pr-6">{productFormData.weight || "-"}</p>
           </div>
         </div>
-        <h3 className="text-lg font-semibold mt-4">Customs</h3>
+
+        <h3 className="text-lg font-semibold mt-4 text-base-content">Customs</h3>
         <div className="grid grid-cols-1 gap-1 mt-2">
           <div className="mb-2 flex flex-row justify-between">
-            <p className="text-[14px] font-normal text-gray-500">MID Code:</p>
-            <p className="mt-1 text-gray-500 text-[14px] pr-6">{productFormData.mid_code || "-"}</p>
+            <p className="text-[14px] font-normal text-base-content/70">MID Code:</p>
+            <p className="text-[14px] text-base-content pr-6">{productFormData.mid_code || "-"}</p>
           </div>
           <div className="mb-2 flex flex-row justify-between">
-            <p className="text-[14px] font-normal text-gray-500">HS Code:</p>
-            <p className="mt-1 text-gray-500 text-[14px] pr-6">{productFormData.hs_code || "-"}</p>
+            <p className="text-[14px] font-normal text-base-content/70">HS Code:</p>
+            <p className="text-[14px] text-base-content pr-6">{productFormData.hs_code || "-"}</p>
           </div>
           <div className="mb-2 flex flex-row justify-between">
-            <p className="text-[14px] font-normal text-gray-500">Country of origin:</p>
-            <p className="mt-1 text-gray-500 text-[14px] pr-6">{productFormData.origin_country || "-"}</p>
+            <p className="text-[14px] font-normal text-base-content/70">Country of origin:</p>
+            <p className="text-[14px] text-base-content pr-6">{productFormData.origin_country || "-"}</p>
           </div>
         </div>
       </div>

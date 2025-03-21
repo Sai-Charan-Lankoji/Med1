@@ -1,7 +1,8 @@
 import { useSWRConfig } from "swr";
 import { useState } from "react";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const createPublishableApiKey = async ({ title, created_by }: { title: string; created_by: string }) => {
   const url = `${baseUrl}/api/publishibleapikey`;

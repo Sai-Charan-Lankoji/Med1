@@ -1,7 +1,10 @@
-import { useSWRConfig } from 'swr';
-import { useState } from 'react';
+"use client";
 
-const baseUrl = "http://localhost:5000";
+import { useSWRConfig } from "swr";
+import { useState } from "react";
+import { Next_server } from "@/constant";
+
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || Next_server;
 
 const uploadImage = async (file: File) => {
   const formData = new FormData();
@@ -10,10 +13,12 @@ const uploadImage = async (file: File) => {
   const response = await fetch(`${baseUrl}/vendor/products/uploads`, {
     method: "POST",
     body: formData,
+    credentials: "include", // Include credentials if needed for authentication
   });
 
   if (!response.ok) {
-    throw new Error("Image upload failed");
+    const errorText = await response.text();
+    throw new Error(`Image upload failed: ${response.status} - ${errorText}`);
   }
 
   const { fileUrl } = await response.json();
@@ -37,8 +42,7 @@ export const useUploadImage = () => {
     } catch (error) {
       setIsLoading(false);
       setError(error);
-      console.error("Error uploading image:", error);
-      throw error;
+      throw error; // Re-throw to allow the component to handle the error
     }
   };
 

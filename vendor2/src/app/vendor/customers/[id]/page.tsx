@@ -184,7 +184,7 @@ const CustomerDetails = () => {
                   </div>
                   <h3 className="text-lg font-semibold">No Orders Yet</h3>
                   <p className="text-base-content opacity-70 mt-1">
-                    This customer hasn't placed any orders.
+                    {"This customer hasn't placed any orders."}
                   </p>
                 </div>
               )}
