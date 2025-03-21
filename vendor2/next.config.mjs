@@ -26,22 +26,28 @@ export default (phase, { defaultConfig }) => {
 
         },
         {
+          protocol: "https",
+          hostname: "*", 
+          pathname: '/**', 
+        },
+       
+        {
           protocol: 'https',
           hostname: 'ik.imagekit.io',
           port: '',  
           pathname: '/zz7harqme/**',  
         },
         {
-          protocol: 'http',
-          hostname: 'localhost',
-          port: '8003',  
-          pathname: '/uploads/**',  
+          protocol: 'https',
+          hostname: 'picsum.photos',
+          port: '',  
+          pathname: '/**',  
         },
         {
-          protocol: 'http',
-          hostname: 'localhost',
-          port: '8004',  
-          pathname: '/uploads/**',  
+          protocol: 'https',
+          hostname: 'media.istockphoto.com',
+          port: '',  
+          pathname: '/**',  
         },
         {
           protocol: 'https',
