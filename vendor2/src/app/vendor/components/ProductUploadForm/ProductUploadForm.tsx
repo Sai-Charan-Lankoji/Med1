@@ -6,8 +6,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Plus, X, AlertCircle, Info } from "lucide-react";
 import Select from "react-select";
+import Image from "next/image";
 import { productFormSchema, type ProductFormValues } from "./schema";
 import { useStock } from "@/app/hooks/useStock";
+import { Next_server } from "@/constant";
 
 // Enhanced product categories with descriptions
 const CATEGORIES = [
@@ -104,6 +106,12 @@ export function ProductUploadForm({
     }
   }, [category, form]);
 
+  useEffect(() => {
+    return () => {
+      form.reset(); // Clean up Data URLs
+    };
+  }, [form]);
+
   const handleSideImageUpload = (side: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -178,7 +186,7 @@ export function ProductUploadForm({
         discount: sale ? formData.discount : 0,
       };
 
-      const response = await fetch("http://localhost:5000/api/standardproducts", {
+      const response = await fetch(`${Next_server}/api/standardproducts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(preparedData),
@@ -196,7 +204,7 @@ export function ProductUploadForm({
       setIsSubmitting(false);
     }
   };
-  
+
   // Helper function to check if a specific field has an error
   const hasFieldError = (fieldName: keyof ProductFormValues) => {
     return !!formErrors[fieldName];
@@ -208,18 +216,18 @@ export function ProductUploadForm({
   };
 
   return (
-    <div className="card bg-base-100 ">
+    <div className="card bg-base-100 shadow-md">
       <div className="card-body p-6">
         {/* Tabs */}
-        <div className="tabs tabs-box bg-base-200 mb-6 flex justify-between">
+        <div className="tabs tabs-boxed bg-base-200 mb-6 flex justify-between">
           <button
-            className={`tab  ${activeTab === "basic" ? "tab-active" : ""}`}
+            className={`tab ${activeTab === "basic" ? "tab-active" : ""}`}
             onClick={() => setActiveTab("basic")}
           >
             Basic Info
           </button>
           <button
-            className={`tab  ${activeTab === "inventory" ? "tab-active" : ""}`}
+            className={`tab ${activeTab === "inventory" ? "tab-active" : ""}`}
             onClick={() => setActiveTab("inventory")}
           >
             Inventory
@@ -236,11 +244,11 @@ export function ProductUploadForm({
 
         {/* Form error alert */}
         {hasErrors && (
-          <div role="alert" className="alert alert-error  mb-6">
+          <div role="alert" className="alert alert-error mb-6">
             <AlertCircle className="h-6 w-6" />
             <div>
               <h4 className="font-bold">Please check the form</h4>
-              <p className="text-sm">Some required Fields are missing.</p>
+              <p className="text-sm">Some required fields are missing.</p>
             </div>
           </div>
         )}
@@ -250,11 +258,11 @@ export function ProductUploadForm({
           {activeTab === "basic" && (
             <div className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
-              {/* Title*/}
-               <label className="floating-label w-full">
-                  <input 
+                {/* Title */}
+                <label className="floating-label w-full">
+                  <input
                     type="text"
-                    placeholder="Enter product title" 
+                    placeholder="Enter product title"
                     className={`input w-full ${hasFieldError("title") ? "input-error" : ""}`}
                     {...form.register("title")}
                   />
@@ -265,29 +273,29 @@ export function ProductUploadForm({
                     </div>
                   )}
                 </label>
-              {/* Price*/}
-              <label className="floating-label w-full relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
-                  <span className="text-base-content">$</span>
-                </div>
-                <input 
-                  type="number" 
-                  placeholder="0.00" 
-                  className={`input w-full pl-7 ${hasFieldError("price") ? "input-error" : ""}`}
-                  {...form.register("price", {
-                    valueAsNumber: true,
-                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
-                  })}
-                />
-                <span>Price</span>
-                {hasFieldError("price") && (
-                  <div className="text-xs text-error mt-1">
-                    {getFieldErrorMessage("price")}
+                {/* Price */}
+                <label className="floating-label w-full relative">
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none z-10">
+                    <span className="text-base-content">$</span>
                   </div>
-                )}
-              </label>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    className={`input w-full pl-7 ${hasFieldError("price") ? "input-error" : ""}`}
+                    {...form.register("price", {
+                      valueAsNumber: true,
+                      setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                    })}
+                  />
+                  <span>Price</span>
+                  {hasFieldError("price") && (
+                    <div className="text-xs text-error mt-1">
+                      {getFieldErrorMessage("price")}
+                    </div>
+                  )}
+                </label>
               </div>
-                {/* Description*/}
+              {/* Description */}
               <label className="floating-label w-full">
                 <textarea
                   placeholder="Enter product description"
@@ -301,39 +309,36 @@ export function ProductUploadForm({
                   </div>
                 )}
               </label>
-                    {/* Brand*/}
-                                  <div className="grid gap-6 md:grid-cols-2">
-                                  <label className="floating-label w-full">
-                      <input 
-                        type="text" 
-                        placeholder="Brand Name" 
-                        className={`input w-full ${hasFieldError("brand") ? "input-error" : ""}`}
-                        {...form.register("brand")}
-                      />
-                      <span>Brand</span>
-                      {hasFieldError("brand") && (
-                        <div className="text-xs text-error mt-1">
-                          {getFieldErrorMessage("brand")}
-                        </div>
-                      )}
-                    </label>
-
-                 {/* SKU*/}
-                 <label className="floating-label w-full">
-                      <input 
-                        type="text" 
-                        placeholder="SKU CODE" 
-                        className={`input w-full ${hasFieldError("sku") ? "input-error" : ""}`}
-                        {...form.register("sku")}
-                      />
-                      <span>SKU</span>
-                      {hasFieldError("sku") && (
-                        <div className="text-xs text-error mt-1">
-                          {getFieldErrorMessage("sku")}
-                        </div>
-                      )}
-                    </label>
-                  
+              {/* Brand and SKU */}
+              <div className="grid gap-6 md:grid-cols-2">
+                <label className="floating-label w-full">
+                  <input
+                    type="text"
+                    placeholder="Brand Name"
+                    className={`input w-full ${hasFieldError("brand") ? "input-error" : ""}`}
+                    {...form.register("brand")}
+                  />
+                  <span>Brand</span>
+                  {hasFieldError("brand") && (
+                    <div className="text-xs text-error mt-1">
+                      {getFieldErrorMessage("brand")}
+                    </div>
+                  )}
+                </label>
+                <label className="floating-label w-full">
+                  <input
+                    type="text"
+                    placeholder="SKU CODE"
+                    className={`input w-full ${hasFieldError("sku") ? "input-error" : ""}`}
+                    {...form.register("sku")}
+                  />
+                  <span>SKU</span>
+                  {hasFieldError("sku") && (
+                    <div className="text-xs text-error mt-1">
+                      {getFieldErrorMessage("sku")}
+                    </div>
+                  )}
+                </label>
               </div>
 
               <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -356,7 +361,7 @@ export function ProductUploadForm({
                     <input
                       type="number"
                       placeholder="10"
-                      className={`input  w-full ${hasFieldError("discount") ? "input-error" : ""}`}
+                      className={`input w-full ${hasFieldError("discount") ? "input-error" : ""}`}
                       {...form.register("discount", {
                         valueAsNumber: true,
                         setValueAs: (v) => (v === "" ? 0 : Number(v)),
@@ -398,7 +403,7 @@ export function ProductUploadForm({
                     formatOptionLabel={({ value, label, description }) => (
                       <div className="flex flex-col">
                         <div>{label}</div>
-                        <div className="text-xs text-gray-500">{description}</div>
+                        <div className="text-xs text-base-content/70">{description}</div>
                       </div>
                     )}
                     styles={{
@@ -409,7 +414,7 @@ export function ProductUploadForm({
                     }}
                   />
                   {!isCustomizable && !!stockId && (
-                    <div className="text-xs flex items-center mt-1 text-base-content opacity-70">
+                    <div className="text-xs flex items-center mt-1 text-base-content/70">
                       <Info className="h-3 w-3 mr-1" />
                       Category is determined by stock selection
                     </div>
@@ -643,11 +648,12 @@ export function ProductUploadForm({
                     </label>
                     {form.watch(side as keyof ProductFormValues) ? (
                       <div className="relative rounded-lg overflow-hidden bg-base-200 border border-base-300">
-                        <div className="h-48 flex items-center justify-center">
-                          <img
+                        <div className="h-48 flex items-center justify-center relative">
+                          <Image
                             src={form.watch(side as keyof ProductFormValues) as string}
                             alt={side.replace("_", " ")}
-                            className="h-full object-contain"
+                            fill
+                            className="object-contain"
                           />
                         </div>
                         <button
@@ -665,7 +671,7 @@ export function ProductUploadForm({
                             <Plus className="h-6 w-6 text-primary" />
                           </div>
                           <p className="text-sm font-medium">Click to upload {side.replace("_", " ")}</p>
-                          <p className="text-xs text-base-content opacity-70 mt-1">SVG, PNG, JPG or GIF</p>
+                          <p className="text-xs text-base-content/70 mt-1">SVG, PNG, JPG or GIF</p>
                         </div>
                         <input
                           type="file"
@@ -702,9 +708,6 @@ export function ProductUploadForm({
             </div>
           )}
         </form>
-
-        {/* Footer */}
-        
       </div>
     </div>
   );

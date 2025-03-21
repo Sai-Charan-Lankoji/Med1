@@ -1,7 +1,8 @@
 import { useSWRConfig } from "swr";
 import { useState } from "react";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 interface StoreUpdateFormData {
   storeId: string;

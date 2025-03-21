@@ -1,158 +1,144 @@
-'use client'
+"use client";
 
-import React, { useState } from "react"
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { ArrowLeft, Plus, Search, MoreHorizontal, PenSquare, X } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@radix-ui/react-label"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import withAuth from "@/lib/withAuth"
-import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels"
-import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel"
-import { useUpdateSalesChannel } from "@/app/hooks/saleschannel/useUpdateSalesChannel"
-import SalesTable from "../../components/saleschannelTableView/salesTable"
-import DashboardComponent from "../../../../components/dashboard/page"
-import { contact_name, vendor_id } from "@/app/utils/constant"
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import Link from "next/link";
+import { ArrowLeft, Plus, Search, MoreHorizontal, PenSquare, X } from "lucide-react";
+import withAuth from "@/lib/withAuth";
+import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
+import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel";
+import { useUpdateSalesChannel } from "@/app/hooks/saleschannel/useUpdateSalesChannel";
+import SalesTable from "../../components/saleschannelTableView/salesTable";
+import DashboardComponent from "../../../../components/dashboard/page";
+import { contact_name, vendor_id } from "@/app/utils/constant";
+import toast from "react-hot-toast";
 
 function SalesChannels() {
-  const [selectedRegion, setSelectedRegion] = useState<string | null>("Default Sales Channel")
+  const [selectedRegion, setSelectedRegion] = useState<string | null>("Default Sales Channel");
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     vendor_id: vendor_id,
-  })
-  const { data: SalesChannels } = useGetSalesChannels()
-  const channelId = SalesChannels?.find((channel) => channel.name === selectedRegion)?.id
-  const { mutate: createSalesChannel } = useCreateSalesChannel()
-  const { mutate: updateSalesChannel } = useUpdateSalesChannel(channelId)
-  const vendorName = contact_name
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  });
+  const { data: SalesChannels } = useGetSalesChannels();
+  const channelId = SalesChannels?.find((channel) => channel.name === selectedRegion)?.id;
+  const { createSalesChannel } = useCreateSalesChannel();
+  const { updateSalesChannel } = useUpdateSalesChannel(channelId || "");
+  const vendorName = contact_name;
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  const openModal = () => setIsModalOpen(true)
-  const closeModal = () => setIsModalOpen(false)
-  const openEditModal = () => setIsEditModalOpen(true)
-  const closeEditModal = () => setIsEditModalOpen(false)
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+  const openEditModal = () => setIsEditModalOpen(true);
+  const closeEditModal = () => setIsEditModalOpen(false);
 
   const handleRadioChange = (region: string) => {
-    setSelectedRegion(region)
-    const selectedChannel = SalesChannels?.find((channel) => channel.name === region)
+    setSelectedRegion(region);
+    const selectedChannel = SalesChannels?.find((channel) => channel.name === region);
     if (selectedChannel) {
       setFormData({
         name: selectedChannel.name,
         description: selectedChannel.description,
         vendor_id: vendor_id || "",
-      })
+      });
     }
-  }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    createSalesChannel(
-      {
+    e.preventDefault();
+    try {
+      await createSalesChannel({
         name: formData.name,
         description: formData.description,
         vendor_id: formData.vendor_id,
-      },
-      {
-        onSuccess: (response) => {
-           closeModal()
-        },
-        onError: (error) => {
-          console.error("Error while creating sales channel:", error)
-        },
-      }
-    )
-  }
+      });
+      toast.success("Sales channel created successfully", { duration: 1000 });
+      closeModal();
+    } catch (error) {
+      console.error("Error while creating sales channel:", error);
+      toast.error("Failed to create sales channel", { duration: 1000 });
+    }
+  };
 
   const handleUpdateSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (channelId) {
-      updateSalesChannel(
-        {
+      try {
+        await updateSalesChannel({
           channelId,
           name: formData.name,
-          description: formData.description
-        },
-        {
-          onSuccess: (response) => {
-             closeEditModal()
-          },
-          onError: (error) => {
-            console.error("Error while updating sales channel:", error)
-          },
-        }
-      )
+          description: formData.description,
+          vendor_id: formData.vendor_id,
+          default_sales_channel_id: channelId,
+        });
+        toast.success("Sales channel updated successfully", { duration: 1000 });
+        closeEditModal();
+      } catch (error) {
+        console.error("Error while updating sales channel:", error);
+        toast.error("Failed to update sales channel", { duration: 1000 });
+      }
     }
-  }
+  };
 
   const renderSidebarContent = () => {
-    switch (selectedRegion) {
-      case selectedRegion:
-        return (
-          <>
-            <div className="flex justify-between items-center px-8 mb-6">
-              <h2 className="text-2xl font-semibold text-black">{selectedRegion}</h2>
-              <div className="flex items-center space-x-4">
-                <p className="text-sm text-black/80">
-                  <span className="w-2.5 h-2.5 rounded-full mr-2 inline-block bg-green-500"></span>
-                  Enabled
-                </p>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="bg-white/10 text-black hover:bg-white/20">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white/10 backdrop-blur-md border border-white/20 rounded-lg shadow-lg">
-                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-black hover:bg-white/20" onClick={openEditModal}>
+    if (selectedRegion) {
+      return (
+        <>
+          <div className="flex justify-between items-center px-8 mb-6">
+            <h2 className="text-2xl font-semibold text-base-content">{selectedRegion}</h2>
+            <div className="flex items-center space-x-4">
+              <p className="text-sm text-base-content/80">
+                <span className="w-2.5 h-2.5 rounded-full mr-2 inline-block bg-green-500"></span>
+                Enabled
+              </p>
+              <div className="dropdown dropdown-end">
+                <label tabIndex={0} className="btn btn-ghost btn-circle">
+                  <MoreHorizontal className="h-4 w-4" />
+                </label>
+                <ul
+                  tabIndex={0}
+                  className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+                >
+                  <li>
+                    <button
+                      className="flex items-center gap-x-2 px-4 py-2 text-sm text-base-content hover:bg-base-200"
+                      onClick={openEditModal}
+                    >
                       <PenSquare className="h-4 w-4" />
                       Edit General info
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-x-2 px-4 py-2 text-sm text-black hover:bg-white/20">
+                    </button>
+                  </li>
+                  <li>
+                    <button className="flex items-center gap-x-2 px-4 py-2 text-sm text-base-content hover:bg-base-200">
                       <Plus className="h-4 w-4" />
                       Add Products
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    </button>
+                  </li>
+                </ul>
               </div>
             </div>
-            <SalesTable />
-          </>
-        )
-      default:
-        return (
-          <div className="flex items-center justify-center h-full">
-            <h2 className="text-xl font-semibold text-black/60">
-              Select a channel to view details
-            </h2>
           </div>
-        )
+          <SalesTable />
+        </>
+      );
     }
-  }
+    return (
+      <div className="flex items-center justify-center h-full">
+        <h2 className="text-xl font-semibold text-base-content/60">
+          Select a channel to view details
+        </h2>
+      </div>
+    );
+  };
 
   return (
     <DashboardComponent
@@ -160,27 +146,27 @@ function SalesChannels() {
       description="Control which products are available in which channels"
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-bold text-black">Channels</CardTitle>
+        <div className="md:col-span-1 overflow-hidden rounded-[12px] bg-base-100 shadow-xl">
+          <div className="flex flex-row items-center justify-between p-4">
+            <h3 className="text-xl font-bold text-base-content">Channels</h3>
             <div className="flex space-x-2">
-              <Button variant="ghost" size="icon" className="bg-white/10 text-black hover:bg-white/20">
+              <button className="btn btn-ghost btn-circle">
                 <Search className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="bg-white/10 text-black hover:bg-white/20" onClick={openModal}>
+              </button>
+              <button className="btn btn-ghost btn-circle" onClick={openModal}>
                 <Plus className="h-4 w-4" />
-              </Button>
+              </button>
             </div>
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="p-4">
             <div className="space-y-2">
               {SalesChannels?.map((channel) => (
                 <motion.div
                   key={channel.id}
                   className={`cursor-pointer p-4 rounded-lg transition-colors ${
                     selectedRegion === channel.name
-                      ? "bg-white/20 text-black"
-                      : "bg-white/5 text-black/80 hover:bg-white/10"
+                      ? "bg-base-200 text-base-content"
+                      : "bg-base-100 text-base-content/80 hover:bg-base-200"
                   }`}
                   onClick={() => handleRadioChange(channel.name)}
                   whileHover={{ scale: 1.02 }}
@@ -189,25 +175,19 @@ function SalesChannels() {
                   <div className="flex justify-between items-center">
                     <div className="flex flex-col">
                       <h3 className="font-semibold">{channel.name}</h3>
-                      <p className="text-sm text-black/60">
-                        {channel.description}
-                      </p>
+                      <p className="text-sm text-base-content/60">{channel.description}</p>
                     </div>
-                    <p className="text-xs text-black/60">
-                      Created By {vendorName}
-                    </p>
+                    <p className="text-xs text-base-content/60">Created By {vendorName}</p>
                   </div>
                 </motion.div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="md:col-span-2 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl">
-          <CardContent className="p-6">
-            {renderSidebarContent()}
-          </CardContent>
-        </Card>
+        <div className="md:col-span-2 overflow-hidden rounded-[12px] bg-base-100 shadow-xl">
+          <div className="p-6">{renderSidebarContent()}</div>
+        </div>
       </div>
 
       <motion.div
@@ -217,85 +197,109 @@ function SalesChannels() {
         className="mt-6"
       >
         <Link href="/vendor/settings" passHref>
-          <Button variant="ghost" className="text-black hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+          <button className="btn btn-ghost text-base-content hover:bg-base-200 rounded-[4px]">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
-          </Button>
+          </button>
         </Link>
       </motion.div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-black">
-          <DialogHeader>
-            <DialogTitle>Create new sales channel</DialogTitle>
-          </DialogHeader>
+      <input type="checkbox" id="create-modal" className="modal-toggle" checked={isModalOpen} onChange={() => setIsModalOpen(!isModalOpen)} />
+      <div className="modal">
+        <div className="modal-box bg-base-100 text-base-content">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">Create new sales channel</h3>
+            <button className="btn btn-ghost btn-circle" onClick={closeModal}>
+              <X className="h-5 w-5" />
+            </button>
+          </div>
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-4 py-4">
+            <div className="space-y-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input
+                <label htmlFor="name" className="label text-right">
+                  <span className="label-text">Name</span>
+                </label>
+                <input
                   id="name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-black"
+                  className="col-span-3 input input-bordered w-full bg-base-200 text-base-content"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">Description</Label>
-                <Input
+                <label htmlFor="description" className="label text-right">
+                  <span className="label-text">Description</span>
+                </label>
+                <input
                   id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-black"
+                  className="col-span-3 input input-bordered w-full bg-base-200 text-base-content"
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="secondary" onClick={closeModal}>Cancel</Button>
-              <Button type="submit">Create Channel</Button>
-            </DialogFooter>
+            <div className="modal-action">
+              <button type="button" className="btn btn-secondary" onClick={closeModal}>
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Create Channel
+              </button>
+            </div>
           </form>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
 
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white/10 backdrop-blur-md border-white/20 text-black">
-          <DialogHeader>
-            <DialogTitle>Edit Sales Channel</DialogTitle>
-          </DialogHeader>
+      <input type="checkbox" id="edit-modal" className="modal-toggle" checked={isEditModalOpen} onChange={() => setIsEditModalOpen(!isEditModalOpen)} />
+      <div className="modal">
+        <div className="modal-box bg-base-100 text-base-content">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-bold">Edit Sales Channel</h3>
+            <button className="btn btn-ghost btn-circle" onClick={closeEditModal}>
+              <X className="h-5 w-5" />
+            </button>
+          </div>
           <form onSubmit={handleUpdateSubmit}>
-            <div className="grid gap-4 py-4">
+            <div className="space-y-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">Name</Label>
-                <Input
+                <label htmlFor="edit-name" className="label text-right">
+                  <span className="label-text">Name</span>
+                </label>
+                <input
                   id="edit-name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-black"
+                  className="col-span-3 input input-bordered w-full bg-base-200 text-base-content"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-description" className="text-right">Description</Label>
-                <Input
+                <label htmlFor="edit-description" className="label text-right">
+                  <span className="label-text">Description</span>
+                </label>
+                <input
                   id="edit-description"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  className="col-span-3 bg-white/10 border-white/20 text-black"
+                  className="col-span-3 input input-bordered w-full bg-base-200 text-base-content"
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button type="button" variant="secondary" onClick={closeEditModal}>Cancel</Button>
-              <Button type="submit">Save Changes</Button>
-            </DialogFooter>
+            <div className="modal-action">
+              <button type="button" className="btn btn-secondary" onClick={closeEditModal}>
+                Cancel
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Save Changes
+              </button>
+            </div>
           </form>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </div>
     </DashboardComponent>
-  )
+  );
 }
 
-export default withAuth(SalesChannels)
+export default withAuth(SalesChannels);

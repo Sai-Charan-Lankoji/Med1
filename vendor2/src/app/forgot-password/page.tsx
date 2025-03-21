@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-
+import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import medusaIcon from "../../../public/medusaIcon.jpeg";
 import Image from "next/image";
@@ -10,15 +9,32 @@ import { useTranslation } from "react-i18next";
 import Link from "next/link";
 import { useResetPassword } from "../hooks/auth/useResetPassword";
 
-
 const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  const { mutate, isLoading, isError, isSuccess, error } = useResetPassword();
+  const { resetPassword, isLoading, data, error } = useResetPassword();
+
+  // Handle success and error feedback
+  useEffect(() => {
+    if (error) {
+      setErrorMessage(error.message || t("Failed to reset password"));
+      setSuccessMessage(null);
+    }
+    if (data) {
+      setSuccessMessage(data.message || t("Password reset successfully"));
+      setErrorMessage(null);
+      // Reset form fields on success
+      setEmail("");
+      setNewPassword("");
+      setConfirmPassword("");
+    }
+  }, [data, error, t]);
 
   const togglePasswordVisibility = () => {
     setShowPassword((prevState) => !prevState);
@@ -26,37 +42,30 @@ const ForgotPasswordPage = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
     if (!email || !newPassword || !confirmPassword) {
-      console.info("Please fill in all fields");
+      setErrorMessage(t("Please fill in all fields"));
       return;
     }
     if (newPassword !== confirmPassword) {
-     console.log("Passwords do not match");
+      setErrorMessage(t("Passwords do not match"));
       return;
     }
-    mutate(
-      { email, newPassword },
-      {
-        onSuccess: () => {
-          console.log("Password reset successfully");
-        },
-        onError: (error) => {
-          console.error(error);
-        }
-      }
-    );
+
+    resetPassword({ email, newPassword });
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-linear-to-br from-blue-600 via-indigo-500 to-purple-500">
-     
-      <div className="relative flex justify-center items-center min-h-screen">
-        <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md p-8 bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20"
-        >
+    <div className="min-h-screen flex items-center justify-center bg-base-200">
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="card w-full max-w-md bg-base-100 shadow-xl"
+      >
+        <div className="card-body p-8">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
@@ -66,7 +75,7 @@ const ForgotPasswordPage = () => {
               stiffness: 260,
               damping: 20,
             }}
-            className="mb-8"
+            className="mb-6"
           >
             <Image
               src={medusaIcon}
@@ -81,22 +90,35 @@ const ForgotPasswordPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-3xl font-bold text-center text-white mb-6"
+            className="text-3xl font-bold text-center text-base-content mb-6"
           >
             {t("Forgot Password")}
           </motion.h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+
+          {/* Error and Success Messages */}
+          {errorMessage && (
+            <div className="alert alert-error shadow-lg mb-4">
+              <span>{errorMessage}</span>
+            </div>
+          )}
+          {successMessage && (
+            <div className="alert alert-success shadow-lg mb-4">
+              <span>{successMessage}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="form-control">
               <input
                 type="email"
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("Enter your email")}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/70 focus:outline-hidden focus:ring-2 focus:ring-white focus:border-transparent transition duration-200"
+                className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
               />
             </div>
-            <div className="relative">
+            <div className="form-control relative">
               <input
                 type={showPassword ? "text" : "password"}
                 name="newPassword"
@@ -104,20 +126,18 @@ const ForgotPasswordPage = () => {
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
                 placeholder={t("New Password")}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/70 focus:outline-hidden focus:ring-2 focus:ring-white focus:border-transparent transition duration-200"
+                className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
-                className="absolute inset-y-0 right-3 flex items-center text-white hover:text-blue-200 transition duration-200"
-                aria-label={
-                  showPassword ? t("Hide Password") : t("Show Password")
-                }
+                className="absolute inset-y-0 right-3 flex items-center text-base-content hover:text-primary transition duration-200"
+                aria-label={showPassword ? t("Hide Password") : t("Show Password")}
               >
                 {showPassword ? <Eye /> : <EyeOff />}
               </button>
             </div>
-            <div>
+            <div className="form-control">
               <input
                 type={showPassword ? "text" : "password"}
                 name="confirmPassword"
@@ -125,27 +145,27 @@ const ForgotPasswordPage = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 placeholder={t("Confirm Password")}
-                className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/30 text-white placeholder-white/70 focus:outline-hidden focus:ring-2 focus:ring-white focus:border-transparent transition duration-200"
+                className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
               />
             </div>
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full px-6 py-3 rounded-xl bg-white text-teal-600 font-semibold text-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1 focus:outline-hidden focus:ring-2 focus:ring-offset-2 focus:ring-teal-500"
+              className="btn btn-primary w-full"
             >
               {isLoading ? <Loader2 className="animate-spin mx-auto" /> : t("Reset Password")}
             </button>
           </form>
-          <p className="text-white text-sm mt-4 text-center">
+          <p className="text-base-content text-sm mt-4 text-center">
             {t("Remembered your password?")}{" "}
-            <Link href="/login" className="font-semibold hover:underline">
+            <Link href="/login" className="font-semibold text-primary hover:underline">
               {t("Login")}
             </Link>
           </p>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </div>
   );
-}
+};
 
-export default ForgotPasswordPage
+export default ForgotPasswordPage;

@@ -1,6 +1,7 @@
+import { Next_server } from "@/constant";
 import useSWR from "swr";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const fetchPlans = async (url: string) => {
   const response = await fetch(url, {
@@ -30,7 +31,14 @@ const fetchPlans = async (url: string) => {
     return [];
   }
 
-  return Array.isArray(plansData) ? plansData : [];
+  // Filter to only include active plans
+  const activePlans = Array.isArray(plansData) 
+    ? plansData.filter(plan => plan.isActive === true)
+    : [];
+  
+  console.log(`Found ${activePlans.length} active plans out of ${Array.isArray(plansData) ? plansData.length : 0} total`);
+  
+  return activePlans;
 };
 
 export const useGetPlans = () => {
@@ -50,10 +58,8 @@ export const useGetPlans = () => {
     },
   });
 
-  const plansData = Array.isArray(data) ? data : [];
-
   return {
-    data: plansData,
+    data,
     error,
     isLoading,
     refetch: mutate,

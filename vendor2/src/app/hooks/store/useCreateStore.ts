@@ -1,7 +1,8 @@
 import { StoreFormData } from "@/app/@types/store";
+import { Next_server } from "@/constant";
 import { useSWRConfig } from "swr";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const createStore = async (storeData: StoreFormData) => {
   const response = await fetch(`${baseUrl}/api/stores`, {

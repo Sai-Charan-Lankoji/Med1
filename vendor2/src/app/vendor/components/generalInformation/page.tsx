@@ -1,28 +1,65 @@
 "use client";
+
 import { useGetProduct } from "@/app/hooks/products/useGetProduct";
 import { useUpdateProduct } from "@/app/hooks/products/useUpdateProduct";
-import {
-  MoreHorizontal,
-  Pencil,
-  Layers,
-  Trash2,
-  X,
-  Circle,
-} from "lucide-react";
+import { MoreHorizontal, Pencil, Layers, Trash2, X, Circle } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+
+interface ProductUpdateData {
+  title?: string;
+  subtitle?: string;
+  description?: string;
+  handle?: string;
+  is_giftcard?: boolean;
+  status?: string;
+  thumbnail?: string;
+  material?: string;
+  collection_id?: string | null;
+  type_id?: string | null;
+  discountable?: boolean;
+  external_id?: string | null;
+  metadata?: Record<string, string>;
+  tags?: string; // Added tags property
+}
 
 const GeneralInformation = () => {
   const router = useRouter();
   const { id } = useParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [fields, setFields] = useState([{ key: "", value: "" }]);
+  const { data: product, isLoading: isProductLoading, error: productError } = useGetProduct(id as string);
+  const { updateProduct, isLoading: isUpdating, error: updateError } = useUpdateProduct(id as string);
+  const [productFormData, setProductFormData] = useState<ProductUpdateData>({});
+
+  useEffect(() => {
+    if (product) {
+      setProductFormData({
+        title: product.title || "",
+        subtitle: product.subtitle || "",
+        description: product.description || "",
+        handle: product.handle || "",
+        is_giftcard: product.is_giftcard || false,
+        status: product.status || "active",
+        thumbnail: product.thumbnail || "",
+        material: product.material || "",
+        collection_id: product.collection_id || null,
+        type_id: product.type_id || null,
+        discountable: product.discountable || false,
+        external_id: product.external_id || null,
+        metadata: product.metadata || {},
+        tags: Array.isArray(product.tags) ? product.tags.join(", ") : product.tags || "",
+      });
+      // Populate metadata fields if they exist
+      const metadata = product.metadata || {};
+      const metadataFields = Object.entries(metadata).map(([key, value]) => ({ key, value: String(value) }));
+      setFields(metadataFields.length > 0 ? metadataFields : [{ key: "", value: "" }]);
+    }
+  }, [product]);
+
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
-  const [fields, setFields] = useState([{ key: "", value: "" }]);
-  const { data: product, refetch: refetchProduct } = useGetProduct(id as string);
-  const { mutate: updateProduct } = useUpdateProduct(id as string);
-  const [productFormData, setProductFormData] = useState<any>({});
 
   const handleFieldChange = (index: number, event: ChangeEvent<HTMLInputElement>) => {
     const updatedFields = [...fields];
@@ -55,48 +92,50 @@ const GeneralInformation = () => {
 
   const handleDeleteField = (index: number) => {
     const values = [...fields];
-    values.splice(index, 1);
-    setFields(values);
+    if (values.length === 1) {
+      setFields([{ key: "", value: "" }]);
+    } else {
+      values.splice(index, 1);
+      setFields(values);
+    }
   };
 
-  useEffect(() => {
-    if (product) {
-      setProductFormData({
-        title: product.title || "",
-        subtitle: product.subtitle || "",
-        description: product.description || "",
-        handle: product.handle || "",
-        is_giftcard: product.is_giftcard || false,
-        status: product.status || "active",
-        thumbnail: product.thumbnail || "",
-        material: product.material || "",
-        collection_id: product.collection_id || null,
-        type_id: product.type_id || null,
-        discountable: product.discountable || false,
-        external_id: product.external_id || null,
-        metadata: product.metadata || {},
-      });
-    }
-  }, [product]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateProduct(productFormData, {
-      onSuccess: () => {
-        toast.success("Product updated successfully", { duration: 1000 });
-        setTimeout(() => {
-          router.push("/vendor/products");
-        }, 3000);
-      },
-      onError: () => {
-        toast.error("Failed to update product", { duration: 1000 });
-      },
-    });
+    try {
+      // Convert fields array to metadata object
+      const metadata = fields.reduce((acc, field) => {
+        if (field.key && field.value) {
+          acc[field.key] = field.value;
+        }
+        return acc;
+      }, {} as Record<string, string>);
+
+      // Convert tags string to array if the backend expects an array
+      const tagsArray = productFormData.tags
+        ? productFormData.tags.split(",").map((tag: string) => tag.trim()).filter((tag: string) => tag)
+        : [];
+
+      // Include metadata and tags in productFormData
+      const updatedProductData = {
+        ...productFormData,
+        metadata,
+        tags: tagsArray, // Send tags as an array
+      };
+
+      await updateProduct(updatedProductData);
+      toast.success("Product updated successfully", { duration: 1000 });
+      setTimeout(() => {
+        router.push("/vendor/products");
+      }, 2000);
+    } catch (error) {
+      toast.error("Failed to update product", { duration: 1000 });
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setProductFormData((prevData: any) => ({
+    setProductFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
@@ -104,7 +143,7 @@ const GeneralInformation = () => {
 
   const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setProductFormData((prevData: any) => ({
+    setProductFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
@@ -122,7 +161,7 @@ const GeneralInformation = () => {
     <div className="form-control">
       <label className="label">
         <span className="label-text">
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-error">*</span>}
         </span>
       </label>
       <input
@@ -132,7 +171,7 @@ const GeneralInformation = () => {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="input input-bordered w-full"
+        className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
         required={required}
       />
     </div>
@@ -157,7 +196,7 @@ const GeneralInformation = () => {
         rows={rows}
         value={value}
         onChange={onChange}
-        className="textarea textarea-bordered w-full"
+        className="textarea textarea-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
       ></textarea>
     </div>
   );
@@ -165,12 +204,12 @@ const GeneralInformation = () => {
   const renderSwitchWithLabel = (label: string, description: string) => (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
       <div>
-        <h1 className="text-lg font-semibold text-black">{label}</h1>
-        <p className="pt-2 text-sm font-semibold text-gray-500">{description}</p>
+        <h1 className="text-lg font-semibold text-base-content">{label}</h1>
+        <p className="pt-2 text-sm text-base-content/70">{description}</p>
       </div>
       <input
         type="checkbox"
-        className="toggle mt-2 sm:mt-0"
+        className="toggle toggle-primary mt-2 sm:mt-0"
         checked={productFormData.discountable}
         onChange={(e) =>
           setProductFormData((prev: any) => ({ ...prev, discountable: e.target.checked }))
@@ -179,19 +218,55 @@ const GeneralInformation = () => {
     </div>
   );
 
+  if (isProductLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
+      </div>
+    );
+  }
+
+  if (productError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="alert alert-error shadow-lg">
+          <span>Error loading product data</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="alert alert-warning shadow-lg">
+          <span>Product not found</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="p-4 rounded-lg">
+      <div className="p-4 rounded-lg bg-base-100 shadow-md">
         <div>
           <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
             <div className="flex flex-col">
-              <h1 className="text-2xl font-bold">{productFormData.title || "Product Title"}</h1>
-              <p className="mt-2 text-sm text-gray-500">{productFormData.description || "Description of the product..."}</p>
+              <h1 className="text-2xl font-bold text-base-content">{productFormData.title || "Product Title"}</h1>
+              <p className="mt-2 text-sm text-base-content/70">{productFormData.description || "Description of the product..."}</p>
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-6">
+              {isUpdating && (
+                <span className="loading loading-spinner text-primary"></span>
+              )}
+              {updateError && (
+                <div className="alert alert-error shadow-lg">
+                  <span>Failed to update product</span>
+                </div>
+              )}
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle">
-                  <MoreHorizontal className="h-6 w-6 text-gray-500" />
+                  <MoreHorizontal className="h-6 w-6 text-base-content/70" />
                 </label>
                 <ul tabIndex={0} className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52">
                   <li>
@@ -205,17 +280,17 @@ const GeneralInformation = () => {
                     </button>
                   </li>
                   <li>
-                    <button className="flex items-center text-red-500">
+                    <button className="flex items-center text-error">
                       <Trash2 className="mr-2 h-5 w-5" /> Delete
                     </button>
                   </li>
                 </ul>
               </div>
               <div className="dropdown dropdown-end">
-                <label tabIndex={0} className="btn btn-ghost text-sm md:text-base text-gray-500 flex items-center">
+                <label tabIndex={0} className="btn btn-ghost text-sm md:text-base text-base-content/70 flex items-center">
                   <span
                     className={`w-2 h-2 rounded-full mr-2 ${
-                      productFormData.status === "published" ? "bg-green-500" : "bg-red-500"
+                      productFormData.status === "published" ? "bg-success" : "bg-error"
                     }`}
                   ></span>
                   {productFormData.status || "Status"}
@@ -233,7 +308,7 @@ const GeneralInformation = () => {
                     >
                       <Circle
                         className={`mr-2 h-5 w-5 ${
-                          productFormData.status === "published" ? "text-red-500" : "text-green-500"
+                          productFormData.status === "published" ? "text-error" : "text-success"
                         }`}
                       />
                       {productFormData.status === "published" ? "Draft" : "Published"}
@@ -243,52 +318,68 @@ const GeneralInformation = () => {
               </div>
             </div>
           </div>
-          <h3 className="text-lg font-semibold mb-2">Details</h3>
+          <h3 className="text-lg font-semibold mb-2 text-base-content">Details</h3>
           <div className="grid grid-cols-1 gap-1">
             <div className="mb-2 flex justify-between">
-              <p className="text-sm text-gray-500">Subtitle:</p>
-              <p className="text-sm text-gray-500">{productFormData.subtitle || "-"}</p>
+              <p className="text-sm text-base-content/70">Subtitle:</p>
+              <p className="text-sm text-base-content">{productFormData.subtitle || "-"}</p>
             </div>
             <div className="mb-2 flex justify-between">
-              <p className="text-sm text-gray-500">Handle:</p>
-              <p className="text-sm text-gray-500">{productFormData.handle || "-"}</p>
+              <p className="text-sm text-base-content/70">Handle:</p>
+              <p className="text-sm text-base-content">{productFormData.handle || "-"}</p>
             </div>
             <div className="mb-2 flex justify-between">
-              <p className="text-sm text-gray-500">Type:</p>
-              <p className="text-sm text-gray-500">-</p>
+              <p className="text-sm text-base-content/70">Type:</p>
+              <p className="text-sm text-base-content">{productFormData.type_id || "-"}</p>
             </div>
             <div className="mb-2 flex justify-between">
-              <p className="text-sm text-gray-500">Collection:</p>
-              <p className="text-sm text-gray-500">{productFormData.collection_id || "-"}</p>
+              <p className="text-sm text-base-content/70">Collection:</p>
+              <p className="text-sm text-base-content">{productFormData.collection_id || "-"}</p>
             </div>
             <div className="mb-2 flex justify-between">
-              <p className="text-sm text-gray-500">Discountable:</p>
-              <p className="text-sm text-gray-500">{productFormData.discountable ? "Yes" : "No"}</p>
+              <p className="text-sm text-base-content/70">Discountable:</p>
+              <p className="text-sm text-base-content">{productFormData.discountable ? "Yes" : "No"}</p>
             </div>
             <div className="mb-2 flex justify-between">
-              <p className="text-sm text-gray-500">Metadata:</p>
-              <p className="text-sm text-gray-500">-</p>
+              <p className="text-sm text-base-content/70">Metadata:</p>
+              <p className="text-sm text-base-content">
+                {Object.keys(productFormData.metadata || {}).length > 0
+                  ? Object.entries(productFormData.metadata)
+                      .map(([key, value]) => `${key}: ${value}`)
+                      .join(", ")
+                  : "-"}
+              </p>
             </div>
           </div>
-          <h3 className="text-lg font-semibold mt-4 mb-2">Sales channels</h3>
+          <h3 className="text-lg font-semibold mt-4 mb-2 text-base-content">Sales Channels</h3>
           <div className="space-x-2">
             <button className="btn btn-outline mb-2">Default Sales Channel</button>
             <button className="btn btn-outline mb-2">Part Two</button>
           </div>
-          <p className="text-sm text-gray-500">Available in 2 out of 3 Sales Channels</p>
+          <p className="text-sm text-base-content/70">Available in 2 out of 3 Sales Channels</p>
         </div>
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md md:max-w-xl h-auto max-h-[90vh] overflow-y-auto">
+        <div className="modal modal-open">
+          <div className="modal-box max-w-2xl h-[90vh] overflow-y-auto bg-base-100">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Edit General Information</h2>
+              <h2 className="text-xl font-semibold text-base-content">Edit General Information</h2>
               <button onClick={closeModal} className="btn btn-ghost btn-circle">
                 <X className="h-6 w-6" />
               </button>
             </div>
-            <hr className="mb-4" />
+            <hr className="mb-4 border-base-300" />
+            {isUpdating && (
+              <div className="flex justify-center mb-4">
+                <span className="loading loading-spinner text-primary"></span>
+              </div>
+            )}
+            {updateError && (
+              <div className="alert alert-error shadow-lg mb-4">
+                <span>Failed to update product</span>
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 {renderInputField(
@@ -297,7 +388,7 @@ const GeneralInformation = () => {
                   "title",
                   "text",
                   true,
-                  productFormData.title,
+                  productFormData.title || "",
                   handleInputChange
                 )}
                 {renderInputField(
@@ -306,11 +397,11 @@ const GeneralInformation = () => {
                   "subtitle",
                   "text",
                   false,
-                  productFormData.subtitle,
+                  productFormData.subtitle || "",
                   handleInputChange
                 )}
               </div>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-base-content/70 mb-4">
                 Give your product a short and clear title. <br />
                 50-60 characters is the recommended length for search engines.
               </p>
@@ -321,7 +412,7 @@ const GeneralInformation = () => {
                   "handle",
                   "text",
                   true,
-                  productFormData.handle,
+                  productFormData.handle || "",
                   handleInputChange
                 )}
                 {renderInputField(
@@ -330,7 +421,7 @@ const GeneralInformation = () => {
                   "material",
                   "text",
                   false,
-                  productFormData.material,
+                  productFormData.material || "",
                   handleInputChange
                 )}
               </div>
@@ -340,24 +431,38 @@ const GeneralInformation = () => {
                   "Description",
                   "Enter a detailed description",
                   5,
-                  productFormData.description,
+                  productFormData.description || "",
                   handleTextAreaChange
                 )}
               </div>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-base-content/70 mb-4">
                 Give your product a short and clear description. <br />
                 120-160 characters is the recommended length for search engines.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div className="form-control">
                   <label className="label"><span className="label-text">Type</span></label>
-                  <select className="select select-bordered w-full">
-                    <option value="no-options">No options</option>
+                  <select
+                    className="select select-bordered w-full bg-base-100 text-base-content"
+                    value={productFormData.type_id || ""}
+                    onChange={(e) =>
+                      setProductFormData((prev: any) => ({ ...prev, type_id: e.target.value }))
+                    }
+                  >
+                    <option value="">No options</option>
+                    {/* Add actual type options if available */}
                   </select>
                 </div>
                 <div className="form-control">
                   <label className="label"><span className="label-text">Collection</span></label>
-                  <select className="select select-bordered w-full">
+                  <select
+                    className="select select-bordered w-full bg-base-100 text-base-content"
+                    value={productFormData.collection_id || ""}
+                    onChange={(e) =>
+                      setProductFormData((prev: any) => ({ ...prev, collection_id: e.target.value }))
+                    }
+                  >
+                    <option value="">Select a collection</option>
                     <option value="merch">Merch</option>
                     <option value="other">Other</option>
                   </select>
@@ -368,25 +473,31 @@ const GeneralInformation = () => {
                 <input
                   type="text"
                   id="tags"
-                  className="input input-bordered w-full"
+                  className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
                   placeholder="Add tags"
+                  value={productFormData.tags || ""}
+                  onChange={(e) =>
+                    setProductFormData((prev: any) => ({ ...prev, tags: e.target.value }))
+                  }
                 />
               </div>
-              <div className="mb-4">{renderSwitchWithLabel(
-                "Discountable",
-                "When unchecked discounts will not be applied to this product."
-              )}</div>
-              <h2 className="text-sm font-semibold mt-4 mb-2">Metadata</h2>
-              <div className="space-y-4 border rounded-md">
+              <div className="mb-4">
+                {renderSwitchWithLabel(
+                  "Discountable",
+                  "When unchecked discounts will not be applied to this product."
+                )}
+              </div>
+              <h2 className="text-sm font-semibold mt-4 mb-2 text-base-content">Metadata</h2>
+              <div className="space-y-4 border border-base-300 rounded-md">
                 <table className="min-w-full">
-                  <thead className="bg-gray-50">
+                  <thead className="bg-base-200">
                     <tr>
-                      <th className="px-2 py-3 text-left text-xs font-semibold text-gray-900">Key</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-900">Value</th>
+                      <th className="px-2 py-3 text-left text-xs font-semibold text-base-content">Key</th>
+                      <th className="px-6 py-3 text-left text-xs font-semibold text-base-content">Value</th>
                       <th className="px-2 py-3"></th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-base-100 divide-y divide-base-300">
                     {fields.map((field, index) => (
                       <tr key={index}>
                         <td className="px-2 py-3">
@@ -396,7 +507,7 @@ const GeneralInformation = () => {
                             placeholder="Key"
                             value={field.key}
                             onChange={(event) => handleFieldChange(index, event)}
-                            className="input input-bordered w-full"
+                            className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
                           />
                         </td>
                         <td className="px-6 py-3">
@@ -406,7 +517,7 @@ const GeneralInformation = () => {
                             placeholder="Value"
                             value={field.value}
                             onChange={(event) => handleFieldChange(index, event)}
-                            className="input input-bordered w-full"
+                            className="input input-bordered w-full bg-base-100 text-base-content placeholder-base-content/70"
                           />
                         </td>
                         <td className="px-2 py-3">
@@ -440,7 +551,9 @@ const GeneralInformation = () => {
               </div>
               <div className="flex justify-end mt-4 space-x-2">
                 <button onClick={closeModal} className="btn btn-secondary">Cancel</button>
-                <button type="submit" className="btn btn-primary">Save</button>
+                <button type="submit" className="btn btn-primary" disabled={isUpdating}>
+                  Save
+                </button>
               </div>
             </form>
           </div>

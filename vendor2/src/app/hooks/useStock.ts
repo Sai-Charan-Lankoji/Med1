@@ -1,7 +1,8 @@
 // hooks/useStock.ts
+import { Next_server } from "@/constant";
 import { useState, useEffect } from "react";
 
-const API_BASE_URL = "http://localhost:5000/api"; // Adjust based on your env
+const API_BASE_URL = `${Next_server}/api`; // Adjust based on your env
 
 
 

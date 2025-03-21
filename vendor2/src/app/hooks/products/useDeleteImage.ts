@@ -1,9 +1,10 @@
 import { useSWRConfig } from "swr";
 import { useState } from "react";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
-const deleteImage = async (productId: any): Promise<void> => {
+const deleteImage = async (productId: string): Promise<void> => {
   const response = await fetch(`${baseUrl}/vendor/products/uploads/${productId}`, {
     method: "DELETE",
     headers: {
@@ -21,28 +22,31 @@ const deleteImage = async (productId: any): Promise<void> => {
 export const useDeleteImage = () => {
   const { mutate } = useSWRConfig();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<unknown>(null);
+  const [error, setError] = useState<Error | null>(null);
 
-  const deleteImageMutation = async (productId: any) => {
+  const deleteImageMutation = async (productId: string) => {
     setIsLoading(true);
     setError(null);
     try {
       await deleteImage(productId);
-      // Optimistic update
+      // Invalidate the cache for the specific product
       mutate(
-        `${baseUrl}/vendor/products`,
-        (currentData: any[] | undefined) =>
-          currentData ? currentData.filter((product) => product.id !== productId) : currentData,
-        false
+        `${baseUrl}/vendor/products/${productId}`,
+        (currentData: any) => {
+          if (!currentData) return currentData;
+          return { ...currentData, thumbnail: "" }; // Update the thumbnail to empty
+        },
+        false // Optimistic update without revalidation
       );
-      // Revalidate
-      mutate(`${baseUrl}/vendor/products`);
+      // Revalidate the specific product
+      mutate(`${baseUrl}/vendor/products/${productId}`);
       setIsLoading(false);
-    } catch (error) {
+    } catch (error: unknown) {
       setIsLoading(false);
-      setError(error);
-      console.error("Error occurred while deleting image:", error);
-      throw error;
+      const err = error instanceof Error ? error : new Error("An unknown error occurred");
+      setError(err);
+      console.error("Error occurred while deleting image:", err);
+      throw err;
     }
   };
 

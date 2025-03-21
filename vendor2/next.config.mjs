@@ -3,9 +3,7 @@ export default (phase, { defaultConfig }) => {
    * @type {import('next').NextConfig}
    */
   const nextConfig = {
-    publicRuntimeConfig: {
-      MEDUSA_BACKEND_URL: 'http://localhost:5000',  
-    },
+    
     images: {
       remotePatterns: [
         {
@@ -13,6 +11,12 @@ export default (phase, { defaultConfig }) => {
           hostname: 'localhost',
           port: '5000',  
           pathname: '/uploads/**',  
+        },
+        {
+          protocol: 'https',
+          hostname: '6655-183-82-111-111.ngrok-free.app',
+          port: '',  
+          pathname: '/**',  
         },
         {
           protocol: 'https',

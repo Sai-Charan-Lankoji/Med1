@@ -3,6 +3,7 @@
 import { useAuth } from '@/app/context/AuthContext';
 import { useState } from 'react'; 
 import { TokenEncryption } from '@/app/utils/encryption';
+import { Next_server } from '@/constant';
 
 interface VendorLoginResponse {
   token: string | null;
@@ -38,8 +39,8 @@ const useVendorLogin = () => {
     }
 
     try { 
-      const localUrl = "http://localhost:5000/api/vendor/login"
-      const url = 'http://localhost:5000';
+      
+      const url = Next_server;
       //`${url}/api/vendor/login`,
       const response = await fetch( `${url}/api/vendor/login`,{
         method: 'POST',

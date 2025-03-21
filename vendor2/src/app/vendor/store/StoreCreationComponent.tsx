@@ -8,6 +8,7 @@ import { useCreatePublishableApiKey } from "@/app/hooks/publishableapikey/useCre
 import { useToast } from "@/hooks/use-toast";
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan";
 import { plan_id, vendor_id } from "@/app/utils/constant"; // Import vendor_id
+import { Next_server } from "@/constant";
 
 const getStoreLimitFromPlan = (plan) => {
   if (!plan || !Array.isArray(plan.features)) return 0;
@@ -94,7 +95,7 @@ const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
       } else {
         setLoadingStage("Creating store...");
         const domainResponse = await fetch(
-          "http://localhost:5000/api/stores/add-domain",
+          `${Next_server}/api/stores/add-domain`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

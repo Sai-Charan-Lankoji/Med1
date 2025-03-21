@@ -1,6 +1,7 @@
+import { Next_server } from "@/constant";
 import useSWR from "swr";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 
 const fetchPlan = async (url: string) => {
   const response = await fetch(url, {

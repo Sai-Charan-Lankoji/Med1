@@ -190,7 +190,7 @@ const LoginForm = () => {
                   </div>
                 )}
                 <p className="text-white text-sm">
-                  Don't have an account?{" "}
+                {"Don't have an account?"}{" "}
                   <Link href="/" className="link hover:underline">
                     Join Us
                   </Link>

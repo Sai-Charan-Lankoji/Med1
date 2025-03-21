@@ -1,11 +1,30 @@
+"use client";
+
 import { useSWRConfig } from "swr";
 import { useState } from "react";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || Next_server;
 
-// Assuming ProductFormData is defined elsewhere; if not, define it
+// Define ProductFormData type for better type safety
 interface ProductFormData {
-  [key: string]: any; // Placeholder; replace with actual type if available
+  title: string;
+  subtitle: string;
+  handle: string;
+  material: string;
+  description: string;
+  discountable: boolean;
+  type: string;
+  tags: string;
+  width: number;
+  length: number;
+  height: number;
+  weight: number;
+  mid_code: string;
+  hs_code: string;
+  origin_country: string;
+  thumbnail: string;
+  vendor_id: string;
 }
 
 const createProduct = async (productData: ProductFormData) => {
@@ -39,17 +58,16 @@ export const useCreateProduct = () => {
         `${baseUrl}/vendor/products`,
         (currentData: any[] | undefined) =>
           currentData ? [...currentData, result] : [result],
-        false
+        { revalidate: false }
       );
       // Revalidate
-      mutate(`${baseUrl}/vendor/products`);
+      mutate(`${baseUrl}/vendor/products`, undefined, { revalidate: true });
       setIsLoading(false);
       return result;
     } catch (error) {
       setIsLoading(false);
       setError(error);
-      console.error('Error creating product:', error);
-      throw error;
+      throw error; // Re-throw to allow the component to handle the error
     }
   };
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { Next_server } from "@/constant";
 import { useEffect, useState } from "react";
 
 interface StoreRevenue {
@@ -21,7 +22,7 @@ export function useRevenueData(vendorId: string) {
   useEffect(() => {
     async function fetchRevenue() {
       try {
-        const response = await fetch(`http://localhost:5000/api/${vendorId}`);
+        const response = await fetch(`${Next_server}/api/${vendorId}`);
         if (!response.ok) throw new Error("Failed to fetch revenue data");
 
         const result = await response.json();

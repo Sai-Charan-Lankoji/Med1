@@ -1,4 +1,6 @@
+// useUpdateVendorPlan.js
 import { vendor_id } from "@/app/utils/constant";
+import { Next_server } from "@/constant";
 import { useSWRConfig } from "swr";
 
 interface UpdatePlanData {
@@ -6,8 +8,8 @@ interface UpdatePlanData {
   plan: string;
 }
 
-const updateVendorPlan = async (updateData: UpdatePlanData) => {
-  const response = await fetch(`http://localhost:5000/api/vendors/${vendor_id}`, {
+const updateVendorPlan = async (vendorId: string, updateData: UpdatePlanData) => {
+  const response = await fetch(`${Next_server}/api/vendors/plan/${vendorId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -17,14 +19,13 @@ const updateVendorPlan = async (updateData: UpdatePlanData) => {
   });
 
   const data = await response.json();
-  console.log("Update Vendor Plan API response:", data); // Debug the response
+  console.log("Update Vendor Plan API response:", data);
 
   if (!response.ok) {
-    throw new Error(data.error || "Failed to update plan");
+    throw new Error(data.message || "Failed to update plan");
   }
 
-  // Extract the nested data (assuming { success: true, data: updatedVendor })
-  return data.data || data;
+  return data.vendor; // Extract the vendor object from the response
 };
 
 export const useUpdateVendorPlan = () => {
@@ -32,24 +33,19 @@ export const useUpdateVendorPlan = () => {
 
   const updatePlanMutation = async (updateData: UpdatePlanData) => {
     try {
-      const result = await updateVendorPlan(updateData);
-      // Invalidate or update relevant caches
-      mutate(`http://localhost:5000/api/vendors/${vendor_id}`, result, { revalidate: true });
-      // Optionally invalidate the plan endpoint if used
-      mutate(`http://localhost:5000/api/plan/${updateData.plan_id}`, undefined, { revalidate: true });
+      const result = await updateVendorPlan(vendor_id, updateData);
+      // Update relevant caches
+      mutate(`${Next_server}/api/vendors/${vendor_id}`, result, { revalidate: true });
+      mutate(`${Next_server}/api/plan/${updateData.plan_id}`, undefined, { revalidate: true });
       return result;
     } catch (error) {
-      if (error instanceof Error) {
-        console.error("Error updating vendor plan:", error.message);
-      } else {
-        console.error("An unknown error occurred:", error);
-      }
+      console.error("Error updating vendor plan:", error instanceof Error ? error.message : String(error));
       throw error;
     }
   };
 
   return {
-    mutateAsync: updatePlanMutation, // Match the expected usage in ServicesDashboard
-    isLoading: false, // SWR mutations don't have a built-in isLoading, but adding for compatibility
+    mutateAsync: updatePlanMutation,
+    isLoading: false, // Can add a loading state if needed
   };
 };

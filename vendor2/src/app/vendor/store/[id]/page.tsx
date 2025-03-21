@@ -8,8 +8,9 @@ import { useParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
+import { Next_server } from "@/constant";
 
-const baseUrl = "http://localhost:5000";
+const baseUrl = Next_server;
 const backendManagementUrl = "http://localhost:3000"; // Backend store management server
 
 interface StoreFormData {
@@ -75,7 +76,7 @@ const EditStore = () => {
 
       if (!backendUpdateResponse.ok) {
         console.error("Failed to update store in backend management system");
-        toast.warning("Store updated, but there was an issue with backend store management", {
+        toast.error("Store updated, but there was an issue with backend store management", {
           duration: 5000,
         });
       }
