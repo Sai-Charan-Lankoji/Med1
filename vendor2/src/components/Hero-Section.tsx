@@ -725,7 +725,7 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* Stats Section */}
+      
       {/* Stats Section */}
 <div ref={statsRef} className="py-16 bg-base-200">
   <div className="container mx-auto px-4">
@@ -744,7 +744,7 @@ export default function LandingPage() {
       animate={statsInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      <div className="stats stats-vertical md:stats-horizontal shadow">
+      <div className="stats stats-vertical md:stats-horizontal shadow bg-base-100">
         <div className="stat place-items-center">
           <div className="stat-figure text-primary">
             <TrendingUp className="w-8 h-8" />
@@ -768,11 +768,11 @@ export default function LandingPage() {
         </div>
         
         <div className="stat place-items-center">
-          <div className="stat-figure text-success">
+          <div className="stat-figure text-accent">
             <Users className="w-8 h-8" />
           </div>
           <div className="stat-title">Customer Retention</div>
-          <div className="stat-value">
+          <div className="stat-value text-accent">
             {statsInView && <CountUp end={89} suffix="%" duration={2} />}
           </div>
           <div className="stat-desc">After 3 months</div>
@@ -831,7 +831,7 @@ export default function LandingPage() {
                       <input key={i} type="radio" name={`rating-${index}`} className="mask mask-star-2 bg-warning" defaultChecked />
                     ))}
                   </div>
-                  <p className="mb-6 italic">"{testimonial.quote}"</p>
+                  <p className="mb-6 italic">&ldquo;{testimonial.quote}&ldquo;</p>
                   <div className="flex items-center gap-3">
                     <div className="avatar">
                       <div className="w-12 h-12 rounded-full">
