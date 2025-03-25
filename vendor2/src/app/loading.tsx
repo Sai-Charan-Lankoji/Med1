@@ -1,69 +1,80 @@
-// loading.tsx
 import { type FC } from 'react'
 
 interface LoadingScreenProps {
   message?: string
   theme?: 'default' | 'pulse' | 'bounce' | 'minimal'
+  loadingType?: 'spinner' | 'dots' | 'ring' | 'ball' | 'bars' | 'infinity'
 }
 
 const LoadingScreen: FC<LoadingScreenProps> = ({
   message = "Please wait while we prepare your content",
-  theme = "default"
+  theme = "default",
+  loadingType = "dots"
 }) => {
-  // Theme-based background classes
+  // Theme mapping to DaisyUI color classes
   const themeClasses = {
-    default: "bg-linear-to-br from-blue-600 via-indigo-500 to-purple-500",
-    pulse: "bg-linear-to-br from-purple-600 via-pink-500 to-red-500",
-    bounce: "bg-linear-to-br from-green-600 via-teal-500 to-blue-500",
-    minimal: "bg-linear-to-br from-gray-800 via-gray-900 to-black"
+    default: "bg-gradient-to-br from-primary/80 to-secondary/80",
+    pulse: "bg-gradient-to-br from-secondary/80 to-accent/80",
+    bounce: "bg-gradient-to-br from-accent/80 to-primary/80",
+    minimal: "bg-base-200"
+  }
+
+  // Loading type mapping to DaisyUI loading classes
+  const loadingClasses = {
+    spinner: "loading loading-spinner",
+    dots: "loading loading-dots", 
+    ring: "loading loading-ring",
+    ball: "loading loading-ball",
+    bars: "loading loading-bars",
+    infinity: "loading loading-infinity"
   }
 
   return (
-    <div className={`min-h-screen overflow-hidden ${themeClasses[theme]}`}>
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        {/* Static circles for background effect */}
-        <div className="absolute inset-0 overflow-hidden">
-          {[300, 600, 900].map((size, index) => (
-            <div
-              key={index}
-              className="absolute rounded-full bg-white/10 backdrop-blur-lg animate-pulse"
-              style={{
-                width: size,
-                height: size,
-                left: '50%',
-                top: '50%',
-                transform: 'translate(-50%, -50%)',
-                animation: `pulse ${2 + index * 0.3}s infinite`
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Main content */}
-        <div className="relative z-10 flex flex-col items-center space-y-8">
-          {/* Spinning loader */}
-          {/* <div className="relative w-16 h-16">
-            <div className="w-16 h-16 rounded-full border-4 border-white/20 border-t-white animate-spin" />
-          </div> */}
-
-          {/* Loading text and dots */}
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-white mb-2">Loading</h2>
-            <div className="flex space-x-2 justify-center">
-              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
-              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-              <div className="w-2 h-2 bg-white rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+    <div className={`fixed inset-0 ${themeClasses[theme]} flex items-center justify-center`}>
+      {/* Decorative elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute w-96 h-96 rounded-full bg-primary/10 blur-xl -top-20 -left-20"></div>
+        <div className="absolute w-96 h-96 rounded-full bg-secondary/10 blur-xl -bottom-20 -right-20"></div>
+      </div>
+      
+      <div className="relative z-10">
+        {/* Main card container */}
+        <div className="card bg-base-100/20 backdrop-blur-lg shadow-xl max-w-md w-full">
+          <div className="card-body items-center text-center gap-8 p-8">
+            {/* Logo or brand element */}
+            <div className="text-primary text-3xl font-bold">
+              Your Brand
             </div>
-          </div>
-
-          {/* Message card */}
-          <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 max-w-md w-full text-center">
-            <p className="text-white/80 text-sm">
+            
+            {/* Loading animation */}
+            <div className="flex flex-col items-center gap-4">
+              <div className={`${loadingClasses[loadingType]} loading-lg text-primary`}></div>
+              <span className="text-base-content/70">Loading</span>
+            </div>
+            
+            {/* Message */}
+            <p className="text-base-content/90">
               {message}
             </p>
+            
+            {/* Progress bar */}
+            <div className="w-full">
+              <progress className="progress progress-primary w-full"></progress>
+            </div>
           </div>
         </div>
+        
+        {/* Secondary elements */}
+        <div className="text-center mt-4 text-base-100/70 text-sm">
+          &copy; {new Date().getFullYear()} Your Company
+        </div>
       </div>
+      
+      {/* Animated accent circles */}
+      <div className="fixed w-20 h-20 rounded-full bg-accent/30 blur-md animate-pulse"
+           style={{ top: '30%', left: '20%' }}></div>
+      <div className="fixed w-10 h-10 rounded-full bg-secondary/30 blur-md animate-bounce"
+           style={{ bottom: '25%', right: '15%' }}></div>
     </div>
   )
 }
