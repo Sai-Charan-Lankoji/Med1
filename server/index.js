@@ -56,6 +56,8 @@ app.use(
     origin: (origin, callback) => {
       const predefinedOrigins = [
         "http://localhost:7009",
+        "http://localhost:8000",
+        "http://localhost:7008",
         "http://localhost:7000",
         "http://localhost:3000",
         "http://localhost:5000",
