@@ -51,6 +51,11 @@ interface StockResponse {
 
 interface AddStockData {
   title: string;
+  category: string;
+  stockType: string;
+  hsnCode: string;
+  productId: string;
+  gstPercentage: number;
   variants: { size: string; color: string | null; totalQuantity: number }[];
 }
 

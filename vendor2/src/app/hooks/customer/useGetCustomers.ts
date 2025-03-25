@@ -20,16 +20,7 @@ const fetchCustomers = async (url: string) => {
     });
 
     const data = await response.json();
-    if (!response.ok) {
-      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-      if (response.status === 404 || response.status === 500) {
-        console.log('No customers found or server error. Returning empty array.');
-        return [];
-      }
-      throw new Error(data.error || `HTTP error! Status: ${response.status}`);
-    }
-
-    return data; // Array of customers
+    return data.data; // Array of customers
   } catch (error: unknown) {
     if (error instanceof Error) {
       console.log('Error fetching data:', error.message);

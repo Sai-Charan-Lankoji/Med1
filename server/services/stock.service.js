@@ -6,12 +6,25 @@ const { Op } = require("sequelize");
 
 class StockService {
   // Create stock with variants
-  async createStock({ title, variants }) {
+  async createStock({ title, category, stockType, productId, hsnCode, gstPercentage, variants }) {
+    // Validate required fields
+    if (!title || !category || !stockType || !hsnCode || !gstPercentage || !variants || !Array.isArray(variants) || variants.length === 0) {
+      throw new Error("All fields (title, category, stockType, hsnCode, gstPercentage, variants) are required");
+    }
+    if (stockType === "Standard" && !productId) {
+      throw new Error("Product ID is required for Standard stock type");
+    }
+
     const totalQuantity = variants.reduce((sum, v) => sum + v.totalQuantity, 0);
     const availableQuantity = totalQuantity;
 
     const stock = await Stock.create({
       title,
+      category,
+      stockType,
+      productId: stockType === "Standard" ? productId : null, // Set null for Designable
+      hsnCode,
+      gstPercentage,
       totalQuantity,
       availableQuantity,
       onHoldQuantity: 0,
@@ -19,7 +32,7 @@ class StockService {
     });
 
     const variantEntries = variants.map((v) => ({
-      stock_id: stock.stock_id,
+      stockId: stock.stock_id,
       size: v.size,
       color: v.color,
       totalQuantity: v.totalQuantity,
@@ -28,9 +41,12 @@ class StockService {
       exhaustedQuantity: 0,
     }));
     await StockVariant.bulkCreate(variantEntries);
-    return stock;
-  }
 
+    return {
+      ...stock.toJSON(),
+      variants: variantEntries,
+    };
+  }
   // Order placed: Move from available to on-hold
   async placeOrder(variantId, quantity, transaction) {
     const variant = await StockVariant.findByPk(variantId, { transaction });

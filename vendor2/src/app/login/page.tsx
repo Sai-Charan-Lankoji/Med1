@@ -1,3 +1,4 @@
+// LoginForm.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -8,6 +9,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import useVendorLogin from "../hooks/auth/useVendorLogin";
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -15,6 +17,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false); // New state for navigation loading
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const { login, error } = useVendorLogin();
@@ -52,9 +55,10 @@ const LoginForm = () => {
       const success = await login(email, password);
       if (success) {
         toast.success("Vendor login successful", { duration: 1000 });
+        setIsNavigating(true); // Show loading overlay
         setTimeout(() => {
           router.push("/vendor/orders");
-        }, 1200);
+        }, 1500); // Increased delay to 1.5s for better UX
       }
     } catch (err: any) {
       toast.error(err.message || "Failed to Login", { duration: 5000 });
@@ -129,6 +133,7 @@ const LoginForm = () => {
                   required
                   className="input input-ghost w-full text-white placeholder-white/70 focus:ring-2 focus:ring-white focus:border-white rounded-xl"
                   placeholder="Enter Email"
+                  disabled={loading}
                 />
                 {emailError && (
                   <p className="text-red-500 text-sm mt-1">{emailError}</p>
@@ -150,12 +155,14 @@ const LoginForm = () => {
                   className="input input-ghost w-full pr-10 text-white placeholder-white/70 focus:ring-2 focus:ring-white focus:border-white rounded-xl"
                   placeholder="Enter Password"
                   aria-label="Enter Password"
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex items-center pr-3 text-white hover:text-gray-200 transition duration-200"
                   onClick={togglePasswordVisibility}
                   aria-label={showPassword ? "Hide password" : "Show password"}
+                  disabled={loading}
                 >
                   {showPassword ? (
                     <EyeOff className="w-5 h-5" />
@@ -190,7 +197,7 @@ const LoginForm = () => {
                   </div>
                 )}
                 <p className="text-white text-sm">
-                {"Don't have an account?"}{" "}
+                  {"Don't have an account?"}{" "}
                   <Link href="/" className="link hover:underline">
                     Join Us
                   </Link>
@@ -205,6 +212,7 @@ const LoginForm = () => {
           </motion.div>
         </div>
       </div>
+      <LoadingOverlay isLoading={isNavigating} /> {/* Add the loading overlay */}
     </>
   );
 };

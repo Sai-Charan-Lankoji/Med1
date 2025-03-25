@@ -5,14 +5,28 @@ const stockService = require("../services/stock.service");
  */
 exports.createStock = async (req, res) => {
   try {
-    const { title, variants } = req.body;
+    const { title, category, stockType, productId, hsnCode, gstPercentage, variants } = req.body;
 
-    if (!title || !variants || !Array.isArray(variants) || variants.length === 0) {
-      return res.status(400).json({ success: false, message: "Title and variants array are required" });
+    if (!title || !category || !stockType || !hsnCode || !gstPercentage || !variants || !Array.isArray(variants) || variants.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, category, stockType, hsnCode, gstPercentage, and variants array are required",
+      });
+    }
+    if (stockType === "Standard" && !productId) {
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required for Standard stock type",
+      });
     }
 
     const stockData = {
       title,
+      category,
+      stockType,
+      productId,
+      hsnCode,
+      gstPercentage,
       variants: variants.map((v) => ({
         size: v.size,
         color: v.color,

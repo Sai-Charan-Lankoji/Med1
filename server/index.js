@@ -59,6 +59,7 @@ app.use(
         "http://localhost:7000",
         "http://localhost:3000",
         "http://localhost:5000",
+        "http://localhost:7008",
         "https://med1-4217.vercel.app",
         "https://med1-five.vercel.app",
         "https://med1-p6q2.vercel.app",

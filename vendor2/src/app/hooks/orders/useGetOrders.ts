@@ -1,15 +1,15 @@
+// useGetOrders.ts
 import useSWR from "swr";
+import { Next_server } from "@/constant";
+import { vendor_id } from "@/app/utils/constant";
 
 const baseUrl = Next_server;
-import { vendor_id } from "@/app/utils/constant";
-import { Next_server } from "@/constant";
 
 const fetchOrders = async (url: string) => {
   if (!vendor_id) {
-    console.log("No vendor ID found in sessionStorage");
+    console.warn("No vendor ID found in sessionStorage");
     return [];
   }
-  console.log("Praveen vendor_id", vendor_id);
 
   try {
     const response = await fetch(url, {
@@ -21,27 +21,14 @@ const fetchOrders = async (url: string) => {
     });
 
     const data = await response.json();
-    console.log("Praveen data", data);
-
     if (!response.ok) {
-      console.log(`HTTP error! Status: ${response.status}, ${data.error}`);
-      if (response.status === 404 || response.status === 500) {
-        console.log("No orders found or server error. Returning empty array.");
-        return [];
-      }
       throw new Error(data.error || `HTTP error! Status: ${response.status}`);
     }
 
-    // Return the nested data array instead of the raw response
     return Array.isArray(data.data) ? data.data : [];
-  } catch (error: unknown) {
-    if (error instanceof Error) {
-      console.log("Error fetching data:", error.message);
-      return [];
-    } else {
-      console.error("An unknown error occurred:", error);
-      return [];
-    }
+  } catch (error) {
+    console.error("Error fetching orders:", error);
+    throw error; // Let SWR handle the error
   }
 };
 
@@ -49,31 +36,26 @@ export const useGetOrders = () => {
   const url = vendor_id ? `${baseUrl}/api/orders/vendor/${vendor_id}` : null;
 
   const { data, error, isLoading, mutate } = useSWR(
-    vendor_id ? ["orders", vendor_id] : null,
+    url ? ["orders", vendor_id] : null,
     () => fetchOrders(url!),
     {
       revalidateOnFocus: false,
       revalidateOnMount: true,
-      dedupingInterval: 5 * 60 * 1000, // 5-minute stale time
-      refreshInterval: 0,
-      shouldRetryOnError: false,
-      onError: (error: unknown) => {
-        if (error instanceof Error) {
-          console.error("Error occurred while fetching orders:", error.message);
-        } else {
-          console.error("An unknown error occurred:", error);
-        }
+      dedupingInterval: 60000, // 1 minute cache
+      refreshInterval: 0, // Disable auto-refresh
+      shouldRetryOnError: true,
+      retryCount: 3,
+      retryOnErrorDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
+      onError: (err) => {
+        console.error("Failed to fetch orders:", err.message);
       },
     }
   );
 
-  // No need to normalize here since fetchOrders already returns an array
-  const ordersData = data || [];
-
   return {
-    data: ordersData,
+    data: data || [],
     isLoading,
-    error,
+    error: error ? new Error("Failed to fetch orders") : null,
     refetch: mutate,
   };
 };

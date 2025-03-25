@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Stock = require("./stock.model");
+const Product = require("./product.model");
 
 const StockVariant = sequelize.define(
   "StockVariant",
@@ -13,7 +14,7 @@ const StockVariant = sequelize.define(
     stockId: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: { model: Stock, key: "stockId" },
+      references: { model: Stock, key: "stock_id" },
     },
     size: {
       type: DataTypes.STRING,
@@ -55,5 +56,10 @@ const StockVariant = sequelize.define(
     indexes: [{ unique: true, fields: ["stockId", "size", "color"] }],
   }
 );
+
+// Define relationships
+Stock.hasMany(StockVariant, { foreignKey: "stockId", as: "variants" });
+StockVariant.belongsTo(Stock, { foreignKey: "stockId", as: "stock" });
+Stock.belongsTo(Product, { foreignKey: "productId", as: "product" });
 
 module.exports = StockVariant;
