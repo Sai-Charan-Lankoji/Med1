@@ -110,6 +110,14 @@ export interface OrderData {
   vendor_id: string | null;
   public_api_key: string | null;
   store_id: string | null;
+  shipping_charges: number;
+  hsn_tax_details: Array<{
+  hsn_code: string;
+  tax_percentage: number;
+  taxable_amount: number;
+  tax_amount: number;
+  }>;
+
   shipping_address?: Address;
   billing_address?: Address;
   payment_method?: string;
@@ -119,11 +127,14 @@ export interface OrderData {
 export interface IDesignableCartItem {
   product_type: "designable";
   id: string;
+  hsnCode: string;
   product_id: string;
+  gstPercentage: number;
   designs: IDesign[];
   designState: IDesign[] | null;
   propsState: IProps | null;
   quantity: number;
+  weightInGrams: number;
   price: number;
   total_price: number;
   customer_id: string;
@@ -137,11 +148,14 @@ export interface IStandardCartItem {
   product_type: "standard";
   id: string;
   product_id: string;
+  hsnCode: string;
+  gstPercentage: number;
   selected_size: string | null;
   selected_color: string | null;
   selected_variant: string | null;
   quantity: number;
   price: number;
+  weightInGrams: number;
   total_price: number;
   customer_id: string;
   email: string | null;
@@ -166,6 +180,8 @@ export interface IStandardCartItem {
     customizable: boolean;
   };
 }
+
+
 
 export type ICartItem = IDesignableCartItem | IStandardCartItem;
 

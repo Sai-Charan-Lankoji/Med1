@@ -25,8 +25,8 @@ try {
     port: 587,
     secure: false, // Use TLS
     auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      user: process.env.SMTP_USERNAME,
+      pass: process.env.SMTP_PASSWORD,
     },
     tls: {
       rejectUnauthorized: false, // Optional: for development only

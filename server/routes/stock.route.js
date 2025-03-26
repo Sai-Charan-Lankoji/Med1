@@ -1,21 +1,38 @@
 const express = require("express");
-const stockController = require("../controllers/stock.controller");
-
 const router = express.Router();
+const stockController = require("../controllers/stock.controller");
 
 /**
  * @swagger
- * tags:
- *   name: Stock
- *   description: API for managing stock and variants
+ * /api/stock:
+ *   get:
+ *     summary: Get all stock entries
+ *     tags: [Stocks]
+ *     responses:
+ *       200:
+ *         description: List of all stock entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 stocks:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Stock'
+ *       400:
+ *         description: Error fetching stocks
  */
+router.get("/", stockController.getAllStocks);
 
 /**
  * @swagger
  * /api/stock:
  *   post:
- *     summary: Create a new stock entry with variants
- *     tags: [Stock]
+ *     summary: Create a new stock entry
+ *     tags: [Stocks]
  *     requestBody:
  *       required: true
  *       content:
@@ -24,11 +41,25 @@ const router = express.Router();
  *             type: object
  *             required:
  *               - title
+ *               - category
+ *               - stockType
+ *               - hsnCode
+ *               - gstPercentage
  *               - variants
  *             properties:
  *               title:
  *                 type: string
- *                 example: Batch 1
+ *               category:
+ *                 type: string
+ *               stockType:
+ *                 type: string
+ *                 enum: [Standard, Designable]
+ *               productId:
+ *                 type: string
+ *               hsnCode:
+ *                 type: string
+ *               gstPercentage:
+ *                 type: number
  *               variants:
  *                 type: array
  *                 items:
@@ -36,16 +67,22 @@ const router = express.Router();
  *                   properties:
  *                     size:
  *                       type: string
- *                       example: M
  *                     color:
  *                       type: string
- *                       example: Black
  *                     totalQuantity:
  *                       type: integer
- *                       example: 100
  *     responses:
  *       201:
  *         description: Stock created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 stock:
+ *                   $ref: '#/components/schemas/Stock'
  *       400:
  *         description: Invalid input
  */
@@ -53,10 +90,64 @@ router.post("/", stockController.createStock);
 
 /**
  * @swagger
+ * /api/stock/{productId}:
+ *   get:
+ *     summary: Get stock by product ID
+ *     tags: [Stocks]
+ *     parameters:
+ *       - in: path
+ *         name: productId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the product to fetch stock for
+ *     responses:
+ *       200:
+ *         description: Stock found for the product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 stock:
+ *                   $ref: '#/components/schemas/Stock'
+ *       400:
+ *         description: Invalid or missing productId
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "productId is required"
+ *       404:
+ *         description: Stock not found for the product
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Stock not found for productId: <productId>"
+ */
+router.get("/:productId", stockController.getStockByProductId);
+
+/**
+ * @swagger
  * /api/stock/place-order:
  *   post:
- *     summary: Place an order (move quantity to on-hold)
- *     tags: [Stock]
+ *     summary: Place an order (move to on-hold)
+ *     tags: [Stocks]
  *     requestBody:
  *       required: true
  *       content:
@@ -69,15 +160,13 @@ router.post("/", stockController.createStock);
  *             properties:
  *               variantId:
  *                 type: string
- *                 example: uuid-for-variant
  *               quantity:
  *                 type: integer
- *                 example: 1
  *     responses:
  *       200:
  *         description: Order placed successfully
  *       400:
- *         description: Insufficient stock or invalid input
+ *         description: Invalid input
  */
 router.post("/place-order", stockController.placeOrder);
 
@@ -85,8 +174,8 @@ router.post("/place-order", stockController.placeOrder);
  * @swagger
  * /api/stock/cancel-order:
  *   post:
- *     summary: Cancel an order (move quantity back to available)
- *     tags: [Stock]
+ *     summary: Cancel an order (move back to available)
+ *     tags: [Stocks]
  *     requestBody:
  *       required: true
  *       content:
@@ -99,15 +188,13 @@ router.post("/place-order", stockController.placeOrder);
  *             properties:
  *               variantId:
  *                 type: string
- *                 example: uuid-for-variant
  *               quantity:
  *                 type: integer
- *                 example: 1
  *     responses:
  *       200:
  *         description: Order cancelled successfully
  *       400:
- *         description: Insufficient on-hold stock or invalid input
+ *         description: Invalid input
  */
 router.post("/cancel-order", stockController.cancelOrder);
 
@@ -115,8 +202,8 @@ router.post("/cancel-order", stockController.cancelOrder);
  * @swagger
  * /api/stock/fulfill-order:
  *   post:
- *     summary: Fulfill an order (move quantity to exhausted)
- *     tags: [Stock]
+ *     summary: Fulfill an order (move to exhausted)
+ *     tags: [Stocks]
  *     requestBody:
  *       required: true
  *       content:
@@ -129,15 +216,13 @@ router.post("/cancel-order", stockController.cancelOrder);
  *             properties:
  *               variantId:
  *                 type: string
- *                 example: uuid-for-variant
  *               quantity:
  *                 type: integer
- *                 example: 1
  *     responses:
  *       200:
  *         description: Order fulfilled successfully
  *       400:
- *         description: Insufficient on-hold stock or invalid input
+ *         description: Invalid input
  */
 router.post("/fulfill-order", stockController.fulfillOrder);
 
@@ -146,7 +231,7 @@ router.post("/fulfill-order", stockController.fulfillOrder);
  * /api/stock/restock:
  *   post:
  *     summary: Restock a variant
- *     tags: [Stock]
+ *     tags: [Stocks]
  *     requestBody:
  *       required: true
  *       content:
@@ -159,10 +244,8 @@ router.post("/fulfill-order", stockController.fulfillOrder);
  *             properties:
  *               variantId:
  *                 type: string
- *                 example: uuid-for-variant
  *               quantity:
  *                 type: integer
- *                 example: 50
  *     responses:
  *       200:
  *         description: Variant restocked successfully
@@ -170,17 +253,5 @@ router.post("/fulfill-order", stockController.fulfillOrder);
  *         description: Invalid input
  */
 router.post("/restock", stockController.restockVariant);
-
-/**
- * @swagger
- * /api/stock:
- *   get:
- *     summary: List all stock entries
- *     tags: [Stock]
- *     responses:
- *       200:
- *         description: List of all stock entries
- */
-router.get("/", stockController.getAllStocks);
 
 module.exports = router;
