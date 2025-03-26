@@ -81,6 +81,7 @@ export default function VendorsWithSearch({
   };
 
   return (
+    <>
     <div className="p-6 min-h-screen bg-base-100 animate-fade-in">
       <div className="mb-6 flex justify-between items-center animate-slide-in-left">
         <h1 className="text-2xl font-bold text-primary">Vendors</h1>
@@ -125,5 +126,6 @@ export default function VendorsWithSearch({
         </div>
       )}
     </div>
+    
   );
 }

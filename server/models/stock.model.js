@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
+const Product = require("./product.model");
 
 const Stock = sequelize.define(
   "Stock",
@@ -12,6 +13,28 @@ const Stock = sequelize.define(
     title: {
       type: DataTypes.STRING,
       allowNull: false,
+    },
+    category: {
+      type: DataTypes.ENUM("Garments", "Fabrics", "Accessories", "Others"),
+      allowNull: false,
+    },
+    stockType: {
+      type: DataTypes.ENUM("Standard", "Designable"),
+      allowNull: false,
+    },
+    hsnCode: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    productId: {
+      type: DataTypes.UUID,
+      allowNull: true, // Nullable for Designable stock
+      references: { model: Product, key: "product_id" },
+    },
+    gstPercentage: {
+      type: DataTypes.FLOAT,
+      allowNull: false,
+      validate: { min: 0, max: 100 },
     },
     totalQuantity: {
       type: DataTypes.INTEGER,
@@ -45,4 +68,5 @@ const Stock = sequelize.define(
   }
 );
 
+// Export the model without defining relationships here
 module.exports = Stock;

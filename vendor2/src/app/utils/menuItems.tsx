@@ -11,12 +11,6 @@ interface MenuItemsProps {
 
 const menuItems = [
   {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/vendor/dashboard",
-    description: "Overview of your store",
-  },
-  {
     title: "Orders",
     icon: ShoppingCart,
     href: "/vendor/orders",

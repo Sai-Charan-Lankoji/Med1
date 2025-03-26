@@ -68,7 +68,7 @@ export default function StockManagement() {
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
-    await fetchStocks()
+    window.location.reload()
     setIsRefreshing(false)
   }
 
@@ -526,7 +526,7 @@ function StockTable({
                     <td className="text-right">
                       <span className="text-error">{stock.exhaustedQuantity}</span>
                     </td>
-                    <td>
+                    <td className="sm:text-[12px] md:text-[14px] lg:text-[16px]">
                       <StockStatusBadge status={getStockStatus(stock)} />
                     </td>
                     <td className="text-sm">
