@@ -1,8 +1,7 @@
-// LoginForm.tsx
 "use client";
 
 import React, { useState } from "react";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -17,7 +16,7 @@ const LoginForm = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false); // New state for navigation loading
+  const [isNavigating, setIsNavigating] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const { login, error } = useVendorLogin();
@@ -54,14 +53,14 @@ const LoginForm = () => {
       setLoading(true);
       const success = await login(email, password);
       if (success) {
-        toast.success("Vendor login successful", { duration: 1000 });
-        setIsNavigating(true); // Show loading overlay
+        toast.success("Login successful", { duration: 1000 });
+        setIsNavigating(true);
         setTimeout(() => {
           router.push("/vendor/orders");
-        }, 1500); // Increased delay to 1.5s for better UX
+        }, 1200);
       }
     } catch (err: any) {
-      toast.error(err.message || "Failed to Login", { duration: 5000 });
+      toast.error(err.message || "Failed to login", { duration: 5000 });
     } finally {
       setLoading(false);
     }
@@ -70,26 +69,26 @@ const LoginForm = () => {
   return (
     <>
       <Toaster position="top-right" />
-      <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-500">
-        {/* Animated Wave Background */}
-        <div className="absolute inset-0 z-0">
-          <div className="wave"></div>
-          <div className="wave"></div>
-          <div className="wave"></div>
+      <div className="min-h-screen bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center p-4">
+        {/* Decorative elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute w-96 h-96 rounded-full bg-primary/10 filter blur-3xl -top-20 -left-20 animate-pulse"></div>
+          <div className="absolute w-96 h-96 rounded-full bg-secondary/10 filter blur-3xl -bottom-20 -right-20 animate-pulse"></div>
+          <div className="absolute w-72 h-72 rounded-full bg-accent/10 filter blur-2xl top-1/3 left-1/2 animate-pulse"></div>
         </div>
-
-        {/* Subtle Animated Gradient Orbs */}
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-to-r from-blue-300 to-indigo-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
-        <div className="absolute top-1/3 right-1/4 w-72 h-72 bg-gradient-to-r from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
-        <div className="absolute bottom-1/4 left-1/2 w-72 h-72 bg-gradient-to-r from-indigo-300 to-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
-
-        <div className="relative flex justify-center items-center min-h-screen">
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="w-full max-w-md p-8 bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl border border-white/20"
-          >
+        
+        {/* Card container */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="card bg-base-100 shadow-xl max-w-md w-full"
+        >
+          {/* Card accent line */}
+          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary to-secondary"></div>
+          
+          <div className="card-body p-8">
+            {/* Logo */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -99,120 +98,149 @@ const LoginForm = () => {
                 stiffness: 260,
                 damping: 20,
               }}
-              className="mb-8"
+              className="avatar flex justify-center mb-6"
             >
-              <Image
-                src="/medusaLogo.png"
-                alt="Logo"
-                className="h-20 w-20 mx-auto rounded-full shadow-lg"
-                width={80}
-                height={80}
-                priority
-              />
+              <div className="w-24 h-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
+                <Image
+                  src="/medusaLogo.png"
+                  alt="Logo"
+                  width={96}
+                  height={96}
+                  priority
+                />
+              </div>
             </motion.div>
+            
+            {/* Title */}
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-3xl font-bold text-center text-white mb-6"
+              className="card-title text-2xl font-bold text-center justify-center"
             >
-              Login
+              Welcome Back
             </motion.h2>
-            <form onSubmit={handleSubmit} method="post" className="space-y-6">
-              <motion.div
-                initial={{ x: -50, opacity: 0 }}
+            
+            {/* Form */}
+            <form onSubmit={handleSubmit} method="post" className="space-y-4 mt-6">
+              {/* Email Field */}
+              <motion.label 
+                className="form-control"
+                initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
               >
+                <div className="label">
+                  <span className="label-text">Email</span>
+                </div>
                 <input
                   type="email"
                   name="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => validateEmail(email)}
-                  required
-                  className="input input-ghost w-full text-white placeholder-white/70 focus:ring-2 focus:ring-white focus:border-white rounded-xl"
-                  placeholder="Enter Email"
+                  className={`input input-bordered w-full ${emailError ? "input-error" : ""}`}
+                  placeholder="you@example.com"
                   disabled={loading}
+                  required
                 />
                 {emailError && (
-                  <p className="text-red-500 text-sm mt-1">{emailError}</p>
+                  <div className="label">
+                    <span className="label-text-alt text-error">{emailError}</span>
+                  </div>
                 )}
-              </motion.div>
-              <motion.div
-                initial={{ x: 50, opacity: 0 }}
+              </motion.label>
+              
+              {/* Password Field */}
+              <motion.label 
+                className="form-control"
+                initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="relative"
               >
-                <input
-                  type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onBlur={() => validatePassword(password)}
-                  required
-                  className="input input-ghost w-full pr-10 text-white placeholder-white/70 focus:ring-2 focus:ring-white focus:border-white rounded-xl"
-                  placeholder="Enter Password"
-                  aria-label="Enter Password"
-                  disabled={loading}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-white hover:text-gray-200 transition duration-200"
-                  onClick={togglePasswordVisibility}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-5 h-5" />
-                  ) : (
-                    <Eye className="w-5 h-5" />
-                  )}
-                </button>
+                <div className="label">
+                  <span className="label-text">Password</span>
+                  <Link href="/forgot-password" className="label-text-alt link link-hover text-primary">
+                    Forgot Password?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    onBlur={() => validatePassword(password)}
+                    className={`input input-bordered w-full pr-10 ${passwordError ? "input-error" : ""}`}
+                    placeholder="••••••••"
+                    disabled={loading}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
+                    onClick={togglePasswordVisibility}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    disabled={loading}
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                </div>
                 {passwordError && (
-                  <p className="text-red-500 text-sm mt-1">{passwordError}</p>
+                  <div className="label">
+                    <span className="label-text-alt text-error">{passwordError}</span>
+                  </div>
                 )}
-              </motion.div>
+              </motion.label>
+              
+              {/* Submit Button */}
               <motion.div
-                initial={{ y: 50, opacity: 0 }}
+                initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
-                className="flex flex-col items-center space-y-4"
+                className="form-control mt-6"
               >
                 <button
                   type="submit"
-                  className="btn w-full bg-white text-purple-600 hover:bg-gray-100 font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition duration-300 ease-in-out transform hover:-translate-y-1"
+                  className="btn btn-primary w-full"
                   disabled={loading}
                 >
                   {loading ? (
-                    <Loader2 className="animate-spin mx-auto" />
+                    <span className="loading loading-spinner loading-sm"></span>
                   ) : (
-                    "Continue"
+                    "Sign In"
                   )}
                 </button>
-                {error && (
-                  <div className="alert alert-error w-full text-center">
-                    <p>{error}</p>
-                  </div>
-                )}
-                <p className="text-white text-sm">
-                  {"Don't have an account?"}{" "}
-                  <Link href="/" className="link hover:underline">
-                    Join Us
-                  </Link>
-                </p>
-                <p className="text-white text-sm">
-                  <Link href="/forgot-password" className="link hover:underline">
-                    Forgot Password?
-                  </Link>
-                </p>
               </motion.div>
+              
+              {/* Error Message */}
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="alert alert-error mt-4"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <span>{error}</span>
+                </motion.div>
+              )}
             </form>
-          </motion.div>
-        </div>
+            
+            {/* Divider and signup option */}
+            <div className="divider mt-6">OR</div>
+            
+            <div className="text-center">
+              <p className="text-base-content/70 mb-4">Don't have an account?</p>
+              <Link href="/" className="btn btn-outline btn-primary">
+                Create Account
+              </Link>
+            </div>
+          </div>
+        </motion.div>
       </div>
-      <LoadingOverlay isLoading={isNavigating} /> {/* Add the loading overlay */}
+      
+      {/* Loading overlay for navigation */}
+      <LoadingOverlay isLoading={isNavigating} />
     </>
   );
 };

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { useVendorLogout } from "../hooks/auth/useVendorLogout";
-import Link from "next/link";
+
 import { ChevronLeft, Menu } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import MenuItems from "../utils/menuItems";

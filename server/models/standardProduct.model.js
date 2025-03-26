@@ -3,6 +3,7 @@ const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Store = require("./store.model"); 
 const Stock = require("./stock.model");
+const Vendor = require("./vendor.model");
 
 const StandardProduct = sequelize.define(
   "StandardProduct",
@@ -37,6 +38,12 @@ const StandardProduct = sequelize.define(
       type: DataTypes.STRING(250),
       allowNull: false,
       references: { model: Store, key: "id" },
+      onDelete: "CASCADE",
+    },
+    vendor_id: {
+      type: DataTypes.STRING(250),
+      allowNull: false,
+      references: { model: Vendor, key: "id" },
       onDelete: "CASCADE",
     },
   },

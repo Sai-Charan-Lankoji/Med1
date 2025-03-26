@@ -291,4 +291,38 @@ router.get("/customer/:customerId", orderController.listOrdersByCustomer); // Li
  */
 router.delete("/:id", orderController.deleteOrder); // Delete an order by ID
 
+// Add this route
+
+/**
+ * @swagger
+ * /api/orders/{id}/status:
+ *   patch:
+ *     summary: Update order status (fulfillment or payment)
+ *     tags: [Orders]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *                 enum: [fulfillment_status, payment_status]
+ *               value:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Order status updated successfully
+ *       400:
+ *         description: Invalid input
+ */
+router.patch("/:id/status", orderController.updateOrderStatus);
+
 module.exports = router;

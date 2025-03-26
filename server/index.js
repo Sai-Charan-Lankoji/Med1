@@ -16,11 +16,11 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 app.use(cookieParser());
-const server = http.createServer(app);
+const server = http.createServer(app); 
 const io = new Server(server, {
   cors: {
     origin: [
-     "http://localhost:7009",
+        "http://localhost:7009",
         "http://localhost:7000",
         "http://localhost:3000",
         "http://localhost:5000",

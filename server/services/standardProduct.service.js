@@ -31,6 +31,25 @@ const getAllStandardProductsByStoreId = async (storeId) => {
   });
 };
 
+// Get all standard products by vendorId
+const getAllStandardProductsByVendorId = async (vendorId) => {
+  return await StandardProduct.findAll({
+    where: { vendor_id: vendorId.toString() },
+    include: [
+      {
+        model: Stock,
+        as: "Stock",
+        include: [
+          {
+            model: StockVariant,
+            as: "StockVariants",
+          },
+        ],
+      },
+    ],
+  });
+};
+
 // Get a single standard product by ID
 const getStandardProductById = async (productId) => {
   try {
@@ -82,6 +101,7 @@ module.exports = {
   createStandardProduct,
   getAllStandardProducts,
   getAllStandardProductsByStoreId,
+  getAllStandardProductsByVendorId,
   getStandardProductById,
   updateStandardProduct,
   deleteStandardProduct,

@@ -23,6 +23,24 @@ class OrderService {
     return true;
   }
 
+/**
+   * Update an order's status (fulfillment or payment)
+   */
+async updateOrderStatus(orderId, type, value) {
+  const order = await this.retrieve(orderId);
+  
+  if (type !== 'fulfillment_status' && type !== 'payment_status') {
+    throw new Error('Invalid status type. Must be "fulfillment_status" or "payment_status"');
+  }
+  
+  // Create update object with the specific field to update
+  const updateData = {};
+  updateData[type] = value;
+  
+  await order.update(updateData);
+  return order;
+}
+
   /**
    * Retrieve an order by ID.
    */

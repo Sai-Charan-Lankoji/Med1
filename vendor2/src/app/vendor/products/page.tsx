@@ -156,7 +156,7 @@ const Product = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 container mx-auto bg-neutral-50 h-dvh w-dvw">
+    <div className="p-4 md:p-6 container mx-auto bg-neutral-50 h-vh w-dvw">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-primary mb-4 sm:mb-0">
           Product Management
