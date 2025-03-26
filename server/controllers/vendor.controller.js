@@ -46,22 +46,30 @@ exports.deleteVendor = async (req, res) => {
   }
 };
 
-
 exports.getVendorAnalytics = async (req, res) => {
   try {
-    const analytics = await vendorService.getVendorAnalytics(req.params.id);
-    res.status(200).json({ success: true, analytics });
+    const analytics = await vendorService.getVendorAnalytics(); // Fixed: No `req.params.id` needed here
+    res.status(analytics.statusCode).json(analytics); // Use statusCode from service response
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(error.statusCode || 500).json(error);
   }
 };
 
-exports.getStoreCommissionBreakdownByVendor = async (req, res) => { 
-  
+exports.getStoreCommissionBreakdownByVendor = async (req, res) => {
   try {
     const breakdown = await vendorService.getStoreCommissionBreakdownByVendor(req.params.vendorId);
-    res.status(200).json({ success: true, breakdown });
+    res.status(breakdown.statusCode).json(breakdown); // Use statusCode from service response
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(error.statusCode || 500).json(error);
+  }
+};
+
+exports.updateVendorPlan = async (req, res) => {
+  try {
+    const { plan_id, plan } = req.body;
+    const updatedVendor = await vendorService.updateVendorPlan(req.params.id, { plan_id, plan });
+    res.status(200).json({ success: true, vendor: updatedVendor });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
   }
 };

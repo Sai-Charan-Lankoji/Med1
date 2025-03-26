@@ -8,7 +8,7 @@ const AuthMiddleware = require("../middleware/AuthMiddleware")
  * tags:
  *   name: Vendors
  *   description: Vendor management APIs
- */
+ */ 
 
 /**
  * @swagger
@@ -336,5 +336,77 @@ router.put("/:id", vendorController.updateVendor);
  *         description: Vendor not found
  */
 router.delete("/:id", vendorController.deleteVendor);
+
+/**
+ * @swagger
+ * /api/vendors/plan/{id}:
+ *   put:
+ *     summary: Assign or update a vendor's subscription plan
+ *     tags: [Vendors]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: vendor_12345678
+ *         description: The ID of the vendor
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               plan_id:
+ *                 type: string
+ *                 example: plan_12345678
+ *               plan:
+ *                 type: string
+ *                 example: Premium
+ *             required:
+ *               - plan_id
+ *               - plan
+ *     responses:
+ *       200:
+ *         description: Vendor plan updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 vendor:
+ *                   $ref: '#/components/schemas/Vendor'
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Vendor ID, plan ID, and plan name are required
+ *       404:
+ *         description: Vendor or plan not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: Vendor not found
+ */
+router.put("/plan/:id",  vendorController.updateVendorPlan);
 
 module.exports = router;
