@@ -144,6 +144,127 @@ router.get("/:productId", stockController.getStockByProductId);
 
 /**
  * @swagger
+ * /api/stock/variant/{variantId}:
+ *   get:
+ *     summary: Get a stock variant by ID
+ *     tags: [Stocks]
+ *     parameters:
+ *       - in: path
+ *         name: variantId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: The ID of the stock variant to retrieve
+ *     responses:
+ *       200:
+ *         description: Stock variant retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Stock variant retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     variantId:
+ *                       type: string
+ *                       format: uuid
+ *                     stockId:
+ *                       type: string
+ *                       format: uuid
+ *                     size:
+ *                       type: string
+ *                     color:
+ *                       type: string
+ *                     totalQuantity:
+ *                       type: integer
+ *                     availableQuantity:
+ *                       type: integer
+ *                     onHoldQuantity:
+ *                       type: integer
+ *                     exhaustedQuantity:
+ *                       type: integer
+ *                     stock:
+ *                       type: object
+ *                       properties:
+ *                         stock_id:
+ *                           type: string
+ *                           format: uuid
+ *                         hsnCode:
+ *                           type: string
+ *                         gstPercentage:
+ *                           type: number
+ *       400:
+ *         description: Invalid request parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 400
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Variant ID is required"
+ *       404:
+ *         description: Stock variant not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 404
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Stock variant not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Failed to fetch stock variant: ..."
+ *                 error:
+ *                   type: object
+ *                   properties:
+ *                     code:
+ *                       type: string
+ *                       example: "INTERNAL_SERVER_ERROR"
+ *                     details:
+ *                       type: string
+ */
+router.get("/variant/:variantId", stockController.getStockVariantById);
+
+/**
+ * @swagger
  * /api/stock/place-order:
  *   post:
  *     summary: Place an order (move to on-hold)

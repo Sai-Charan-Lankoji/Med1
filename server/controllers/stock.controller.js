@@ -138,4 +138,35 @@ exports.getStockByProductId = async (req, res) => {
   }
 };
 
+exports.getStockVariantById = async (req, res) => {
+  try {
+    const { variantId } = req.params;
+    if (!variantId) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Variant ID is required",
+      });
+    }
+
+    const stockVariant = await stockService.getStockVariantById(variantId);
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Stock variant retrieved successfully",
+      data: stockVariant,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: error.message,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        details: error.message,
+      },
+    });
+  }
+}
+
 module.exports = exports;

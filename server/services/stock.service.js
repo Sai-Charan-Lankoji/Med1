@@ -39,6 +39,23 @@ class StockService {
     };
   }
 
+  async getStockVariantById(variantId) {
+    try {
+      const stockVariant = await StockVariant.findOne({
+        where: { variantId },
+        include: [{ model: require("../models/stock.model"), as: "stock" }],
+      });
+
+      if (!stockVariant) {
+        throw new Error("Stock variant not found");
+      }
+
+      return stockVariant;
+    } catch (error) {
+      throw new Error(`Failed to fetch stock variant: ${error.message}`);
+    }
+  }
+
   async createStock({ title, category, stockType, productId, hsnCode, gstPercentage, variants }) {
     if (!title || !category || !stockType || !hsnCode || !gstPercentage || !variants || !Array.isArray(variants) || variants.length === 0) {
       throw new Error("All fields (title, category, stockType, hsnCode, gstPercentage, variants) are required");
