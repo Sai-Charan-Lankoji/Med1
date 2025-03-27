@@ -2,7 +2,6 @@
 
 import React from "react"
 import { motion } from "framer-motion"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 interface DashboardComponentProps {
@@ -13,7 +12,7 @@ interface DashboardComponentProps {
 
 export default function DashboardComponent({ title, description, children }: DashboardComponentProps) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-linear-to-br">
+    <div className="relative min-h-screen overflow-hidden bg-base-100">
       <div className="relative z-10 min-h-screen p-4 md:p-6">
         <div className="max-w-6xl mx-auto space-y-6">
           <motion.div
@@ -22,10 +21,10 @@ export default function DashboardComponent({ title, description, children }: Das
             transition={{ duration: 0.5 }}
             className="text-center space-y-2 mb-8"
           >
-            <h1 className="text-3xl md:text-4xl font-bold text-blue-700">
+            <h1 className="text-3xl md:text-4xl font-bold text-primary">
               {title}
             </h1>
-            <p className="text-sm text-black/80 max-w-xl mx-auto">
+            <p className="text-sm text-base-content/80 max-w-xl mx-auto">
               {description}
             </p>
           </motion.div>
@@ -35,11 +34,11 @@ export default function DashboardComponent({ title, description, children }: Das
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <Card className="mb-6 rounded-xl overflow-hidden border-0 bg-white/10 backdrop-blur-md shadow-2xl">
-              <CardContent className="p-4">
+            <div className="card mb-6 shadow-xl bg-base-100">
+              <div className="card-body p-4">
                 {children}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -49,16 +48,16 @@ export default function DashboardComponent({ title, description, children }: Das
 
 export function DashboardCard({ title, children, className }: { title: string; children: React.ReactNode; className?: string }) {
   return (
-    <Card className={cn("bg-white/10 rounded-xl p-4 shadow-md border border-white/20", className)}>
-      <CardHeader className="p-0">
-        <CardTitle className="text-base font-semibold text-black mb-3">
+    <div className={cn("card bg-base-200 p-4 shadow-md", className)}>
+      <div className="card-body p-0">
+        <h2 className="card-title text-base font-semibold text-base-content mb-3">
           {title}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        {children}
-      </CardContent>
-    </Card>
+        </h2>
+        <div>
+          {children}
+        </div>
+      </div>
+    </div>
   )
 }
 

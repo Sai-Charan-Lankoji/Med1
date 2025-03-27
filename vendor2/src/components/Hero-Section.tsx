@@ -865,10 +865,10 @@ export default function LandingPage() {
                 Pick a plan and unlock the tools to scale your e-commerce business.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
-                <Link href="/signup" className="btn btn-primary btn-lg">
+                <Link href="/plans" className="btn btn-primary btn-lg">
                   Start Free Trial <ChevronRight className="ml-1 h-5 w-5" />
                 </Link>
-                <Link href="/pricing" className="btn btn-outline btn-lg">
+                <Link href="/plans" className="btn btn-outline btn-lg">
                   View Pricing
                 </Link>
               </div>

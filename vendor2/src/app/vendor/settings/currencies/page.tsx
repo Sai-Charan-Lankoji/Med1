@@ -4,25 +4,8 @@ import React, { useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { ArrowLeft, Check } from 'lucide-react'
 import Link from "next/link"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
- import withAuth from "@/lib/withAuth"
- import Pagination from "../../../utils/pagination"
+import withAuth from "@/lib/withAuth"
+import Pagination from "../../../utils/pagination"
 import { currencies } from "@/app/utils/currencies "
 import DashboardComponent from "../../../../components/dashboard/page"
 
@@ -35,8 +18,8 @@ function CurrencyManager() {
   const openModal = () => setIsModalOpen(true)
   const closeModal = () => setIsModalOpen(false)
 
-  const handleCurrencyChange = (value: string) => {
-    setDefaultCurrency(value)
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setDefaultCurrency(e.target.value)
   }
 
   const handleSelectCurrency = (currencyCode: string) => {
@@ -64,21 +47,21 @@ function CurrencyManager() {
       title="Currency Management"
       description="Manage the currencies for your store"
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 ">
-        <Card className="md:col-span-2 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xl font-bold text-black">Store Currencies</CardTitle>
-            <button
-              
-              onClick={openModal}
-              className="bg-white/10 text-black hover:bg-white/20"
-            >
-              Edit Currencies
-            </button>
-          </CardHeader>
-          <CardContent>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="card bg-base-100 shadow-md md:col-span-2">
+          <div className="card-body">
+            <div className="flex justify-between items-center">
+              <h2 className="card-title text-base-content">Store Currencies</h2>
+              <button
+                onClick={openModal}
+                className="btn btn-primary btn-sm"
+              >
+                Edit Currencies
+              </button>
+            </div>
+            
             {selectedCurrencies.length === 0 ? (
-              <p className="text-black/80">No currencies selected</p>
+              <p className="text-base-content/80">No currencies selected</p>
             ) : (
               <ul className="space-y-2">
                 {selectedCurrencies.map((code) => {
@@ -86,13 +69,13 @@ function CurrencyManager() {
                   return currency ? (
                     <li
                       key={code}
-                      className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+                      className="flex items-center justify-between p-2 rounded-lg bg-base-200 hover:bg-base-300 transition-colors"
                     >
-                      <span className="text-black">
+                      <span className="text-base-content">
                         {currency.code.toLocaleUpperCase()} - {currency.name}
                       </span>
                       {defaultCurrency === currency.code && (
-                        <span className="px-2 py-1 text-xs font-medium bg-green-500/20 text-green-100 rounded-full">
+                        <span className="badge badge-success">
                           Default
                         </span>
                       )}
@@ -101,32 +84,30 @@ function CurrencyManager() {
                 })}
               </ul>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="overflow-hidden border-0 rounded-[12px] bg-white/10 backdrop-blur-md shadow-md">
-          <CardHeader>
-            <CardTitle className="text-xl font-bold text-black">Default Currency</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-black/80 mb-4">Select the default currency for your store.</p>
-            <Select onValueChange={handleCurrencyChange} value={defaultCurrency}>
-              <SelectTrigger className="w-full bg-white/10 border-white/20 text-black">
-                <SelectValue placeholder="Select a currency"  />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedCurrencies.map((code) => {
-                  const currency = currencies.currencies.find((c) => c.code === code)
-                  return currency ? (
-                    <SelectItem key={code} value={currency.code}>
-                      {currency.code.toLocaleUpperCase()} - {currency.name}
-                    </SelectItem>
-                  ) : null
-                })}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
+        <div className="card bg-base-100 shadow-md">
+          <div className="card-body">
+            <h2 className="card-title text-base-content">Default Currency</h2>
+            <p className="text-base-content/80 mb-4">Select the default currency for your store.</p>
+            <select 
+              className="select select-bordered w-full" 
+              onChange={handleCurrencyChange}
+              value={defaultCurrency}
+            >
+              <option value="" disabled>Select a currency</option>
+              {selectedCurrencies.map((code) => {
+                const currency = currencies.currencies.find((c) => c.code === code)
+                return currency ? (
+                  <option key={code} value={currency.code}>
+                    {currency.code.toLocaleUpperCase()} - {currency.name}
+                  </option>
+                ) : null
+              })}
+            </select>
+          </div>
+        </div>
       </div>
 
       <motion.div
@@ -136,30 +117,29 @@ function CurrencyManager() {
         className="mt-6"
       >
         <Link href="/vendor/settings" passHref>
-          <button className="text-black hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+          <button className="btn btn-ghost text-base-content">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
           </button>
         </Link>
       </motion.div>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px] bg-white">
-          <DialogHeader>
-            <DialogTitle>Select Currencies</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
+      {/* Modal using daisyUI */}
+      <dialog className={`modal ${isModalOpen ? 'modal-open' : ''}`}>
+        <div className="modal-box">
+          <h3 className="font-bold text-lg">Select Currencies</h3>
+          <div className="py-4">
             {currentCurrencies.map((currency) => (
-              <div key={currency.code} className="flex items-center space-x-2">
-                <Checkbox
-                  id={currency.code}
-                  checked={selectedCurrencies.includes(currency.code)}
-                  onCheckedChange={() => handleSelectCurrency(currency.code)}
-                />
-                <label
-                  htmlFor={currency.code}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {currency.code.toLocaleUpperCase()} - {currency.name}
+              <div key={currency.code} className="form-control">
+                <label className="label cursor-pointer">
+                  <span className="label-text">
+                    {currency.code.toLocaleUpperCase()} - {currency.name}
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="checkbox"
+                    checked={selectedCurrencies.includes(currency.code)}
+                    onChange={() => handleSelectCurrency(currency.code)}
+                  />
                 </label>
               </div>
             ))}
@@ -170,11 +150,15 @@ function CurrencyManager() {
             totalItems={currencies.currencies.length}
             data={currencies.currencies}
           />
-          <DialogFooter>
-            <button onClick={handleSaveChanges}>Save changes</button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="modal-action">
+            <button className="btn btn-primary" onClick={handleSaveChanges}>Save changes</button>
+            <button className="btn" onClick={closeModal}>Close</button>
+          </div>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button onClick={closeModal}>close</button>
+        </form>
+      </dialog>
     </DashboardComponent>
   )
 }

@@ -11,10 +11,9 @@ import { useDeleteStore } from "@/app/hooks/store/useDeleteStore";
 import Pagination from "@/app/utils/pagination";
 import { getColors } from "@/app/utils/dummyData";
 import StoreCreationComponent from "./StoreCreationComponent";
-import { useToast } from "@/hooks/use-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const Store = () => {
-  const { toast } = useToast();
   const { data: storesData, isLoading, refetch: refreshStores } = useGetStores();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { deleteStore } = useDeleteStore();
@@ -85,14 +84,24 @@ const Store = () => {
     setIsDeletingStore(true);
     try {
       await deleteStore(storeToDelete);
-      toast({ title: "Success", description: "Store deleted successfully" });
+      toast.success("Store deleted successfully", {
+        duration: 3000,
+        style: {
+          background: 'var(--fallback-b1,oklch(var(--b1)))',
+          color: 'var(--fallback-bc,oklch(var(--bc)))',
+          border: '1px solid var(--fallback-bc,oklch(var(--bc)))',
+        },
+      });
       refreshStores();
     } catch (error) {
       console.error("Error deleting store:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete store",
-        variant: "destructive",
+      toast.error("Failed to delete store", {
+        duration: 4000,
+        style: {
+          background: 'var(--fallback-b1,oklch(var(--b1)))',
+          color: 'var(--fallback-bc,oklch(var(--bc)))',
+          border: '1px solid var(--fallback-er,oklch(var(--er)))',
+        },
       });
     } finally {
       setIsDeletingStore(false);
@@ -130,7 +139,7 @@ const Store = () => {
         </div>
       </div>
 
-      <div className="card card-border bg-base-100">
+      <div className="card bg-base-100">
         <div className="card-body p-0">
           <div className="overflow-x-auto">
             <table className="table table-zebra w-full">
@@ -151,8 +160,8 @@ const Store = () => {
                     <td>{formatDate(store.createdAt || store.created_at)}</td>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="avatar avatar-placeholder">
-                          <div className={"w-8 rounded-full bg-primary text-primary-content"}>
+                        <div className="avatar">
+                          <div className="w-8 rounded-full bg-primary text-primary-content">
                             <span>{store.name.charAt(0).toUpperCase()}</span>
                           </div>
                         </div>
@@ -167,7 +176,7 @@ const Store = () => {
                       {store.matchingSalesChannel?.name || "N/A"}
                     </td>
                     <td>
-                      <span className="badge badge-primary badge-soft">
+                      <span className="badge badge-primary">
                         {store.store_type || "N/A"}
                       </span>
                     </td>
@@ -209,7 +218,7 @@ const Store = () => {
             </table>
           </div>
           
-          <div className=" border-t border-base-200">
+          <div className="border-t border-base-200">
             <Pagination
               currentPage={currentPage}
               setCurrentPage={setCurrentPage}
@@ -243,7 +252,7 @@ const Store = () => {
                 <button className="btn btn-outline" onClick={() => setIsDeleteModalOpen(false)}>
                   Cancel
                 </button>
-                <button className="btn btn-error btn-soft" onClick={handleDelete}>
+                <button className="btn btn-error" onClick={handleDelete}>
                   Delete
                 </button>
               </div>
@@ -254,6 +263,9 @@ const Store = () => {
           </form>
         </div>
       </dialog>
+      
+      {/* Add Toaster component for notifications */}
+      <Toaster position="top-right" />
     </div>
   );
 };
@@ -265,7 +277,7 @@ const StoreSkeleton = () => (
       <div className="skeleton w-full sm:w-72 h-10"></div>
     </div>
 
-    <div className="card card-border bg-base-100">
+    <div className="card bg-base-100">
       <div className="card-body p-0">
         <div className="overflow-x-auto">
           <table className="table w-full">

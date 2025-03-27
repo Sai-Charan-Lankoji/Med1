@@ -1,15 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { CountryCode, phoneRegexMap } from "@/app/@types/phonevalidation"
 
@@ -54,7 +45,8 @@ export function PhoneInput({
     }
   }
 
-  const handleCountrySelect = (value: string) => {
+  const handleCountrySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value
     setPhoneValue('') // Reset phone input when country changes
     setIsValid(true)  // Reset validation state
     onCountryChange(value)
@@ -66,41 +58,42 @@ export function PhoneInput({
   }, [value])
 
   return (
-    <div className="space-y-2">
-      <Label>Phone Number</Label>
+    <div className="form-control w-full gap-2">
+      <label className="label">
+        <span className="label-text">Phone Number</span>
+      </label>
       <div className="flex gap-2">
-        <Select 
+        <select 
           value={countryCode} 
-          onValueChange={handleCountrySelect}
+          onChange={handleCountrySelect}
+          className="select select-bordered w-[120px]"
         >
-          <SelectTrigger className="w-[79px]">
-            <SelectValue placeholder="☎︎">
-              {countryCode ? countryOptions.find(opt => opt.value === countryCode)?.value : "+91"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent  className="max-h-[300px] overflow-y-auto">
-            {countryOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input
+          <option disabled value="">☎︎</option>
+          {countryOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.value}
+            </option>
+          ))}
+        </select>
+        <input
           type="tel"
           value={phoneValue}
           onChange={handlePhoneChange}
           className={cn(
-            "flex-1",
-            !isValid && phoneValue && "border-red-500 focus-visible:ring-red-500"
+            "input input-bordered flex-1",
+            !isValid && phoneValue ? "input-error" : ""
           )}
           placeholder={countryCode ? `Enter phone number for ${countryCode}` : "Select country first"}
           disabled={!countryCode}
         />
       </div>
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <div className="label">
+        <span className="label-text-alt text-error">{error}</span>
+      </div>}
       {!isValid && phoneValue && !error && (
-        <p className="text-sm text-red-500">Please enter a valid phone number for the selected country</p>
+        <div className="label">
+          <span className="label-text-alt text-error">Please enter a valid phone number for the selected country</span>
+        </div>
       )}
     </div>
   )

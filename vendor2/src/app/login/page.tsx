@@ -230,8 +230,8 @@ const LoginForm = () => {
             <div className="divider mt-6">OR</div>
             
             <div className="text-center">
-              <p className="text-base-content/70 mb-4">Don't have an account?</p>
-              <Link href="/" className="btn btn-outline btn-primary">
+              <p className="text-base-content/70 mb-4">{"Don't have an account?"}</p>
+              <Link href="/plans" className="btn btn-outline btn-primary">
                 Create Account
               </Link>
             </div>

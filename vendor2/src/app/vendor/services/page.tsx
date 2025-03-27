@@ -1,17 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { CheckCircle,  Store, ShieldCheck, BadgeCheck } from "lucide-react";
+import { CheckCircle, Store, ShieldCheck, BadgeCheck } from "lucide-react";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { useGetPlans } from "@/app/hooks/plan/useGetPlans";
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan";
 import { useUpdateVendorPlan } from "@/app/hooks/vendor/useUpdateVendorPlan";
 import { useGetVendor } from "@/app/hooks/vendor/useGetVendor";
-import { useToast } from "@/hooks/use-toast";
-
+import toast, { Toaster } from "react-hot-toast";
 
 export default function ServicesDashboard() {
-  const { toast } = useToast();
   const { data: stores, isLoading: storesLoading } = useGetStores();
   const { data: plans, isLoading: plansLoading } = useGetPlans();
   const { data: vendor, isLoading: vendorLoading, refetch: refetchVendor } = useGetVendor();
@@ -53,17 +51,23 @@ export default function ServicesDashboard() {
       // Explicitly set the active plan to avoid UI delay
       setActivePlan(plan);
 
-      toast({
-        title: "Success",
-        description: `Your plan has been upgraded to ${plan.name}`,
-        variant: "default",
+      toast.success(`Your plan has been upgraded to ${plan.name}`, {
+        duration: 4000,
+        style: {
+          background: 'var(--fallback-b1,oklch(var(--b1)))',
+          color: 'var(--fallback-bc,oklch(var(--bc)))',
+          border: '1px solid var(--fallback-bc,oklch(var(--bc)))',
+        },
       });
     } catch (error) {
       console.error("Plan upgrade error:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update plan. Please try again.",
-        variant: "destructive",
+      toast.error("Failed to update plan. Please try again.", {
+        duration: 4000,
+        style: {
+          background: 'var(--fallback-b1,oklch(var(--b1)))',
+          color: 'var(--fallback-bc,oklch(var(--bc)))',
+          border: '1px solid var(--fallback-error,oklch(var(--er)))',
+        },
       });
     }
   };
@@ -81,7 +85,7 @@ export default function ServicesDashboard() {
   if (!plans?.length) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="alert alert-warning max-w-xl">
+        <div role="alert" className="alert alert-warning max-w-xl">
           <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
           <span>No subscription plans are currently available. Please try again later.</span>
         </div>
@@ -103,8 +107,8 @@ export default function ServicesDashboard() {
 
       {/* Current Plan Usage */}
       {activePlan && (
-        <div className="card card-border bg-base-100">
-          <div className="card-body bg-primary text-primary-content p-6">
+        <div className="card bg-base-100">
+          <div className="bg-primary text-primary-content p-6 rounded-t-box">
             <h2 className="card-title text-xl md:text-2xl flex items-center gap-2">
               <BadgeCheck className="h-5 w-5" /> Current Plan Overview
             </h2>
@@ -116,7 +120,7 @@ export default function ServicesDashboard() {
                 <div className="stat-title text-base-content/70">Current Plan</div>
                 <div className="stat-value text-primary text-2xl">{activePlan?.name}</div>
                 <div className="stat-desc mt-1">
-                  <div className="badge badge-primary badge-soft">
+                  <div className="badge badge-primary">
                     ${activePlan?.price}/month
                   </div>
                 </div>
@@ -155,76 +159,84 @@ export default function ServicesDashboard() {
       <div>
         <h2 className="text-xl md:text-2xl font-bold mb-6 text-center">Available Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => (
-  <div key={plan.id} className="group h-full">
-    <div className={`card card-border h-full bg-base-100 overflow-hidden ${
-      plan.id === activePlan?.id 
-        ? "ring-2 ring-primary" 
-        : "hover:shadow-md"
-    }`}>
-      {/* Use proper card structure to fix border radius issues */}
-      <div className={`p-6 rounded-t-box ${
-        plan.id === activePlan?.id 
-          ? "bg-primary text-primary-content" 
-          : "bg-base-200/50"
-      }`}>
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="text-xl font-bold">{plan.name}</h3>
-            {plan.id === activePlan?.id && (
-              <div className="badge  badge-neutral mt-1">
-                 <svg className="size-[1em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="currentColor" strokeLinejoin="miter" strokeLinecap="butt"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeLinecap="square" stroke-miterlimit="10" strokeWidth="2"></circle><polyline points="7 13 10 16 17 8" fill="none" stroke="currentColor" strokeLinecap="square" stroke-miterlimit="10" strokeWidth="2"></polyline></g></svg>
-                 
-                Active</div>
-            )}
-          </div>
-          <div className="text-end">
-            <div className="text-2xl font-bold">${plan.price}</div>
-            <div className="text-xs opacity-80">per month</div>
-          </div>
+          {plans.map((plan) => (
+            <div key={plan.id} className="group h-full">
+              <div className={`card h-full bg-base-100 overflow-hidden ${
+                plan.id === activePlan?.id 
+                  ? "ring-2 ring-primary" 
+                  : "hover:shadow-md"
+              }`}>
+                {/* Use proper card structure to fix border radius issues */}
+                <div className={`p-6 rounded-t-box ${
+                  plan.id === activePlan?.id 
+                    ? "bg-primary text-primary-content" 
+                    : "bg-base-200/50"
+                }`}>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-xl font-bold">{plan.name}</h3>
+                      {plan.id === activePlan?.id && (
+                        <div className="badge badge-neutral mt-1">
+                          <svg className="size-[1em]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <g fill="currentColor" strokeLinejoin="miter" strokeLinecap="butt">
+                              <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeLinecap="square" strokeMiterlimit="10" strokeWidth="2"></circle>
+                              <polyline points="7 13 10 16 17 8" fill="none" stroke="currentColor" strokeLinecap="square" strokeMiterlimit="10" strokeWidth="2"></polyline>
+                            </g>
+                          </svg>
+                          Active
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-end">
+                      <div className="text-2xl font-bold">${plan.price}</div>
+                      <div className="text-xs opacity-80">per month</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="card-body p-6 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="text-sm text-base-content/70 mb-3">
+                      {plan.no_stores === "unlimited" 
+                        ? "Unlimited stores" 
+                        : `Up to ${plan.no_stores} stores`}
+                    </div>
+                    
+                    <div className="divider my-1"></div>
+                    
+                    <ul className="space-y-3 min-h-44">
+                      {plan?.features?.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <CheckCircle className="w-5 h-5 text-success mt-0.5 shrink-0" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  
+                  <button
+                    className={`btn w-full mt-6 ${
+                      plan.id === activePlan?.id 
+                        ? "btn-disabled" 
+                        : "btn-primary"
+                    }`}
+                    onClick={() => handleUpgradePlan(plan)}
+                    disabled={plan.id === activePlan?.id || updateLoading}
+                  >
+                    {updateLoading && plan.id !== activePlan?.id ? (
+                      <span className="loading loading-spinner loading-xs"></span>
+                    ) : null}
+                    {plan.id === activePlan?.id ? "Current Plan" : `Upgrade to ${plan.name}`}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       
-      <div className="card-body p-6 flex flex-col justify-between">
-        <div className="space-y-4">
-          <div className="text-sm text-base-content/70 mb-3">
-            {plan.no_stores === "unlimited" 
-              ? "Unlimited stores" 
-              : `Up to ${plan.no_stores} stores`}
-          </div>
-          
-          <div className="divider my-1"></div>
-          
-          <ul className="space-y-3 min-h-44">
-            {plan?.features?.map((feature, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <CheckCircle className="w-5 h-5 text-success mt-0.5 shrink-0" />
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        
-        <button
-          className={`btn w-full mt-6 ${
-            plan.id === activePlan?.id 
-              ? "btn-disabled" 
-              : "btn-primary btn-soft"
-          }`}
-          onClick={() => handleUpgradePlan(plan)}
-          disabled={plan.id === activePlan?.id || updateLoading}
-        >
-          {updateLoading && plan.id !== activePlan?.id ? (
-            <span className="loading loading-spinner loading-xs"></span>
-          ) : null}
-          {plan.id === activePlan?.id ? "Current Plan" : `Upgrade to ${plan.name}`}
-        </button>
-      </div>
-    </div>
-  </div>
-))}
-        </div>
-      </div>
+      {/* Add Toaster component */}
+      <Toaster position="top-right" />
     </div>
   );
 }

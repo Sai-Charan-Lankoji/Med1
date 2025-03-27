@@ -5,7 +5,7 @@ import withAuth from "@/lib/withAuth";
 import ProductGallery from "../components/productgallery/page";
 import { Plus, Settings, Package, AlertCircle } from "lucide-react";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
-import { useToast } from "@/hooks/use-toast";
+import toast, { Toaster } from "react-hot-toast";
 import { ProductUploadForm } from "../components/ProductUploadForm/ProductUploadForm";
 
 // Section: Store Selection Modal
@@ -38,13 +38,13 @@ const StoreSelectionModal = ({ isOpen, onClose, stores, onStoreSelect }) => {
           </div>
         )}
         <div className="modal-action">
-          <button className="btn  btn-error" onClick={onClose}>
+          <button className="btn btn-error" onClick={onClose}>
             Close
           </button>
         </div>
       </div>
       <form method="dialog" className="modal-backdrop">
-        <button className="btn  btn-error" onClick={onClose}>close</button>
+        <button className="btn btn-error" onClick={onClose}>close</button>
       </form>
     </dialog>
   );
@@ -76,7 +76,7 @@ const OptionSelectionModal = ({ isOpen, onClose, onOptionSelect }) => {
           </button>
         </div>
         <div className="modal-action">
-          <button className="btn  btn-error" onClick={onClose}>
+          <button className="btn btn-error" onClick={onClose}>
             Close
           </button>
         </div>
@@ -117,7 +117,6 @@ const ProductFormModal = ({ isOpen, onClose, productType, store }) => {
 // Main Product Page
 const Product = () => {
   const { data: stores, isLoading, error } = useGetStores();
-  const { toast } = useToast();
   const [isStoreModalOpen, setIsStoreModalOpen] = useState(false);
   const [isOptionModalOpen, setIsOptionModalOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -126,10 +125,17 @@ const Product = () => {
 
   const handleAddProductClick = () => {
     if (!stores || stores.length === 0) {
-      toast({
-        title: "No Stores",
-        description: "You need to create a store before adding products.",
-        variant: "destructive",
+      toast.error("You need to create a store before adding products.", {
+        icon: <AlertCircle className="h-5 w-5 text-error" />,
+        style: {
+          background: 'var(--fallback-b1,oklch(var(--b1)))',
+          color: 'var(--fallback-bc,oklch(var(--bc)))',
+          borderColor: 'var(--fallback-bc,oklch(var(--bc)))',
+          border: '1px solid',
+          padding: '16px',
+          borderRadius: '0.5rem',
+        },
+        duration: 4000,
       });
       setIsStoreModalOpen(true);
     } else {
@@ -156,13 +162,13 @@ const Product = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 container mx-auto bg-neutral-50 h-vh w-dvw">
+    <div className="p-4 md:p-6 container mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-2xl lg:text-3xl font-bold text-primary mb-4 sm:mb-0">
           Product Management
         </h1>
 
-        <button className="btn btn-primary btn-soft" onClick={handleAddProductClick}>
+        <button className="btn btn-primary" onClick={handleAddProductClick}>
           <Plus className="mr-2 h-4 w-4" /> Add Product
         </button>
       </div>
@@ -172,7 +178,7 @@ const Product = () => {
           <span className="loading loading-spinner loading-lg text-primary"></span>
         </div>
       ) : error ? (
-        <div role="alert" className="alert alert-error alert-soft">
+        <div role="alert" className="alert alert-error">
           <AlertCircle className="h-5 w-5" />
           <span>Failed to load stores</span>
         </div>
@@ -201,6 +207,9 @@ const Product = () => {
           store={selectedStore}
         />
       )}
+      
+      {/* Add the Toaster component */}
+      <Toaster position="top-right" />
     </div>
   );
 };

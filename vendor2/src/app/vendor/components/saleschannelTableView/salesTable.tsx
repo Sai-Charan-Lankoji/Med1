@@ -3,13 +3,14 @@
 import React, { useState } from "react"
 import Image from "next/image"
 import { useGetProducts } from "@/app/hooks/products/useGetProducts"
-import { Checkbox } from "@/components/ui/checkbox"
 
 const SalesTable = () => {
-  const { data: productsData, error, isLoading } = useGetProducts()
+  const { allProducts, isLoading, error } = useGetProducts()
+  const productsData = allProducts?.standard || []
   const [selectedProducts, setSelectedProducts] = useState<string[]>([])
 
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked
     if (checked) {
       const allProductIds = productsData?.map((product: any) => product.id) || []
       setSelectedProducts(allProductIds)
@@ -30,37 +31,50 @@ const SalesTable = () => {
 
   const isAllSelected = productsData?.length > 0 && selectedProducts.length === productsData?.length
 
-  if (isLoading) return <div className="text-center text-white">Loading...</div>
-  if (error) return <div className="text-center text-red-500">Error loading products</div>
+  if (isLoading.any) return (
+    <div className="flex justify-center py-8">
+      <span className="loading loading-spinner loading-md text-primary"></span>
+    </div>
+  )
+  
+  if (error.any || error) return (
+    <div className="alert alert-error">
+      <span>Error loading products</span>
+    </div>
+  )
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="table">
         <thead>
-          <tr className="bg-white/5">
-            <th className="p-3">
-              <Checkbox
+          <tr className="bg-base-200">
+            <th className="w-12">
+              <input
+                type="checkbox"
+                className="checkbox checkbox-sm"
                 checked={isAllSelected}
-                onCheckedChange={handleSelectAll}
+                onChange={handleSelectAll}
                 aria-label="Select all products"
               />
             </th>
-            <th className="p-3 text-left text-sm font-medium text-black/80">Name</th>
-            <th className="p-3 text-left text-sm font-medium text-black/80">Collection</th>
+            <th className="text-base-content/80">Name</th>
+            <th className="text-base-content/80">Collection</th>
           </tr>
         </thead>
         <tbody>
           {productsData?.map((product: any) => (
-            <tr key={product.id} className="border-t border-white/10 hover:bg-white/5">
-              <td className="p-3">
-                <Checkbox
+            <tr key={product.id} className="hover:bg-base-200">
+              <td>
+                <input
+                  type="checkbox"
+                  className="checkbox checkbox-sm"
                   checked={selectedProducts.includes(product.id)}
-                  onCheckedChange={() => handleSelectProduct(product.id)}
+                  onChange={() => handleSelectProduct(product.id)}
                   aria-label={`Select ${product.title}`}
                 />
               </td>
-              <td className="p-3 flex items-center">
-                <div className="w-12 h-12 mr-4 relative">
+              <td className="flex items-center gap-4">
+                <div className="w-12 h-12 relative">
                   <Image
                     src={product.thumbnail || "/placeholder.svg"}
                     alt={product.title}
@@ -70,11 +84,18 @@ const SalesTable = () => {
                     priority
                   />
                 </div>
-                <span className="text-sm text-white">{product.title}</span>
+                <span className="text-base-content">{product.title}</span>
               </td>
-              <td className="p-3 text-sm text-white/80">{product.collection || "-"}</td>
+              <td className="text-base-content/80">{product.collection || "-"}</td>
             </tr>
           ))}
+          {productsData?.length === 0 && (
+            <tr>
+              <td colSpan={3} className="text-center py-8 text-base-content/70">
+                No products available
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>
