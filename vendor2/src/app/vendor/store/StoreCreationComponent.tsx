@@ -5,10 +5,10 @@ import { Plus } from "lucide-react";
 import { useCreateStore } from "@/app/hooks/store/useCreateStore";
 import { useCreateSalesChannel } from "@/app/hooks/saleschannel/useCreateSalesChannel";
 import { useCreatePublishableApiKey } from "@/app/hooks/publishableapikey/useCreatepublishablekey";
-import { useToast } from "@/hooks/use-toast";
 import { useGetPlan } from "@/app/hooks/plan/useGetPlan";
 import { plan_id, vendor_id } from "@/app/utils/constant"; // Import vendor_id
 import { Next_server } from "@/constant";
+import toast, { Toaster } from "react-hot-toast";
 
 const getStoreLimitFromPlan = (plan) => {
   if (!plan || !Array.isArray(plan.features)) return 0;
@@ -26,7 +26,6 @@ const getStoreLimitFromPlan = (plan) => {
 };
 
 const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
-  const { toast } = useToast();
   const { data: currentPlan } = useGetPlan(plan_id);
   const { createStore } = useCreateStore();
   const { createSalesChannel } = useCreateSalesChannel();
@@ -65,10 +64,13 @@ const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isSalesChannelCreated && !canCreateStore()) {
-      toast({
-        title: "Limit Reached",
-        description: "You've reached your store limit. Please upgrade your plan.",
-        variant: "destructive",
+      toast.error("You've reached your store limit. Please upgrade your plan.", {
+        duration: 4000,
+        style: {
+          background: 'var(--fallback-b1,oklch(var(--b1)))',
+          color: 'var(--fallback-bc,oklch(var(--bc)))',
+          border: '1px solid var(--fallback-er,oklch(var(--er)))',
+        },
       });
       return;
     }
@@ -83,13 +85,27 @@ const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
           description: formData.description,
           vendor_id: formData.vendor_id, // Pass vendor_id explicitly
         });
-        toast({ title: "Success", description: "Sales Channel Created" });
+        toast.success("Sales Channel Created", {
+          duration: 3000,
+          style: {
+            background: 'var(--fallback-b1,oklch(var(--b1)))',
+            color: 'var(--fallback-bc,oklch(var(--bc)))',
+            border: '1px solid var(--fallback-bc,oklch(var(--bc)))',
+          },
+        });
         setFormData((prev) => ({ ...prev, salesChannelId: response.id }));
         const apiKeyResponse = await createPublishableApiKey({
           title: response.name,
           created_by: response.vendor_id, // Assuming response includes vendor_id
         });
-        toast({ title: "Success", description: "API Key Created" });
+        toast.success("API Key Created", {
+          duration: 3000,
+          style: {
+            background: 'var(--fallback-b1,oklch(var(--b1)))',
+            color: 'var(--fallback-bc,oklch(var(--bc)))',
+            border: '1px solid var(--fallback-bc,oklch(var(--bc)))',
+          },
+        });
         setFormData((prev) => ({ ...prev, publishableapikey: apiKeyResponse.id }));
         setIsSalesChannelCreated(true);
       } else {
@@ -124,7 +140,14 @@ const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
         };
 
         await createStore(storeData);
-        toast({ title: "Success", description: "Store Created" });
+        toast.success("Store Created", {
+          duration: 3000,
+          style: {
+            background: 'var(--fallback-b1,oklch(var(--b1)))',
+            color: 'var(--fallback-bc,oklch(var(--bc)))',
+            border: '1px solid var(--fallback-bc,oklch(var(--bc)))',
+          },
+        });
         setIsModalOpen(false);
         setIsSalesChannelCreated(false);
         setFormData({
@@ -143,10 +166,13 @@ const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
       }
     } catch (error) {
       console.error("Error during submission:", error);
-      toast({
-        title: "Error",
-        description: (error as any).message || "An error occurred",
-        variant: "destructive",
+      toast.error((error as any).message || "An error occurred", {
+        duration: 4000,
+        style: {
+          background: 'var(--fallback-b1,oklch(var(--b1)))',
+          color: 'var(--fallback-bc,oklch(var(--bc)))',
+          border: '1px solid var(--fallback-er,oklch(var(--er)))',
+        },
       });
     } finally {
       setLoading(false);
@@ -160,10 +186,13 @@ const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
         className="btn btn-primary mb-4"
         onClick={() => {
           if (!canCreateStore()) {
-            toast({
-              title: "Limit Reached",
-              description: "Upgrade your plan to create more stores.",
-              variant: "destructive",
+            toast.error("Upgrade your plan to create more stores.", {
+              duration: 4000,
+              style: {
+                background: 'var(--fallback-b1,oklch(var(--b1)))',
+                color: 'var(--fallback-bc,oklch(var(--bc)))',
+                border: '1px solid var(--fallback-er,oklch(var(--er)))',
+              },
             });
             return;
           }
@@ -304,6 +333,9 @@ const StoreCreationComponent = ({ onStoreCreated, storesData }) => {
           </form>
         </div>
       </div>
+      
+      {/* Add the Toaster component for showing toast notifications */}
+      <Toaster position="top-right" />
     </>
   );
 };

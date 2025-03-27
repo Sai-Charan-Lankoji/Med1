@@ -136,6 +136,26 @@ router.get("/store/:storeId", standardProductController.getAllStandardProductsBy
 
 /**
  * @swagger
+ * /api/standardproducts/vendor/{vendorId}:
+ *   get:
+ *     summary: List all standard products by vendorId
+ *     tags: [StandardProducts]
+ *     parameters:
+ *       - in: path
+ *         name: vendorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Products found
+ *       404:
+ *         description: No products found
+ */
+router.get("/vendor/:vendorId", standardProductController.getAllStandardProductsByVendorId);
+
+/**
+ * @swagger
  * /api/standardproducts/{id}:
  *   get:
  *     summary: Get a standard product by ID

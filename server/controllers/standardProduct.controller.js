@@ -23,6 +23,7 @@ exports.createStandardProduct = async (req, res) => {
       customizable: req.body.customizable === "true" || req.body.customizable === true,
       sale: req.body.sale === "true" || req.body.sale === true,
       store_id: req.body.store_id,
+      vendor_id: req.body.vendor_id, // Make sure this is included
       product_type: "Standard",
     };
 
@@ -159,6 +160,26 @@ exports.getAllStandardProductsByStoreId = async (req, res) => {
     res.status(200).json({ success: true, products });
   } catch (error) {
     console.error("Error fetching standard products:", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * List standard products by vendorId.
+ */
+exports.getAllStandardProductsByVendorId = async (req, res) => {
+  const vendorId = req.params.vendorId;
+
+  try {
+    if (!vendorId) {
+      return res.status(400).json({ success: false, message: "Vendor ID is required" });
+    }
+
+    const products = await standardProductService.getAllStandardProductsByVendorId(vendorId.toString());
+
+    res.status(200).json({ success: true, products });
+  } catch (error) {
+    console.error("Error fetching standard products by vendor:", error);
     res.status(400).json({ success: false, message: error.message });
   }
 };

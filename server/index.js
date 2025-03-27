@@ -16,16 +16,19 @@ const cookieParser = require("cookie-parser");
 
 const app = express();
 app.use(cookieParser());
-const server = http.createServer(app);
+const server = http.createServer(app); 
 const io = new Server(server, {
   cors: {
     origin: [
-      "http://localhost:3000",
-      "http://localhost:7000",
-      "http://localhost:7009",
-      "https://med1-4217.vercel.app",
-      "https://med1-five.vercel.app",
-      "https://med1-p6q2.vercel.app",
+        "http://localhost:7009",
+        "http://localhost:7000",
+        "http://localhost:3000",
+        "http://localhost:5000",
+        "http://localhost:7008",
+        "https://med1-4217.vercel.app",
+        "https://med1-five.vercel.app",
+        "https://med1-p6q2.vercel.app",
+        "https://med1-wyou.onrender.com",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     credentials: true,
@@ -65,6 +68,7 @@ app.use(
         "https://med1-4217.vercel.app",
         "https://med1-five.vercel.app",
         "https://med1-p6q2.vercel.app",
+        "https://med1-wyou.onrender.com",
       ];
       const allowedOrigins = [...predefinedOrigins, ...dynamicAllowedOrigins];
       if (!origin || allowedOrigins.includes(origin)) {

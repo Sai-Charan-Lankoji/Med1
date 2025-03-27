@@ -27,11 +27,11 @@ export default function RootLayout({
         <LoadingProvider>
           <Provider store={store}>
             <QueryClientProvider client={queryClient}>
-              <MedusaProvider
+              {/* <MedusaProvider
                 queryClientProviderProps={{ client: queryClient }}
                 baseUrl="http://localhost:5000"
                 publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
-              >
+              > */}
                 <WishlistProvider>
                 <StoreProvider> 
                   <UserProvider>
@@ -46,7 +46,7 @@ export default function RootLayout({
                   </UserProvider>
                 </StoreProvider>
                 </WishlistProvider>
-              </MedusaProvider>
+              {/* </MedusaProvider> */}
             </QueryClientProvider>
           </Provider>
         </LoadingProvider>

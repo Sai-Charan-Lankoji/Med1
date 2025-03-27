@@ -4,17 +4,6 @@ import React, { useState } from "react"
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { ArrowLeft, Plus } from 'lucide-react'
-import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import withAuth from "@/lib/withAuth"
 import { useGetStores } from "@/app/hooks/store/useGetStores"
 import DashboardComponent from "../../../../components/dashboard/page"
@@ -30,77 +19,68 @@ function PublishableApiKeysTable() {
       title="Publishable API Keys"
       description="Manage your publishable keys to authenticate API requests."
     >
-      {/* <Card className="mb-6 overflow-hidden rounded-[12px] border-0 bg-white/10 backdrop-blur-md shadow-2xl"> */}
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-xl font-bold text-black">
-            API Keys  
-          </CardTitle>
-          <Button
-            variant="secondary"
-            size="sm"
-            className="bg-white/10 text-black hover:bg-white/20 hidden"
-          >
-            <Plus className="mr-2 h-4 w-4" /> Create API Key
-          </Button>
-        </CardHeader>
-        <CardContent>
+      <div className="card bg-base-100">
+        <div className="card-body p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="card-title text-xl font-bold text-base-content">API Keys</h2>
+            <button className="btn btn-primary btn-sm hidden">
+              <Plus className="mr-2 h-4 w-4" /> Create API Key
+            </button>
+          </div>
+          
           {stores?.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-black/80">No API Keys created yet</p>
+              <p className="text-base-content/80">No API Keys created yet</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-b border-white/10">
-                    <TableHead className="text-black">S/No</TableHead>
-                    <TableHead className="text-black">Name</TableHead>
-                    <TableHead className="text-black">Token</TableHead>
-                    <TableHead className="text-black">Created</TableHead>
-                    <TableHead className="text-black">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <table className="table table-md">
+                <thead>
+                  <tr className="border-b border-base-300">
+                    <th className="text-base-content">S/No</th>
+                    <th className="text-base-content">Name</th>
+                    <th className="text-base-content">Token</th>
+                    <th className="text-base-content">Created</th>
+                    <th className="text-base-content">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
                   {stores?.map((apiKey, index) => (
-                    <TableRow key={index} className="border-b border-white/10">
-                      <TableCell className="text-black">{index + 1}</TableCell>
-                      <TableCell className="text-black">
-                        {apiKey.name}
-                      </TableCell>
-                      <TableCell className="text-black">
-                        {apiKey.publishableapikey}
-                      </TableCell>
-                      <TableCell className="text-black">
+                    <tr key={index} className="border-b border-base-300">
+                      <td className="text-base-content">{index + 1}</td>
+                      <td className="text-base-content">{apiKey.name}</td>
+                      <td className="text-base-content">{apiKey.publishableapikey}</td>
+                      <td className="text-base-content">
                         {new Date(apiKey.createdAt).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={apiKey.revoked_at ? "destructive" : "secondary"}
-                          className={`rounded-full text-xs font-medium ${
-                            apiKey.revoked_at 
-                              ? "bg-red-500/10 text-red-500" 
-                              : "bg-green-500/10 text-green-400"
-                          }`}                        >
+                      </td>
+                      <td>
+                        <span className={`badge ${
+                          apiKey.revoked_at 
+                            ? "badge-error badge-outline" 
+                            : "badge-success badge-outline"
+                        }`}>
                           {apiKey.revoked_at ? "Revoked" : "Live"}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
+                        </span>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
           )}
-        </CardContent>
-      {/* </Card> */}
+        </div>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
+        className="mt-6"
       >
         <Link href="/vendor/settings" passHref>
-          <Button variant="ghost" className="text-black hover:bg-white hover:text-fuchsia-700 rounded-[4px]">
+          <button className="btn btn-ghost text-base-content hover:bg-base-200">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back to Settings
-          </Button>
+          </button>
         </Link>
       </motion.div>
     </DashboardComponent>

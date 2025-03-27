@@ -162,7 +162,7 @@ const CartPage = () => {
       return total + pricePerItem * item.quantity;
     }, 0);
     const shippingCost = 0;
-    const taxRate = 0.1;
+    const taxRate = 0.12;
     const taxAmount = subtotal * taxRate;
     const total = subtotal + shippingCost + taxAmount;
     return { subtotal, shippingCost, taxAmount, total };
@@ -530,13 +530,13 @@ const CartPage = () => {
                       <span className="font-medium text-gray-900">₹{calculateSelectedTotals().subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm text-gray-600">
-                      <span>Tax (10%)</span>
-                      <span className="font-medium text-gray-900">₹{calculateSelectedTotals().taxAmount.toFixed(2)}</span>
+                      <span>Shipping</span>
+                      <span className="font-medium text-gray-900">Extra Shipping + <span className="text-blue-600">GST</span></span>
                     </div>
                     <div className="pt-4 border-t border-gray-100">
                       <div className="flex justify-between">
                         <span className="text-lg font-semibold text-gray-900">Total</span>
-                        <span className="text-xl font-bold text-blue-600">₹{calculateSelectedTotals().total.toFixed(2)}</span>
+                        <span className="text-xl font-bold text-blue-600">₹{calculateSelectedTotals().total.toFixed(2)} + <span className="text-[12px] text-blue-500 font-normal">Shipping Charges</span></span>
                       </div>
                     </div>
                   </div>

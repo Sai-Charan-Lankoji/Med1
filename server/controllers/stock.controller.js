@@ -1,8 +1,5 @@
 const stockService = require("../services/stock.service");
 
-/**
- * Create a new stock entry with variants
- */
 exports.createStock = async (req, res) => {
   try {
     const { title, category, stockType, productId, hsnCode, gstPercentage, variants } = req.body;
@@ -42,9 +39,6 @@ exports.createStock = async (req, res) => {
   }
 };
 
-/**
- * Place an order (move to on-hold)
- */
 exports.placeOrder = async (req, res) => {
   try {
     const { variantId, quantity } = req.body;
@@ -61,9 +55,6 @@ exports.placeOrder = async (req, res) => {
   }
 };
 
-/**
- * Cancel an order (move back to available)
- */
 exports.cancelOrder = async (req, res) => {
   try {
     const { variantId, quantity } = req.body;
@@ -80,9 +71,6 @@ exports.cancelOrder = async (req, res) => {
   }
 };
 
-/**
- * Fulfill an order (move to exhausted)
- */
 exports.fulfillOrder = async (req, res) => {
   try {
     const { variantId, quantity } = req.body;
@@ -99,9 +87,6 @@ exports.fulfillOrder = async (req, res) => {
   }
 };
 
-/**
- * Restock a variant
- */
 exports.restockVariant = async (req, res) => {
   try {
     const { variantId, quantity } = req.body;
@@ -118,9 +103,6 @@ exports.restockVariant = async (req, res) => {
   }
 };
 
-/**
- * Get all stock entries
- */
 exports.getAllStocks = async (req, res) => {
   try {
     const stocks = await stockService.getAllStocks();
@@ -130,5 +112,61 @@ exports.getAllStocks = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+exports.getStockByProductId = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    if (!productId) {
+      return res.status(400).json({
+        success: false,
+        message: "productId is required",
+      });
+    }
+
+    const stock = await stockService.getStockByProductId(productId);
+    if (!stock) {
+      return res.status(404).json({
+        success: false,
+        message: `Stock not found for productId: ${productId}`,
+      });
+    }
+
+    res.status(200).json({ success: true, stock });
+  } catch (error) {
+    console.error("Error fetching stock by productId:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+exports.getStockVariantById = async (req, res) => {
+  try {
+    const { variantId } = req.params;
+    if (!variantId) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Variant ID is required",
+      });
+    }
+
+    const stockVariant = await stockService.getStockVariantById(variantId);
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Stock variant retrieved successfully",
+      data: stockVariant,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: error.message,
+      error: {
+        code: "INTERNAL_SERVER_ERROR",
+        details: error.message,
+      },
+    });
+  }
+}
 
 module.exports = exports;

@@ -4,7 +4,6 @@
 import React, { useCallback, useMemo, useState, useEffect } from "react";
 import withAuth from "@/lib/withAuth";
 import { useGetOrders } from "@/app/hooks/orders/useGetOrders";
-import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useGetCustomers } from "@/app/hooks/customer/useGetCustomers";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { useRouter } from "next/navigation";
@@ -21,6 +20,9 @@ const Order = () => {
   const [selectedStore, setSelectedStore] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [updatingOrder, setUpdatingOrder] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState("");
   const router = useRouter();
   const pageSize = 8;
 
@@ -104,8 +106,82 @@ const Order = () => {
     setIsRefreshing(false);
   };
 
+  const handleFulfillmentChange = async (orderId, newStatus) => {
+    try {
+      setIsUpdating(true);
+      setUpdateError("");
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authorization headers if needed
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: 'fulfillment_status',
+          value: newStatus
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update fulfillment status');
+      }
+      
+      // Success! Refetch orders to update the UI
+      refetch();
+      
+    } catch (error) {
+      console.error("Error updating fulfillment status:", error);
+      setUpdateError(
+        error instanceof Error ? error.message : "Failed to update status. Please try again."
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handlePaymentChange = async (orderId, newStatus) => {
+    try {
+      setIsUpdating(true);
+      setUpdateError("");
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add authorization headers if needed
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          type: 'payment_status',
+          value: newStatus
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update payment status');
+      }
+      
+      // Success! Refetch orders to update the UI
+    } catch (error) {
+      console.error("Error updating payment status:", error);
+      setUpdateError(
+        error instanceof Error ? error.message : "Failed to update status. Please try again."
+      );
+      console.error("Error updating payment status:", error);
+      setUpdateError(
+        error instanceof Error ? error.message : "Failed to update status. Please try again."
+      );
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const OrderSkeleton = () => (
-    <div className="p-4 md:p-6 container mx-auto max-w-7xl">
+    <div className="p-4 md:p-6 container mx-auto w-full">
       <div className="animate-pulse">
         <div className="flex justify-between mb-6">
           <div className="h-8 w-48 bg-base-200 mb-2"></div>
@@ -145,7 +221,7 @@ const Order = () => {
   if (ordersLoading || customersLoading || storesLoading) return <OrderSkeleton />;
   if (ordersError) {
     return (
-      <div className="p-4 md:p-6 container mx-auto max-w-9xl bg-base-200">
+      <div className="p-4 md:p-6 container mx-auto w-full bg-base-200">
         <div className="card card-border bg-base-100 shadow-2xl">
           <div className="card-body items-center text-center">
             <h2 className="card-title text-xl text-error">Error Loading Orders</h2>
@@ -160,7 +236,7 @@ const Order = () => {
   }
 
   return (
-    <div className="p-4 md:p-6 container mx-auto max-w-9xl bg-base-200">
+    <div className="p-4 md:p-6 container mx-auto w-full bg-base-200">
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-2xl md:text-3xl font-bold text-primary flex items-center gap-2">
@@ -328,14 +404,54 @@ const Order = () => {
                         </div>
                       </td>
                       <td className="text-center">
-                        <span className={`badge ${order.fulfillment_status === "fulfilled" ? "badge-success badge-soft" : "badge-secondary badge-soft"}`}>
-                          {order.fulfillment_status}
-                        </span>
+                        <div className="dropdown dropdown-end">
+                          <div tabIndex={0} role="button" className={`badge badge-soft cursor-pointer ${
+                            order.fulfillment_status === "fulfilled" ? "badge-success" : "badge-secondary"
+                          }`}>
+                            {order.fulfillment_status}
+                          </div>
+                          <div tabIndex={0} className="dropdown-content z-[1] card card-compact shadow bg-base-100 w-56">
+                            <div className="card-body">
+                              <h3 className="font-medium mb-2">Update Fulfillment</h3>
+                              <div className="flex flex-col gap-2">
+                                {["not_fulfilled", "partially_fulfilled", "fulfilled", "shipped", "canceled"].map((status) => (
+                                  <button 
+                                    key={status} 
+                                    onClick={() => handleFulfillmentChange(order.id, status)}
+                                    className={`btn btn-sm ${order.fulfillment_status === status ? 'btn-primary' : 'btn-ghost'}`}
+                                  >
+                                    {status.replace(/_/g, ' ')}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       <td className="text-center">
-                        <span className={`badge ${order.payment_status === "captured" ? "badge-success badge-soft" : "badge-warning badge-soft"}`}>
-                          {order.payment_status}
-                        </span>
+                        <div className="dropdown dropdown-end">
+                          <div tabIndex={0} role="button" className={`badge badge-soft cursor-pointer ${
+                            order.payment_status === "captured" ? "badge-success" : "badge-warning"
+                          }`}>
+                            {order.payment_status}
+                          </div>
+                          <div tabIndex={0} className="dropdown-content z-[1] card card-compact shadow bg-base-100 w-56">
+                            <div className="card-body">
+                              <h3 className="font-medium mb-2">Update Payment</h3>
+                              <div className="flex flex-col gap-2">
+                                {["awaiting", "captured", "refunded", "canceled"].map((status) => (
+                                  <button 
+                                    key={status} 
+                                    onClick={() => handlePaymentChange(order.id, status)}
+                                    className={`btn btn-sm ${order.payment_status === status ? 'btn-primary' : 'btn-ghost'}`}
+                                  >
+                                    {status}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       <td className="text-center">
                         <span className="badge badge-outline">{getStoreName(order.store_id)}</span>
@@ -371,6 +487,19 @@ const Order = () => {
           </div>
         )}
       </div>
+
+      {/* Status Update Error Toast */}
+      {updateError && (
+        <div className="toast toast-end toast-bottom z-50">
+          <div className="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{updateError}</span>
+            <button onClick={() => setUpdateError("")} className="btn btn-sm">Dismiss</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

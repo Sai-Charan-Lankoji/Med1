@@ -16,6 +16,37 @@ class VendorService {
     return await Vendor.findAll({ include: ["address"] });
   }
 
+  async updateVendorPlan(vendorId, { plan_id, plan }) {
+    try {
+      if (!vendorId || !plan_id || !plan) {
+        throw new Error("Vendor ID, plan ID, and plan name are required");
+      }
+
+      const vendor = await Vendor.findByPk(vendorId, {
+        include: [{ model: Plan, as: "subscription_plan" }],
+      });
+      if (!vendor) {
+        throw new Error("Vendor not found");
+      }
+
+      const planExists = await Plan.findByPk(plan_id);
+      if (!planExists) {
+        throw new Error("Plan not found");
+      }
+
+      const updatedVendor = await vendor.update({
+        plan_id,
+        plan,
+        next_billing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // Reset billing cycle
+      });
+
+      return updatedVendor;
+    } catch (error) {
+      console.error("Error updating vendor plan:", error.message);
+      throw error;
+    }
+  }
+
   async getVendorById(id) {
     const vendor = await Vendor.findByPk(id, {
       include: [

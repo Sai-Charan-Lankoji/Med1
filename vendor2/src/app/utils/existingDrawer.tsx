@@ -4,7 +4,8 @@ import { CornerUpLeft, Search, X } from "lucide-react";
 import Image from "next/image";
 
 const ExistingDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ isOpen, onClose }) => {
-  const { data: productsData, error, isLoading } = useGetProducts();
+  const { allProducts, error, isLoading } = useGetProducts();
+  const productsData = [...allProducts.custom, ...allProducts.standard];
 
   return (
     <div
@@ -38,12 +39,11 @@ const ExistingDrawer: React.FC<{ isOpen: boolean; onClose: () => void }> = ({ is
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           </div>
 
-          {/* Product List */}
-          {isLoading ? (
+          {isLoading.any ? (
             <div className="flex justify-center items-center h-full">
               <span className="loading loading-spinner loading-lg"></span>
             </div>
-          ) : error ? (
+          ) : error.any ? (
             <p className="text-red-500 text-center">Error loading products</p>
           ) : (
             <ul>

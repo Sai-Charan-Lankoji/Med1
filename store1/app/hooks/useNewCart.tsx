@@ -1,4 +1,3 @@
-// hooks/useNewCart.js
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../reducer/rootReducer";
 import { useUserContext } from "@/context/userContext";
@@ -14,7 +13,7 @@ import {
   IStandardCartItem,
 } from "@/@types/models";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 
 const baseUrl = NEXT_PUBLIC_API_URL;
 
@@ -22,9 +21,32 @@ export const useNewCart = () => {
   const { email } = useUserContext();
   const dispatch = useDispatch();
   const cart = useSelector((state: RootState) => state.cart);
+  const [customerId, setCustomerId] = useState("");
 
-  const customerId =
-    typeof window !== "undefined" ? sessionStorage.getItem("customerId") : null;
+  const fetchCurrentUser = async () => {
+    try {
+      const meResponse = await fetch(`${baseUrl}/api/customer/me`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (!meResponse.ok) {
+        throw new Error("Failed to fetch user details");
+      }
+
+      const customer = await meResponse.json();
+      setCustomerId(customer.data.id);
+    } catch (error: any) {
+      dispatch(setError(error.message));
+    }
+  };
+
+  useEffect(() => {
+    fetchCurrentUser();
+  }, []);
 
   const fetchCartData = useCallback(async () => {
     if (!customerId) return;
@@ -68,7 +90,7 @@ export const useNewCart = () => {
       designState: IDesign[],
       propsState: IProps,
       productId?: string,
-      quantity: number = 1, // Added quantity with default value
+      quantity: number = 1,
       selectedSize?: string,
       selectedColor?: string
     ): Promise<boolean> => {
@@ -95,7 +117,7 @@ export const useNewCart = () => {
             designs: processedDesigns,
             designState,
             propsState,
-            quantity, // Use provided quantity
+            quantity,
             selected_size: selectedSize || null,
             selected_color: selectedColor || null,
             email: email || null,
@@ -126,7 +148,7 @@ export const useNewCart = () => {
       productId: string,
       quantity: number,
       selectedSize?: string,
-      selectedColor?: string, // Hex string (e.g., "#FFFFFF")
+      selectedColor?: string,
       selectedVariantId?: string
     ): Promise<boolean> => {
       if (!customerId) return false;
@@ -143,7 +165,7 @@ export const useNewCart = () => {
             product_type: "standard",
             quantity,
             selected_size: selectedSize || null,
-            selected_color: selectedColor || null, // Hex string
+            selected_color: selectedColor || null,
             selected_variant: selectedVariantId || null,
             email: email || null,
           }),

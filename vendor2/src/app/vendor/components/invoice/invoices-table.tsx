@@ -1,5 +1,3 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
 const invoices = [
   {
     id: "INV001",
@@ -29,26 +27,35 @@ const invoices = [
 
 export function InvoicesTable() {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Invoice ID</TableHead>
-          <TableHead>Amount</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Date</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {invoices.map((invoice) => (
-          <TableRow key={invoice.id}>
-            <TableCell>{invoice.id}</TableCell>
-            <TableCell>${invoice.amount.toFixed(2)}</TableCell>
-            <TableCell>{invoice.status}</TableCell>
-            <TableCell>{invoice.date}</TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <div className="overflow-x-auto">
+      <table className="table">
+        <thead>
+          <tr className="bg-base-200">
+            <th>Invoice ID</th>
+            <th>Amount</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {invoices.map((invoice) => (
+            <tr key={invoice.id} className="hover:bg-base-200">
+              <td className="font-medium">{invoice.id}</td>
+              <td>${invoice.amount.toFixed(2)}</td>
+              <td>
+                <span className={`badge ${
+                  invoice.status === "Paid" 
+                    ? "badge-success badge-outline" 
+                    : "badge-warning badge-outline"
+                }`}>
+                  {invoice.status}
+                </span>
+              </td>
+              <td className="text-base-content/70">{invoice.date}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   )
 }
-

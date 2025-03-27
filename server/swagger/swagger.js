@@ -13,6 +13,10 @@ const swaggerOptions = {
       {
         url: "http://localhost:5000",
       },
+      {
+        url: process.env.RENDER_EXTERNAL_URL || "https://med1-wyou.onrender.com/",
+        description: "Production server"
+      }
     ],
     components: {
       securitySchemes: {
@@ -29,7 +33,7 @@ const swaggerOptions = {
       },
     ],
   },
-  apis: ["./routes/*.js"], // Make sure this path correctly matches where your route files are located
+  apis: ["./routes/*.js","./routes/*/*.js"],
 };
 
 const swaggerSpecs = swaggerJsDoc(swaggerOptions);

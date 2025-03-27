@@ -235,3 +235,31 @@ exports.listOrdersByCustomer = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 };
+
+/**
+ * Update order status (fulfillment or payment)
+ */
+exports.updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, value } = req.body;
+    
+    if (!type || !value) {
+      return res.status(400).json({ 
+        success: false, 
+        message: "Status type and value are required" 
+      });
+    }
+    
+    const order = await orderService.updateOrderStatus(id, type, value);
+    
+    res.status(200).json({ 
+      success: true, 
+      message: "Order status updated successfully",
+      data: order
+    });
+    
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

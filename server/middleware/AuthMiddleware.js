@@ -69,7 +69,6 @@ const authMiddleware = async (req, res, next) => {
 
     logger.error("Authentication error:", {
       error: error.message,
-      token: req.cookies.auth_token || req.headers.authorization,
       path: req.path,
     });
 
