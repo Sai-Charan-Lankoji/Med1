@@ -2,178 +2,188 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus } from "lucide-react";
-import { createPlan, updatePlan, getAllPlans, Plan, PlanData } from "@/app/api/plan/route"; // Added getAllPlans to imports
+import { Plan, PlanData } from "@/app/api/plan/route";
 
-type PlanModalProps = {
+interface PlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  plan?: Plan | null;
-  onPlanSaved: (updatedPlans: Plan[]) => void;
+  plan: Plan | null;
+  onPlanSaved: () => void;
   cookieHeader: string;
-};
+}
 
-export default function PlanModal({ isOpen, onClose, plan, onPlanSaved, cookieHeader }: PlanModalProps) {
-  const [formData, setFormData] = useState<Plan>(() => {
-    const defaultPlan: Plan = {
-      id: "",
-      name: "",
-      price: "",
-      features: [],
-      discount: 0,
-      isActive: false,
-      created_at: "",
-      updated_at: "",
-      deleted_at: null,
-      description: "",
-      no_stores: "",
-      commission_rate: 0,
-    };
-    return plan ? { ...defaultPlan, ...plan, features: plan.features || [] } : defaultPlan;
+export default function PlanModal({
+  isOpen,
+  onClose,
+  plan,
+  onPlanSaved,
+  cookieHeader,
+}: PlanModalProps) {
+  const [formData, setFormData] = useState<PlanData>({
+    name: "",
+    price: "",
+    description: "",
+    features: [],
+    discount: 0,
+    isActive: false,
+    no_stores: "",
+    commission_rate: 0,
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const defaultPlan: Plan = {
-      id: "",
-      name: "",
-      price: "",
-      features: [],
-      discount: 0,
-      isActive: false,
-      created_at: "",
-      updated_at: "",
-      deleted_at: null,
-      description: "",
-      no_stores: "",
-      commission_rate: 0,
-    };
-    setFormData(plan ? { ...defaultPlan, ...plan, features: plan.features || [] } : defaultPlan);
+    if (plan) {
+      setFormData({
+        name: plan.name,
+        price: plan.price,
+        description: plan.description || "",
+        features: plan.features || [],
+        discount: plan.discount || 0,
+        isActive: plan.isActive || false,
+        no_stores: plan.no_stores || "",
+        commission_rate: plan.commission_rate || 0,
+      });
+    } else {
+      setFormData({
+        name: "",
+        price: "",
+        description: "",
+        features: [],
+        discount: 0,
+        isActive: false,
+        no_stores: "",
+        commission_rate: 0,
+      });
+    }
   }, [plan]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const planData: PlanData = {
-        name: formData.name,
-        price: formData.price,
-        description: formData.description,
-        features: formData.features,
-        discount: formData.discount,
-        isActive: formData.isActive,
-        no_stores: formData.no_stores,
-        commission_rate: formData.commission_rate,
-      };
+    setIsLoading(true);
+    setError(null);
 
-      if (plan) {
-        await updatePlan(plan.id, planData, cookieHeader);
-      } else {
-        await createPlan(planData, cookieHeader);
+    try {
+      const url = plan?.id ? `/api/plan?id=${plan.id}` : '/api/plan';
+      const method = plan?.id ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: cookieHeader,
+        },
+        credentials: 'include',
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Failed to ${plan?.id ? 'update' : 'create'} plan`);
       }
-      const updatedPlans = await getAllPlans(cookieHeader); // Now recognized with the import
-      onPlanSaved(updatedPlans);
+
+      onPlanSaved();
       onClose();
     } catch (err) {
-      console.error(`${plan ? "Update" : "Create"} plan error:`, err);
-      alert(`Failed to ${plan ? "update" : "create"} plan`);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <dialog open={isOpen} className="modal modal-bottom sm:modal-middle animate-fade-in-up">
-      <div className="modal-box bg-base-100 shadow-2xl border border-base-300 rounded-xl">
-        <h3 className="font-bold text-xl flex items-center gap-2 text-primary">
-          {plan ? "Edit Plan" : <><Plus className="h-6 w-6" /> Add New Plan</>}
-        </h3>
-        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-          <div className="form-control">
-            <label className="label"><span className="label-text font-semibold">Name</span></label>
+    <div className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg">{plan ? 'Edit Plan' : 'Add New Plan'}</h3>
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <div>
+            <label className="label">Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
+              className="input input-bordered w-full"
               required
             />
           </div>
-          <div className="form-control">
-            <label className="label"><span className="label-text font-semibold">Description</span></label>
-            <input
-              type="text"
-              value={formData.description || ""}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
-            />
-          </div>
-          <div className="form-control">
-            <label className="label"><span className="label-text font-semibold">Price</span></label>
+          <div>
+            <label className="label">Price</label>
             <input
               type="number"
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
+              className="input input-bordered w-full"
               required
             />
           </div>
-          <div className="form-control">
-            <label className="label"><span className="label-text font-semibold">Features (comma-separated)</span></label>
-            <input
-              type="text"
-              value={formData.features?.join(", ") || ""}
-              onChange={(e) => setFormData({ ...formData, features: e.target.value.split(",").map((f) => f.trim()) })}
-              className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
+          <div>
+            <label className="label">Description</label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="textarea textarea-bordered w-full"
             />
           </div>
-          <div className="form-control">
-            <label className="label"><span className="label-text font-semibold">Number of Stores</span></label>
+          <div>
+            <label className="label">Features (comma-separated)</label>
+            <input
+              type="text"
+              value={formData.features?.join(',')}
+              onChange={(e) => setFormData({ ...formData, features: e.target.value.split(',') })}
+              className="input input-bordered w-full"
+            />
+          </div>
+          <div>
+            <label className="label">Discount (%)</label>
+            <input
+              type="number"
+              value={formData.discount}
+              onChange={(e) => setFormData({ ...formData, discount: Number(e.target.value) })}
+              className="input input-bordered w-full"
+            />
+          </div>
+          <div>
+            <label className="label">Number of Stores</label>
             <input
               type="text"
               value={formData.no_stores}
               onChange={(e) => setFormData({ ...formData, no_stores: e.target.value })}
-              className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
-              required
+              className="input input-bordered w-full"
             />
           </div>
-          <div className="form-control">
-            <label className="label"><span className="label-text font-semibold">Commission Rate (%)</span></label>
+          <div>
+            <label className="label">Commission Rate (%)</label>
             <input
               type="number"
               value={formData.commission_rate}
-              onChange={(e) => setFormData({ ...formData, commission_rate: parseFloat(e.target.value) || 0 })}
-              className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
-              required
-            />
-          </div>
-          <div className="form-control">
-            <label className="label"><span className="label-text font-semibold">Discount (%)</span></label>
-            <input
-              type="number"
-              value={formData.discount}
-              onChange={(e) => setFormData({ ...formData, discount: parseFloat(e.target.value) || 0 })}
-              className="input input-bordered w-full focus:ring-2 focus:ring-primary transition-all duration-300"
+              onChange={(e) => setFormData({ ...formData, commission_rate: Number(e.target.value) })}
+              className="input input-bordered w-full"
             />
           </div>
           <div className="form-control">
             <label className="label cursor-pointer">
-              <span className="label-text font-semibold">Active</span>
+              <span className="label-text">Active</span>
               <input
                 type="checkbox"
                 checked={formData.isActive}
                 onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                className="checkbox checkbox-primary"
+                className="checkbox"
               />
             </label>
           </div>
+          {error && <div className="alert alert-error">{error}</div>}
           <div className="modal-action">
-            <button type="submit" className="btn btn-primary hover:scale-105 transition-all duration-300">
-              {plan ? "Update" : "Create"}
+            <button type="submit" className="btn btn-primary" disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save'}
             </button>
-            <button type="button" onClick={onClose} className="btn btn-outline hover:scale-105 transition-all duration-300">
+            <button type="button" className="btn" onClick={onClose} disabled={isLoading}>
               Cancel
             </button>
           </div>
         </form>
       </div>
-      <div className="modal-backdrop" onClick={onClose}></div>
-    </dialog>
+    </div>
   );
 }

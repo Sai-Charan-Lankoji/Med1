@@ -17,7 +17,8 @@ export default function PlansWithSearch({
   initialError: string | null;
   cookieHeader: string;
 }) {
-  const [filteredPlans, setFilteredPlans] = useState<Plan[]>(initialPlans);
+  const [plans, setPlans] = useState<Plan[]>(initialPlans || []);
+  const [filteredPlans, setFilteredPlans] = useState<Plan[]>(initialPlans || []);
   const [query, setQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -30,28 +31,51 @@ export default function PlansWithSearch({
 
   useEffect(() => {
     setIsMounted(true);
-    setFilteredPlans(initialPlans);
+    setPlans(initialPlans || []);
+    setFilteredPlans(initialPlans || []);
   }, [initialPlans]);
 
-  const refreshPlans = (updatedPlans: Plan[]) => {
-    setFilteredPlans(updatedPlans);
-  };
+  const refreshPlans = async () => {
+    try {
+      const response = await fetch('/api/plan', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: cookieHeader || '',
+        },
+        credentials: 'include',
+        cache: 'no-store',
+      });
 
-  const activePlans = filteredPlans.filter((plan) => plan.isActive);
-  const inactivePlans = filteredPlans.filter((plan) => !plan.isActive);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || `Failed to fetch plans: ${response.status}`);
+      }
+
+      // Ensure we set an array even if the response structure is unexpected
+      const newPlans = Array.isArray(data.plans) ? data.plans : [];
+      console.log('Fetched plans:', newPlans); // Debug log
+      setPlans(newPlans);
+      setFilteredPlans(newPlans);
+    } catch (error) {
+      console.error('Error refreshing plans:', error);
+      setPlans([]);
+      setFilteredPlans([]);
+    }
+  };
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
     setCurrentPage(1);
     if (!value) {
-      setFilteredPlans(initialPlans);
+      setFilteredPlans(plans);
       return;
     }
     const lowerQuery = value.toLowerCase();
-    const filtered = initialPlans.filter((plan) =>
+    const filtered = Array.isArray(plans) ? plans.filter((plan) =>
       plan.name.toLowerCase().includes(lowerQuery)
-    );
+    ) : [];
     setFilteredPlans(filtered);
   };
 
@@ -66,6 +90,10 @@ export default function PlansWithSearch({
       totalPlans,
     };
   };
+
+  // Ensure filteredPlans is an array before filtering
+  const activePlans = Array.isArray(filteredPlans) ? filteredPlans.filter((plan) => plan.isActive) : [];
+  const inactivePlans = Array.isArray(filteredPlans) ? filteredPlans.filter((plan) => !plan.isActive) : [];
 
   const activePaginated = paginatePlans(activePlans);
   const inactivePaginated = paginatePlans(inactivePlans);
@@ -223,9 +251,9 @@ export default function PlansWithSearch({
         <div className="text-center py-16 animate-fade-in">
           <h3 className="text-2xl font-semibold text-base-content">No plans found</h3>
           <p className="mt-2 text-base-content/60">
-            {initialPlans.length === 0 ? "Start by adding a new plan." : "Try adjusting your search."}
+            {plans.length === 0 ? "Start by adding a new plan." : "Try adjusting your search."}
           </p>
-          {initialPlans.length === 0 && (
+          {plans.length === 0 && (
             <button
               onClick={() => {
                 setEditingPlan(null);

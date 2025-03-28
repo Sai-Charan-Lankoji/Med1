@@ -124,12 +124,12 @@ export async function getOverallAnalytics(cookieHeader?: string): Promise<Analyt
     throw new Error(errorData.message || `Failed to fetch analytics: ${response.statusText}`);
   }
 
-  const data: { success: boolean; analytics: { status: string; statusCode: number; message: string; data: AnalyticsData } } = await response.json();
-  if (!data.success || data.analytics.status !== "success" || !data.analytics.data) {
+  const data: { status: string; statusCode: number; message: string; data: AnalyticsData } = await response.json();
+  if (data.status !== "success" || !data.data) {
     throw new Error("Invalid analytics response format");
   }
 
-  return data.analytics.data;
+  return data.data;
 }
 
 // Fetch analytics for a specific vendor (SSR)
@@ -150,12 +150,12 @@ export async function getAnalyticsByVendor(vendorId: string, cookieHeader?: stri
     throw new Error(errorData.message || `Failed to fetch vendor analytics: ${response.statusText}`);
   }
 
-  const data: { success: boolean; breakdown: { status: string; statusCode: number; message: string; data: VendorAnalyticsData } } = await response.json();
-  if (!data.success || data.breakdown.status !== "success" || !data.breakdown.data) {
+  const data: { status: string; statusCode: number; message: string; data: VendorAnalyticsData } = await response.json();
+  if (data.status !== "success" || !data.data) {
     throw new Error("Invalid vendor analytics response format");
   }
 
-  return data.breakdown.data;
+  return data.data;
 }
 
 // Notify a specific vendor (client-side)

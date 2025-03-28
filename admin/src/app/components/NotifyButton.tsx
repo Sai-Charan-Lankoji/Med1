@@ -1,8 +1,8 @@
-// src/app/components/NotifyButton.tsx
+// src/app/components/NotifyButton.tsx (with optional vendorId)
 "use client";
 import { useState } from "react";
 import { FaDollarSign, FaCheckCircle } from "react-icons/fa";
-import { notifyVendor, notifyAllVendors } from "@/app/api/billingServices/route";
+import { notifyVendor } from "@/app/api/billingServices/route";
 
 export default function NotifyButton({ vendorId }: { vendorId?: string }) {
   const [isNotifying, setIsNotifying] = useState(false);
@@ -10,26 +10,26 @@ export default function NotifyButton({ vendorId }: { vendorId?: string }) {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleNotify = async () => {
+    if (!vendorId) return; 
+
     setIsNotifying(true);
     try {
-      if (vendorId) {
-        await notifyVendor(vendorId);
-      } else {
-        await notifyAllVendors();
-      }
-      setShowSuccessModal(true); // Show modern success modal
-      setTimeout(() => setShowSuccessModal(false), 3000); // Auto-close after 3s
+      await notifyVendor(vendorId);
+      setShowSuccessModal(true);
+      setTimeout(() => setShowSuccessModal(false), 3000);
     } catch (err) {
+      console.error('Notification error:', err);
       setErrorMessage(`Error: ${err instanceof Error ? err.message : "Unknown"}`);
-      setTimeout(() => setErrorMessage(null), 3000); // Clear error after 3s
+      setTimeout(() => setErrorMessage(null), 3000);
     } finally {
       setIsNotifying(false);
     }
   };
 
+  if (!vendorId) return null; 
+
   return (
     <>
-      {/* Notify Button */}
       <button
         onClick={handleNotify}
         disabled={isNotifying}
@@ -40,10 +40,9 @@ export default function NotifyButton({ vendorId }: { vendorId?: string }) {
         ) : (
           <FaDollarSign className="w-5 h-5" />
         )}
-        {isNotifying ? "Notifying..." : vendorId ? "Notify Vendor" : "Notify All"}
+        {isNotifying ? "Notifying..." : "Notify Vendor"}
       </button>
 
-      {/* Success Modal */}
       {showSuccessModal && (
         <div className="modal modal-open">
           <div className="modal-box bg-gradient-to-r from-green-400 to-teal-500 text-white shadow-xl rounded-xl p-6 max-w-md mx-auto">
@@ -51,9 +50,7 @@ export default function NotifyButton({ vendorId }: { vendorId?: string }) {
               <FaCheckCircle className="w-8 h-8 animate-pulse" />
               <div>
                 <h3 className="text-2xl font-bold">Message Sent!</h3>
-                <p className="text-lg">
-                  {vendorId ? "Vendor notified successfully." : "All vendors notified successfully!"}
-                </p>
+                <p className="text-lg">Vendor notified successfully.</p>
               </div>
             </div>
             <div className="modal-action mt-4">
@@ -68,7 +65,6 @@ export default function NotifyButton({ vendorId }: { vendorId?: string }) {
         </div>
       )}
 
-      {/* Error Toast */}
       {errorMessage && (
         <div className="toast toast-end">
           <div className="alert alert-error shadow-lg">

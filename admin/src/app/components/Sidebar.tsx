@@ -4,8 +4,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FaUsers, FaDollarSign, FaCog, FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { Settings, LogOut } from "lucide-react";
+import { FaUsers, FaDollarSign, FaCog, FaChevronDown } from "react-icons/fa";
+import { LogOut } from "lucide-react";
 import Image from "next/image";
 import clsx from "clsx";
 
@@ -19,7 +19,6 @@ type User = {
 
 export default function Sidebar({ user }: { user: User }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -51,83 +50,92 @@ export default function Sidebar({ user }: { user: User }) {
   return (
     <aside
       className={clsx(
-        "min-h-screen bg-base-200 transition-all duration-300 ease-in-out flex flex-col border-r border-base-300 shadow-sm relative",
+        "min-h-screen bg-base-200 transition-all duration-300 ease-in-out flex flex-col border-r border-base-300 shadow-md",
         isCollapsed ? "w-20" : "w-64"
       )}
     >
-      {/* Toggle Button at Top Right */}
-      <button
-        className="btn btn-ghost btn-sm text-base-content/70 hover:text-base-content absolute top-2 right-2 z-10"
-        onClick={toggleSidebar}
-      >
-        {isCollapsed ? <FaChevronRight className="w-5 h-5" /> : <FaChevronLeft className="w-5 h-5" />}
-      </button>
-
-      {/* Header */}
-      <div className="p-4 pt-12 flex items-center justify-between border-b bg-base-100">
-        {!isCollapsed && <span className="text-xl font-bold text-base-content">Dashboard</span>}
+      {/* Header with Toggle Button */}
+      <div className="p-3 flex items-center justify-between border-b border-b-gray-400 bg-base-100 shadow-sm">
+        {!isCollapsed && (
+          <span className="text-xl font-bold text-primary">Dashboard</span>
+        )}
+        <button
+          className="btn btn-ghost btn-circle text-base-content hover:bg-base-200 transition-all duration-300"
+          onClick={toggleSidebar}
+        >
+          <FaChevronDown
+            className={clsx(
+              "w-5 h-5 transition-transform",
+              isCollapsed ? "rotate-90" : "-rotate-90"
+            )}
+          />
+        </button>
       </div>
 
       {/* Profile Section */}
-      <div className="p-4 border-b bg-base-100">
-        <div
-          className={clsx(
-            "dropdown dropdown-hover w-full",
-            isCollapsed ? "dropdown-end" : "dropdown-bottom"
-          )}
-        >
-          <button
+      <div className="p-4 border-b bg-base-100 shadow-sm">
+        <div className="dropdown">
+          <label
             tabIndex={0}
             className={clsx(
-              "flex items-center w-full p-2 rounded-lg hover:bg-base-200 transition-colors",
-              isCollapsed ? "justify-center" : "justify-start space-x-3"
+              "btn btn-ghost w-full flex items-center rounded-lg hover:bg-base-200 transition-all duration-300 cursor-pointer",
+              isCollapsed ? "justify-center p-0" : "justify-start p-2 space-x-3"
             )}
-            onClick={() => !isCollapsed && setIsDropdownOpen(!isDropdownOpen)}
           >
-            {user.profilePic ? (
-              <Image
-                src={user.profilePic}
-                alt="Profile"
-                className="w-10 h-10 rounded-full border-2 border-base-300"
-                width={40}
-                height={40}
-              />
-            ) : (
-              <div className="avatar avatar-online">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-focus flex items-center justify-center ring-2 ring-base-100">
-                  <span className="text-lg font-semibold text-primary-content">{getInitial()}</span>
+            <div className="relative flex-shrink-0">
+              {user.profilePic ? (
+                <Image
+                  src={user.profilePic}
+                  alt="Profile"
+                  className="w-10 h-10 rounded-full border-2 border-base-300"
+                  width={36}
+                  height={36}
+                />
+              ) : (
+                <div className="avatar avatar-online avatar-placeholder">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-focus flex items-center justify-center  ring-2 ring-base-100">
+                    <span className="text-lg  font-semibold text-primary-content">
+                      {getInitial()}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
             {!isCollapsed && (
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-base-content truncate">
-                    {`${user.first_name} ${user.last_name}`}
+                    {`${user.first_name} ${user.last_name}` || "Admin"}
                   </span>
-                  <span className="badge badge-primary badge-sm">{user.role}</span>
+                  <span className="badge badge-primary badge-sm text-primary-content">
+                    {user.role || "N/A"}
+                  </span>
                 </div>
-                <span className="text-xs text-base-content/70 truncate max-w-[150px]">{user.email}</span>
+                <span className="text-xs text-base-content/70 truncate max-w-[150px]">
+                  {user.email || "No email"}
+                </span>
               </div>
             )}
-          </button>
-
-          {/* Dropdown Menu */}
-          {!isCollapsed && isDropdownOpen && (
+          </label>
+          {!isCollapsed && (
             <ul
               tabIndex={0}
-              className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-56 border border-base-200 z-10"
+              className="dropdown-content menu shadow-md bg-base-100 rounded-md w-48 border border-base-300 mt-2"
             >
               <li>
-                <Link href="/admin/settings" className="flex items-center text-base-content">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </Link>
+                <button className="btn btn-outline btn-success w-full">
+                  <Link
+                    href="/forget-password" // Change to forgot-password initially
+                    className="flex items-center hover:text-base-300 text-success transition-all duration-300 py-2 px-4"
+                  >
+                    Reset Password
+                  </Link>
+                </button>
               </li>
               <li>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center text-error hover:bg-error hover:text-error-content"
+                  className="flex items-center text-error hover:bg-error hover:text-error-content transition-all duration-300 py-2 px-4 w-full text-left"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
                   Logout
@@ -145,10 +153,10 @@ export default function Sidebar({ user }: { user: User }) {
             key={href}
             href={href}
             className={clsx(
-              "flex items-center p-2 mx-2 rounded-lg transition-colors duration-200",
+              "flex items-center p-2 mx-2 rounded-lg transition-all duration-300",
               pathname === href
                 ? "bg-primary text-primary-content"
-                : "text-base-content hover:bg-base-300",
+                : "text-base-content hover:bg-base-200",
               isCollapsed ? "justify-center" : "space-x-3"
             )}
             title={isCollapsed ? label : undefined}
@@ -166,9 +174,8 @@ export default function Sidebar({ user }: { user: User }) {
 
       {/* Footer */}
       {!isCollapsed && (
-        <div className="p-4 mb-auto text-xs text-base-content/60 border-t bg-base-100">
+        <div className="p-4 text-xs text-base-content/60 border-t bg-base-100 shadow-sm">
           <p>© 2025 VendorSync</p>
-          <p>Version 1.0.0</p>
         </div>
       )}
     </aside>

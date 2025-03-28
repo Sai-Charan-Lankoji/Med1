@@ -2,61 +2,84 @@
 "use client";
 
 import { useState } from "react";
-import { deletePlan, getAllPlans, Plan } from "@/app/api/plan/route";
 
-type DeletePlanModalProps = {
+interface DeletePlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   planId: string | null;
   planName: string;
-  onPlanDeleted: (updatedPlans: Plan[]) => void; // Updated type to match refreshPlans
+  onPlanDeleted: () => void;
   cookieHeader: string;
-};
+}
 
-export default function DeletePlanModal({ isOpen, onClose, planId, planName, onPlanDeleted, cookieHeader }: DeletePlanModalProps) {
+export default function DeletePlanModal({
+  isOpen,
+  onClose,
+  planId,
+  planName,
+  onPlanDeleted,
+  cookieHeader,
+}: DeletePlanModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!planId) return;
+
     setIsLoading(true);
+    setError(null);
+
     try {
-      await deletePlan(planId, cookieHeader);
-      const updatedPlans = await getAllPlans(cookieHeader);
-      onPlanDeleted(updatedPlans);
+      const response = await fetch(`/api/plan?id=${planId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: cookieHeader,
+        },
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to delete plan');
+      }
+
+      onPlanDeleted(); // Trigger refreshPlans
       onClose();
     } catch (err) {
-      console.error("Delete plan error:", err);
-      alert("Failed to delete plan");
+      setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
     }
   };
 
+  if (!isOpen || !planId) return null;
+
   return (
-    <dialog open={isOpen} className="modal modal-bottom sm:modal-middle animate-fade-in-up">
-      <div className="modal-box bg-base-100 shadow-2xl border border-base-300 rounded-xl">
-        <h3 className="font-bold text-xl text-error">Delete Plan</h3>
+    <div className="modal modal-open">
+      <div className="modal-box">
+        <h3 className="font-bold text-lg">Delete Plan</h3>
         <p className="py-4">
-          Are you sure you want to delete <span className="font-semibold">{planName}</span>? This action cannot be undone.
+          Are you sure you want to delete the plan &quot;<strong>{planName}</strong>&quot;? This action cannot be undone.
         </p>
+        {error && <div className="alert alert-error mb-4">{error}</div>}
         <div className="modal-action">
           <button
+            className="btn btn-error"
             onClick={handleDelete}
-            className="btn btn-error hover:scale-105 transition-all duration-300"
             disabled={isLoading}
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? 'Deleting...' : 'Delete'}
           </button>
           <button
+            className="btn"
             onClick={onClose}
-            className="btn btn-outline hover:scale-105 transition-all duration-300"
             disabled={isLoading}
           >
             Cancel
           </button>
         </div>
       </div>
-      <div className="modal-backdrop" onClick={onClose}></div>
-    </dialog>
+    </div>
   );
 }

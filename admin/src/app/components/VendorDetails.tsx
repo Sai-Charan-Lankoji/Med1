@@ -22,7 +22,6 @@ type Store = {
 export default function VendorDetails({
   stores,
   error,
-  vendorId,
 }: {
   stores: Store[];
   error: string | null;
@@ -32,7 +31,7 @@ export default function VendorDetails({
     <div className="min-h-screen bg-base-100 p-6 animate-fade-in">
       <div className="flex items-center justify-between mb-8 animate-slide-in-left">
         <h1 className="text-3xl font-bold text-base-content">
-          Vendor Stores ({vendorId})
+          Vendor Stores
         </h1>
         <div className="transform transition-all duration-300 hover:scale-105">
           <BackButton />
@@ -89,11 +88,11 @@ export default function VendorDetails({
                     {new Date(store.updatedAt).toLocaleDateString()}
                   </p>
                 </div>
-                <div className="card-actions justify-end mt-4">
+                {/* <div className="card-actions justify-end mt-4">
                   <button className="btn btn-sm btn-outline btn-info hover:scale-105 transition-all duration-300">
                     Edit Store
                   </button>
-                </div>
+                </div> */}
               </div>
             </div>
           ))}

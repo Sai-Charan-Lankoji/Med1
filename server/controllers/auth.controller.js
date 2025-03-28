@@ -87,10 +87,34 @@ const getUsers = async (req, res) => {
   }
 };
 
+
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    await authService.forgotPassword(email);
+    res.status(200).json({ message: 'Password reset link sent to your email.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+    await authService.resetPassword(token, password);
+    res.status(200).json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
 module.exports = {
   signup,
   login,
   logout,
   getUsers,
   getCurrentUser,
+  forgotPassword,
+  resetPassword,
 };
+

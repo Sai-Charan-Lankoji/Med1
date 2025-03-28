@@ -67,6 +67,7 @@ export default function VendorsWithSearch({
     );
     setFilteredVendors(filtered);
   };
+  
 
   const totalVendors = filteredVendors.length;
   const totalPages = Math.ceil(totalVendors / vendorsPerPage);
@@ -124,8 +125,10 @@ export default function VendorsWithSearch({
             </button>
           </div>
         </div>
+
       )}
-    </div>
-    
+      
+  </div>
+  </>
   );
 }
