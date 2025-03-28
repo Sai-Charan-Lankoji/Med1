@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { vendor_id } from "@/app/utils/constant";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, PointElement, LineElement, BarElement, Title } from 'chart.js';
 import { Doughnut, Line, Bar } from 'react-chartjs-2';
+import LoadingOverlay from "@/components/ui/LoadingOverlay";
 
 // Register Chart.js components
 ChartJS.register(
@@ -94,9 +95,10 @@ export default function RevenueAnalytics() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] ">
-        <span className="loading loading-spinner loading-lg text-primary"></span>
-      </div>
+      // <div className="flex items-center justify-center min-h-[60vh] ">
+      //   <span className="loading loading-spinner loading-lg text-primary"></span>
+      // </div>
+      <LoadingOverlay isLoading={isLoading} />
     );
   }
 
