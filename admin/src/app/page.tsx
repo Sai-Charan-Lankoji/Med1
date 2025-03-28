@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { ToastContainer, toast } from "react-toastify"; 
 import "react-toastify/dist/ReactToastify.css"; 
+import {NEXT_URL} from "@/app/constants";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -83,18 +84,34 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ email: true, password: true });
-
+  
     if (validateForm()) {
       try {
-        const response = await fetch("http://localhost:5000/api/auth/login", {
+        const response = await fetch(`${NEXT_URL}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
           credentials: "include",
         });
-
         if (response.ok) {
           toast.success("Login Successful!", {
+            position: "top-right",
+            autoClose: 1000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            theme: "colored",
+          });
+          console.log("Login successful, redirecting to /admin/vendors"); // Debug log
+          setTimeout(() => {
+            console.log("Executing redirect to /admin/vendors"); // Debug log
+            router.replace("/admin/vendors");
+          }, 1500);
+        } else {
+          const errorData = await response.json();
+          const errorMessage = errorData.error || "Login Failed";
+          toast.error(errorMessage, {
             position: "top-right",
             autoClose: 2000,
             hideProgressBar: false,
@@ -103,25 +120,13 @@ export default function LoginPage() {
             draggable: true,
             theme: "colored",
           });
-          setTimeout(() => router.push("/admin/vendors"), 1500); // Delay redirect for toast visibility
-        } else {
-          const errorData = await response.json();
-          const errorMessage = errorData.error || "Login Failed";
-          toast.error(errorMessage, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "colored",
-          });
           setErrors({ server: errorMessage });
         }
-      } catch {
+      } catch (error) {
+        console.error("Login error:", error); // Debug log
         toast.error("Something went wrong. Please try again later.", {
           position: "top-right",
-          autoClose: 5000,
+          autoClose: 2000,
           hideProgressBar: false,
           closeOnClick: true,
           pauseOnHover: true,
@@ -151,7 +156,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/auth/forgot-password", {
+      const response = await fetch(`${NEXT_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail }),

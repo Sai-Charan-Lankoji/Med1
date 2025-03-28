@@ -1,8 +1,8 @@
 // app/api/plan/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import {NEXT_URL} from "@/app/constants"
 
-const BACKEND_URL = 'http://localhost:5000';
 
 export interface PlanData {
   name: string;
@@ -27,7 +27,7 @@ export async function GET() {
   const cookieHeader = cookieStore.toString();
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/plan`, {
+    const response = await fetch(`${NEXT_URL}/api/plan`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/plan`, {
+    const response = await fetch(`${NEXT_URL}/api/plan`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -106,7 +106,7 @@ export async function PUT(req: NextRequest) {
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/plan/${id}`, {
+    const response = await fetch(`${NEXT_URL}/api/plan/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -149,7 +149,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/plan/${id}`, {
+    const response = await fetch(`${NEXT_URL}/api/plan/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

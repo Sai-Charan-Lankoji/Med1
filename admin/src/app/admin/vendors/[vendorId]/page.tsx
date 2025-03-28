@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import VendorDetails from "@/app/components/VendorDetails";
 import SuspenseWithFade from "@/app/components/SuspenseWithFade";
 import Loading from "@/app/components/Loading";
+import {NEXT_URL} from "@/app/constants";
 
 type Store = {
   id: string;
@@ -28,7 +29,7 @@ async function fetchVendorStores(vendorId: string): Promise<{ stores: Store[]; e
   console.log("Cookies sent:", cookieHeader);
 
   try {
-    const response = await fetch(`http://localhost:5000/api/stores/vendor?vendor_id=${vendorId}`, {
+    const response = await fetch(`${NEXT_URL}/api/stores/vendor?vendor_id=${vendorId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
