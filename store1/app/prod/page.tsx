@@ -110,15 +110,18 @@ const ProductGallery: React.FC = () => {
       console.error("Failed to log product view:", error);
     }
   };
-  
+
   const handleProductClick = (product: any) => {
     logProductView(product.id, store_id); // Use store_id from useStore
     setSelectedProduct({
       ...product,
       front_image: product.designs?.[0]?.apparel.url,
-      back_image: product.designs?.find((d:any) => d.apparel.side === "back")?.apparel.url,
-      left_image: product.designs?.find((d:any) => d.apparel.side === "left")?.apparel.url,
-      right_image: product.designs?.find((d:any) => d.apparel.side === "right")?.apparel.url,
+      back_image: product.designs?.find((d: any) => d.apparel.side === "back")
+        ?.apparel.url,
+      left_image: product.designs?.find((d: any) => d.apparel.side === "left")
+        ?.apparel.url,
+      right_image: product.designs?.find((d: any) => d.apparel.side === "right")
+        ?.apparel.url,
       customizable: true,
     });
   };
@@ -324,7 +327,8 @@ const ProductGallery: React.FC = () => {
           Standard Products
         </h2>
         {standardProducts?.length ? (
-          <StandardProducts products={standardProducts} />        ) : (
+          <StandardProducts products={standardProducts} />
+        ) : (
           <p className="text-gray-600">No standard products found.</p>
         )}
       </div>

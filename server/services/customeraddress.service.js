@@ -4,10 +4,35 @@ class AddressService {
   // Create Address
   async createAddress(addressData) {
     try {
-      const { customer_id, customer_email, street, city, state, pincode, address_type } = addressData;
+      const {
+        customer_id,
+        customer_email,
+        first_name,
+        last_name,
+        phone_number,
+        street,
+        landmark,
+        city,
+        state,
+        pincode,
+        country,
+        address_type,
+        is_default,
+      } = addressData;
 
       // Validate required fields
-      if (!customer_id || !customer_email || !street || !city || !state || !pincode) {
+      if (
+        !customer_id ||
+        !customer_email ||
+        !first_name ||
+        !last_name ||
+        !phone_number ||
+        !street ||
+        !city ||
+        !state ||
+        !pincode ||
+        !country
+      ) {
         return {
           status: 400,
           success: false,
@@ -15,7 +40,8 @@ class AddressService {
           data: null,
           error: {
             code: 'VALIDATION_ERROR',
-            details: 'All fields (customer_id, customer_email, street, city, state, pincode) are required',
+            details:
+              'All fields (customer_id, customer_email, first_name, last_name, phone_number, street, city, state, pincode, country) are required',
           },
         };
       }
@@ -35,7 +61,22 @@ class AddressService {
         };
       }
 
-      // Validate pincode (assuming 5-10 digits)
+      // Validate phone_number (10-15 digits)
+      const phoneRegex = /^[0-9]{10,15}$/;
+      if (!phoneRegex.test(phone_number)) {
+        return {
+          status: 422,
+          success: false,
+          message: 'Invalid input',
+          data: null,
+          error: {
+            code: 'INVALID_DATA',
+            details: 'Phone number must be 10-15 digits',
+          },
+        };
+      }
+
+      // Validate pincode (5-10 digits)
       const pincodeRegex = /^\d{5,10}$/;
       if (!pincodeRegex.test(pincode)) {
         return {
@@ -64,9 +105,34 @@ class AddressService {
         };
       }
 
+      // Validate is_default if provided
+      if (is_default !== undefined && typeof is_default !== 'boolean') {
+        return {
+          status: 422,
+          success: false,
+          message: 'Invalid input',
+          data: null,
+          error: {
+            code: 'INVALID_DATA',
+            details: 'is_default must be a boolean value',
+          },
+        };
+      }
+
       const newAddress = await Address.create({
-        ...addressData,
-        address_type: address_type || null, // Default to null if not provided
+        customer_id,
+        customer_email,
+        first_name,
+        last_name,
+        phone_number,
+        street,
+        landmark: landmark || null, // Optional field
+        city,
+        state,
+        pincode,
+        country,
+        address_type: address_type || null,
+        is_default: is_default || false,
       });
 
       return {
@@ -158,7 +224,7 @@ class AddressService {
         };
       }
 
-      const address = await Address.findByPk(addressId); // Sequelize uses findByPk for primary key
+      const address = await Address.findByPk(addressId);
       if (!address) {
         return {
           status: 404,
@@ -208,7 +274,20 @@ class AddressService {
         };
       }
 
-      const { customer_email, street, city, state, pincode, address_type } = updateData;
+      const {
+        customer_email,
+        first_name,
+        last_name,
+        phone_number,
+        street,
+        landmark,
+        city,
+        state,
+        pincode,
+        country,
+        address_type,
+        is_default,
+      } = updateData;
 
       // Validate optional fields if provided
       if (customer_email) {
@@ -226,6 +305,23 @@ class AddressService {
           };
         }
       }
+
+      if (phone_number) {
+        const phoneRegex = /^[0-9]{10,15}$/;
+        if (!phoneRegex.test(phone_number)) {
+          return {
+            status: 422,
+            success: false,
+            message: 'Invalid input',
+            data: null,
+            error: {
+              code: 'INVALID_DATA',
+              details: 'Phone number must be 10-15 digits',
+            },
+          };
+        }
+      }
+
       if (pincode) {
         const pincodeRegex = /^\d{5,10}$/;
         if (!pincodeRegex.test(pincode)) {
@@ -241,6 +337,7 @@ class AddressService {
           };
         }
       }
+
       if (address_type && !['billing', 'shipping'].includes(address_type)) {
         return {
           status: 422,
@@ -254,9 +351,36 @@ class AddressService {
         };
       }
 
+      if (is_default !== undefined && typeof is_default !== 'boolean') {
+        return {
+          status: 422,
+          success: false,
+          message: 'Invalid input',
+          data: null,
+          error: {
+            code: 'INVALID_DATA',
+            details: 'is_default must be a boolean value',
+          },
+        };
+      }
+
       const [updatedCount, updatedAddresses] = await Address.update(
-        { ...updateData, updated_at: new Date() },
-        { where: { id: addressId }, returning: true } // Returning updated record
+        {
+          customer_email,
+          first_name,
+          last_name,
+          phone_number,
+          street,
+          landmark,
+          city,
+          state,
+          pincode,
+          country,
+          address_type,
+          is_default,
+          updated_at: new Date(),
+        },
+        { where: { id: addressId }, returning: true }
       );
 
       if (updatedCount === 0) {
@@ -308,8 +432,8 @@ class AddressService {
         };
       }
 
-      const deletedCount = await Address.destroy({ where: { id: addressId } });
-      if (deletedCount === 0) {
+      const address = await Address.findByPk(addressId);
+      if (!address) {
         return {
           status: 404,
           success: false,
@@ -321,6 +445,26 @@ class AddressService {
           },
         };
       }
+
+      // If the address being deleted is the default, ensure another address is set as default
+      if (address.is_default) {
+        const otherAddresses = await Address.findAll({
+          where: {
+            customer_id: address.customer_id,
+            id: { [Address.sequelize.Op.ne]: addressId },
+          },
+          order: [['created_at', 'ASC']],
+        });
+
+        if (otherAddresses.length > 0) {
+          await Address.update(
+            { is_default: true },
+            { where: { id: otherAddresses[0].id } }
+          );
+        }
+      }
+
+      await Address.destroy({ where: { id: addressId } });
 
       return {
         status: 200,

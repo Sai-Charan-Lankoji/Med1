@@ -60,7 +60,6 @@ export interface Item {
 }
 export type PropsAction = { type: "SELECTED_PROPS"; payload: IProps };
 
-
 export interface IDesign {
   apparel: IApparel;
   id?: string; // Changed from `any` for better typing
@@ -86,18 +85,36 @@ export interface Address {
   metadata?: any;
 }
 
+export type PasswordFieldProps = {
+  control: any;
+  name: string;
+  label: string;
+  show: boolean;
+  onToggle: () => void;
+  error?: string;
+};
+
+// FormField and PasswordField components remain unchanged
+export interface FormFieldProps {
+  control: any;
+  name: string;
+  label: string;
+  type?: string;
+  error?: string;
+}
+
 export interface OrderData {
   line_items: Array<{
-  product_id: string | undefined;
-  quantity: number;
-  price: number;
-  title: string;
-  images: string[];
-  designs?: IDesignableCartItem["designs"];
-  selected_size?: IStandardCartItem["selected_size"];
-  selected_color?: IStandardCartItem["selected_color"];
-  selected_variant?: IStandardCartItem["selected_variant"];
-  product_type?: "designable" | "standard";
+    product_id: string | undefined;
+    quantity: number;
+    price: number;
+    title: string;
+    images: string[];
+    designs?: IDesignableCartItem["designs"];
+    selected_size?: IStandardCartItem["selected_size"];
+    selected_color?: IStandardCartItem["selected_color"];
+    selected_variant?: IStandardCartItem["selected_variant"];
+    product_type?: "designable" | "standard";
   }>;
   total_amount: number;
   currency_code: string;
@@ -112,16 +129,16 @@ export interface OrderData {
   store_id: string | null;
   shipping_charges: number;
   hsn_tax_details: Array<{
-  hsn_code: string;
-  tax_percentage: number;
-  taxable_amount: number;
-  tax_amount: number;
+    hsn_code: string;
+    tax_percentage: number;
+    taxable_amount: number;
+    tax_amount: number;
   }>;
 
   shipping_address?: Address;
   billing_address?: Address;
   payment_method?: string;
-  }
+}
 
 // Cart-related interfaces
 export interface IDesignableCartItem {
@@ -180,8 +197,6 @@ export interface IStandardCartItem {
     customizable: boolean;
   };
 }
-
-
 
 export type ICartItem = IDesignableCartItem | IStandardCartItem;
 

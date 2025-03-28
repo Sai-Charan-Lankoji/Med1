@@ -6,7 +6,8 @@ const upload = multer(); // Use Multer to parse multipart form-data
 
 const signup = async (req, res) => {
   try {
-    const { email, first_name, last_name, password, phone, vendor_id } = req.body;
+    const { email, first_name, last_name, password, phone, vendor_id } =
+      req.body;
 
     // Validate required fields
     if (!email || !first_name || !last_name || !password || !phone) {
@@ -15,7 +16,11 @@ const signup = async (req, res) => {
         success: false,
         message: "Invalid request parameters",
         data: null,
-        error: { code: "VALIDATION_ERROR", details: "All fields (email, first_name, last_name, password, phone) are required" },
+        error: {
+          code: "VALIDATION_ERROR",
+          details:
+            "All fields (email, first_name, last_name, password, phone) are required",
+        },
       });
     }
 
@@ -73,7 +78,10 @@ const login = async (req, res) => {
         success: false,
         message: "Invalid request parameters",
         data: null,
-        error: { code: "VALIDATION_ERROR", details: "Email and password are required" },
+        error: {
+          code: "VALIDATION_ERROR",
+          details: "Email and password are required",
+        },
       });
     }
 
@@ -115,10 +123,12 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    const token = req.cookies.auth_token || 
-                  (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
-                    ? req.headers.authorization.split(" ")[1]
-                    : null);
+    const token =
+      req.cookies.auth_token ||
+      (req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
+        : null);
 
     // If token is present, blacklist it
     if (token) {
@@ -193,7 +203,11 @@ const getCurrentUser = async (req, res) => {
 const getUsers = async (req, res) => {
   try {
     const { page, limit, role } = req.query;
-    const customers = await customerService.getUsers(parseInt(page) || 1, parseInt(limit) || 10, role);
+    const customers = await customerService.getUsers(
+      parseInt(page) || 1,
+      parseInt(limit) || 10,
+      role
+    );
 
     if (!customers || customers.length === 0) {
       return res.status(404).json({
@@ -283,7 +297,10 @@ const customerByVendorId = async (req, res) => {
         success: false,
         message: "Resource not found",
         data: null,
-        error: { code: "NOT_FOUND", details: "No customers found for this vendor ID" },
+        error: {
+          code: "NOT_FOUND",
+          details: "No customers found for this vendor ID",
+        },
       });
     }
 
@@ -353,7 +370,10 @@ const getCustomerByEmail = async (req, res) => {
         success: false,
         message: "Resource not found",
         data: null,
-        error: { code: "NOT_FOUND", details: "Customer not found with this email" },
+        error: {
+          code: "NOT_FOUND",
+          details: "Customer not found with this email",
+        },
       });
     }
 
@@ -377,7 +397,7 @@ const getCustomerByEmail = async (req, res) => {
 const updateCustomerDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    const { email, first_name, last_name, phone, old_password, new_password } = req.body;
+    const { email, first_name, last_name, phone } = req.body;
 
     if (!id) {
       return res.status(400).json({
@@ -389,10 +409,36 @@ const updateCustomerDetails = async (req, res) => {
       });
     }
 
+    if (req.method !== "PUT") {
+      return res.status(405).json({
+        status: 405,
+        success: false,
+        message: "Method Not Allowed",
+        data: null,
+        error: { code: "INVALID_METHOD", details: "Use PUT instead" },
+      });
+    }
+
     let profile_photo = null;
     if (req.file) {
-      const fileData = await fileService.saveBase64File(req.file.buffer.toString("base64"), req);
-      profile_photo = fileData.url;
+      try {
+        const fileData = await fileService.saveBase64File(
+          req.file.buffer.toString("base64"),
+          req
+        );
+        profile_photo = fileData.url;
+      } catch (fileError) {
+        return res.status(422).json({
+          status: 422,
+          success: false,
+          message: "Invalid input",
+          data: null,
+          error: {
+            code: "INVALID_DATA",
+            details: "Failed to process profile photo",
+          },
+        });
+      }
     }
 
     const updatedCustomer = await customerService.updateCustomerDetails(id, {
@@ -401,18 +447,97 @@ const updateCustomerDetails = async (req, res) => {
       last_name,
       phone,
       profile_photo,
-      old_password,
-      new_password,
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       status: 200,
       success: true,
       message: "Request successful",
       data: updatedCustomer,
     });
   } catch (error) {
-    if (error.message.includes("Invalid old password")) {
+    if (error.message === "Customer not found") {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "Customer does not exist" },
+      });
+    }
+
+    if (error.message.includes("duplicate key")) {
+      return res.status(409).json({
+        status: 409,
+        success: false,
+        message: "Conflict detected",
+        data: null,
+        error: { code: "RESOURCE_EXISTS", details: "Email already in use" },
+      });
+    }
+
+    console.error("Controller Error:", error);
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: "An unexpected error occurred" },
+    });
+  }
+};
+
+const changeCustomerPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { old_password, new_password } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "Customer ID is required" },
+      });
+    }
+
+    if (!old_password || !new_password) {
+      return res.status(422).json({
+        status: 422,
+        success: false,
+        message: "Invalid input",
+        data: null,
+        error: {
+          code: "INVALID_DATA",
+          details: "Old and new passwords are required",
+        },
+      });
+    }
+
+    const updatedCustomer = await customerService.changeCustomerPassword(id, {
+      old_password,
+      new_password,
+    });
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Password changed successfully",
+      data: updatedCustomer,
+    });
+  } catch (error) {
+    if (error.message === "Customer not found") {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "Customer does not exist" },
+      });
+    }
+
+    if (error.message === "Old password is incorrect") {
       return res.status(401).json({
         status: 401,
         success: false,
@@ -421,16 +546,61 @@ const updateCustomerDetails = async (req, res) => {
         error: { code: "AUTH_ERROR", details: "Invalid old password" },
       });
     }
-    res.status(500).json({
+
+    console.error("Controller Error:", error);
+    return res.status(500).json({
       status: 500,
       success: false,
       message: "Internal Server Error",
       data: null,
-      error: { code: "SERVER_ERROR", details: error.message },
+      error: { code: "SERVER_ERROR", details: "An unexpected error occurred" },
     });
   }
 };
 
+const resetCustomerPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        status: 400,
+        success: false,
+        message: "Invalid request parameters",
+        data: null,
+        error: { code: "VALIDATION_ERROR", details: "Email is required" },
+      });
+    }
+
+    await customerService.resetCustomerPassword(email);
+
+    return res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Password reset link sent to your email",
+      data: null,
+    });
+  } catch (error) {
+    if (error.message === "Customer not found") {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Resource not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "Customer does not exist" },
+      });
+    }
+
+    console.error("Controller Error:", error);
+    return res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: "An unexpected error occurred" },
+    });
+  }
+};
 module.exports = {
   signup,
   login,
@@ -442,4 +612,6 @@ module.exports = {
   getAllCustomers,
   getCustomerByEmail,
   updateCustomerDetails,
+  changeCustomerPassword,
+  resetCustomerPassword,
 };

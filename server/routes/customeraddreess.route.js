@@ -12,10 +12,14 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *       required:
  *         - customer_id
  *         - customer_email
+ *         - first_name
+ *         - last_name
+ *         - phone_number
  *         - street
  *         - city
  *         - state
  *         - pincode
+ *         - country
  *       properties:
  *         customer_id:
  *           type: string
@@ -24,9 +28,21 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *           type: string
  *           description: Email of the customer
  *           format: email
+ *         first_name:
+ *           type: string
+ *           description: First name of the customer
+ *         last_name:
+ *           type: string
+ *           description: Last name of the customer
+ *         phone_number:
+ *           type: string
+ *           description: Phone number of the customer (10-15 digits)
  *         street:
  *           type: string
  *           description: Street address
+ *         landmark:
+ *           type: string
+ *           description: Landmark (optional)
  *         city:
  *           type: string
  *           description: City name
@@ -36,22 +52,49 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *         pincode:
  *           type: string
  *           description: Postal code (5-10 digits)
- *         _id:
+ *         country:
+ *           type: string
+ *           description: Country name
+ *         address_type:
+ *           type: string
+ *           enum: [billing, shipping]
+ *           description: Type of address (optional)
+ *         is_default:
+ *           type: boolean
+ *           description: Whether this is the default address (optional)
+ *         id:
  *           type: string
  *           description: Unique identifier of the address
  *         created_at:
  *           type: string
  *           format: date-time
  *           description: Timestamp when the address was created
+ *         updated_at:
+ *           type: string
+ *           format: date-time
+ *           description: Timestamp when the address was last updated
+ *         deleted_at:
+ *           type: string
+ *           format: date-time
+ *           description: Timestamp when the address was deleted (soft delete)
  *       example:
  *         customer_id: "12345"
  *         customer_email: "user@example.com"
+ *         first_name: "John"
+ *         last_name: "Doe"
+ *         phone_number: "1234567890"
  *         street: "123 Main St"
+ *         landmark: "Near Central Park"
  *         city: "Hyderabad"
  *         state: "Telangana"
  *         pincode: "500001"
- *         _id: "some-id"
+ *         country: "India"
+ *         address_type: "billing"
+ *         is_default: true
+ *         id: "address_abc123"
  *         created_at: "2025-03-06T10:00:00Z"
+ *         updated_at: null
+ *         deleted_at: null
  *     Error:
  *       type: object
  *       properties:
@@ -108,11 +151,18 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *                 data:
  *                   customer_id: "12345"
  *                   customer_email: "user@example.com"
+ *                   first_name: "John"
+ *                   last_name: "Doe"
+ *                   phone_number: "1234567890"
  *                   street: "123 Main St"
+ *                   landmark: "Near Central Park"
  *                   city: "Hyderabad"
  *                   state: "Telangana"
  *                   pincode: "500001"
- *                   _id: "some-id"
+ *                   country: "India"
+ *                   address_type: "billing"
+ *                   is_default: true
+ *                   id: "address_abc123"
  *                   created_at: "2025-03-06T10:00:00Z"
  *       400:
  *         description: Invalid request parameters
@@ -184,11 +234,18 @@ router.post('/create', authMiddleware, addressController.createAddress);
  *                 data:
  *                   - customer_id: "12345"
  *                     customer_email: "user@example.com"
+ *                     first_name: "John"
+ *                     last_name: "Doe"
+ *                     phone_number: "1234567890"
  *                     street: "123 Main St"
+ *                     landmark: "Near Central Park"
  *                     city: "Hyderabad"
  *                     state: "Telangana"
  *                     pincode: "500001"
- *                     _id: "some-id"
+ *                     country: "India"
+ *                     address_type: "billing"
+ *                     is_default: true
+ *                     id: "address_abc123"
  *                     created_at: "2025-03-06T10:00:00Z"
  *       400:
  *         description: Invalid customer ID
@@ -258,11 +315,18 @@ router.get('/customer/:customerId', authMiddleware, addressController.getCustome
  *                 data:
  *                   customer_id: "12345"
  *                   customer_email: "user@example.com"
+ *                   first_name: "John"
+ *                   last_name: "Doe"
+ *                   phone_number: "1234567890"
  *                   street: "123 Main St"
+ *                   landmark: "Near Central Park"
  *                   city: "Hyderabad"
  *                   state: "Telangana"
  *                   pincode: "500001"
- *                   _id: "some-id"
+ *                   country: "India"
+ *                   address_type: "billing"
+ *                   is_default: true
+ *                   id: "address_abc123"
  *                   created_at: "2025-03-06T10:00:00Z"
  *       400:
  *         description: Invalid address ID
@@ -323,9 +387,21 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *                 type: string
  *                 format: email
  *                 description: Email of the customer (optional)
+ *               first_name:
+ *                 type: string
+ *                 description: First name of the customer (optional)
+ *               last_name:
+ *                 type: string
+ *                 description: Last name of the customer (optional)
+ *               phone_number:
+ *                 type: string
+ *                 description: Phone number of the customer (optional, 10-15 digits)
  *               street:
  *                 type: string
  *                 description: Street address (optional)
+ *               landmark:
+ *                 type: string
+ *                 description: Landmark (optional)
  *               city:
  *                 type: string
  *                 description: City name (optional)
@@ -335,12 +411,29 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *               pincode:
  *                 type: string
  *                 description: Postal code (optional, 5-10 digits)
+ *               country:
+ *                 type: string
+ *                 description: Country name (optional)
+ *               address_type:
+ *                 type: string
+ *                 enum: [billing, shipping]
+ *                 description: Type of address (optional)
+ *               is_default:
+ *                 type: boolean
+ *                 description: Whether this is the default address (optional)
  *             example:
  *               customer_email: "newuser@example.com"
+ *               first_name: "Jane"
+ *               last_name: "Doe"
+ *               phone_number: "0987654321"
  *               street: "456 New St"
+ *               landmark: "Near City Mall"
  *               city: "Bangalore"
  *               state: "Karnataka"
  *               pincode: "560001"
+ *               country: "India"
+ *               address_type: "shipping"
+ *               is_default: false
  *     responses:
  *       200:
  *         description: Address updated successfully
@@ -361,11 +454,18 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *                 data:
  *                   customer_id: "12345"
  *                   customer_email: "newuser@example.com"
+ *                   first_name: "Jane"
+ *                   last_name: "Doe"
+ *                   phone_number: "0987654321"
  *                   street: "456 New St"
+ *                   landmark: "Near City Mall"
  *                   city: "Bangalore"
  *                   state: "Karnataka"
  *                   pincode: "560001"
- *                   _id: "some-id"
+ *                   country: "India"
+ *                   address_type: "shipping"
+ *                   is_default: false
+ *                   id: "address_abc123"
  *                   created_at: "2025-03-06T10:00:00Z"
  *       400:
  *         description: Invalid request parameters

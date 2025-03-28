@@ -11,8 +11,10 @@ const {
   getAllCustomers,
   getCustomerByEmail,
   updateCustomerDetails,
+  changeCustomerPassword,
+  resetCustomerPassword,
 } = require("../controllers/customer.controller");
-const authMiddleware = require('../middleware/AuthMiddleware');
+const authMiddleware = require("../middleware/AuthMiddleware");
 const router = express.Router();
 const upload = multer(); // Initialize Multer for parsing form-data
 
@@ -86,11 +88,11 @@ router.post("/signup", signup);
  *               email:
  *                 type: string
  *                 format: email
- *                 example: johndoe@example.com
+ *                 example: jayaramsai@gmail.com
  *               password:
  *                 type: string
  *                 format: password
- *                 example: securePassword123
+ *                 example: password
  *     responses:
  *       200:
  *         description: Login successful, token set in cookie
@@ -315,21 +317,19 @@ router.get("/vendor/:vendor_id", customerByVendorId);
  *         description: Customer not found
  */
 router.get("/:email", getCustomerByEmail);
-
 /**
  * @swagger
- * /api/customer/{id}:
+ * /customer/{id}:
  *   put:
- *     summary: Update customer details
- *     tags: [Customers]
+ *     summary: Update customer profile
+ *     tags: [Customer]
  *     parameters:
  *       - in: path
  *         name: id
+ *         required: true
  *         schema:
  *           type: string
- *         required: true
- *         description: ID of the customer to update
- *         example: customer_12345
+ *         description: Customer ID
  *     requestBody:
  *       required: true
  *       content:
@@ -339,50 +339,84 @@ router.get("/:email", getCustomerByEmail);
  *             properties:
  *               email:
  *                 type: string
- *                 description: Email of the customer
- *                 example: johndoe@example.com
  *               first_name:
  *                 type: string
- *                 description: First name of the customer
- *                 example: John
  *               last_name:
  *                 type: string
- *                 description: Last name of the customer
- *                 example: Doe
  *               phone:
  *                 type: string
- *                 description: Phone number of the customer
- *                 example: "9908798484"
- *               old_password:
- *                 type: string
- *                 description: Current password for verification
- *                 example: oldPassword123
- *               new_password:
- *                 type: string
- *                 description: New password to set
- *                 example: newPassword123
  *               profile_photo:
  *                 type: string
  *                 format: binary
- *                 description: Profile photo of the customer
  *     responses:
  *       200:
- *         description: Customer updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: "Profile updated successfully"
- *                 data:
- *                   $ref: '#/components/schemas/Customer'
+ *         description: Request successful
  *       400:
- *         description: Invalid input data
+ *         description: Invalid request parameters
  *       404:
  *         description: Customer not found
  */
 router.put("/:id", upload.single("profile_photo"), updateCustomerDetails);
+
+/**
+ * @swagger
+ * /customer/{id}/change-password:
+ *   put:
+ *     summary: Change customer password
+ *     tags: [Customer]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Customer ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               old_password:
+ *                 type: string
+ *               new_password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *       400:
+ *         description: Invalid request parameters
+ *       401:
+ *         description: Invalid old password
+ *       404:
+ *         description: Customer not found
+ */
+router.put("/:id/change-password", changeCustomerPassword);
+
+/**
+ * @swagger
+ * /customer/reset-password:
+ *   post:
+ *     summary: Reset customer password
+ *     tags: [Customer]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Password reset link sent to your email
+ *       400:
+ *         description: Invalid request parameters
+ *       404:
+ *         description: Customer not found
+ */
+router.post("/reset-password", resetCustomerPassword);
 
 module.exports = router;

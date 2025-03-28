@@ -12,80 +12,48 @@ class AddressController {
   }
 
   async getCustomerAddresses(req, res) {
-    try {
-      const customerId = req.params.customerId;
-      const result = await addressService.getCustomerAddresses(customerId);
-      res.status(result.status).json({
-        success: result.success,
-        message: result.message,
-        data: result.data,
-        ...(result.error && { error: result.error }),
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to retrieve customer addresses',
-        error: error.message,
-      });
-    }
+    const customerId = req.params.customerId;
+    const result = await addressService.getCustomerAddresses(customerId);
+    res.status(result.status).json({
+      success: result.success,
+      message: result.message,
+      data: result.data,
+      ...(result.error && { error: result.error }),
+    });
   }
 
   async getAddressById(req, res) {
-    try {
-      const addressId = req.params.id;
-      const result = await addressService.getAddressById(addressId);
-      res.status(result.status).json({
-        success: result.success,
-        message: result.message,
-        data: result.data,
-        ...(result.error && { error: result.error }),
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to retrieve address',
-        error: error.message,
-      });
-    }
+    const addressId = req.params.addressId;
+    const result = await addressService.getAddressById(addressId);
+    res.status(result.status).json({
+      success: result.success,
+      message: result.message,
+      data: result.data,
+      ...(result.error && { error: result.error }),
+    });
   }
 
   async updateAddress(req, res) {
-    try {
-      const addressId = req.params.id;
-      const updateData = req.body;
-      const result = await addressService.updateAddress(addressId, updateData);
-      res.status(result.status).json({
-        success: result.success,
-        message: result.message,
-        data: result.data,
-        ...(result.error && { error: result.error }),
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to update address',
-        error: error.message,
-      });
-    }
+    const addressId = req.params.addressId;
+    const updateData = req.body;
+    const result = await addressService.updateAddress(addressId, updateData);
+    res.status(result.status).json({
+      success: result.success,
+      message: result.message,
+      data: result.data,
+      ...(result.error && { error: result.error }),
+    });
   }
 
   async deleteAddress(req, res) {
-    try {
-      const addressId = req.params.id;
-      const result = await addressService.deleteAddress(addressId);
-      res.status(result.status).json({
-        success: result.success,
-        message: result.message,
-        data: result.data,
-        ...(result.error && { error: result.error }),
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: 'Failed to delete address',
-        error: error.message,
-      });
-    }
+    const addressId = req.params.addressId;
+    const result = await addressService.deleteAddress(addressId);
+    res.status(result.status).json({
+      success: result.success,
+      message: result.message,
+      data: result.data,
+      ...(result.error && { error: result.error }),
+    });
   }
 }
 

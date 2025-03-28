@@ -6,8 +6,18 @@ import { IconContext } from "react-icons/lib";
 import { fabric } from "fabric";
 import { DesignContext, TextPropsContext } from "../context/designcontext";
 import { FiShoppingBag } from "react-icons/fi";
-import { initControls, extractFillColorsSelectedObject } from "@/shared/controlutils";
-import { IBgcolor, bgColours, designApparels, IApparel, IDesign, IProps } from "../@types/models";
+import {
+  initControls,
+  extractFillColorsSelectedObject,
+} from "@/shared/controlutils";
+import {
+  IBgcolor,
+  bgColours,
+  designApparels,
+  IApparel,
+  IDesign,
+  IProps,
+} from "../@types/models";
 import { useDispatch, useSelector } from "react-redux";
 import { ColorPickerContext } from "../context/colorpickercontext";
 import { MenuContext } from "../context/menucontext";
@@ -49,9 +59,13 @@ export default function DesignArea({
   const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const [lastSavedDesign, setLastSavedDesign] = useState<string | null>(null);
   const canvasState = useSelector((state: RootState) => state.setReducer);
-  const { addDesignToCart, updateCartItem, loading: cartLoading } = useNewCart();
-  const { isLogin } = useUserContext(); // Replaced customerToken with isLogin
-  const isAuthorized = isVendorMode || isLogin; // Use isLogin here
+  const {
+    addDesignToCart,
+    updateCartItem,
+    loading: cartLoading,
+  } = useNewCart();
+  const { isLogin } = useUserContext();
+  const isAuthorized = isVendorMode || isLogin;
   const router = useRouter();
   const { svgUrl } = useSvgContext();
   const dispatchForCanvas = useDispatch();
@@ -73,10 +87,51 @@ export default function DesignArea({
       selected: color.value === currentBgColor,
     }))
   );
-  const [saveTimeout, setSaveTimeout] = useState<NodeJS.Timeout | null>(null);
   const { store } = useStore();
 
-  const customerId = typeof window !== "undefined" ? sessionStorage.getItem("customerId") : null;
+  // State to store customer data from API
+  const [customerData, setCustomerData] = useState<{
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    phone: string;
+    profile_photo: string | null;
+    vendor_id: string;
+  } | null>(null);
+
+  // Fetch customer data from API
+  useEffect(() => {
+    const fetchCustomerData = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/api/customer/me", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        });
+        if (!response.ok) throw new Error("Failed to fetch customer data");
+        const { data } = await response.json();
+        setCustomerData({
+          id: data.id,
+          email: data.email,
+          first_name: data.first_name,
+          last_name: data.last_name,
+          phone: data.phone,
+          profile_photo: data.profile_photo,
+          vendor_id: data.vendor_id,
+        });
+      } catch (error) {
+        console.error("Error fetching customer data:", error);
+        setCustomerData(null);
+      }
+    };
+    fetchCustomerData();
+  }, []);
+
+  // Use customerId from customerData instead of sessionStorage
+  const customerId = customerData?.id || null;
 
   const autoSaveDesign = React.useCallback(() => {
     if (!canvas || !design) return;
@@ -164,7 +219,9 @@ export default function DesignArea({
         currentDesign: design,
         selectedApparal: { ...apparel, color: currentBgColor },
         jsonDesign: canvas?.toJSON(),
-        pngImage: canvas?.toJSON().objects.length ? canvas?.toDataURL({ multiplier: 4 }) : null,
+        pngImage: canvas?.toJSON().objects.length
+          ? canvas?.toDataURL({ multiplier: 4 })
+          : null,
         svgImage: canvas?.toSVG(),
       });
     }
@@ -382,7 +439,7 @@ export default function DesignArea({
       designId: design?.id,
     };
 
-    if (!isLogin) { // Replaced customerToken with isLogin
+    if (!isLogin) {
       saveStateToLocalStorage();
       router.push("/auth");
       return;
@@ -410,7 +467,12 @@ export default function DesignArea({
       const currentDesignState = designs.map((design) => ({
         ...design,
         svgImage: design.id === design?.id ? svgUrl : design.svgImage,
-        pngImage: design.id === design?.id ? (canvas?.toJSON().objects.length ? pngImage : null) : design.pngImage,
+        pngImage:
+          design.id === design?.id
+            ? canvas?.toJSON().objects.length
+              ? pngImage
+              : null
+            : design.pngImage,
       }));
 
       const currentPropsState = {
@@ -419,7 +481,7 @@ export default function DesignArea({
       };
 
       const requestBody = {
-        vendor_id: store?.vendor_id,
+        vendor_id: store?.vendor_id || customerData?.vendor_id, // Use vendor_id from customerData if store is unavailable
         designs: designs,
         designstate: currentDesignState,
         propstate: currentPropsState,
@@ -469,10 +531,16 @@ export default function DesignArea({
       designId: design?.id,
     };
 
-    if (!isLogin) { // Replaced customerToken with isLogin
+    if (!isLogin) {
       localStorage.setItem("pendingCartAdd", "true");
-      localStorage.setItem("pendingDesignState", JSON.stringify(currentDesignState));
-      localStorage.setItem("pendingPropsState", JSON.stringify(currentPropsState));
+      localStorage.setItem(
+        "pendingDesignState",
+        JSON.stringify(currentDesignState)
+      );
+      localStorage.setItem(
+        "pendingPropsState",
+        JSON.stringify(currentPropsState)
+      );
       saveStateToLocalStorage();
       router.push("/auth");
       return;
@@ -486,11 +554,14 @@ export default function DesignArea({
     );
 
     if (success) {
-      const response = await fetch(`${baseurl}/api/carts/customer/${customerId}`);
+      const response = await fetch(
+        `${baseurl}/api/carts/customer/${customerId}` // Use customerId from state
+      );
       if (response.ok) {
         const cartData = await response.json();
         const addedItem = cartData.data.designable_products.find(
-          (item: any) => JSON.stringify(item.designs) === JSON.stringify(currentDesignState)
+          (item: any) =>
+            JSON.stringify(item.designs) === JSON.stringify(currentDesignState)
         );
         if (addedItem) {
           setCartId(addedItem.id);
@@ -509,11 +580,13 @@ export default function DesignArea({
     }
   };
 
+  // Removed the redundant fetchCustomerData useEffect since we already have one at the top
+
   useEffect(() => {
     const checkPendingCartAdd = async () => {
       const hasPendingAdd = localStorage.getItem("pendingCartAdd");
 
-      if (isLogin && hasPendingAdd === "true") { // Replaced customerToken with isLogin
+      if (isLogin && hasPendingAdd === "true") {
         const pendingDesignStateStr = localStorage.getItem("pendingDesignState");
         const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
 
@@ -533,11 +606,15 @@ export default function DesignArea({
           );
 
           if (success) {
-            const response = await fetch(`${baseurl}/api/carts/customer/${customerId}`);
+            const response = await fetch(
+              `${baseurl}/api/carts/customer/${customerId}` // Use customerId from state
+            );
             if (response.ok) {
               const cartData = await response.json();
               const addedItem = cartData.data.designable_products.find(
-                (item: any) => JSON.stringify(item.designs) === JSON.stringify(pendingDesignState)
+                (item: any) =>
+                  JSON.stringify(item.designs) ===
+                  JSON.stringify(pendingDesignState)
               );
               if (addedItem) {
                 setCartId(addedItem.id);
@@ -566,7 +643,7 @@ export default function DesignArea({
     const checkPendingCartUpdate = async () => {
       const hasPendingUpdate = localStorage.getItem("pendingCartUpdate");
 
-      if (isLogin && hasPendingUpdate === "true") { // Replaced customerToken with isLogin
+      if (isLogin && hasPendingUpdate === "true") {
         const pendingDesignStateStr = localStorage.getItem("pendingDesignState");
         const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
         const pendingCartId = localStorage.getItem("pendingCartId");
@@ -577,7 +654,9 @@ export default function DesignArea({
 
         try {
           const pendingDesignState: IDesign[] = JSON.parse(pendingDesignStateStr);
-          const pendingPropsState: IProps & { designId?: string } = JSON.parse(pendingPropsStateStr);
+          const pendingPropsState: IProps & { designId?: string } = JSON.parse(
+            pendingPropsStateStr
+          );
 
           const success = await updateCartItem(
             pendingCartId,
@@ -610,27 +689,32 @@ export default function DesignArea({
     checkPendingCartAdd();
     checkPendingCartUpdate();
   }, [
-    isLogin, // Replaced customerToken with isLogin
+    isLogin,
     addDesignToCart,
     updateCartItem,
     svgUrl,
     dispatchDesign,
     updateColor,
     productData,
-    customerId,
+    customerId, // Use customerId from state
   ]);
 
   return (
     <div>
       <div className="flex justify-between mb-1">
-        {(isVendorMode || isLogin) && ( // Replaced customerToken with isLogin
+        {(isVendorMode || isLogin) && (
           <>
             <button
               type="button"
               onClick={downloadDesignJson}
               className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800"
             >
-              <IconContext.Provider value={{ size: "18px", className: "btn-download-design inline-block" }}>
+              <IconContext.Provider
+                value={{
+                  size: "18px",
+                  className: "btn-download-design inline-block",
+                }}
+              >
                 <FaDownload />
               </IconContext.Provider>
               <span className="ml-3">Download Json</span>
@@ -640,7 +724,12 @@ export default function DesignArea({
               onClick={downloadZip}
               className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
             >
-              <IconContext.Provider value={{ size: "24px", className: "btn-zip-design inline-block" }}>
+              <IconContext.Provider
+                value={{
+                  size: "24px",
+                  className: "btn-zip-design inline-block",
+                }}
+              >
                 <VscBriefcase />
               </IconContext.Provider>
               <span className="ml-3">Download Zip</span>
@@ -651,11 +740,16 @@ export default function DesignArea({
 
       <div className="flex justify-between pt-2 bg-white p-2 pb-0 border border-b-0 border-zinc-300">
         <div>
-          {(isVendorMode || isLogin) && ( // Replaced customerToken with isLogin
+          {(isVendorMode || isLogin) && (
             <>
               <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
                 <button onClick={downloadSVG}>
-                  <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
+                  <IconContext.Provider
+                    value={{
+                      size: "10px",
+                      className: "btn-download-design inline-block",
+                    }}
+                  >
                     <FaDownload />
                   </IconContext.Provider>
                   <p className="px-2 text-[10px]">SVG</p>
@@ -663,7 +757,12 @@ export default function DesignArea({
               </div>
               <div className="text-purple-700 float-left hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
                 <button onClick={() => downloadPNG()}>
-                  <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
+                  <IconContext.Provider
+                    value={{
+                      size: "10px",
+                      className: "btn-download-design inline-block",
+                    }}
+                  >
                     <FaDownload />
                   </IconContext.Provider>
                   <p className="px-2 text-[10px]">PNG</p>
@@ -676,7 +775,12 @@ export default function DesignArea({
         <div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={handleRedo}>
-              <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
+              <IconContext.Provider
+                value={{
+                  size: "10px",
+                  className: "btn-download-design inline-block",
+                }}
+              >
                 <FaRedo />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">Redo</p>
@@ -684,7 +788,12 @@ export default function DesignArea({
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={handleUndo}>
-              <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
+              <IconContext.Provider
+                value={{
+                  size: "10px",
+                  className: "btn-download-design inline-block",
+                }}
+              >
                 <FaUndo />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">Undo</p>
@@ -692,7 +801,12 @@ export default function DesignArea({
           </div>
           <div className="text-purple-700 float-right hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border group bg-gradient-to-br group-hover:from-purple-600 group-hover:to-blue-500 focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-1 py-1 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:focus:ring-blue-800">
             <button onClick={() => reset()}>
-              <IconContext.Provider value={{ size: "10px", className: "btn-download-design inline-block" }}>
+              <IconContext.Provider
+                value={{
+                  size: "10px",
+                  className: "btn-download-design inline-block",
+                }}
+              >
                 <FaSync />
               </IconContext.Provider>
               <p className="px-2 text-[10px]">Reset</p>
@@ -709,7 +823,9 @@ export default function DesignArea({
             alt="Current Background"
             style={{ backgroundColor: currentBgColor }}
           />
-          <div className={`canvas_div none text-gray-400 border-1 top-20 absolute border-stone-600 ${getCanvasClass()}`}>
+          <div
+            className={`canvas_div none text-gray-400 border-1 top-20 absolute border-stone-600 ${getCanvasClass()}`}
+          >
             <canvas id="canvas"></canvas>
           </div>
         </div>
@@ -720,7 +836,9 @@ export default function DesignArea({
             {apparels.map((apparel) => (
               <div
                 key={apparel.url}
-                className={`w-full p-1 rounded-lg border hover:bg-zinc-200 hover:border-zinc-400 ${apparel.selected ? "border border-zinc-500" : ""}`}
+                className={`w-full p-1 rounded-lg border hover:bg-zinc-200 hover:border-zinc-400 ${
+                  apparel.selected ? "border border-zinc-500" : ""
+                }`}
               >
                 <img
                   src={apparel.url}
@@ -738,7 +856,9 @@ export default function DesignArea({
             {colors.map((color) => (
               <div
                 key={color.value}
-                className={`sm:p-4 sm:w-4 sm:h-4 md:p-3 lg:p-[12px] sm:rounded-full cursor-pointer border hover:bg-zinc-800 hover:border-zinc-400 ${color.selected ? "border border-zinc-500" : ""}`}
+                className={`sm:p-4 sm:w-4 sm:h-4 md:p-3 lg:p-[12px] sm:rounded-full cursor-pointer border hover:bg-zinc-800 hover:border-zinc-400 ${
+                  color.selected ? "border border-zinc-500" : ""
+                }`}
                 style={{ backgroundColor: color.value }}
                 onClick={() => handleColorClick(color.value)}
               ></div>
@@ -749,13 +869,30 @@ export default function DesignArea({
         <div className="col-span-12 sm:col-span-12 md:col-span-12 lg:col-span-4 text-right">
           <button
             type="button"
-            onClick={() => (isVendorMode ? addProduct() : cartId ? handleUpdateCart() : handleAddToCart())}
+            onClick={() =>
+              isVendorMode
+                ? addProduct()
+                : cartId
+                ? handleUpdateCart()
+                : handleAddToCart()
+            }
             className="text-purple-700 hover:text-white border-purple-700 hover:bg-purple-800 focus:ring-1 border focus:outline-none focus:ring-blue-100 font-medium rounded-lg text-sm px-5 py-1.5 text-center me-2 mb-2 dark:border-purple-500 dark:text-purple-500 dark:hover:text-white dark:hover:bg-purple-500 dark:focus:ring-blue-800"
           >
-            <IconContext.Provider value={{ size: "24px", className: "btn-add-to-cart inline-block" }}>
+            <IconContext.Provider
+              value={{
+                size: "24px",
+                className: "btn-add-to-cart inline-block",
+              }}
+            >
               <FiShoppingBag />
             </IconContext.Provider>
-            <span className="ml-3">{isVendorMode ? "Add Product" : cartId ? `Update Cart` : `Add to Cart`}</span>
+            <span className="ml-3">
+              {isVendorMode
+                ? "Add Product"
+                : cartId
+                ? `Update Cart`
+                : `Add to Cart`}
+            </span>
           </button>
         </div>
       </div>
