@@ -13,10 +13,15 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const meResponse = await fetch(`${NEXT_URL}/api/auth/me`, {
     headers: { cookie: cookieHeader || "" },
   });
-
-  if (!meResponse.ok) {
-    redirect("/"); // Redirect to login if not authenticated
+  const data = await meResponse.json();
+  console.log("meResponse:", data); // Debug log
+  console.log("meResponse status:", meResponse.status, "cookie:", cookieHeader); // Debug log
+  if (!data.success) {
+    console.log("Redirecting to / due to auth failure"); // Debug log
+    redirect("/");
   }
+
+  
 
   const user = await meResponse.json();
 

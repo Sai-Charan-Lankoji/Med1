@@ -45,11 +45,12 @@ export const useGetUsers = () => {
 
   const { data, error, isLoading, mutate } = useSWR(url, fetchUsers, {
     revalidateOnFocus: false,     // Matches refetchOnWindowFocus: false
-    revalidateOnMount: false,     // Matches refetchOnMount: false
-    dedupingInterval: 0,          // Matches cacheTime: 0 for deduplication
-    errorRetryCount: 0,           // Matches retry: false
+    revalidateOnMount: true,     // Matches refetchOnMount: false
+    dedupingInterval: 10000,          
+    errorRetryCount: 2, 
+              // Matches retry: false
     // Improvement: Only revalidate if explicitly stale (controlled manually)
-    revalidateIfStale: false,
+    revalidateIfStale: true,
     onError: (error: unknown) => {
       if (error instanceof Error) {
         console.error('Error occurred while fetching users:', error.message);

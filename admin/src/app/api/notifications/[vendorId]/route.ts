@@ -1,12 +1,13 @@
 // src/app/api/notifications/[vendorId]/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { NEXT_URL } from "@/app/constants";
 
 export async function PUT(req: NextRequest, { params }: { params: { vendorId: string } }) {
   const { vendorId } = params;
   const cookieHeader = req.headers.get("cookie") || "";
 
   try {
-    const backendUrl = `http://localhost:5000/api/notifications/${vendorId}`;
+    const backendUrl = `${NEXT_URL}/api/notifications/${vendorId}`;
     const response = await fetch(backendUrl, {
       method: "PUT",
       headers: {
@@ -38,7 +39,7 @@ export async function POST(req: NextRequest) {
   const cookieHeader = req.headers.get("cookie") || "";
 
   try {
-    const backendUrl = "http://localhost:5000/api/vendors/notify";
+    const backendUrl = `${NEXT_URL}/api/vendors/notify`;
     const response = await fetch(backendUrl, {
       method: "POST",
       headers: {

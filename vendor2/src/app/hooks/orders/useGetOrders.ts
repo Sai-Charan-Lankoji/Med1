@@ -39,11 +39,12 @@ export const useGetOrders = () => {
     url ? ["orders", vendor_id] : null,
     () => fetchOrders(url!),
     {
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
       revalidateOnMount: true,
-      dedupingInterval: 60000, // 1 minute cache
+      dedupingInterval: 10000, 
       refreshInterval: 0, // Disable auto-refresh
       shouldRetryOnError: true,
+      revalidateIfStale: true,
       retryCount: 3,
       retryOnErrorDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000),
       onError: (err) => {

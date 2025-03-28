@@ -1,5 +1,5 @@
 
-// import { NEXT_URL } from "@/app/constants";
+import { NEXT_URL } from "@/app/constants";
 
 // Vendor interface (adjusted from your sample)
 export interface Vendor {
@@ -82,7 +82,7 @@ export interface VendorAnalyticsData {
 }
 // Fetch all vendors (SSR)
 export async function getAllVendors(cookieHeader?: string): Promise<Vendor[]> {
-  const url = "http://localhost:5000/api/vendors";
+  const url = `${NEXT_URL}/api/vendors`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -108,7 +108,7 @@ export async function getAllVendors(cookieHeader?: string): Promise<Vendor[]> {
 
 // Fetch overall analytics (SSR)
 export async function getOverallAnalytics(cookieHeader?: string): Promise<AnalyticsData> {
-  const url = "http://localhost:5000/api/vendors/analytics";
+  const url = `${NEXT_URL}/api/vendors/analytics`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -134,7 +134,7 @@ export async function getOverallAnalytics(cookieHeader?: string): Promise<Analyt
 
 // Fetch analytics for a specific vendor (SSR)
 export async function getAnalyticsByVendor(vendorId: string, cookieHeader?: string): Promise<VendorAnalyticsData> {
-  const url = `http://localhost:5000/api/vendors/analytics/${vendorId}`;
+  const url = `${NEXT_URL}/api/vendors/analytics/${vendorId}`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
@@ -158,38 +158,38 @@ export async function getAnalyticsByVendor(vendorId: string, cookieHeader?: stri
   return data.data;
 }
 
-// Notify a specific vendor (client-side)
-export async function notifyVendor(vendorId: string): Promise<void> {
-  const url = `/api/notifications/${vendorId}`; // Relative path to Next.js API route
-  const response = await fetch(url, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ status: "active" }),
-  });
+// // Notify a specific vendor (client-side)
+// export async function notifyVendor(vendorId: string): Promise<void> {
+//   const url = `/api/notifications/${vendorId}`; // Relative path to Next.js API route
+//   const response = await fetch(url, {
+//     method: "PUT",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     credentials: "include",
+//     body: JSON.stringify({ status: "active" }),
+//   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Failed to notify vendor: ${response.status}`);
-  }
-}
+//   if (!response.ok) {
+//     const errorData = await response.json().catch(() => ({}));
+//     throw new Error(errorData.message || `Failed to notify vendor: ${response.status}`);
+//   }
+// }
 
-// Notify all vendors (client-side)
-export async function notifyAllVendors(): Promise<void> {
-  const url = "/api/notifications"; // Relative path to Next.js API route
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify({ vendorId: "all" }),
-  });
+// // Notify all vendors (client-side)
+// export async function notifyAllVendors(): Promise<void> {
+//   const url = "/api/notifications"; // Relative path to Next.js API route
+//   const response = await fetch(url, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     credentials: "include",
+//     body: JSON.stringify({ vendorId: "all" }),
+//   });
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || `Failed to notify all vendors: ${response.status}`);
-  }
-}
+//   if (!response.ok) {
+//     const errorData = await response.json().catch(() => ({}));
+//     throw new Error(errorData.message || `Failed to notify all vendors: ${response.status}`);
+//   }
+// }

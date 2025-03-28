@@ -1,6 +1,5 @@
 // backend/controllers/auth.controller.js
 const AuthService = require('../services/auth.service');
-const TokenEncryption = require('../utils/encryption');
 const authService = new AuthService();
 const User = require('../models/user.model');
 
@@ -9,15 +8,14 @@ const signup = async (req, res) => {
     const { email, first_name, last_name, password, role } = req.body;
     const { user, token } = await authService.signup({ email, first_name, last_name, password, role });
 
-    // Set encrypted token in cookie
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === 'production', // True on Render
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // 'none' for cross-site
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.status(201).json(user); // Return user only, no token
+    res.status(201).json(user);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -26,17 +24,16 @@ const signup = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const { token } = await authService.login({ email, password }); // Only need token
+    const { token } = await authService.login({ email, password });
 
-    // Set encrypted token in cookie
     res.cookie('auth_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === 'production', // True on Render
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict', // 'none' for cross-site
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.status(200).json({ message: 'Login successful' }); // Minimal response
+    res.status(200).json({ message: 'Login successful' });
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
@@ -44,20 +41,19 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    const token = await req.cookies.auth_token; // Get from cookie
+    const token = req.cookies.auth_token;
     await authService.logout(token);
 
-    // Clear cookie
     res.clearCookie('auth_token');
     res.status(200).json({ message: 'Logout successful.' });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-}; 
+};
 
 const getCurrentUser = async (req, res) => {
   try {
-    const userId = req.user?.id; // Safely access req.user.id
+    const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ error: 'User ID not found in token' });
     }
@@ -79,14 +75,13 @@ const getCurrentUser = async (req, res) => {
 
 const getUsers = async (req, res) => {
   try {
-    const { page, limit, role } = req.query; // Optional query params
+    const { page, limit, role } = req.query;
     const users = await authService.getUsers(parseInt(page) || 1, parseInt(limit) || 10, role);
     res.status(200).json(users);
   } catch (error) {
     res.status(404).json({ error: error.message });
   }
 };
-
 
 const forgotPassword = async (req, res) => {
   try {
@@ -117,4 +112,3 @@ module.exports = {
   forgotPassword,
   resetPassword,
 };
-

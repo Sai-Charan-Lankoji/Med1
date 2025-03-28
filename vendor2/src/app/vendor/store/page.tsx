@@ -3,18 +3,28 @@
 import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
-import { Search, MoreHorizontal, PencilIcon, TrashIcon, Store as StoreIcon } from "lucide-react";
+import {
+  Search,
+  MoreHorizontal,
+  PencilIcon,
+  TrashIcon,
+  Store as StoreIcon,
+} from "lucide-react";
 import withAuth from "@/lib/withAuth";
 import { useGetStores } from "@/app/hooks/store/useGetStores";
 import { useGetSalesChannels } from "@/app/hooks/saleschannel/useGetSalesChannels";
 import { useDeleteStore } from "@/app/hooks/store/useDeleteStore";
 import Pagination from "@/app/utils/pagination";
-import { getColors } from "@/app/utils/dummyData";
+
 import StoreCreationComponent from "./StoreCreationComponent";
 import toast, { Toaster } from "react-hot-toast";
 
 const Store = () => {
-  const { data: storesData, isLoading, refetch: refreshStores } = useGetStores();
+  const {
+    data: storesData,
+    isLoading,
+    refetch: refreshStores,
+  } = useGetStores();
   const { data: saleschannelsData } = useGetSalesChannels();
   const { deleteStore } = useDeleteStore();
 
@@ -41,10 +51,12 @@ const Store = () => {
     const searchLower = searchQuery.toLowerCase();
     return storesWithMatchingSalesChannels.filter((store) => {
       const storeNameMatch = store.name?.toLowerCase().includes(searchLower);
-      const createdDateMatch = store.createdAt?.toLowerCase().includes(searchLower) || 
+      const createdDateMatch =
+        store.createdAt?.toLowerCase().includes(searchLower) ||
         store.created_at?.toLowerCase().includes(searchLower);
-      const salesChannelNameMatch =
-        store.matchingSalesChannel?.name?.toLowerCase().includes(searchLower);
+      const salesChannelNameMatch = store.matchingSalesChannel?.name
+        ?.toLowerCase()
+        .includes(searchLower);
       return storeNameMatch || createdDateMatch || salesChannelNameMatch;
     });
   }, [storesWithMatchingSalesChannels, searchQuery]);
@@ -87,9 +99,9 @@ const Store = () => {
       toast.success("Store deleted successfully", {
         duration: 3000,
         style: {
-          background: 'var(--fallback-b1,oklch(var(--b1)))',
-          color: 'var(--fallback-bc,oklch(var(--bc)))',
-          border: '1px solid var(--fallback-bc,oklch(var(--bc)))',
+          background: "var(--fallback-b1,oklch(var(--b1)))",
+          color: "var(--fallback-bc,oklch(var(--bc)))",
+          border: "1px solid var(--fallback-bc,oklch(var(--bc)))",
         },
       });
       refreshStores();
@@ -98,9 +110,9 @@ const Store = () => {
       toast.error("Failed to delete store", {
         duration: 4000,
         style: {
-          background: 'var(--fallback-b1,oklch(var(--b1)))',
-          color: 'var(--fallback-bc,oklch(var(--bc)))',
-          border: '1px solid var(--fallback-er,oklch(var(--er)))',
+          background: "var(--fallback-b1,oklch(var(--b1)))",
+          color: "var(--fallback-bc,oklch(var(--bc)))",
+          border: "1px solid var(--fallback-er,oklch(var(--er)))",
         },
       });
     } finally {
@@ -145,28 +157,47 @@ const Store = () => {
             <table className="table table-zebra w-full">
               <thead>
                 <tr className="bg-base-200/50 text-base-content">
-                  <th className="text-xs font-semibold uppercase tracking-wider">Store #</th>
-                  <th className="text-xs font-semibold uppercase tracking-wider">Date Added</th>
-                  <th className="text-xs font-semibold uppercase tracking-wider">Store Name</th>
-                  <th className="text-xs font-semibold uppercase tracking-wider">Sales Channel</th>
-                  <th className="text-xs font-semibold uppercase tracking-wider">Store Type</th>
-                  <th className="text-xs font-semibold uppercase tracking-wider">Actions</th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">
+                    Store #
+                  </th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">
+                    Date Added
+                  </th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">
+                    Store Name
+                  </th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">
+                    Sales Channel
+                  </th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">
+                    Store Type
+                  </th>
+                  <th className="text-xs font-semibold uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedStores.map((store, index) => (
-                  <tr key={store.id} className="hover:bg-base-200/30 transition-colors duration-200">
+                  <tr
+                    key={store.id}
+                    className="hover:bg-base-200/30 transition-colors duration-200"
+                  >
                     <td className="font-medium">{getRowIndex(index)}</td>
                     <td>{formatDate(store.createdAt || store.created_at)}</td>
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="avatar">
-                          <div className="w-8 rounded-full bg-primary text-primary-content">
+                        <div className="avatar avatar-placeholder">
+                          <div className="w-8 rounded-full bg-primary text-primary-content font-semibold">
                             <span>{store.name.charAt(0).toUpperCase()}</span>
                           </div>
                         </div>
                         <div>
-                          <Link href={store.store_url} target="_blank" className="link link-hover font-medium">
+                          <Link
+                            href={store.store_url}
+                            target="_blank"
+                            className="link link-hover font-medium"
+                          >
                             {store.name}
                           </Link>
                         </div>
@@ -182,7 +213,10 @@ const Store = () => {
                     </td>
                     <td>
                       <div className="dropdown dropdown-end">
-                        <button tabIndex={0} className="btn btn-ghost btn-sm btn-circle">
+                        <button
+                          tabIndex={0}
+                          className="btn btn-ghost btn-sm btn-circle"
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                         <ul
@@ -190,14 +224,19 @@ const Store = () => {
                           className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-[1]"
                         >
                           <li>
-                            <Link href={`/vendor/store/${store.id}`} className="flex items-center">
+                            <Link
+                              href={`/vendor/store/${store.id}`}
+                              className="flex items-center"
+                            >
                               <PencilIcon className="h-4 w-4" /> Edit
                             </Link>
                           </li>
                           <li>
                             <button
                               className="flex items-center text-error"
-                              onClick={(event) => initiateDelete(store.id, event)}
+                              onClick={(event) =>
+                                initiateDelete(store.id, event)
+                              }
                             >
                               <TrashIcon className="h-4 w-4" /> Delete
                             </button>
@@ -209,7 +248,10 @@ const Store = () => {
                 ))}
                 {paginatedStores.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center text-base-content/70 py-10">
+                    <td
+                      colSpan={6}
+                      className="text-center text-base-content/70 py-10"
+                    >
                       No stores found
                     </td>
                   </tr>
@@ -217,7 +259,7 @@ const Store = () => {
               </tbody>
             </table>
           </div>
-          
+
           <div className="border-t border-base-200">
             <Pagination
               currentPage={currentPage}
@@ -230,7 +272,10 @@ const Store = () => {
       </div>
 
       <div className="mt-6">
-        <StoreCreationComponent onStoreCreated={refreshStores} storesData={storesData || []} />
+        <StoreCreationComponent
+          onStoreCreated={refreshStores}
+          storesData={storesData || []}
+        />
       </div>
 
       <dialog id="delete-modal" className="modal" open={isDeleteModalOpen}>
@@ -245,11 +290,15 @@ const Store = () => {
             <>
               <div className="py-4">
                 <p className="text-center text-base-content/70">
-                  Are you sure you want to delete this store? This action cannot be undone.
+                  Are you sure you want to delete this store? This action cannot
+                  be undone.
                 </p>
               </div>
               <div className="modal-action">
-                <button className="btn btn-outline" onClick={() => setIsDeleteModalOpen(false)}>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setIsDeleteModalOpen(false)}
+                >
                   Cancel
                 </button>
                 <button className="btn btn-error" onClick={handleDelete}>
@@ -263,8 +312,8 @@ const Store = () => {
           </form>
         </div>
       </dialog>
-      
-      {/* Add Toaster component for notifications */}
+
+     
       <Toaster position="top-right" />
     </div>
   );

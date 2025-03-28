@@ -1,9 +1,10 @@
 // src/app/api/auth/logout/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import {NEXT_URL} from "@/app/constants"
 
 export async function POST(req: NextRequest) {
   try {
-    const backendUrl = "http://localhost:5000/api/auth/logout"; // Your backend
+    const backendUrl = `${NEXT_URL}/api/auth/logout`;
     const cookieHeader = req.headers.get("cookie") || "";
 
     const response = await fetch(backendUrl, {

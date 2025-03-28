@@ -424,15 +424,15 @@ const ProductGallery = () => {
                               style={{
                                 top:
                                   currentDesign.apparel.side === "leftshoulder"
-                                    ? "120px"
+                                    ? "130px"
                                     : currentDesign.apparel.side === "rightshoulder"
-                                    ? "120px"
+                                    ? "150px"
                                     : "initial",
                                 left:
                                   currentDesign.apparel.side === "leftshoulder"
-                                    ? "90px"
+                                    ? "120px"
                                     : currentDesign.apparel.side === "rightshoulder"
-                                    ? "100px"
+                                    ? "150px"
                                     : "initial",
                                 width:
                                   currentDesign.apparel.side === "leftshoulder" ||

@@ -56,7 +56,7 @@ const LoginForm = () => {
         toast.success("Login successful", { duration: 1000 });
         setIsNavigating(true);
         setTimeout(() => {
-          router.push("/vendor/orders");
+          router.push("/vendor/products");
         }, 1200);
       }
     } catch (err: any) {

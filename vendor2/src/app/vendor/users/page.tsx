@@ -4,7 +4,7 @@ import { useState } from "react";
 import { MoreHorizontal, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import withAuth from "@/lib/withAuth";
-import { useGetStores } from "@/app/hooks/store/useGetStores";
+
 import { useCreateUser } from "@/app/hooks/users/useCreateUser";
 import { useDeleteUser } from "@/app/hooks/users/useDeleteUser";
 import { useGetUsers } from "@/app/hooks/users/useGetUsers";
@@ -29,7 +29,7 @@ const statuses = [
 
 const Users = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: stores } = useGetStores();
+  
   const { data: users, isLoading: isLoadingUsers } = useGetUsers();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserResponseData | null>(null);

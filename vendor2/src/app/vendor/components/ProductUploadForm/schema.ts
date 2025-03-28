@@ -3,7 +3,7 @@ import { z } from "zod"
 export const productFormSchema = z
   .object({
     title: z.string().min(1, "Title is required"),
-    description: z.string().min(1, "Description is required"),
+    description: z.string().min(1, "Description is required").max(200, "Description must be less than 500 characters"),
     price: z.number().positive("Must be greater than 0").finite(),
     category: z.string().min(1, "Category is required"),
     sizes: z.array(z.string()).optional(),
