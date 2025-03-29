@@ -12,6 +12,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   const meResponse = await fetch(`${NEXT_URL}/api/auth/me`, {
     headers: { cookie: cookieHeader || "" },
+    credentials: "include", // Add this
   });
   const data = await meResponse.json();
   console.log("meResponse:", data); // Debug log
