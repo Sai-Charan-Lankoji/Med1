@@ -1,13 +1,12 @@
-// src/app/page.tsx
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
-import { ToastContainer, toast } from "react-toastify"; 
-import "react-toastify/dist/ReactToastify.css"; 
-import {NEXT_URL} from "@/app/constants";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { NEXT_URL } from "@/app/constants";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -32,27 +31,13 @@ export default function LoginPage() {
   const [forgotPasswordLoading, setForgotPasswordLoading] = useState(false);
   const router = useRouter();
 
-  // Password strength criteria
-  const passwordCriteria = {
-    minLength: password.length >= 6,
-    hasUppercase: /[A-Z]/.test(password),
-    hasNumber: /[0-9]/.test(password),
-    hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/.test(password),
-  };
-
   // Validate email format
   const isEmailValid = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   };
 
-  // Validate login form on input change
-  useEffect(() => {
-    if (touched.email || touched.password) {
-      validateForm(false);
-    }
-  }, [email, password, touched]);
-
-  const validateForm = (isSubmitting = true) => {
+  // Simplified validation without password criteria
+  const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email) {
@@ -63,14 +48,6 @@ export default function LoginPage() {
 
     if (!password) {
       newErrors.password = "Password is required";
-    } else if (password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
-    } else if (isSubmitting && !passwordCriteria.hasUppercase) {
-      newErrors.password = "Password must contain at least one uppercase letter";
-    } else if (isSubmitting && !passwordCriteria.hasNumber) {
-      newErrors.password = "Password must contain at least one number";
-    } else if (isSubmitting && !passwordCriteria.hasSpecialChar) {
-      newErrors.password = "Password must contain at least one special character";
     }
 
     setErrors(newErrors);
@@ -79,12 +56,13 @@ export default function LoginPage() {
 
   const handleBlur = (field: "email" | "password") => {
     setTouched((prev) => ({ ...prev, [field]: true }));
+    validateForm(); // Validate on blur
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched({ email: true, password: true });
-  
+
     if (validateForm()) {
       try {
         const response = await fetch(`${NEXT_URL}/api/auth/login`, {
@@ -95,7 +73,7 @@ export default function LoginPage() {
         });
         const data = await response.json();
         if (response.ok) {
-          localStorage.setItem("auth_token", data.token); // Store token
+          localStorage.setItem("auth_token", data.token);
           toast.success("Login Successful!");
           setTimeout(() => {
             router.push("/admin/vendors");
@@ -155,10 +133,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      {/* Toast Container */}
       <ToastContainer />
-
-      {/* Left Side - Company Banner */}
       <div className="w-full md:w-1/2 bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center p-8">
         <div className="text-center text-white max-w-md">
           <h1 className="text-5xl font-bold mb-6">Vendor Hub</h1>
@@ -225,7 +200,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Login Form */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-base-100 p-4 md:p-8">
         <div className="card w-full max-w-md bg-base-200 shadow-xl">
           <div className="card-body">
@@ -313,54 +287,6 @@ export default function LoginPage() {
                 {touched.password && errors.password && (
                   <span className="text-error text-sm mt-1">{errors.password}</span>
                 )}
-
-                {password.length > 0 && (
-                  <div className="mt-2 space-y-2">
-                    <p className="text-sm font-medium">Password requirements:</p>
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm">
-                        <div
-                          className={`w-4 h-4 mr-2 rounded-full flex items-center justify-center ${passwordCriteria.minLength ? "bg-success" : "bg-neutral"}`}
-                        >
-                          {passwordCriteria.minLength && <CheckCircle2 className="h-3 w-3 text-white" />}
-                        </div>
-                        <span className={passwordCriteria.minLength ? "text-success" : "text-base-content/50"}>
-                          At least 6 characters
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <div
-                          className={`w-4 h-4 mr-2 rounded-full flex items-center justify-center ${passwordCriteria.hasUppercase ? "bg-success" : "bg-neutral"}`}
-                        >
-                          {passwordCriteria.hasUppercase && <CheckCircle2 className="h-3 w-3 text-white" />}
-                        </div>
-                        <span className={passwordCriteria.hasUppercase ? "text-success" : "text-base-content/50"}>
-                          At least one uppercase letter
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <div
-                          className={`w-4 h-4 mr-2 rounded-full flex items-center justify-center ${passwordCriteria.hasNumber ? "bg-success" : "bg-neutral"}`}
-                        >
-                          {passwordCriteria.hasNumber && <CheckCircle2 className="h-3 w-3 text-white" />}
-                        </div>
-                        <span className={passwordCriteria.hasNumber ? "text-success" : "text-base-content/50"}>
-                          At least one number
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm">
-                        <div
-                          className={`w-4 h-4 mr-2 rounded-full flex items-center justify-center ${passwordCriteria.hasSpecialChar ? "bg-success" : "bg-neutral"}`}
-                        >
-                          {passwordCriteria.hasSpecialChar && <CheckCircle2 className="h-3 w-3 text-white" />}
-                        </div>
-                        <span className={passwordCriteria.hasSpecialChar ? "text-success" : "text-base-content/50"}>
-                          At least one special character
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <button type="submit" className="btn btn-primary w-full">
@@ -368,17 +294,11 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-6 text-center text-sm">
-              <span className="text-base-content/70">Don&apos;t have an account?</span>{" "}
-              <button type="button" className="btn btn-link p-0 h-auto">
-                Create account
-              </button>
-            </div>
+           
           </div>
         </div>
       </div>
 
-      {/* Forgot Password Modal */}
       {isForgotPasswordModalOpen && (
         <div className="modal modal-open">
           <div className="modal-box">

@@ -1,7 +1,6 @@
-// backend/services/auth.service.js
 const bcrypt = require('bcrypt');
 const User = require('../models/user.model');
-const { generateToken } = require('../utils/jwt'); // Assuming you have a JWT utility
+const { generateToken } = require('../utils/jwt');
 const TokenBlacklist = require('../models/tokenBlacklist.model');
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
@@ -12,7 +11,7 @@ class AuthService {
   static PASSWORD_MIN_LENGTH = 8;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
+    const smtpConfig = {
       host: process.env.SMTP_SERVER,
       port: parseInt(process.env.SMTP_PORT),
       secure: process.env.SMTP_SSL === 'true',
@@ -20,6 +19,32 @@ class AuthService {
         user: process.env.SMTP_USERNAME,
         pass: process.env.SMTP_PASSWORD,
       },
+    };
+
+    // Log SMTP config for debugging
+    console.log("Initializing SMTP Transporter with config:", {
+      host: smtpConfig.host,
+      port: smtpConfig.port,
+      secure: smtpConfig.secure,
+      user: smtpConfig.auth.user,
+      pass: smtpConfig.auth.pass ? "[REDACTED]" : undefined,
+    });
+
+    // Validate SMTP credentials
+    if (!smtpConfig.host || !smtpConfig.port || !smtpConfig.auth.user || !smtpConfig.auth.pass) {
+      console.error("SMTP configuration is incomplete. Check environment variables.");
+      throw new Error('SMTP configuration is incomplete. Missing required credentials.');
+    }
+
+    this.transporter = nodemailer.createTransport(smtpConfig);
+
+    // Verify transporter setup
+    this.transporter.verify((error, success) => {
+      if (error) {
+        console.error("SMTP Transporter verification failed:", error);
+      } else {
+        console.log("SMTP Transporter is ready to send emails.");
+      }
     });
   }
 
@@ -49,7 +74,7 @@ class AuthService {
       first_name: first_name.trim(),
       last_name: last_name.trim(),
       password_hash,
-      role: role || 'member', // Default to 'member' as per model
+      role: role || 'member',
     });
 
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
@@ -72,21 +97,17 @@ class AuthService {
 
   async logout(token) {
     if (!token?.trim()) {
-      // No token provided, just return (no error needed)
       return { message: "No token to logout." };
     }
   
     const existingBlacklist = await TokenBlacklist.findOne({ where: { token } });
     if (existingBlacklist) {
-      // Token already blacklisted, return success instead of error
       return { message: "Token already invalidated." };
     }
   
     await TokenBlacklist.create({ token, blacklisted_at: new Date() });
     return { message: "Logged out successfully." };
   }
-
-
 
   async getUsers(page = 1, limit = 10, role) {
     const offset = (page - 1) * limit;
@@ -95,7 +116,7 @@ class AuthService {
       offset,
       attributes: { exclude: ['password_hash'] },
       order: [['created_at', 'DESC']],
-      paranoid: true, // Respect soft deletes
+      paranoid: true,
     };
     if (role) query.where = { role };
 
@@ -114,7 +135,7 @@ class AuthService {
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     const resetTokenHash = await bcrypt.hash(resetToken, this.constructor.SALT_ROUNDS);
-    const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour expiry
+    const resetTokenExpires = new Date(Date.now() + 3600000);
 
     await user.update({
       reset_password_token: resetTokenHash,
@@ -130,7 +151,13 @@ class AuthService {
       html: `<p>You requested a password reset for Vendor Hub. Click <a href="${resetUrl}">here</a> to reset your password.</p><p>If you didn’t request this, please ignore this email.</p>`,
     };
 
-    await this.transporter.sendMail(mailOptions);
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log("Reset email sent successfully to:", email);
+    } catch (error) {
+      console.error("Failed to send reset email:", error);
+      throw new Error('Failed to send reset email. Please try again later.');
+    }
   }
 
   async resetPassword(token, password) {
