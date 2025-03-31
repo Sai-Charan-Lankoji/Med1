@@ -106,7 +106,7 @@ export default function LoginPage() {
           console.log("Login successful, redirecting to /admin/vendors"); // Debug log
           setTimeout(() => {
             console.log("Executing redirect to /admin/vendors"); // Debug log
-            router.replace("/admin/vendors");
+            router.push("/admin/vendors");
           }, 1500);
         } else {
           const errorData = await response.json();
