@@ -125,9 +125,9 @@ class AuthService {
     const mailOptions = {
       from: process.env.SMTP_USERNAME,
       to: email,
-      subject: 'Password Reset Request - VendorSync',
-      text: `You requested a password reset for VendorSync. Click this link to reset your password: ${resetUrl}\n\nIf you didn’t request this, please ignore this email.`,
-      html: `<p>You requested a password reset for VendorSync. Click <a href="${resetUrl}">here</a> to reset your password.</p><p>If you didn’t request this, please ignore this email.</p>`,
+      subject: 'Password Reset Request - Vendor Hub',
+      text: `You requested a password reset for Vendor Hub. Click this link to reset your password: ${resetUrl}\n\nIf you didn’t request this, please ignore this email.`,
+      html: `<p>You requested a password reset for Vendor Hub. Click <a href="${resetUrl}">here</a> to reset your password.</p><p>If you didn’t request this, please ignore this email.</p>`,
     };
 
     await this.transporter.sendMail(mailOptions);

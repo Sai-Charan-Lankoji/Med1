@@ -188,7 +188,7 @@ export default function Sidebar({ user }: { user: User }) {
       {/* Footer */}
       {!isCollapsed && (
         <div className="p-4 text-xs text-base-content/60 border-t bg-base-100 shadow-sm">
-          <p>© 2025 VendorSync</p>
+          <p>© 2025 Vendor Hub</p>
         </div>
       )}
     </aside>

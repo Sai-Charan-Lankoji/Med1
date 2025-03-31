@@ -15,7 +15,7 @@ const formatDate = (dateString: string) => {
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }); // Force US format for consistency
+  }); 
 };
 
 async function fetchVendorAnalytics(vendorId: string, token: string): Promise<{
@@ -33,7 +33,7 @@ async function fetchVendorAnalytics(vendorId: string, token: string): Promise<{
     return {
       analytics: {
         vendor_id: vendorId,
-        vendor_name: "Unknown Vendor",
+        vendor_name: "Vendor",
         commission_rate: "0",
         stores: [],
         monthly_revenue: [],
@@ -53,7 +53,7 @@ export default function VendorBillingDetailsPage() {
   }>({
     analytics: {
       vendor_id: vendorId || "",
-      vendor_name: "Unknown Vendor",
+      vendor_name: "Vendor",
       commission_rate: "0",
       stores: [],
       monthly_revenue: [],
@@ -117,7 +117,7 @@ export default function VendorBillingDetailsPage() {
     );
   }
 
-  const { vendor_name, stores, commission_rate, monthly_revenue, next_billing_date } = analytics;
+  const {  stores, commission_rate, monthly_revenue, next_billing_date } = analytics;
 
   return (
     <div className="min-h-screen bg-base-100 p-4">
@@ -128,7 +128,7 @@ export default function VendorBillingDetailsPage() {
             <div className="flex justify-between items-center flex-wrap gap-4">
               <div>
                 <h1 className="card-title text-3xl font-bold text-primary">
-                  {vendor_name} Billing Details
+                  Vendor Billing Details
                 </h1>
                 <p className="text-base-content/70">Advanced financial overview</p>
               </div>
@@ -147,7 +147,7 @@ export default function VendorBillingDetailsPage() {
                   <FaDollarSign className="w-8 h-8" />
                 </div>
                 <div className="stat-title">Commission Rate</div>
-                <div className="stat-value text-info">{commission_rate}%</div>
+                <div className="stat-value text-info">{commission_rate}</div>
               </div>
               <div className="stat bg-base-200 rounded-box shadow-md p-4 hover:shadow-lg transition-shadow">
                 <div className="stat-figure text-success">

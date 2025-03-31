@@ -161,7 +161,7 @@ export default function LoginPage() {
       {/* Left Side - Company Banner */}
       <div className="w-full md:w-1/2 bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center p-8">
         <div className="text-center text-white max-w-md">
-          <h1 className="text-5xl font-bold mb-6">VendorSync</h1>
+          <h1 className="text-5xl font-bold mb-6">Vendor Hub</h1>
           <p className="text-xl">Empowering Vendors, One Dashboard at a Time</p>
           <div className="mt-12 space-y-4 opacity-85">
             <div className="flex items-center space-x-3">
