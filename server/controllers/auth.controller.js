@@ -26,27 +26,39 @@ const signup = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     const { token } = await authService.login({ email, password });
 
+    // Set httpOnly cookie (for security)
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
-      path: "/", // Ensure cookie is available for all paths
+      path: "/",
+    });
+
+    // Set non-httpOnly cookie for frontend access
+    res.cookie("token", token, {
+      httpOnly: false, // Accessible by frontend
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
     res.set("Access-Control-Allow-Origin", req.headers.origin);
     res.set("Access-Control-Allow-Credentials", "true");
 
-    res.status(200).json({ message: "Login successful" });
+    res.status(200).json({ message: "Login successful", token });
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
 };
+
 
 
 const logout = async (req, res) => {

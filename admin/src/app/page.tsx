@@ -93,7 +93,10 @@ export default function LoginPage() {
           body: JSON.stringify({ email, password }),
           credentials: "include",
         });
+        const data = await response.json();
         if (response.ok) {
+          // Store token in localStorage
+          localStorage.setItem("auth_token", data.token);
           toast.success("Login Successful!", {
             position: "top-right",
             autoClose: 1000,
@@ -103,36 +106,15 @@ export default function LoginPage() {
             draggable: true,
             theme: "colored",
           });
-          console.log("Login successful, redirecting to /admin/vendors"); // Debug log
           setTimeout(() => {
-            console.log("Executing redirect to /admin/vendors"); // Debug log
             router.push("/admin/vendors");
           }, 1500);
         } else {
-          const errorData = await response.json();
-          const errorMessage = errorData.error || "Login Failed";
-          toast.error(errorMessage, {
-            position: "top-right",
-            autoClose: 2000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "colored",
-          });
-          setErrors({ server: errorMessage });
+          toast.error(data.error || "Login Failed");
+          setErrors({ server: data.error || "Login Failed" });
         }
-      } catch (error) {
-        console.error("Login error:", error); // Debug log
-        toast.error("Something went wrong. Please try again later.", {
-          position: "top-right",
-          autoClose: 2000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
-          theme: "colored",
-        });
+      } catch {
+        toast.error("Something went wrong. Please try again later.");
         setErrors({ server: "Something went wrong. Please try again later." });
       }
     }
