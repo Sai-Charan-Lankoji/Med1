@@ -43,7 +43,7 @@ export const useCustomerSignup = () => {
     setError(null);
 
     try { 
-      const localUrl = "http://localhost:5000/api/customer/signup" 
+      const localUrl = `${NEXT_PUBLIC_API_URL}/api/customer/signup` 
       //`${url}/api/customer/signup`
       const url = NEXT_PUBLIC_API_URL;
       const response = await fetch(`${url}/api/customer/signup`, {

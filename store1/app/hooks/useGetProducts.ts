@@ -1,6 +1,7 @@
+import { NEXT_PUBLIC_API_URL } from '@/constants/constants';
 import { useQuery } from '@tanstack/react-query';
  
-const baseUrl = "http://localhost:5000";
+const baseUrl = NEXT_PUBLIC_API_URL;
 const fetchProducts = async (store_id: string) => {
   
   if (!store_id) {

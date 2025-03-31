@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
-
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 interface Address {
   id: string;
   customer_id: string;
@@ -43,7 +43,7 @@ interface UseAddressesReturn {
   handleAddAddress: () => Promise<void>;
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = NEXT_PUBLIC_API_URL;
 
 export const useAddresses = (): UseAddressesReturn => {
   const [customer, setCustomer] = useState<Customer | null>(null);

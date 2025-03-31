@@ -12,6 +12,7 @@ import { useGetStandardProducts } from "../hooks/useGetStandardProducts";
 import StandardProducts from "../components/StandardProdcuts";
 import ProductDetailModal from "../components/ProductDetailModal";
 import axios from "axios";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 const InfiniteScrollContainer: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -101,7 +102,7 @@ const ProductGallery: React.FC = () => {
 
   const logProductView = async (productId: string, storeId: string) => {
     try {
-      await axios.post("http://localhost:5000/api/product-view", {
+      await axios.post(`${NEXT_PUBLIC_API_URL}/api/product-view`, {
         product_id: productId,
         store_id: storeId, // Changed to store_id
       });

@@ -29,7 +29,7 @@ export default function RootLayout({
             <QueryClientProvider client={queryClient}>
               {/* <MedusaProvider
                 queryClientProviderProps={{ client: queryClient }}
-                baseUrl="http://localhost:5000"
+                baseUrl=`${NEXT_PUBLIC_API_URL}`
                 publishableApiKey={process.env.NEXT_PUBLIC_MEDUSA_API_KEY}
               > */}
                 <WishlistProvider>

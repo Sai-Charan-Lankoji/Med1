@@ -14,6 +14,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 // Define form schemas using Zod with industry-standard validations
 const loginSchema = z.object({
@@ -60,7 +61,7 @@ interface ApiResponse<T> {
   error?: { code: string; details: string };
 }
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = `${NEXT_PUBLIC_API_URL}`;
 
 export default function SignIn() {
   const { store } = useStore();

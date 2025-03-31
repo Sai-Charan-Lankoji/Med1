@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { NEXT_PUBLIC_API_URL } from "../constants/constants";
 
 interface WishlistItem {
   id: string;
@@ -30,7 +31,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const fetchWishlist = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/wishlists", {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/wishlists`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -55,7 +56,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
     standard_product_id: string | null;
   }) => {
     try {
-      const response = await fetch("http://localhost:5000/api/wishlists/add", {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/wishlists/add`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -76,7 +77,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const removeFromWishlist = async (itemId: string) => {
     try {
-      const response = await fetch("http://localhost:5000/api/wishlists/remove", {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/wishlists/remove`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

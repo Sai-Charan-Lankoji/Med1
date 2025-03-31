@@ -31,6 +31,7 @@ import { useNewCart } from "@/app/hooks/useNewCart";
 import { useEffect, useState } from "react";
 import { getStackFromDB } from "@/utils/indexedDButils";
 import { useStore } from "@/context/storecontext";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 const shapesGal = /(rect|circle|triangle)/i;
 const clipartGal = /(group|path)/i;
@@ -104,7 +105,7 @@ export default function DesignArea({
   useEffect(() => {
     const fetchCustomerData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/customer/me", {
+        const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -491,7 +492,7 @@ export default function DesignArea({
 
       console.log("this is product request Body : ", requestBody);
 
-      const response = await fetch("http://localhost:5000/api/products", {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/products`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

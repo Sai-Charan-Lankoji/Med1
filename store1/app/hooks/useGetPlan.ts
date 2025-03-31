@@ -1,6 +1,8 @@
-const baseUrl = "http://localhost:5000";
+
+import { NEXT_PUBLIC_API_URL } from '@/constants/constants';
 import { useQuery } from '@tanstack/react-query';
 
+const baseUrl = NEXT_PUBLIC_API_URL;
 const fetchPlan = async (id: string) => {
   const url = `${baseUrl}/admin/plan/${id}`;
 

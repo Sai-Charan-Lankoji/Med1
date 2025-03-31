@@ -6,6 +6,7 @@ import { DesignContext } from "../context/designcontext";
 import { useDispatch } from "react-redux";
 import { DesignEnums, Item } from "@/@types/models";
 import Image from 'next/image';
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 export function UploadImage(): React.ReactElement {
   const { menus, dispatchMenu } = useContext(MenuContext)!;
@@ -34,7 +35,7 @@ export function UploadImage(): React.ReactElement {
     formData.append("file", selectedFile);
   
     try {
-      const res = await fetch("http://localhost:5000/api/files", {
+      const res = await fetch(`${NEXT_PUBLIC_API_URL}/api/files`, {
         method: "POST",
         body: formData,
       });

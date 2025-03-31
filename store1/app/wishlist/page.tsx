@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import { IDesign } from "@/@types/models";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 interface Color {
   hex: string;
@@ -164,9 +165,9 @@ interface WishlistApiResponse {
   error?: { code: string; details: string };
 }
 
-const WISHLIST_API_URL = "http://localhost:5000/api/wishlists";
-const STANDARD_PRODUCT_API_URL = "http://localhost:5000/api/standardproducts";
-const DESIGNABLE_PRODUCT_API_URL = "http://localhost:5000/api/products";
+const WISHLIST_API_URL = `${NEXT_PUBLIC_API_URL}/api/wishlists`;
+const STANDARD_PRODUCT_API_URL = `${NEXT_PUBLIC_API_URL}/api/standardproducts`;
+const DESIGNABLE_PRODUCT_API_URL = `${NEXT_PUBLIC_API_URL}/api/products`;
 
 const DEFAULT_COLORS: Color[] = [
   { hex: "#FFFFFF", name: "White" },

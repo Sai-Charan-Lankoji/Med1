@@ -9,6 +9,7 @@ import { toast } from "react-hot-toast";
 import { Loader2, PlusCircle, Eye, EyeOff, User, Lock, Key, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 const profileSchema = z.object({
   email: z.string().email().optional(),
@@ -48,7 +49,7 @@ const updateCustomerProfile = async (id: string, formData: ProfileFormData & { p
     }
   });
 
-  return fetch(`http://localhost:5000/api/customer/${id}`, {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/${id}`, {
     method: "PUT",
     body: form,
     headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -56,7 +57,7 @@ const updateCustomerProfile = async (id: string, formData: ProfileFormData & { p
 };
 
 const changeCustomerPassword = async (id: string, formData: ChangePasswordFormData) => {
-  return fetch(`http://localhost:5000/api/customer/${id}/change-password`, {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/${id}/change-password`, {
     method: "PUT",
     body: JSON.stringify(formData),
     headers: {
@@ -67,7 +68,7 @@ const changeCustomerPassword = async (id: string, formData: ChangePasswordFormDa
 };
 
 const resetCustomerPassword = async (formData: ResetPasswordFormData) => {
-  return fetch(`http://localhost:5000/api/customer/reset-password`, {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/reset-password`, {
     method: "POST",
     body: JSON.stringify(formData),
     headers: {
@@ -77,7 +78,7 @@ const resetCustomerPassword = async (formData: ResetPasswordFormData) => {
 };
 
 const changePasswordWithToken = async (token: string, formData: TokenChangePasswordFormData) => {
-  return fetch(`http://localhost:5000/api/customer/reset-password-with-token`, {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/reset-password-with-token`, {
     method: "POST",
     body: JSON.stringify({ token, new_password: formData.new_password }),
     headers: {
@@ -146,7 +147,7 @@ export default function ProfileSettings() {
   useEffect(() => {
     const fetchCustomerData = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/customer/me", {
+        const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
           method: "GET",
           headers: {
             "Content-Type": "application/json",

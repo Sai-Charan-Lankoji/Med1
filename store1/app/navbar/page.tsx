@@ -21,7 +21,7 @@ import { useStore } from "@/context/storecontext";
 import { useNewCart } from "../hooks/useNewCart";
 import { useDesignSwitcher } from "../hooks/useDesignSwitcher";
 import { useWishlist } from "@/context/wishlistContext";
-
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 // Types (unchanged from your code)
 interface WishlistItem {
   id: string;
@@ -88,7 +88,7 @@ interface IStandardCartItem {
 type ICartItem = IDesignableCartItem | IStandardCartItem;
 
 // Constants
-const WISHLIST_API_URL = "http://localhost:5000/api/wishlists";
+const WISHLIST_API_URL = `${NEXT_PUBLIC_API_URL}/api/wishlists`;
 
 const Navbar: React.FC = () => {
   const { firstName, email, profilePhoto, isLogin, logout } = useUserContext();

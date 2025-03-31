@@ -10,6 +10,7 @@ import type {
   IStandardCartItem,
   OrderData,
 } from "@/@types/models";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 import { useStore } from "@/context/storecontext";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -135,7 +136,7 @@ const OrderPage = () => {
   // Fetch customer data from API
   const fetchCustomerData = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/customer/me", {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -178,7 +179,7 @@ const OrderPage = () => {
   const fetchProductDetails = useCallback(async (productId: string) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/stock/${productId}`,
+        `${NEXT_PUBLIC_API_URL}/api/stock/${productId}`,
         { method: "GET" }
       );
       const data = await response.json();

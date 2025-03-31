@@ -29,6 +29,8 @@ import {
 import { Input } from "../components/ui/input";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
+
 
 // Define interfaces for type safety
 interface CustomerData {
@@ -111,7 +113,7 @@ export default function Orders() {
   // Fetch customer data
   const fetchCustomerData = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/customer/me", {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -141,7 +143,7 @@ export default function Orders() {
     if (!customerData?.id) return;
     try {
       const response = await fetch(
-        `http://localhost:5000/api/orders/customer/${customerData.id}`
+        `${NEXT_PUBLIC_API_URL}/api/orders/customer/${customerData.id}`
       );
       if (!response.ok) throw new Error("Failed to fetch orders");
       const data = await response.json();

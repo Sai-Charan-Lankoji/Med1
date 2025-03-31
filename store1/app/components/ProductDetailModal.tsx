@@ -19,7 +19,7 @@ import { useNewCart } from "../hooks/useNewCart";
 import type { IDesign } from "@/@types/models";
 import { getHexFromColorName } from "../utils/colorUtils";
 import { useWishlist } from "@/context/wishlistContext";
-
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 interface Color {
   hex: string;
   name: string;
@@ -474,7 +474,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
 
   const fetchWishlist = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/wishlists", {
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/wishlists`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -521,7 +521,7 @@ const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
   //       : { product_id: null, standard_product_id: product.id };
 
   //     const response = await fetch(
-  //       `http://localhost:5000/api/wishlists${endpoint}`,
+  //       `${NEXT_PUBLIC_API_URL}/api/wishlists${endpoint}`,
   //       {
   //         method: isCurrentlyInWishlist ? "DELETE" : "POST",
   //         headers: {
