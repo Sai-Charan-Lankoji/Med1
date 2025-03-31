@@ -26,7 +26,6 @@ const signup = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -37,9 +36,9 @@ const login = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
+      path: "/", // Ensure cookie is available for all paths
     });
 
-    // Set CORS headers explicitly
     res.set("Access-Control-Allow-Origin", req.headers.origin);
     res.set("Access-Control-Allow-Credentials", "true");
 

@@ -9,27 +9,24 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   const cookieStore = await cookies();
   const cookieHeader = cookieStore.toString();
 
+  // Call the backend directly, bypassing Next.js /api proxy
   const meResponse = await fetch(`${NEXT_URL}/api/auth/me`, {
-    headers: { cookie: cookieHeader || "" },
+    headers: {
+      cookie: cookieHeader || "",
+      "Content-Type": "application/json",
+    },
     credentials: "include",
-  }); 
+  });
 
-  // Check if the response is ok (status 200)
-
-
-  // Parse response once
   const user = await meResponse.json();
-  console.log("user:", user, "cookie:", cookieHeader);
 
-  // Check if response is successful (status 200) and user exists
-  if (!meResponse.ok || !user || user.error) {
+  console.log("meResponse:", user);
+  console.log("meResponse status:", meResponse.status, "cookie:", cookieHeader);
+
+  if (!meResponse.ok || !user || user.success === false) {
     console.log("Redirecting to / due to auth failure");
     redirect("/");
   }
-
-  // Log for debugging
-  console.log("meResponse:", user);
-  console.log("meResponse status:", meResponse.status, "cookie:", cookieHeader);
 
   return (
     <div className="flex min-h-screen">
