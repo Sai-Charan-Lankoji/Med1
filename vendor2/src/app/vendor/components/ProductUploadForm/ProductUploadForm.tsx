@@ -11,6 +11,7 @@ import { productFormSchema, type ProductFormValues } from "./schema";
 import { useStock } from "@/app/hooks/useStock";
 
 import { Next_server } from "@/constant";
+import { vendor_id } from "@/app/utils/constant";
 
 // Enhanced product categories with descriptions
 const CATEGORIES = [
@@ -184,6 +185,7 @@ export function ProductUploadForm({
       const preparedData = {
         ...formData,
         stock_id: formData.stockId,
+        vendor_id: vendor_id,
         discount: sale ? formData.discount : 0,
       };
 
