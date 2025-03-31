@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
-import { headers } from "next/headers";
+import { useParams } from "next/navigation"; // Use client-side params
+import { useEffect, useState } from "react";
 import { FaDollarSign, FaStore, FaCalendar } from "react-icons/fa";
 import { getAnalyticsByVendor, VendorAnalyticsData } from "@/app/api/billingServices/route";
 import { VendorCharts } from "@/app/components/VendorCharts";
@@ -15,12 +18,12 @@ const formatDate = (dateString: string) => {
   }); // Force US format for consistency
 };
 
-async function fetchVendorAnalytics(vendorId: string, cookieHeader: string): Promise<{
+async function fetchVendorAnalytics(vendorId: string, token: string): Promise<{
   analytics: VendorAnalyticsData;
   error: string | null;
 }> {
   try {
-    const analytics = await getAnalyticsByVendor(vendorId, cookieHeader);
+    const analytics = await getAnalyticsByVendor(vendorId, token);
     if (!analytics.vendor_name) {
       analytics.vendor_name = `Vendor ${vendorId}`; // Fallback
     }
@@ -41,12 +44,55 @@ async function fetchVendorAnalytics(vendorId: string, cookieHeader: string): Pro
   }
 };
 
-// UPDATED: Changed the params type from Record<string, string> to a specific type with vendorId
-export default async function VendorBillingDetailsPage({ params }: { params: { vendorId: string } }) {
-  const vendorId = params.vendorId; // Access vendorId dynamically
-  const headersList = await headers();
-  const cookieHeader = headersList.get("cookie") || "";
-  const { analytics, error } = await fetchVendorAnalytics(vendorId, cookieHeader);
+export default function VendorBillingDetailsPage() {
+  const params = useParams(); // Client-side params
+  const vendorId = params?.vendorId as string; // Type assertion for client-side
+  const [data, setData] = useState<{
+    analytics: VendorAnalyticsData;
+    error: string | null;
+  }>({
+    analytics: {
+      vendor_id: vendorId || "",
+      vendor_name: "Unknown Vendor",
+      commission_rate: "0",
+      stores: [],
+      monthly_revenue: [],
+      next_billing_date: "",
+    },
+    error: null,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      setData((prev) => ({ ...prev, error: "No authentication token found" }));
+      setLoading(false);
+      return;
+    }
+
+    if (!vendorId) {
+      setData((prev) => ({ ...prev, error: "No vendor ID provided" }));
+      setLoading(false);
+      return;
+    }
+
+    fetchVendorAnalytics(vendorId, token).then((result) => {
+      setData(result);
+      setLoading(false);
+    });
+  }, [vendorId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-base-100">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
+  const { analytics, error } = data;
 
   if (error) {
     return (
@@ -75,7 +121,7 @@ export default async function VendorBillingDetailsPage({ params }: { params: { v
 
   return (
     <div className="min-h-screen bg-base-100 p-4">
-      <div className="mx-auto space-y-8 ">
+      <div className="mx-auto space-y-8">
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
             {/* Header with NotifyButton */}
@@ -87,7 +133,7 @@ export default async function VendorBillingDetailsPage({ params }: { params: { v
                 <p className="text-base-content/70">Advanced financial overview</p>
               </div>
               <div className="flex gap-4">
-                <NotifyButton vendorId={vendorId} /> {/* Button 1: Top-right */}
+                <NotifyButton vendorId={vendorId} />
                 <Link href="/admin/billingServices" className="btn btn-outline btn-sm btn-primary">
                   Back to Dashboard
                 </Link>
@@ -118,8 +164,6 @@ export default async function VendorBillingDetailsPage({ params }: { params: { v
                 <div className="stat-value text-warning">{formatDate(next_billing_date)}</div>
               </div>
             </div>
-
-           
 
             {/* Charts */}
             <div className="mt-8">

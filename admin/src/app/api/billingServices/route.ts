@@ -1,7 +1,6 @@
-
 import { NEXT_URL } from "@/app/constants";
 
-// Vendor interface (adjusted from your sample)
+// Vendor interface
 export interface Vendor {
   id: string;
   company_name: string;
@@ -39,7 +38,7 @@ export interface Vendor {
   }>;
 }
 
-// Analytics interfaces from your hooks
+// Analytics interfaces
 export interface MonthlyRevenue {
   month: string;
   revenue: string;
@@ -64,32 +63,24 @@ export interface StoreData {
   orders_count: number;
 }
 
-// export interface VendorAnalyticsData {
-//   vendor_id: string;
-//   commission_rate: string;
-//   stores: StoreData[];
-//   monthly_revenue: MonthlyRevenue[];
-//   next_billing_date: string;
-// }
-
 export interface VendorAnalyticsData {
   vendor_id: string;
-  vendor_name: string; // Added this
+  vendor_name: string;
   commission_rate: string;
   stores: StoreData[];
   monthly_revenue: MonthlyRevenue[];
   next_billing_date: string;
 }
-// Fetch all vendors (SSR)
-export async function getAllVendors(cookieHeader?: string): Promise<Vendor[]> {
+
+// Fetch all vendors (client-side compatible)
+export async function getAllVendors(token: string): Promise<Vendor[]> {
   const url = `${NEXT_URL}/api/vendors`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Cookie: cookieHeader || "",
+      Authorization: `Bearer ${token}`, // Use token instead of cookie
     },
-    credentials: "include",
     cache: "no-store",
   });
 
@@ -106,16 +97,15 @@ export async function getAllVendors(cookieHeader?: string): Promise<Vendor[]> {
   return data.vendors;
 }
 
-// Fetch overall analytics (SSR)
-export async function getOverallAnalytics(cookieHeader?: string): Promise<AnalyticsData> {
+// Fetch overall analytics (client-side compatible)
+export async function getOverallAnalytics(token: string): Promise<AnalyticsData> {
   const url = `${NEXT_URL}/api/vendors/analytics`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Cookie: cookieHeader || "",
+      Authorization: `Bearer ${token}`, // Use token instead of cookie
     },
-    credentials: "include",
     cache: "no-store",
   });
 
@@ -132,16 +122,15 @@ export async function getOverallAnalytics(cookieHeader?: string): Promise<Analyt
   return data.data;
 }
 
-// Fetch analytics for a specific vendor (SSR)
-export async function getAnalyticsByVendor(vendorId: string, cookieHeader?: string): Promise<VendorAnalyticsData> {
+// Fetch analytics for a specific vendor (client-side compatible)
+export async function getAnalyticsByVendor(vendorId: string, token: string): Promise<VendorAnalyticsData> {
   const url = `${NEXT_URL}/api/vendors/analytics/${vendorId}`;
   const response = await fetch(url, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-      Cookie: cookieHeader || "",
+      Authorization: `Bearer ${token}`, // Use token instead of cookie
     },
-    credentials: "include",
     cache: "no-store",
   });
 
@@ -158,9 +147,9 @@ export async function getAnalyticsByVendor(vendorId: string, cookieHeader?: stri
   return data.data;
 }
 
-// Notify a specific vendor (client-side)
+// Notify a specific vendor (client-side, unchanged)
 export async function notifyVendor(vendorId: string): Promise<void> {
-  const url = `/api/notifications/${vendorId}`; // Relative path to Next.js API route
+  const url = `/api/notifications/${vendorId}`;
   const response = await fetch(url, {
     method: "PUT",
     headers: {
@@ -176,9 +165,9 @@ export async function notifyVendor(vendorId: string): Promise<void> {
   }
 }
 
-// Notify all vendors (client-side)
+// Notify all vendors (client-side, unchanged)
 export async function notifyAllVendors(): Promise<void> {
-  const url = "/api/notifications"; // Relative path to Next.js API route
+  const url = "/api/notifications";
   const response = await fetch(url, {
     method: "POST",
     headers: {

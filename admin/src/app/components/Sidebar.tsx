@@ -1,4 +1,3 @@
-// src/app/components/Sidebar.tsx
 "use client";
 
 import { useState } from "react";
@@ -26,18 +25,32 @@ export default function Sidebar({ user }: { user: User }) {
   const getInitial = () => user.first_name.charAt(0).toUpperCase();
 
   const handleLogout = async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      localStorage.removeItem("auth_token");
+      router.push("/");
+      return;
+    }
     try {
       const response = await fetch("/api/auth/logout", {
         method: "POST",
-        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
       if (response.ok) {
+        localStorage.removeItem("auth_token");
         router.push("/");
       } else {
         console.error("Logout failed:", await response.text());
+        localStorage.removeItem("auth_token");
+        router.push("/");
       }
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.error("Logout error:", error);
+      localStorage.removeItem("auth_token");
+      router.push("/");
     }
   };
 
@@ -93,8 +106,8 @@ export default function Sidebar({ user }: { user: User }) {
                 />
               ) : (
                 <div className="avatar avatar-online avatar-placeholder">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-focus flex items-center justify-center  ring-2 ring-base-100">
-                    <span className="text-lg  font-semibold text-primary-content">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-focus flex items-center justify-center ring-2 ring-base-100">
+                    <span className="text-lg font-semibold text-primary-content">
                       {getInitial()}
                     </span>
                   </div>

@@ -1,19 +1,20 @@
-// src/app/admin/billingServices/page.tsx
+"use client"; // Convert to client component
+
 import Link from "next/link";
-import { headers } from "next/headers";
+import { useEffect, useState } from "react";
 import { FaUsers, FaShoppingCart, FaDollarSign, FaPercent } from "react-icons/fa";
 import { getAllVendors, getOverallAnalytics, AnalyticsData, Vendor } from "@/app/api/billingServices/route";
 import { AnimatedNumber } from "@/app/components/AnimatedNumber";
 
-async function fetchBillingData(cookieHeader: string): Promise<{
+async function fetchBillingData(token: string): Promise<{
   vendors: Vendor[];
   analytics: AnalyticsData;
   error: string | null;
 }> {
   try {
     const [vendors, analytics] = await Promise.all([
-      getAllVendors(cookieHeader),
-      getOverallAnalytics(cookieHeader),
+      getAllVendors(token), // Pass token instead of cookieHeader
+      getOverallAnalytics(token),
     ]);
     return { vendors, analytics, error: null };
   } catch (err) {
@@ -35,10 +36,51 @@ async function fetchBillingData(cookieHeader: string): Promise<{
   }
 }
 
-export default async function BillingServicesPage() {
-  const headersList = await headers();
-  const cookieHeader = headersList.get("cookie") || "";
-  const { vendors, analytics, error } = await fetchBillingData(cookieHeader);
+export default function BillingServicesPage() {
+  const [data, setData] = useState<{
+    vendors: Vendor[];
+    analytics: AnalyticsData;
+    error: string | null;
+  }>({
+    vendors: [],
+    analytics: {
+      total_vendors: 0,
+      total_orders: 0,
+      commission_total_orders: 0,
+      total_vendor_revenue: "0",
+      total_admin_commission: "0",
+      non_commissionable_revenue: "0",
+      final_vendor_revenue: "0",
+      monthly_revenue: [],
+    },
+    error: null,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
+
+    if (!token) {
+      setData((prev) => ({ ...prev, error: "No authentication token found" }));
+      setLoading(false);
+      return;
+    }
+
+    fetchBillingData(token).then((result) => {
+      setData(result);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-base-100">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
+  }
+
+  const { vendors, analytics, error } = data;
 
   if (error) {
     return (

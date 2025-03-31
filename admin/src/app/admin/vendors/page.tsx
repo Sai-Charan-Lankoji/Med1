@@ -1,4 +1,6 @@
-import { cookies } from "next/headers";
+"use client"; // Make it a client component
+
+import { useEffect, useState } from "react";
 import { NEXT_URL } from "@/app/constants";
 import VendorsWithSearch from "@/app/components/VendorsWithSearch";
 import SuspenseWithFade from "@/app/components/SuspenseWithFade";
@@ -35,28 +37,54 @@ type Vendor = {
   }[];
 };
 
-async function fetchVendors(): Promise<{ vendors: Vendor[]; error: string | null }> {
-  const cookieStore = await cookies();
-  const cookieHeader = cookieStore.toString();
+export default function VendorsPage() {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  try {
-    const response = await fetch(`${NEXT_URL}/api/vendors`, {
-      headers: { cookie: cookieHeader || "" },
-    });
+  useEffect(() => {
+    const token = localStorage.getItem("auth_token");
 
-    if (!response.ok) {
-      throw new Error("Failed to fetch vendors");
+    if (!token) {
+      setError("No authentication token found");
+      setLoading(false);
+      return;
     }
 
-    const data = await response.json();
-    return { vendors: data.vendors, error: null };
-  } catch (err) {
-    return { vendors: [], error: (err as Error).message };
-  }
-}
+    async function fetchVendors() {
+      try {
+        const response = await fetch(`${NEXT_URL}/api/vendors`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
 
-export default async function VendorsPage() {
-  const { vendors, error } = await fetchVendors();
+        if (!response.ok) {
+          throw new Error("Failed to fetch vendors");
+        }
+
+        const data = await response.json();
+        setVendors(data.vendors || []);
+        setError(null);
+      } catch (err) {
+        setError((err as Error).message);
+        setVendors([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchVendors();
+  }, []);
+
+  if (loading) {
+    return (
+      <SuspenseWithFade fallback={<Loading />}>
+        <Loading />
+      </SuspenseWithFade>
+    );
+  }
 
   return (
     <SuspenseWithFade fallback={<Loading />}>

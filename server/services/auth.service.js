@@ -71,14 +71,22 @@ class AuthService {
   }
 
   async logout(token) {
-    if (!token?.trim()) throw new Error('Valid token is required for logout.');
-
+    if (!token?.trim()) {
+      // No token provided, just return (no error needed)
+      return { message: "No token to logout." };
+    }
+  
     const existingBlacklist = await TokenBlacklist.findOne({ where: { token } });
-    if (existingBlacklist) throw new Error('Token is already invalidated.');
-
+    if (existingBlacklist) {
+      // Token already blacklisted, return success instead of error
+      return { message: "Token already invalidated." };
+    }
+  
     await TokenBlacklist.create({ token, blacklisted_at: new Date() });
-    return { message: 'Logged out successfully.' };
+    return { message: "Logged out successfully." };
   }
+
+
 
   async getUsers(page = 1, limit = 10, role) {
     const offset = (page - 1) * limit;
@@ -113,7 +121,7 @@ class AuthService {
       reset_password_expires: resetTokenExpires,
     });
 
-    const resetUrl = `http://localhost:8000/reset-password/${resetToken}`;
+    const resetUrl = `https://med1-4217.vercel.app/reset-password/${resetToken}`;
     const mailOptions = {
       from: process.env.SMTP_USERNAME,
       to: email,

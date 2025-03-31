@@ -63,16 +63,30 @@ const login = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
-    const token = req.cookies.auth_token;
+    // Accept token from either cookie or Authorization header
+    const token = req.cookies.auth_token || req.headers.authorization?.split(" ")[1];
+
+    if (!token) {
+      // If no token, still clear cookies and return success (client already cleared localStorage)
+      res.clearCookie("auth_token");
+      res.clearCookie("token");
+      return res.status(200).json({ message: "No token provided, cookies cleared." });
+    }
+
+    // Attempt to blacklist the token, but don’t fail if it’s already blacklisted
     await authService.logout(token);
 
     res.clearCookie("auth_token");
+    res.clearCookie("token");
     res.status(200).json({ message: "Logout successful." });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    // Log error but still succeed to ensure client logout completes
+    console.error("Logout error:", error.message);
+    res.clearCookie("auth_token");
+    res.clearCookie("token");
+    res.status(200).json({ message: "Logout successful despite error." });
   }
 };
-
 const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -113,9 +127,7 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     await authService.forgotPassword(email);
-    res
-      .status(200)
-      .json({ message: "Password reset link sent to your email." });
+    res.status(200).json({ message: "Password reset link sent to your email." });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

@@ -1,10 +1,10 @@
-// src/app/forgot-password/page.tsx
 "use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { NEXT_URL } from "@/app/constants";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +18,7 @@ export default function ForgotPasswordPage() {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/forgot-password", {
+      const response = await fetch(`${NEXT_URL}/api/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -28,12 +28,12 @@ export default function ForgotPasswordPage() {
       if (response.ok) {
         setMessage({ type: "success", text: "Password reset link sent to your email!" });
         setEmail("");
-        setTimeout(() => router.push("/ "), 3000); // Redirect to login after 3s
+        setTimeout(() => router.push("/"), 3000); // Fixed redirect path
       } else {
-        setMessage({ type: "error", text: data.error || "Something went wrong" });
+        setMessage({ type: "error", text: data.error || "Failed to send reset link" });
       }
     } catch {
-      setMessage({ type: "error", text: "Failed to send reset link. Try again later." });
+      setMessage({ type: "error", text: "Something went wrong. Please try again later." });
     } finally {
       setLoading(false);
     }

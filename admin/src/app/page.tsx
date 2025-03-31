@@ -95,17 +95,8 @@ export default function LoginPage() {
         });
         const data = await response.json();
         if (response.ok) {
-          // Store token in localStorage
-          localStorage.setItem("auth_token", data.token);
-          toast.success("Login Successful!", {
-            position: "top-right",
-            autoClose: 1000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            theme: "colored",
-          });
+          localStorage.setItem("auth_token", data.token); // Store token
+          toast.success("Login Successful!");
           setTimeout(() => {
             router.push("/admin/vendors");
           }, 1500);
