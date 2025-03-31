@@ -1,6 +1,6 @@
-// src/components/AnimatedNumber.tsx
 "use client";
 
+import { useEffect, useRef } from "react";
 import CountUp from "react-countup";
 
 interface AnimatedNumberProps {
@@ -18,6 +18,18 @@ export function AnimatedNumber({
   suffix = "",
   duration = 0.8,
 }: AnimatedNumberProps) {
+  const countUpRef = useRef<InstanceType<typeof CountUp> | null>(null); // Ref to CountUp instance
+  const spanRef = useRef<HTMLSpanElement>(null);
+
+  useEffect(() => {
+    if (spanRef.current && typeof value === "number" && !isNaN(value)) {
+      // Manually trigger CountUp update
+      if (countUpRef.current) {
+        countUpRef.current.update(value);
+      }
+    }
+  }, [value]);
+
   return (
     <CountUp
       start={0}
@@ -28,9 +40,14 @@ export function AnimatedNumber({
       duration={duration}
       useEasing={true}
       separator=","
+      onEnd={() => {
+        if (countUpRef.current) {
+          countUpRef.current.update(value);
+        }
+      }}
     >
-      {({ countUpRef }) => (
-        <span ref={countUpRef} className="inline-block tabular-nums" />
+      {() => (
+        <span ref={spanRef} className="inline-block tabular-nums" />
       )}
     </CountUp>
   );
