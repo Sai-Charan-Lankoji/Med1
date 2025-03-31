@@ -69,7 +69,7 @@ app.use(cors({
     ];
     const allowedOrigins = [...predefinedOrigins, ...dynamicAllowedOrigins];
     if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, origin || "http://localhost:8000"); // Return specific origin
+      callback(null, origin); // Return the exact origin, not a default
     } else {
       console.log(`CORS rejected origin: ${origin}`);
       callback(new Error("Not allowed by CORS"));
@@ -78,7 +78,10 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
+  exposedHeaders: ["Set-Cookie"], // Ensure cookie headers are exposed
 }));
+
+
 app.options('*', cors()); // Handle preflight requests
 
 app.use(bodyParser.json({ limit: "50mb" }));
