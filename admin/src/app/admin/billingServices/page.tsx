@@ -2,8 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { FaUsers, FaShoppingCart, FaDollarSign, FaPercent } from "react-icons/fa";
-import { getAllVendors, getOverallAnalytics, AnalyticsData, Vendor } from "@/app/api/billingServices/route";
+import {
+  FaUsers,
+  FaShoppingCart,
+  FaDollarSign,
+  FaPercent,
+} from "react-icons/fa";
+import {
+  getAllVendors,
+  getOverallAnalytics,
+  AnalyticsData,
+  Vendor,
+} from "@/app/api/billingServices/route";
 import { AnimatedNumber } from "@/app/components/AnimatedNumber";
 
 async function fetchBillingData(token: string): Promise<{
@@ -34,7 +44,10 @@ async function fetchBillingData(token: string): Promise<{
         final_vendor_revenue: "0",
         monthly_revenue: [],
       },
-      error: err instanceof Error ? err.message : "Unknown error fetching billing data",
+      error:
+        err instanceof Error
+          ? err.message
+          : "Unknown error fetching billing data",
     };
   }
 }
@@ -176,30 +189,36 @@ export default function BillingServicesPage() {
           <div className="card-body">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="card-title text-3xl font-bold text-primary">Billing Services</h1>
-                <p className="text-base-content/70">Overall financial summary and vendor details</p>
+                <h1 className="card-title text-3xl font-bold text-primary">
+                  Billing Services
+                </h1>
+                <p className="text-base-content/70">
+                  Overall financial summary and vendor details
+                </p>
               </div>
             </div>
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-6">
-            {stats.map((stat) => (
-              <div
-                key={stat.title}
-                className="stat bg-base-200 rounded-box shadow-md p-4 transform transition-all hover:scale-105"
-              >
-                <div className="stat-figure">{stat.icon}</div>
-                <div className="stat-title text-base-content/80">{stat.title}</div>
-                <div className="stat-value text-base-content">
-                  <AnimatedNumber
-                    key={stat.title} // Force re-mount
-                    value={stat.value}
-                    decimals={stat.decimals}
-                    prefix={stat.prefix}
-                    duration={0.8}
-                  />
+              {stats.map((stat) => (
+                <div
+                  key={stat.title}
+                  className="stat bg-base-200 rounded-box shadow-md p-4 transform transition-all hover:scale-105"
+                >
+                  <div className="stat-figure">{stat.icon}</div>
+                  <div className="stat-title text-base-content/80">
+                    {stat.title}
+                  </div>
+                  <div className="stat-value text-base-content">
+                    <AnimatedNumber
+                      key={stat.title}
+                      value={stat.value}
+                      decimals={stat.decimals}
+                      prefix={stat.prefix}
+                      duration={0.8}
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
             <div className="overflow-x-auto mt-8">
               <table className="table table-zebra w-full">
@@ -223,10 +242,18 @@ export default function BillingServicesPage() {
                           {vendor.company_name || "N/A"}
                         </Link>
                       </td>
-                      <td className="text-base-content">{vendor.contact_name || "N/A"}</td>
-                      <td className="text-base-content/70 font-mono text-sm">{vendor.contact_email || "N/A"}</td>
-                      <td className="text-base-content">{vendor.plan || "N/A"}</td>
-                      <td className="text-base-content">{vendor.business_type || "N/A"}</td>
+                      <td className="text-base-content">
+                        {vendor.contact_name || "N/A"}
+                      </td>
+                      <td className="text-base-content/70 font-mono text-sm">
+                        {vendor.contact_email || "N/A"}
+                      </td>
+                      <td className="text-base-content">
+                        {vendor.plan || "N/A"}
+                      </td>
+                      <td className="text-base-content">
+                        {vendor.business_type || "N/A"}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
