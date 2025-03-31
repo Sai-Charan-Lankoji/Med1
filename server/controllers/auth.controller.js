@@ -34,16 +34,21 @@ const login = async (req, res) => {
 
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // True on Render
+      secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
     });
+
+    // Set CORS headers explicitly
+    res.set("Access-Control-Allow-Origin", req.headers.origin);
+    res.set("Access-Control-Allow-Credentials", "true");
 
     res.status(200).json({ message: "Login successful" });
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
 };
+
 
 const logout = async (req, res) => {
   try {

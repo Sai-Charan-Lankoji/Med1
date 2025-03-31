@@ -1,4 +1,3 @@
-// app/admin/layout.tsx
 import { ReactNode } from "react";
 import Sidebar from "@/app/components/Sidebar";
 import Navbar from "@/app/components/Navbar";
@@ -12,22 +11,27 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   const meResponse = await fetch(`${NEXT_URL}/api/auth/me`, {
     headers: { cookie: cookieHeader || "" },
-    credentials: "include", // Add this
-  });
-  const data = await meResponse.json();
-  console.log("meResponse:", data); // Debug log
-  console.log("meResponse status:", meResponse.status, "cookie:", cookieHeader); // Debug log
-  if (!data.success) {
-    console.log("Redirecting to / due to auth failure"); // Debug log
+    credentials: "include",
+  }); 
+
+  // Check if the response is ok (status 200)
+
+
+  // Parse response once
+  const user = await meResponse.json();
+  console.log("user:", user, "cookie:", cookieHeader);
+
+  // Check if response is successful (status 200) and user exists
+  if (!meResponse.ok || !user || user.error) {
+    console.log("Redirecting to / due to auth failure");
     redirect("/");
   }
 
-  
-
-  const user = await meResponse.json();
+  // Log for debugging
+  console.log("meResponse:", user);
+  console.log("meResponse status:", meResponse.status, "cookie:", cookieHeader);
 
   return (
-
     <div className="flex min-h-screen">
       <Sidebar user={user} />
       <div className="flex-1 flex flex-col">
@@ -35,6 +39,5 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <main className="p-6">{children}</main>
       </div>
     </div>
-
   );
 }

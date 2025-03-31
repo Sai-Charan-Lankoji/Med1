@@ -158,38 +158,38 @@ export async function getAnalyticsByVendor(vendorId: string, cookieHeader?: stri
   return data.data;
 }
 
-// // Notify a specific vendor (client-side)
-// export async function notifyVendor(vendorId: string): Promise<void> {
-//   const url = `/api/notifications/${vendorId}`; // Relative path to Next.js API route
-//   const response = await fetch(url, {
-//     method: "PUT",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     credentials: "include",
-//     body: JSON.stringify({ status: "active" }),
-//   });
+// Notify a specific vendor (client-side)
+export async function notifyVendor(vendorId: string): Promise<void> {
+  const url = `/api/notifications/${vendorId}`; // Relative path to Next.js API route
+  const response = await fetch(url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ status: "active" }),
+  });
 
-//   if (!response.ok) {
-//     const errorData = await response.json().catch(() => ({}));
-//     throw new Error(errorData.message || `Failed to notify vendor: ${response.status}`);
-//   }
-// }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to notify vendor: ${response.status}`);
+  }
+}
 
-// // Notify all vendors (client-side)
-// export async function notifyAllVendors(): Promise<void> {
-//   const url = "/api/notifications"; // Relative path to Next.js API route
-//   const response = await fetch(url, {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//     credentials: "include",
-//     body: JSON.stringify({ vendorId: "all" }),
-//   });
+// Notify all vendors (client-side)
+export async function notifyAllVendors(): Promise<void> {
+  const url = "/api/notifications"; // Relative path to Next.js API route
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({ vendorId: "all" }),
+  });
 
-//   if (!response.ok) {
-//     const errorData = await response.json().catch(() => ({}));
-//     throw new Error(errorData.message || `Failed to notify all vendors: ${response.status}`);
-//   }
-// }
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || `Failed to notify all vendors: ${response.status}`);
+  }
+}

@@ -16,16 +16,24 @@ const authMiddleware = async (req, res, next) => {
 
   try {
     // Extract token from cookies or Authorization header (Bearer)
-    const token = req.cookies.auth_token || 
-                  (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
-                    ? req.headers.authorization.split(" ")[1]
-                    : null);
+    const token =
+      req.cookies.auth_token ||
+      (req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer ")
+        ? req.headers.authorization.split(" ")[1]
+        : null);
+
+    console.log("Received cookies:", req.cookies); // Debug log
+    console.log("Received token:", token); // Debug log
 
     if (!token) {
       return res.status(401).json({
         success: false,
         message: "Authentication failed",
-        error: { code: "NO_TOKEN", details: "No authentication token provided" },
+        error: {
+          code: "NO_TOKEN",
+          details: "No authentication token provided",
+        },
       });
     }
 
@@ -59,10 +67,16 @@ const authMiddleware = async (req, res, next) => {
   } catch (error) {
     // Enhanced error handling
     let status = 401;
-    let errorDetails = { code: "INVALID_TOKEN", details: "Invalid or expired token" };
+    let errorDetails = {
+      code: "INVALID_TOKEN",
+      details: "Invalid or expired token",
+    };
 
     if (error.name === "JsonWebTokenError") {
-      errorDetails = { code: "TOKEN_MALFORMED", details: "Token is malformed or invalid" };
+      errorDetails = {
+        code: "TOKEN_MALFORMED",
+        details: "Token is malformed or invalid",
+      };
     } else if (error.name === "TokenExpiredError") {
       errorDetails = { code: "TOKEN_EXPIRED", details: "Token has expired" };
     }
