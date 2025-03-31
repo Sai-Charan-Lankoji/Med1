@@ -180,31 +180,26 @@ export default function BillingServicesPage() {
                 <p className="text-base-content/70">Overall financial summary and vendor details</p>
               </div>
             </div>
-
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-6">
-              {stats.map((stat) => (
-                <div
-                  key={stat.title}
-                  className="stat bg-base-200 rounded-box shadow-md p-4 transform transition-all hover:scale-105"
-                >
-                  <div className="stat-figure">{stat.icon}</div>
-                  <div className="stat-title text-base-content/80">{stat.title}</div>
-                  <div className="stat-value text-base-content">
-                    <AnimatedNumber
-                      key={stat.title} // Force re-mount on value change
-                      value={stat.value}
-                      decimals={stat.decimals}
-                      prefix={stat.prefix}
-                      duration={0.8}
-                    />
-                    {/* Fallback for debugging */}
-                    <span className="text-xs opacity-50">
-                      ({stat.prefix || ""}{stat.value.toFixed(stat.decimals || 0)})
-                    </span>
-                  </div>
+            {stats.map((stat) => (
+              <div
+                key={stat.title}
+                className="stat bg-base-200 rounded-box shadow-md p-4 transform transition-all hover:scale-105"
+              >
+                <div className="stat-figure">{stat.icon}</div>
+                <div className="stat-title text-base-content/80">{stat.title}</div>
+                <div className="stat-value text-base-content">
+                  <AnimatedNumber
+                    key={stat.title} // Force re-mount
+                    value={stat.value}
+                    decimals={stat.decimals}
+                    prefix={stat.prefix}
+                    duration={0.8}
+                  />
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
+          </div>
 
             <div className="overflow-x-auto mt-8">
               <table className="table table-zebra w-full">

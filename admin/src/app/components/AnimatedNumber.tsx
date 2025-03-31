@@ -18,15 +18,11 @@ export function AnimatedNumber({
   suffix = "",
   duration = 0.8,
 }: AnimatedNumberProps) {
-  const countUpRef = useRef<InstanceType<typeof CountUp> | null>(null); // Ref to CountUp instance
-  const spanRef = useRef<HTMLSpanElement>(null);
+  const countUpRef = useRef<any>(null); // Ref to CountUp instance
 
   useEffect(() => {
-    if (spanRef.current && typeof value === "number" && !isNaN(value)) {
-      // Manually trigger CountUp update
-      if (countUpRef.current) {
-        countUpRef.current.update(value);
-      }
+    if (countUpRef.current && typeof value === "number" && !isNaN(value)) {
+      countUpRef.current.update(value); // Update value when it changes
     }
   }, [value]);
 
@@ -40,14 +36,9 @@ export function AnimatedNumber({
       duration={duration}
       useEasing={true}
       separator=","
-      onEnd={() => {
-        if (countUpRef.current) {
-          countUpRef.current.update(value);
-        }
-      }}
     >
-      {() => (
-        <span ref={spanRef} className="inline-block tabular-nums" />
+      {({ countUpRef: containerRef }) => (
+        <span ref={containerRef} className="inline-block tabular-nums" />
       )}
     </CountUp>
   );
