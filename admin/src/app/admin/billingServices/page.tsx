@@ -17,8 +17,7 @@ async function fetchBillingData(token: string): Promise<{
       getOverallAnalytics(token),
     ]);
 
-    // Extract nested data from analytics response
-    const analyticsData = analyticsResponse; // Use the response directly as it is already of type AnalyticsData
+    const analyticsData = analyticsResponse;
 
     return { vendors: vendorsResponse, analytics: analyticsData, error: null };
   } catch (err) {
@@ -71,8 +70,9 @@ export default function BillingServicesPage() {
     }
 
     fetchBillingData(token).then((result) => {
-      console.log("Fetched billing data:", result); // Debug log
-      setData(result);
+      console.log("Fetched billing data:", result);
+      setData({ ...result });
+      console.log("State updated with:", result);
       setLoading(false);
     });
   }, []);
@@ -86,6 +86,7 @@ export default function BillingServicesPage() {
   }
 
   const { vendors, analytics, error } = data;
+  console.log("Rendering with analytics:", analytics);
 
   if (error) {
     return (
@@ -189,12 +190,15 @@ export default function BillingServicesPage() {
                   <div className="stat-figure">{stat.icon}</div>
                   <div className="stat-title text-base-content/80">{stat.title}</div>
                   <div className="stat-value text-base-content">
+                    {/* Fallback to raw value if animation fails */}
                     <AnimatedNumber
                       value={stat.value}
                       decimals={stat.decimals}
                       prefix={stat.prefix}
                       duration={0.8}
                     />
+                    {/* Uncomment to test raw value */}
+                    {/* <span>{stat.prefix || ""}{stat.value.toFixed(stat.decimals || 0)}</span> */}
                   </div>
                 </div>
               ))}
