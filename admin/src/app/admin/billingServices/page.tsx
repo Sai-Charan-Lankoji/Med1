@@ -1,4 +1,4 @@
-"use client"; // Convert to client component
+"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -12,11 +12,15 @@ async function fetchBillingData(token: string): Promise<{
   error: string | null;
 }> {
   try {
-    const [vendors, analytics] = await Promise.all([
-      getAllVendors(token), // Pass token instead of cookieHeader
+    const [vendorsResponse, analyticsResponse] = await Promise.all([
+      getAllVendors(token),
       getOverallAnalytics(token),
     ]);
-    return { vendors, analytics, error: null };
+
+    // Extract nested data from analytics response
+    const analyticsData = analyticsResponse; // Use the response directly as it is already of type AnalyticsData
+
+    return { vendors: vendorsResponse, analytics: analyticsData, error: null };
   } catch (err) {
     console.error("Error fetching billing data:", err);
     return {
@@ -67,6 +71,7 @@ export default function BillingServicesPage() {
     }
 
     fetchBillingData(token).then((result) => {
+      console.log("Fetched billing data:", result); // Debug log
       setData(result);
       setLoading(false);
     });
@@ -177,14 +182,14 @@ export default function BillingServicesPage() {
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-6">
               {stats.map((stat) => (
-                <div 
-                  key={stat.title} 
+                <div
+                  key={stat.title}
                   className="stat bg-base-200 rounded-box shadow-md p-4 transform transition-all hover:scale-105"
                 >
                   <div className="stat-figure">{stat.icon}</div>
                   <div className="stat-title text-base-content/80">{stat.title}</div>
                   <div className="stat-value text-base-content">
-                    <AnimatedNumber 
+                    <AnimatedNumber
                       value={stat.value}
                       decimals={stat.decimals}
                       prefix={stat.prefix}
