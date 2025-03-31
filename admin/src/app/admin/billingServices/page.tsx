@@ -190,15 +190,17 @@ export default function BillingServicesPage() {
                   <div className="stat-figure">{stat.icon}</div>
                   <div className="stat-title text-base-content/80">{stat.title}</div>
                   <div className="stat-value text-base-content">
-                    {/* Fallback to raw value if animation fails */}
                     <AnimatedNumber
+                      key={stat.title} // Force re-mount on value change
                       value={stat.value}
                       decimals={stat.decimals}
                       prefix={stat.prefix}
                       duration={0.8}
                     />
-                    {/* Uncomment to test raw value */}
-                    {/* <span>{stat.prefix || ""}{stat.value.toFixed(stat.decimals || 0)}</span> */}
+                    {/* Fallback for debugging */}
+                    <span className="text-xs opacity-50">
+                      ({stat.prefix || ""}{stat.value.toFixed(stat.decimals || 0)})
+                    </span>
                   </div>
                 </div>
               ))}
