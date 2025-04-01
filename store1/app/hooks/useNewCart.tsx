@@ -29,8 +29,9 @@ export const useNewCart = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+
         },
-        credentials: "include",
       });
 
       if (!meResponse.ok) {

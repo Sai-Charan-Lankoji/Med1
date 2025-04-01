@@ -43,9 +43,9 @@ export const useCustomerLogin = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+
+        }      });
 
       if (!meResponse.ok) {
         throw new Error("Failed to fetch user details");

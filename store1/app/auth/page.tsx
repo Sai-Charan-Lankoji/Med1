@@ -46,8 +46,7 @@ const fetchUserDetails = async () => {
     method: "GET",
     headers: { "Content-Type": "application/json",
       Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-     },
-    credentials: "include",
+     }
   });
   const result = await response.json();
 
@@ -113,7 +112,7 @@ export default function SignIn() {
       });
 
       const result = await response.json();
-      sessionStorage.setItem("auth_token", result.data.token);
+      sessionStorage.setItem("auth_token", result.token);
       if (!response.ok) {
         const errorMessage = result.error?.details || result.message || "Login failed";
         if (result.status === 400) {

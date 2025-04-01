@@ -32,9 +32,9 @@ export const useCustomerLogout = (): UseCustomerLogoutReturn => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+
+        }      });
 
       if (!response.ok) {
         const errorData = await response.json();

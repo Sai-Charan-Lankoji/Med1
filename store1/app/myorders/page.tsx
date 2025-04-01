@@ -115,9 +115,10 @@ export default function Orders() {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+        headers: { "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+
+         }      });
       if (!response.ok) throw new Error("Failed to fetch customer data");
       const { data } = await response.json();
       setCustomerData({

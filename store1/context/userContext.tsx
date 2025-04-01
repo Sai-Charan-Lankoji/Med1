@@ -29,9 +29,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for auth_token
-      });
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+
+        }      });
 
       if (response.ok) {
         const result = await response.json();

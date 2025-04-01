@@ -140,9 +140,9 @@ const OrderPage = () => {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+
+        }      });
       if (!response.ok) throw new Error("Failed to fetch customer data");
       const { data } = await response.json();
       setCustomerData({

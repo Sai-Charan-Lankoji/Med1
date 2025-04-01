@@ -68,9 +68,10 @@ export const useAddresses = (): UseAddressesReturn => {
     try {
       const response = await fetch(`${BASE_URL}/api/customer/me`, {
         method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+        headers: { "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+
+         }      });
 
       if (!response.ok) {
         const errorData = await response.json();
