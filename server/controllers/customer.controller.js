@@ -36,9 +36,9 @@ const signup = async (req, res) => {
     // Set encrypted token in cookie
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      secure: process.env.NODE_ENV === "production", // True on Render
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.status(201).json({
@@ -87,18 +87,33 @@ const login = async (req, res) => {
 
     const { token } = await customerService.login({ email, password });
 
+    // Set httpOnly cookie (for security)
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
     });
+
+    // Set non-httpOnly cookie for frontend access
+    res.cookie("token", token, {
+      httpOnly: false, // Accessible by frontend
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
+    });
+
+    res.set("Access-Control-Allow-Origin", req.headers.origin);
+    res.set("Access-Control-Allow-Credentials", "true");
+
 
     res.status(200).json({
       status: 200,
       success: true,
       message: "Customer Successfully LoggedIn",
-      data: { message: "Login successful" },
+      data: { message: "Login successful", token },
     });
   } catch (error) {
     if (error.message.includes("Invalid credentials")) {
