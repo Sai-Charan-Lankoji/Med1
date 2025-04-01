@@ -121,6 +121,9 @@ export default function SignIn() {
 
       const userResponse = await fetch(`${BASE_URL}/api/customer/me`, {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
         credentials: "include",
       });
       const userResult = await userResponse.json();
@@ -219,31 +222,8 @@ export default function SignIn() {
         return;
       }
 
-      const userResponse = await fetch(`${BASE_URL}/api/customer/me`, {
-        method: "GET",
-        credentials: "include",
-      });
-      const userResult = await userResponse.json();
-
-      if (!userResponse.ok) {
-        const errorMessage = userResult.error?.details || userResult.message || "Failed to fetch user details";
-        toast.update(toastId, {
-          render: `Error: ${errorMessage}`,
-          type: "error",
-          isLoading: false,
-          autoClose: 3000,
-        });
-        return;
-      }
-
-      setUser({
-        firstName: userResult.data.first_name,
-        email: userResult.data.email,
-        profilePhoto: userResult.data.profile_photo || null,
-      });
-      setIsLogin(true);
-      sessionStorage.setItem("customerId", userResult.data.id);
-      sessionStorage.setItem("customerEmail", userResult.data.email);
+      
+      setIsLogin(true); 
 
       toast.update(toastId, {
         render: result.message || "Signup successful!",

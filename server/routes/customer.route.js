@@ -131,7 +131,7 @@ router.post("/login", login);
  *       500:
  *         description: Server error
  */
-router.get("/me", authMiddleware, getCurrentUser);
+router.get("/me", getCurrentUser);
 
 /**
  * @swagger

@@ -32,8 +32,8 @@ const signup = async (req, res) => {
 
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Lax for local testing
+      secure: true, // Always true since Render uses HTTPS
+      sameSite: "None", // Allow cross-site requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
@@ -84,8 +84,8 @@ const login = async (req, res) => {
 
     res.cookie("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax", // Lax for local testing
+      secure: true, // Always true since Render uses HTTPS
+      sameSite: "None", // Allow cross-site requests
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     });
 
@@ -114,7 +114,6 @@ const login = async (req, res) => {
     });
   }
 };
-
 // Remaining functions unchanged
 const logout = async (req, res) => { /* ... */ };
 const getCurrentUser = async (req, res) => { /* ... */ };
