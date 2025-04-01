@@ -24,7 +24,7 @@ const io = new Server(server, {
       "http://localhost:7009",
       "http://localhost:7000",
       "http://localhost:8000",
-      "http://localhost:3000",
+      "http://localhost:3000", // Added for local testing
       "http://localhost:5000",
       "http://localhost:7008",
       "https://med1-4217.vercel.app",
@@ -53,36 +53,37 @@ const updateAllowedOrigins = async () => {
 
 updateAllowedOrigins();
 
-app.use(cors({
-  origin: (origin, callback) => {
-    const predefinedOrigins = [
-      "http://localhost:7009",
-      "http://localhost:8000",
-      "http://localhost:7008",
-      "http://localhost:7000",
-      "http://localhost:3000",
-      "http://localhost:5000",
-      "https://med1-4217.vercel.app",
-      "https://med1-five.vercel.app",
-      "https://med1-p6q2.vercel.app",
-      "https://med1-wyou.onrender.com",
-    ];
-    const allowedOrigins = [...predefinedOrigins, ...dynamicAllowedOrigins];
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, origin); // Return the exact origin, not a default
-    } else {
-      console.log(`CORS rejected origin: ${origin}`);
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-  exposedHeaders: ["Set-Cookie"], // Ensure cookie headers are exposed
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      const predefinedOrigins = [
+        "http://localhost:7009",
+        "http://localhost:8000",
+        "http://localhost:7008",
+        "http://localhost:7000",
+        "http://localhost:3000", // Added for local testing
+        "http://localhost:5000",
+        "https://med1-4217.vercel.app",
+        "https://med1-five.vercel.app",
+        "https://med1-p6q2.vercel.app",
+        "https://med1-wyou.onrender.com",
+      ];
+      const allowedOrigins = [...predefinedOrigins, ...dynamicAllowedOrigins];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, origin);
+      } else {
+        console.log(`CORS rejected origin: ${origin}`);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+    exposedHeaders: ["Set-Cookie"], // Ensure cookies are exposed
+  })
+);
 
-
-app.options('*', cors()); // Handle preflight requests
+app.options("*", cors()); // Handle preflight requests
 
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
@@ -92,7 +93,10 @@ app.use(
   (req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", req.headers.origin || "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type, Accept"
+    );
     res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
     if (req.method === "OPTIONS") {
       return res.status(200).end();

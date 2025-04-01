@@ -23,25 +23,14 @@ const loginSchema = z.object({
 });
 
 const signupSchema = z.object({
-  firstName: z
-    .string()
-    .min(2, "First name too short")
-    .max(50)
-    .regex(/^[A-Za-z\s]+$/, "Letters only"),
-  lastName: z
-    .string()
-    .min(2, "Last name too short")
-    .max(50)
-    .regex(/^[A-Za-z\s]+$/, "Letters only"),
+  firstName: z.string().min(2, "First name too short").max(50).regex(/^[A-Za-z\s]+$/, "Letters only"),
+  lastName: z.string().min(2, "Last name too short").max(50).regex(/^[A-Za-z\s]+$/, "Letters only"),
   phone: z.string().regex(/^\+?\d{10,15}$/, "Invalid phone number"),
   email: z.string().email("Invalid email").min(1, "Email is required"),
   password: z
     .string()
     .min(8, "Password too short")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-      "Strong password required"
-    ),
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, "Strong password required"),
   has_account: z.boolean().default(true),
   vendor_id: z.string().nullable(),
 });
@@ -92,14 +81,13 @@ export default function SignIn() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
-        credentials: "include", // Ensures cookies are sent/received
+        credentials: "include",
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        const errorMessage =
-          result.error?.details || result.message || "Login failed";
+        const errorMessage = result.error?.details || result.message || "Login failed";
         switch (result.status) {
           case 400:
             toast.update(toastId, {
@@ -126,28 +114,19 @@ export default function SignIn() {
             });
             break;
           default:
-            toast.update(toastId, {
-              render: errorMessage,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
+            toast.update(toastId, { render: errorMessage, type: "error", isLoading: false, autoClose: 3000 });
         }
         return;
       }
 
-      // Fetch current user details after successful login
       const userResponse = await fetch(`${BASE_URL}/api/customer/me`, {
         method: "GET",
-        credentials: "include", // Ensures the auth_token cookie is sent
+        credentials: "include",
       });
       const userResult = await userResponse.json();
 
       if (!userResponse.ok) {
-        const errorMessage =
-          userResult.error?.details ||
-          userResult.message ||
-          "Failed to fetch user details";
+        const errorMessage = userResult.error?.details || userResult.message || "Failed to fetch user details";
         toast.update(toastId, {
           render: `Error: ${errorMessage}`,
           type: "error",
@@ -157,7 +136,6 @@ export default function SignIn() {
         return;
       }
 
-      // Update context and session storage
       setUser({
         firstName: userResult.data.first_name,
         email: userResult.data.email,
@@ -173,7 +151,7 @@ export default function SignIn() {
         isLoading: false,
         autoClose: 3000,
       });
-      setTimeout(() => router.push("/dashboard"), 1000); // Slight delay for user feedback
+      setTimeout(() => router.push("/dashboard"), 1000);
     } catch (error: any) {
       toast.update(toastId, {
         render: `Unexpected error: ${error.message || "Please try again"}`,
@@ -191,31 +169,25 @@ export default function SignIn() {
     const toastId = toast.loading("Signing up...");
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/ _
-
-api/customer/signup`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: data.email,
-            first_name: data.firstName,
-            last_name: data.lastName,
-            password: data.password,
-            phone: data.phone,
-            has_account: data.has_account,
-            vendor_id: data.vendor_id,
-          }),
-          credentials: "include", // Ensures cookies are sent/received
-        }
-      );
+      const response = await fetch(`${BASE_URL}/api/customer/signup`, { // Fixed URL
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: data.email,
+          first_name: data.firstName,
+          last_name: data.lastName,
+          password: data.password,
+          phone: data.phone,
+          has_account: data.has_account,
+          vendor_id: data.vendor_id,
+        }),
+        credentials: "include",
+      });
 
       const result = await response.json();
 
       if (!response.ok) {
-        const errorMessage =
-          result.error?.details || result.message || "Signup failed";
+        const errorMessage = result.error?.details || result.message || "Signup failed";
         switch (result.status) {
           case 400:
             toast.update(toastId, {
@@ -242,28 +214,19 @@ api/customer/signup`,
             });
             break;
           default:
-            toast.update(toastId, {
-              render: errorMessage,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
+            toast.update(toastId, { render: errorMessage, type: "error", isLoading: false, autoClose: 3000 });
         }
         return;
       }
 
-      // Fetch current user details after successful signup
       const userResponse = await fetch(`${BASE_URL}/api/customer/me`, {
         method: "GET",
-        credentials: "include", // Ensures the auth_token cookie is sent
+        credentials: "include",
       });
       const userResult = await userResponse.json();
 
       if (!userResponse.ok) {
-        const errorMessage =
-          userResult.error?.details ||
-          userResult.message ||
-          "Failed to fetch user details";
+        const errorMessage = userResult.error?.details || userResult.message || "Failed to fetch user details";
         toast.update(toastId, {
           render: `Error: ${errorMessage}`,
           type: "error",
@@ -273,7 +236,6 @@ api/customer/signup`,
         return;
       }
 
-      // Update context and session storage
       setUser({
         firstName: userResult.data.first_name,
         email: userResult.data.email,
@@ -289,7 +251,7 @@ api/customer/signup`,
         isLoading: false,
         autoClose: 3000,
       });
-      setTimeout(() => router.push("/dashboard"), 1000); // Slight delay for user feedback
+      setTimeout(() => router.push("/dashboard"), 1000);
     } catch (error: any) {
       toast.update(toastId, {
         render: `Unexpected error: ${error.message || "Please try again"}`,
@@ -310,50 +272,30 @@ api/customer/signup`,
 
   const handleToggleForm = () => {
     setIsSignup((prev) => !prev);
-    toast.info(`Switched to ${isSignup ? "Login" : "Signup"}`, {
-      autoClose: 1500,
-    });
+    toast.info(`Switched to ${isSignup ? "Login" : "Signup"}`, { autoClose: 1500 });
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <ToastContainer
-        position="top-right"
-        autoClose={3000}
-        hideProgressBar={false}
-      />
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-        <Image
-          src={medusaIcon}
-          alt="Medusa Logo"
-          className="h-16 w-16 mx-auto mb-6 rounded-full"
-          width={64}
-          height={64}
-          priority
-        />
+        <Image src={medusaIcon} alt="Medusa Logo" className="h-16 w-16 mx-auto mb-6 rounded-full" width={64} height={64} priority />
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           {isSignup ? "Create an Account" : "Welcome Back"}
         </h2>
         {isSignup ? (
-          <form
-            onSubmit={signupForm.handleSubmit(onSubmitSignup)}
-            className="space-y-4"
-          >
+          <form onSubmit={signupForm.handleSubmit(onSubmitSignup)} className="space-y-4">
             <div>
               <Input
                 type="text"
                 placeholder="First Name"
                 className={`w-full p-3 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${
-                  signupForm.formState.errors.firstName
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  signupForm.formState.errors.firstName ? "border-red-500" : "border-gray-200"
                 }`}
                 {...signupForm.register("firstName")}
               />
               {signupForm.formState.errors.firstName && (
-                <p className="text-red-500 text-sm mt-1">
-                  {signupForm.formState.errors.firstName.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.firstName.message}</p>
               )}
             </div>
             <div>
@@ -361,16 +303,12 @@ api/customer/signup`,
                 type="text"
                 placeholder="Last Name"
                 className={`w-full p-3 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${
-                  signupForm.formState.errors.lastName
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  signupForm.formState.errors.lastName ? "border-red-500" : "border-gray-200"
                 }`}
                 {...signupForm.register("lastName")}
               />
               {signupForm.formState.errors.lastName && (
-                <p className="text-red-500 text-sm mt-1">
-                  {signupForm.formState.errors.lastName.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.lastName.message}</p>
               )}
             </div>
             <div>
@@ -378,16 +316,12 @@ api/customer/signup`,
                 type="tel"
                 placeholder="Phone (e.g., +1234567890)"
                 className={`w-full p-3 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${
-                  signupForm.formState.errors.phone
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  signupForm.formState.errors.phone ? "border-red-500" : "border-gray-200"
                 }`}
                 {...signupForm.register("phone")}
               />
               {signupForm.formState.errors.phone && (
-                <p className="text-red-500 text-sm mt-1">
-                  {signupForm.formState.errors.phone.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.phone.message}</p>
               )}
             </div>
             <div>
@@ -395,16 +329,12 @@ api/customer/signup`,
                 type="email"
                 placeholder="Enter Email"
                 className={`w-full p-3 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${
-                  signupForm.formState.errors.email
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  signupForm.formState.errors.email ? "border-red-500" : "border-gray-200"
                 }`}
                 {...signupForm.register("email")}
               />
               {signupForm.formState.errors.email && (
-                <p className="text-red-500 text-sm mt-1">
-                  {signupForm.formState.errors.email.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.email.message}</p>
               )}
             </div>
             <div className="relative">
@@ -412,9 +342,7 @@ api/customer/signup`,
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter Password"
                 className={`w-full p-3 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${
-                  signupForm.formState.errors.password
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  signupForm.formState.errors.password ? "border-red-500" : "border-gray-200"
                 }`}
                 {...signupForm.register("password")}
               />
@@ -423,48 +351,33 @@ api/customer/signup`,
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
                 onClick={togglePasswordVisibility}
               >
-                {showPassword ? (
-                  <HiEye className="w-5 h-5" />
-                ) : (
-                  <HiEyeOff className="w-5 h-5" />
-                )}
+                {showPassword ? <HiEye className="w-5 h-5" /> : <HiEyeOff className="w-5 h-5" />}
               </button>
               {signupForm.formState.errors.password && (
-                <p className="text-red-500 text-sm mt-1">
-                  {signupForm.formState.errors.password.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{signupForm.formState.errors.password.message}</p>
               )}
             </div>
             <Button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-                isLoading ? "opacity-60" : ""
-              }`}
+              className={`w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isLoading ? "opacity-60" : ""}`}
             >
               {isLoading ? "Signing Up..." : "Sign Up"}
             </Button>
           </form>
         ) : (
-          <form
-            onSubmit={loginForm.handleSubmit(onSubmitLogin)}
-            className="space-y-4"
-          >
+          <form onSubmit={loginForm.handleSubmit(onSubmitLogin)} className="space-y-4">
             <div>
               <Input
                 type="email"
                 placeholder="Enter Email"
                 className={`w-full p-3 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${
-                  loginForm.formState.errors.email
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  loginForm.formState.errors.email ? "border-red-500" : "border-gray-200"
                 }`}
                 {...loginForm.register("email")}
               />
               {loginForm.formState.errors.email && (
-                <p className="text-red-500 text-sm mt-1">
-                  {loginForm.formState.errors.email.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{loginForm.formState.errors.email.message}</p>
               )}
             </div>
             <div className="relative">
@@ -472,9 +385,7 @@ api/customer/signup`,
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter Password"
                 className={`w-full p-3 border rounded-lg text-gray-900 focus:ring-2 focus:ring-blue-500 ${
-                  loginForm.formState.errors.password
-                    ? "border-red-500"
-                    : "border-gray-200"
+                  loginForm.formState.errors.password ? "border-red-500" : "border-gray-200"
                 }`}
                 {...loginForm.register("password")}
               />
@@ -483,24 +394,16 @@ api/customer/signup`,
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
                 onClick={togglePasswordVisibility}
               >
-                {showPassword ? (
-                  <HiEye className="w-5 h-5" />
-                ) : (
-                  <HiEyeOff className="w-5 h-5" />
-                )}
+                {showPassword ? <HiEye className="w-5 h-5" /> : <HiEyeOff className="w-5 h-5" />}
               </button>
               {loginForm.formState.errors.password && (
-                <p className="text-red-500 text-sm mt-1">
-                  {loginForm.formState.errors.password.message}
-                </p>
+                <p className="text-red-500 text-sm mt-1">{loginForm.formState.errors.password.message}</p>
               )}
             </div>
             <Button
               type="submit"
               disabled={isLoading}
-              className={`w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${
-                isLoading ? "opacity-60" : ""
-              }`}
+              className={`w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 ${isLoading ? "opacity-60" : ""}`}
             >
               {isLoading ? "Logging In..." : "Log In"}
             </Button>
@@ -509,10 +412,7 @@ api/customer/signup`,
         <div className="mt-6 text-center">
           <p className="text-gray-600 text-sm">
             {isSignup ? "Already have an account?" : "Don't have an account?"}
-            <button
-              onClick={handleToggleForm}
-              className="text-blue-600 hover:text-blue-700 ml-2"
-            >
+            <button onClick={handleToggleForm} className="text-blue-600 hover:text-blue-700 ml-2">
               {isSignup ? "Log In" : "Sign Up"}
             </button>
           </p>
