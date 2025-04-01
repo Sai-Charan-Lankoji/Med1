@@ -123,7 +123,8 @@ export default function StockManagement() {
     )
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8 min-h-screen bg-base-100">
+    <div className="min-h-screen bg-gradient-to-bl from-base-200 to-base-100">
+    <div className="container p-6  mx-auto space-y-8 min-h-screen bg-base-100">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -284,6 +285,7 @@ export default function StockManagement() {
 
       {/* Add Stock Dialog */}
       <AddStockDialog open={showAddStock} onClose={() => setShowAddStock(false)} />
+    </div>
     </div>
   )
 }

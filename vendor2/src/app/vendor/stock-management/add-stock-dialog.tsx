@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, X, Package } from "lucide-react";
 import { useStock } from "@/app/hooks/useStock";
+import { vendor_id } from "@/app/utils/constant";
 
 export function AddStockDialog({ open, onClose }) {
   const { standardProducts, addStock, loading, error } = useStock();
@@ -25,6 +26,7 @@ export function AddStockDialog({ open, onClose }) {
         stockType: stockData.stockType,
         productId: stockData.stockType === "Standard" ? stockData.productId : null,
         hsnCode: stockData.hsnCode,
+        vendor_id: vendor_id,
         gstPercentage: Number.parseFloat(stockData.gstPercentage),
         variants: stockData.variants.map((v) => ({
           size: v.size,

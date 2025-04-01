@@ -1,6 +1,7 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
 const Product = require("./product.model");
+const Vendor = require("./vendor.model");
 
 const Stock = sequelize.define(
   "Stock",
@@ -31,6 +32,12 @@ const Stock = sequelize.define(
       allowNull: true, // Nullable for Designable stock
       references: { model: Product, key: "product_id" },
     },
+    vendor_id: {
+      type: DataTypes.STRING(250),
+      allowNull: false,
+      references: { model: "vendor", key: "id" },
+    },
+
     gstPercentage: {
       type: DataTypes.FLOAT,
       allowNull: false,
@@ -67,6 +74,7 @@ const Stock = sequelize.define(
     underscored: true,
   }
 );
+
 
 // Export the model without defining relationships here
 module.exports = Stock;

@@ -1,10 +1,9 @@
 // Import necessary dependencies
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/db");
-const Address = require("../models/address.model")
+
 const crypto = require("crypto"); 
-const Store = require('../models/store.model'); 
-const Plan = require('../models/plan.model');
+
 
 // Function to generate a custom ID
 const generateEntityId = (prefix) => {
@@ -102,29 +101,7 @@ const Vendor = sequelize.define(
   }
 );
 // Define associations
-Vendor.hasMany(Address, {
-  foreignKey: "vendor_address_id",
-  as: "address",
-});
 
-Address.belongsTo(Vendor, {
-  foreignKey: "id",
-  as: "vendor",
-}); 
-Vendor.hasMany(Store, {
-  foreignKey: "vendor_id",
-  as: "stores",
-});
-
-Store.belongsTo(Vendor, {
-  foreignKey: "vendor_id",
-  as: "vendor",
-});
-
-Vendor.belongsTo(Plan, {
-  foreignKey: "plan_id",
-  as: "subscription_plan",
-});
 
 // Export the models
 module.exports = Vendor

@@ -1,8 +1,14 @@
 {
-    "postman.settings.dotenv-detection-notification-visibility": false,
-    "github.copilot.chat.codeGeneration.instructions": [
-        {
-          "file": "./.vscode/daisyui.md"
-        }
-      ]
+    
+    // "github.copilot.chat.codeGeneration.instructions": [
+    //     {
+    //       "file": "./.vscode/daisyui.md"
+    //     }
+    //   ],
+      "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+      "github.copilot.editor.enableAutoCompletions": true,
+      "github.copilot.editor.enableCodeActions": true,
+      "github.copilot.chat.followUps": "always",
+      "postman.settings.dotenv-detection-notification-visibility": false,
+      "terminal.integrated.shellIntegration.enabled": true,
 }

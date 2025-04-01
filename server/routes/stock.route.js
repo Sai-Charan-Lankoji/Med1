@@ -375,4 +375,53 @@ router.post("/fulfill-order", stockController.fulfillOrder);
  */
 router.post("/restock", stockController.restockVariant);
 
+/**
+ * @swagger
+ * /api/stock/vendor/{vendorId}:
+ *   get:
+ *     summary: Get all stocks by vendor ID
+ *     tags: [Stocks]
+ *     parameters:
+ *       - in: path
+ *         name: vendorId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the vendor to fetch stocks for
+ *     responses:
+ *       200:
+ *         description: List of stocks for the vendor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 stocks:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Stock'
+ *       400:
+ *         description: Invalid or missing vendorId
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: "Vendor ID is required"
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/vendor/:vendorId", stockController.getStocksByVendorId);
+
 module.exports = router;

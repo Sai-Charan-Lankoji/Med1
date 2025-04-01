@@ -1,6 +1,7 @@
 // hooks/useStock.ts
 import { Next_server } from "@/constant";
 import { useState, useEffect } from "react";
+import { vendor_id } from "../utils/constant";
 
 const API_BASE_URL = `${Next_server}/api`; // Adjust based on your env
 
@@ -30,6 +31,7 @@ interface Stock {
   createdAt: string
   updatedAt: string
   StockVariants: Variant[]
+  vendor_id: string
   totals: {
     totalQuantity: number
     availableQuantity: number
@@ -56,6 +58,7 @@ interface AddStockData {
   hsnCode: string;
   productId: string;
   gstPercentage: number;
+  vendor_id: string;
   variants: { size: string; color: string | null; totalQuantity: number }[];
 }
 
@@ -68,7 +71,7 @@ export function useStock() {
   const fetchStocks = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/stock`, {
+      const response = await fetch(`${API_BASE_URL}/stock/vendor/${vendor_id}`, {
         headers: { Accept: "application/json" },
       });
       if (!response.ok) throw new Error("Failed to fetch stocks");

@@ -56,15 +56,32 @@ class StockService {
     }
   }
 
-  async createStock({ title, category, stockType, productId, hsnCode, gstPercentage, variants }) {
-    if (!title || !category || !stockType || !hsnCode || !gstPercentage || !variants || !Array.isArray(variants) || variants.length === 0) {
-      throw new Error("All fields (title, category, stockType, hsnCode, gstPercentage, variants) are required");
-    }
-    if (stockType === "Standard" && !productId) {
-      throw new Error("Product ID is required for Standard stock type");
+  async createStock({ title, category, stockType, productId, hsnCode, gstPercentage, variants, vendor_id }) {
+    // Check for missing fields and collect them
+    const missingFields = [];
+    if (!title) missingFields.push("title");
+    if (!category) missingFields.push("category");
+    if (!stockType) missingFields.push("stockType");
+    if (!hsnCode) missingFields.push("hsnCode");
+    if (!gstPercentage) missingFields.push("gstPercentage");
+    if (!variants || !Array.isArray(variants) || variants.length === 0) missingFields.push("variants (must be a non-empty array)");
+    if (!vendor_id) missingFields.push("vendor_id");
+    if (stockType === "Standard" && !productId) missingFields.push("productId (required for Standard stock type)");
+    
+    if (missingFields.length > 0) {
+      throw new Error(`The following required fields are missing: ${missingFields.join(", ")}`);
     }
 
-    const totalQuantity = variants.reduce((sum, v) => sum + v.totalQuantity, 0);
+    // Check variant structure
+    const invalidVariants = variants.filter(v => 
+      !v.size || !v.hasOwnProperty('totalQuantity') || isNaN(parseInt(v.totalQuantity)) || parseInt(v.totalQuantity) <= 0
+    );
+    
+    if (invalidVariants.length > 0) {
+      throw new Error(`${invalidVariants.length} variants have invalid data. Each variant must have size and a positive totalQuantity`);
+    }
+
+    const totalQuantity = variants.reduce((sum, v) => sum + parseInt(v.totalQuantity), 0);
 
     const stock = await Stock.create({
       title,
@@ -77,14 +94,15 @@ class StockService {
       availableQuantity: totalQuantity,
       onHoldQuantity: 0,
       exhaustedQuantity: 0,
+      vendor_id,
     });
 
     const variantEntries = variants.map((v) => ({
       stockId: stock.stock_id,
       size: v.size,
-      color: v.color,
-      totalQuantity: v.totalQuantity,
-      availableQuantity: v.totalQuantity,
+      color: v.color || null, // Make color optional
+      totalQuantity: parseInt(v.totalQuantity),
+      availableQuantity: parseInt(v.totalQuantity),
       onHoldQuantity: 0,
       exhaustedQuantity: 0,
     }));
@@ -166,6 +184,40 @@ class StockService {
 
   async getAllStocks() {
     const stocks = await Stock.findAll({
+      include: [
+        {
+          model: StockVariant,
+          as: "StockVariants",
+        },
+      ],
+    });
+
+    return stocks.map((stock) => ({
+      ...stock.toJSON(),
+      totals: {
+        totalQuantity: stock.totalQuantity,
+        availableQuantity: stock.availableQuantity,
+        onHoldQuantity: stock.onHoldQuantity,
+        exhaustedQuantity: stock.exhaustedQuantity,
+      },
+      availableVariants: {
+        sizes: [...new Set(stock.StockVariants.map((v) => v.size))].filter((size) =>
+          stock.StockVariants.some((sv) => sv.size === size && sv.availableQuantity > 0)
+        ),
+        colors: [...new Set(stock.StockVariants.map((v) => v.color).filter(Boolean))].filter((color) =>
+          stock.StockVariants.some((sv) => sv.color === color && sv.availableQuantity > 0)
+        ),
+      },
+    }));
+  }
+
+  async getStocksByVendorId(vendorId) {
+    if (!vendorId) {
+      throw new Error("Vendor ID is required");
+    }
+
+    const stocks = await Stock.findAll({
+      where: { vendor_id: vendorId },
       include: [
         {
           model: StockVariant,

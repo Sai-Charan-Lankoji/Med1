@@ -2,18 +2,24 @@ const stockService = require("../services/stock.service");
 
 exports.createStock = async (req, res) => {
   try {
-    const { title, category, stockType, productId, hsnCode, gstPercentage, variants } = req.body;
+    const { title, category, stockType, productId, hsnCode, gstPercentage, variants, vendor_id } = req.body;
 
-    if (!title || !category || !stockType || !hsnCode || !gstPercentage || !variants || !Array.isArray(variants) || variants.length === 0) {
+    // Check for missing fields and collect them
+    const missingFields = [];
+    if (!title) missingFields.push("title");
+    if (!category) missingFields.push("category");
+    if (!stockType) missingFields.push("stockType");
+    if (!hsnCode) missingFields.push("hsnCode");
+    if (!gstPercentage) missingFields.push("gstPercentage");
+    if (!variants || !Array.isArray(variants) || variants.length === 0) missingFields.push("variants (must be a non-empty array)");
+    if (!vendor_id) missingFields.push("vendor_id");
+    if (stockType === "Standard" && !productId) missingFields.push("productId (required for Standard stock type)");
+
+    // If any fields are missing, return an error
+    if (missingFields.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Title, category, stockType, hsnCode, gstPercentage, and variants array are required",
-      });
-    }
-    if (stockType === "Standard" && !productId) {
-      return res.status(400).json({
-        success: false,
-        message: "Product ID is required for Standard stock type",
+        message: `The following required fields are missing: ${missingFields.join(", ")}`,
       });
     }
 
@@ -24,6 +30,7 @@ exports.createStock = async (req, res) => {
       productId,
       hsnCode,
       gstPercentage,
+      vendor_id,
       variants: variants.map((v) => ({
         size: v.size,
         color: v.color,
@@ -168,5 +175,30 @@ exports.getStockVariantById = async (req, res) => {
     });
   }
 }
+
+// New controller method for getting stocks by vendor ID
+exports.getStocksByVendorId = async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        success: false,
+        message: "Vendor ID is required",
+      });
+    }
+
+    const stocks = await stockService.getStocksByVendorId(vendorId);
+    
+    res.status(200).json({ 
+      success: true, 
+      count: stocks.length,
+      stocks 
+    });
+  } catch (error) {
+    console.error("Error fetching stocks by vendor ID:", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
 
 module.exports = exports;

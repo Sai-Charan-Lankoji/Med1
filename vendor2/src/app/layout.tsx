@@ -22,7 +22,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-base-300 text-base-content`}>
+      <body className={`${inter.className} bg-gradient-to-bl from-base-200 to-base-100 text-base-content`}>
         <AuthProvider>
           <ThemeProvider>
             <div className="flex h-screen">

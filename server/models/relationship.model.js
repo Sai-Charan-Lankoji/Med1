@@ -4,6 +4,10 @@ const StockVariant = require("./stockvariant.model");
 const Store = require("./store.model");
 const Cart2 = require("./cart2.model");
 const Product = require("./product.model");
+const Vendor = require("./vendor.model");
+const Address = require("../models/address.model")
+const Plan = require('../models/plan.model');
+
 
 function defineRelationships() {
   // Stock and StandardProduct (1:1)
@@ -32,6 +36,40 @@ function defineRelationships() {
 
   Product.hasMany(Cart2, { foreignKey: "product_id", constraints: false });
   StandardProduct.hasMany(Cart2, { foreignKey: "product_id", constraints: false });
+
+  Vendor.hasMany(Address, {
+    foreignKey: "vendor_address_id",
+    as: "address",
+  });
+  
+  Address.belongsTo(Vendor, {
+    foreignKey: "id",
+    as: "vendor",
+  }); 
+  Vendor.hasMany(Store, {
+    foreignKey: "vendor_id",
+    as: "stores",
+  });
+  
+  Store.belongsTo(Vendor, {
+    foreignKey: "vendor_id",
+    as: "vendor",
+  });
+  
+  Vendor.belongsTo(Plan, {
+    foreignKey: "plan_id",
+    as: "subscription_plan",
+  });
+  
+  Vendor.hasMany(Stock, {
+    foreignKey: "vendor_id",
+    as: "stocks",
+  });
+  
+  Stock.belongsTo(Vendor, {
+    foreignKey: "vendor_id",
+    as: "vendor",
+  });
 }
 
 module.exports = defineRelationships;

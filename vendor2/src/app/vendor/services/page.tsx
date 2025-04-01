@@ -170,7 +170,7 @@ export default function ServicesDashboard() {
                 <div className={`p-6 rounded-t-box ${
                   plan.id === activePlan?.id 
                     ? "bg-primary text-primary-content" 
-                    : "bg-base-200/50"
+                    : "bg-base-300 text-base-content"
                 }`}>
                   <div className="flex justify-between items-start">
                     <div>
