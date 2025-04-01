@@ -44,7 +44,9 @@ const BASE_URL = `${NEXT_PUBLIC_API_URL}`;
 const fetchUserDetails = async () => {
   const response = await fetch(`${BASE_URL}/api/customer/me`, {
     method: "GET",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json",
+      Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
+     },
     credentials: "include",
   });
   const result = await response.json();
@@ -111,7 +113,7 @@ export default function SignIn() {
       });
 
       const result = await response.json();
-
+      sessionStorage.setItem("auth_token", result.data.token);
       if (!response.ok) {
         const errorMessage = result.error?.details || result.message || "Login failed";
         if (result.status === 400) {
