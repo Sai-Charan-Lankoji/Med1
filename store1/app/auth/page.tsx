@@ -40,6 +40,32 @@ type SignupFormInputs = z.infer<typeof signupSchema>;
 
 const BASE_URL = `${NEXT_PUBLIC_API_URL}`;
 
+// Helper functions for API calls and state management
+const fetchUserDetails = async () => {
+  const response = await fetch(`${BASE_URL}/api/customer/me`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  const result = await response.json();
+
+  if (!response.ok) {
+    throw new Error(result.error?.details || result.message || "Failed to fetch user details");
+  }
+  return result.data;
+};
+
+const updateUserState = (userData: any, setUser: (user: any) => void, setIsLogin: (isLogin: boolean) => void) => {
+  setUser({
+    firstName: userData.first_name,
+    email: userData.email,
+    profilePhoto: userData.profile_photo || null,
+  });
+  setIsLogin(true);
+  sessionStorage.setItem("customerId", userData.id);
+  sessionStorage.setItem("customerEmail", userData.email);
+};
+
 export default function SignIn() {
   const { store } = useStore();
   const { setUser, setIsLogin } = useUserContext();
@@ -88,65 +114,20 @@ export default function SignIn() {
 
       if (!response.ok) {
         const errorMessage = result.error?.details || result.message || "Login failed";
-        switch (result.status) {
-          case 400:
-            toast.update(toastId, {
-              render: `Invalid request: ${errorMessage}`,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
-            break;
-          case 401:
-            toast.update(toastId, {
-              render: `Unauthorized: ${errorMessage}`,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
-            break;
-          case 500:
-            toast.update(toastId, {
-              render: `Server error: ${errorMessage}`,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
-            break;
-          default:
-            toast.update(toastId, { render: errorMessage, type: "error", isLoading: false, autoClose: 3000 });
+        if (result.status === 400) {
+          toast.update(toastId, { render: `Invalid request: ${errorMessage}`, type: "error", isLoading: false, autoClose: 3000 });
+        } else if (result.status === 401) {
+          toast.update(toastId, { render: `Unauthorized: ${errorMessage}`, type: "error", isLoading: false, autoClose: 3000 });
+        } else if (result.status === 500) {
+          toast.update(toastId, { render: `Server error: ${errorMessage}`, type: "error", isLoading: false, autoClose: 3000 });
+        } else {
+          toast.update(toastId, { render: errorMessage, type: "error", isLoading: false, autoClose: 3000 });
         }
         return;
       }
 
-      const userResponse = await fetch(`${BASE_URL}/api/customer/me`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      const userResult = await userResponse.json();
-
-      if (!userResponse.ok) {
-        const errorMessage = userResult.error?.details || userResult.message || "Failed to fetch user details";
-        toast.update(toastId, {
-          render: `Error: ${errorMessage}`,
-          type: "error",
-          isLoading: false,
-          autoClose: 3000,
-        });
-        return;
-      }
-
-      setUser({
-        firstName: userResult.data.first_name,
-        email: userResult.data.email,
-        profilePhoto: userResult.data.profile_photo || null,
-      });
-      setIsLogin(true);
-      sessionStorage.setItem("customerId", userResult.data.id);
-      sessionStorage.setItem("customerEmail", userResult.data.email);
+      const userData = await fetchUserDetails();
+      updateUserState(userData, setUser, setIsLogin);
 
       toast.update(toastId, {
         render: result.message || "Login successful!",
@@ -172,7 +153,7 @@ export default function SignIn() {
     const toastId = toast.loading("Signing up...");
 
     try {
-      const response = await fetch(`${BASE_URL}/api/customer/signup`, { // Fixed URL
+      const response = await fetch(`${BASE_URL}/api/customer/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -191,65 +172,20 @@ export default function SignIn() {
 
       if (!response.ok) {
         const errorMessage = result.error?.details || result.message || "Signup failed";
-        switch (result.status) {
-          case 400:
-            toast.update(toastId, {
-              render: `Invalid request: ${errorMessage}`,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
-            break;
-          case 409:
-            toast.update(toastId, {
-              render: `Conflict: ${errorMessage}`,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
-            break;
-          case 500:
-            toast.update(toastId, {
-              render: `Server error: ${errorMessage}`,
-              type: "error",
-              isLoading: false,
-              autoClose: 3000,
-            });
-            break;
-          default:
-            toast.update(toastId, { render: errorMessage, type: "error", isLoading: false, autoClose: 3000 });
+        if (result.status === 400) {
+          toast.update(toastId, { render: `Invalid request: ${errorMessage}`, type: "error", isLoading: false, autoClose: 3000 });
+        } else if (result.status === 409) {
+          toast.update(toastId, { render: `Conflict: ${errorMessage}`, type: "error", isLoading: false, autoClose: 3000 });
+        } else if (result.status === 500) {
+          toast.update(toastId, { render: `Server error: ${errorMessage}`, type: "error", isLoading: false, autoClose: 3000 });
+        } else {
+          toast.update(toastId, { render: errorMessage, type: "error", isLoading: false, autoClose: 3000 });
         }
         return;
       }
 
-      const userResponse = await fetch(`${BASE_URL}/api/customer/me`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-      const userResult = await userResponse.json();
-
-      if (!userResponse.ok) {
-        const errorMessage = userResult.error?.details || userResult.message || "Failed to fetch user details";
-        toast.update(toastId, {
-          render: `Error: ${errorMessage}`,
-          type: "error",
-          isLoading: false,
-          autoClose: 3000,
-        });
-        return;
-      }
-
-      setUser({
-        firstName: userResult.data.first_name,
-        email: userResult.data.email,
-        profilePhoto: userResult.data.profile_photo || null,
-      });
-      setIsLogin(true);
-      sessionStorage.setItem("customerId", userResult.data.id);
-      sessionStorage.setItem("customerEmail", userResult.data.email);
+      const userData = await fetchUserDetails();
+      updateUserState(userData, setUser, setIsLogin);
 
       toast.update(toastId, {
         render: result.message || "Signup successful!",

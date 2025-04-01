@@ -1,14 +1,11 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import Head from 'next/head';
-import Image from 'next/image';
 import { ArrowRight, Facebook, Instagram, Twitter, Palette, Truck, BadgeCheck, ShirtIcon, PencilRuler, ShoppingCart, PackageCheck, Star } from 'lucide-react';
 import { Button } from '@/components/button';
 import { useGetProducts } from './hooks/useGetProducts';
-import { useGetStore } from './hooks/useGetStoreURL';
 import ProductGallery from './prod/page';
 import { useStore } from '@/context/storecontext';
 
