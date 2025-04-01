@@ -23,8 +23,8 @@ const authMiddleware = async (req, res, next) => {
         ? req.headers.authorization.split(" ")[1]
         : null);
 
-    // console.log("Received cookies:", req.cookies); // Debug log
-    // console.log("Received token:", token); // Debug log
+    console.log("Received cookies:", req.cookies); // Debug log
+    console.log("Received token:", token); // Debug log
 
     if (!token) {
       return res.status(401).json({
