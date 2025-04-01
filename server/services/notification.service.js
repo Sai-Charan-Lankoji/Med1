@@ -9,7 +9,7 @@ const logger = require("../utils/logger");
 
 // Verify environment variables are loaded
 const verifyEnvVariables = () => {
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  if (!process.env.SMTP_USERNAME || !process.env.SMTP_PASSWORD) {
     throw new Error(
       "Email credentials not found in environment variables. Ensure EMAIL_USER and EMAIL_PASS are set in .env file"
     );
