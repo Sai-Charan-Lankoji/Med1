@@ -1,68 +1,45 @@
-"use client";
-
-import useSWRMutation from "swr/mutation";
-import { useSWRConfig } from "swr";
 import { Next_server } from "@/constant";
+import { useState } from "react";
 
-interface ResetPasswordPayload {
+interface ResetPasswordData {
+  message: string;
+}
+
+interface ResetPasswordParams {
   email: string;
   newPassword: string;
 }
 
-interface ResetPasswordResponse {
-  message: string;
-}
-
-const resetPasswordFetcher = async (
-  key: string,
-  { arg }: { arg: ResetPasswordPayload }
-): Promise<ResetPasswordResponse> => {
-  const response = await fetch(key, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(arg),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error || "Failed to reset password");
-  }
-
-  return response.json();
-};
-
 export const useResetPassword = () => {
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || Next_server;
-  const url = `${baseUrl}/vendor/resetpassword`;
-  const key = ["reset-password", url]; // Use an array key for better specificity
-  const { mutate } = useSWRConfig();
+  const [data, setData] = useState<ResetPasswordData | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const { trigger, isMutating, data, error } = useSWRMutation<
-    ResetPasswordResponse,
-    Error,
-    string[],
-    ResetPasswordPayload
-  >(
-    key,
-    (key: string[], { arg }) => resetPasswordFetcher(key[1], { arg }), // Use the URL from the key array
-    {
-      onSuccess: (data: ResetPasswordResponse) => {
-        // Invalidate related caches
-        mutate("user-data", undefined, { revalidate: true });
-        mutate("vendor-data", undefined, { revalidate: true });
-      },
-      onError: (err: Error) => {
-        // Expose the error to the UI; no need for console.error since the UI will handle it
-      },
+  const resetPassword = async ({ email, newPassword }: ResetPasswordParams) => {
+    setIsLoading(true);
+    setError(null);
+    setData(null);
+
+    try {
+      const response = await fetch(`${Next_server}/api/vendor/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, newPassword }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to reset password");
+      }
+
+      setData(result);
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error("An unknown error occurred"));
+    } finally {
+      setIsLoading(false);
     }
-  );
-
-  return {
-    resetPassword: (data: ResetPasswordPayload) => trigger(data),
-    isLoading: isMutating,
-    data,
-    error,
   };
+
+  return { resetPassword, isLoading, data, error };
 };

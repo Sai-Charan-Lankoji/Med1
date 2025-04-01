@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
-import useVendorLogin from "../hooks/auth/useVendorLogin";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
 
 const LoginForm = () => {
@@ -19,50 +18,121 @@ const LoginForm = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const { login, error } = useVendorLogin();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
 
-  const togglePasswordVisibility = () => {
-    setShowPassword((prevState) => !prevState);
+  const togglePasswordVisibility = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevents event bubbling to parent elements
+    setShowPassword((prev) => !prev);
   };
 
   const validateEmail = (email: string) => {
     const re = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (!re.test(email)) {
-      setEmailError("Please enter a valid email address");
-    } else {
-      setEmailError("");
-    }
+    if (!re.test(email)) setEmailError("Please enter a valid email address");
+    else setEmailError("");
   };
 
   const validatePassword = (password: string) => {
-    if (password.length < 8) {
-      setPasswordError("Password must be at least 8 characters long");
-    } else {
-      setPasswordError("");
-    }
+    if (password.length < 8) setPasswordError("Password must be at least 8 characters long");
+    else setPasswordError("");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Email and password are required", { duration: 3000 });
+      toast.error("Email and password are required", { duration: 4000 });
+      return;
+    }
+    if (emailError || passwordError) {
+      toast.error("Please fix the errors before submitting", { duration: 4000 });
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
-      const success = await login(email, password);
-      if (success) {
-        toast.success("Login successful", { duration: 1000 });
-        setIsNavigating(true);
-        setTimeout(() => {
-          router.push("/vendor/products");
-        }, 1200);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = result.error?.details || result.message || "Failed to login";
+        switch (result.status) {
+          case 400:
+            toast.error("Invalid request: " + errorMessage, { duration: 4000 });
+            break;
+          case 401:
+            toast.error("Unauthorized: " + errorMessage, { duration: 4000 });
+            break;
+          case 500:
+            toast.error("Server error: " + errorMessage, { duration: 4000 });
+            break;
+          default:
+            toast.error(errorMessage, { duration: 4000 });
+        }
+        return;
       }
+
+      // Success case
+      toast.success(result.message || "Login successful", { duration: 4000 });
+      setIsNavigating(true);
+      setTimeout(() => router.push("/vendor/products"), 1200);
     } catch (err: any) {
-      toast.error(err.message || "Failed to login", { duration: 5000 });
+      toast.error("Unexpected error: " + (err.message || "Please try again"), { duration: 4000 });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResetPasswordRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast.error("Please enter your email", { duration: 4000 });
+      return;
+    }
+    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(resetEmail)) {
+      toast.error("Please enter a valid email address", { duration: 4000 });
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/send-reset-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        const errorMessage = result.error?.details || result.message || "Failed to send reset link";
+        switch (result.status) {
+          case 400:
+            toast.error("Invalid request: " + errorMessage, { duration: 4000 });
+            break;
+          case 404:
+            toast.error("Email not found", { duration: 4000 });
+            break;
+          case 500:
+            toast.error("Server error: " + errorMessage, { duration: 4000 });
+            break;
+          default:
+            toast.error(errorMessage, { duration: 4000 });
+        }
+        return;
+      }
+
+      toast.success(result.message || "Reset link sent to your email", { duration: 4000 });
+      setResetEmail("");
+      setIsDialogOpen(false);
+    } catch (err: any) {
+      toast.error("Unexpected error: " + (err.message || "Please try again"), { duration: 4000 });
+    } finally {
+      setResetLoading(false);
     }
   };
 
@@ -70,48 +140,31 @@ const LoginForm = () => {
     <>
       <Toaster position="top-right" />
       <div className="min-h-screen bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center p-4">
-        {/* Decorative elements */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
           <div className="absolute w-96 h-96 rounded-full bg-primary/10 filter blur-3xl -top-20 -left-20 animate-pulse"></div>
           <div className="absolute w-96 h-96 rounded-full bg-secondary/10 filter blur-3xl -bottom-20 -right-20 animate-pulse"></div>
           <div className="absolute w-72 h-72 rounded-full bg-accent/10 filter blur-2xl top-1/3 left-1/2 animate-pulse"></div>
         </div>
-        
-        {/* Card container */}
+
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="card bg-base-100 shadow-xl max-w-md w-full"
+          className="card bg-base-100 shadow-xl max-w-md w-full relative z-10"
         >
-          {/* Card accent line */}
           <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary to-secondary"></div>
-          
           <div className="card-body p-8">
-            {/* Logo */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{
-                delay: 0.2,
-                type: "spring",
-                stiffness: 260,
-                damping: 20,
-              }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
               className="avatar flex justify-center mb-6"
             >
               <div className="w-24 h-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                <Image
-                  src="/medusaLogo.png"
-                  alt="Logo"
-                  width={96}
-                  height={96}
-                  priority
-                />
+                <Image src="/medusaLogo.png" alt="Logo" width={96} height={96} priority />
               </div>
             </motion.div>
-            
-            {/* Title */}
+
             <motion.h2
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -120,11 +173,9 @@ const LoginForm = () => {
             >
               Welcome Back
             </motion.h2>
-            
-            {/* Form */}
-            <form onSubmit={handleSubmit} method="post" className="space-y-4 mt-6">
-              {/* Email Field */}
-              <motion.label 
+
+            <form onSubmit={handleSubmit} method="post" className="space-y-6 mt-6">
+              <motion.label
                 className="form-control"
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -150,9 +201,8 @@ const LoginForm = () => {
                   </div>
                 )}
               </motion.label>
-              
-              {/* Password Field */}
-              <motion.label 
+
+              <motion.label
                 className="form-control"
                 initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -160,9 +210,13 @@ const LoginForm = () => {
               >
                 <div className="label">
                   <span className="label-text">Password</span>
-                  <Link href="/forgot-password" className="label-text-alt link link-hover text-primary">
+                  <button
+                    type="button"
+                    onClick={() => setIsDialogOpen(true)}
+                    className="label-text-alt link link-hover text-primary"
+                  >
                     Forgot Password?
-                  </Link>
+                  </button>
                 </div>
                 <div className="relative">
                   <input
@@ -192,43 +246,20 @@ const LoginForm = () => {
                   </div>
                 )}
               </motion.label>
-              
-              {/* Submit Button */}
+
               <motion.div
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
                 className="form-control mt-6"
               >
-                <button
-                  type="submit"
-                  className="btn btn-primary w-full"
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <span className="loading loading-spinner loading-sm"></span>
-                  ) : (
-                    "Sign In"
-                  )}
+                <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+                  {loading ? <span className="loading loading-spinner loading-sm"></span> : "Sign In"}
                 </button>
               </motion.div>
-              
-              {/* Error Message */}
-              {error && (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="alert alert-error mt-4"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  <span>{error}</span>
-                </motion.div>
-              )}
             </form>
-            
-            {/* Divider and signup option */}
+
             <div className="divider mt-6">OR</div>
-            
             <div className="text-center">
               <p className="text-base-content/70 mb-4">{"Don't have an account?"}</p>
               <Link href="/plans" className="btn btn-outline btn-primary">
@@ -237,9 +268,46 @@ const LoginForm = () => {
             </div>
           </div>
         </motion.div>
+
+        {/* Forgot Password Dialog */}
+        {isDialogOpen && (
+          <div className="modal modal-open">
+            <div className="modal-box">
+              <h3 className="font-bold text-lg">Reset Password</h3>
+              <p className="py-4">Enter your email to receive a password reset link.</p>
+              <form onSubmit={handleResetPasswordRequest} className="space-y-4">
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text">Email</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="input input-bordered w-full"
+                    placeholder="you@example.com"
+                    disabled={resetLoading}
+                  />
+                </div>
+                <div className="modal-action">
+                  <button type="submit" className="btn btn-primary" disabled={resetLoading}>
+                    {resetLoading ? <span className="loading loading-spinner loading-sm"></span> : "Send Reset Link"}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    onClick={() => setIsDialogOpen(false)}
+                    disabled={resetLoading}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
-      
-      {/* Loading overlay for navigation */}
+
       <LoadingOverlay isLoading={isNavigating} />
     </>
   );
