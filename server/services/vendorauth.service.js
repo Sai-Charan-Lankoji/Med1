@@ -78,7 +78,7 @@ class VendorAuthService {
       const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, {
         expiresIn: "1h",
       });
-      const resetLink = `http://localhost:7008/forgot-password?token=${resetToken}`;
+      const resetLink = `https://med1-five.vercel.app/forgot-password?token=${resetToken}`;
 
       // Send email with reset link (using nodemailer)
       const transporter = nodemailer.createTransport({
