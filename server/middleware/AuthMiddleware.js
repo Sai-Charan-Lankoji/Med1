@@ -1,12 +1,7 @@
 const jwt = require("jsonwebtoken");
 const TokenBlacklist = require("../models/tokenBlacklist.model");
-
-// Utility to promisify jwt.verify for cleaner async/await
 const { promisify } = require("util");
 const jwtVerifyAsync = promisify(jwt.verify);
-
-// Optional: Add a logging library (e.g., winston) for better logging
-const logger = console; // Replace with winston or similar in production
 
 const authMiddleware = async (req, res, next) => {
   // Skip token check for logout endpoint
@@ -15,11 +10,9 @@ const authMiddleware = async (req, res, next) => {
   }
 
   try {
-    // Extract token from cookies or Authorization header (Bearer)
+    // Extract token from cookies or Authorization header
     const token = req.cookies.auth_token || 
-                  (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
-                    ? req.headers.authorization.split(" ")[1]
-                    : null);
+                  (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
 
     if (!token) {
       return res.status(401).json({
@@ -41,23 +34,12 @@ const authMiddleware = async (req, res, next) => {
 
     // Verify token
     const decoded = await jwtVerifyAsync(token, process.env.JWT_SECRET, {
-      algorithms: ["HS256"], // Enforce specific algorithm to prevent alg switching
+      algorithms: ["HS256"],
     });
 
-    // Optional: Add additional checks (e.g., issuer, audience)
-    if (process.env.JWT_ISSUER && decoded.iss !== process.env.JWT_ISSUER) {
-      return res.status(401).json({
-        success: false,
-        message: "Authentication failed",
-        error: { code: "INVALID_ISSUER", details: "Token issuer is invalid" },
-      });
-    }
-
-    // Attach decoded user data to request
     req.user = decoded;
     next();
   } catch (error) {
-    // Enhanced error handling
     let status = 401;
     let errorDetails = { code: "INVALID_TOKEN", details: "Invalid or expired token" };
 
@@ -66,12 +48,6 @@ const authMiddleware = async (req, res, next) => {
     } else if (error.name === "TokenExpiredError") {
       errorDetails = { code: "TOKEN_EXPIRED", details: "Token has expired" };
     }
-
-    logger.error("Authentication error:", {
-      error: error.message,
-      token: req.cookies.auth_token || req.headers.authorization,
-      path: req.path,
-    });
 
     return res.status(status).json({
       success: false,

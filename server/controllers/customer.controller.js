@@ -4,10 +4,10 @@ const multer = require("multer");
 const fileService = new FileService();
 const upload = multer(); // Use Multer to parse multipart form-data
 
+// Signup function
 const signup = async (req, res) => {
   try {
-    const { email, first_name, last_name, password, phone, vendor_id } =
-      req.body;
+    const { email, first_name, last_name, password, phone, vendor_id } = req.body;
 
     // Validate required fields
     if (!email || !first_name || !last_name || !password || !phone) {
@@ -15,12 +15,7 @@ const signup = async (req, res) => {
         status: 400,
         success: false,
         message: "Invalid request parameters",
-        data: null,
-        error: {
-          code: "VALIDATION_ERROR",
-          details:
-            "All fields (email, first_name, last_name, password, phone) are required",
-        },
+        error: { code: "VALIDATION_ERROR", details: "All fields are required" },
       });
     }
 
@@ -33,18 +28,20 @@ const signup = async (req, res) => {
       vendor_id,
     });
 
-    // Set encrypted token in cookie
+    // Set authentication cookie for cross-subdomain access
     res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // True on Render
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true, // Prevent client-side access
+      secure: process.env.NODE_ENV === "production", // HTTPS only in production
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site in production
+      maxAge: 24 * 60 * 60 * 1000, // 1 day expiration
+      path: "/", // Accessible across all paths
+      domain: ".vercel.app", // Share across subdomains (replace with your domain)
     });
 
     res.status(201).json({
       status: 201,
       success: true,
-      message: "Resource created successfully",
+      message: "Customer signed up successfully",
       data: user,
     });
   } catch (error) {
@@ -52,21 +49,20 @@ const signup = async (req, res) => {
       return res.status(409).json({
         status: 409,
         success: false,
-        message: "Conflict detected",
-        data: null,
-        error: { code: "RESOURCE_EXISTS", details: "Email already registered" },
+        message: "Email already registered",
+        error: { code: "RESOURCE_EXISTS", details: error.message },
       });
     }
     res.status(500).json({
       status: 500,
       success: false,
       message: "Internal Server Error",
-      data: null,
       error: { code: "SERVER_ERROR", details: error.message },
     });
   }
 };
 
+// Login function
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -77,42 +73,30 @@ const login = async (req, res) => {
         status: 400,
         success: false,
         message: "Invalid request parameters",
-        data: null,
-        error: {
-          code: "VALIDATION_ERROR",
-          details: "Email and password are required",
-        },
+        error: { code: "VALIDATION_ERROR", details: "Email and password are required" },
       });
     }
 
     const { token } = await customerService.login({ email, password });
 
-    // Set httpOnly cookie (for security)
+    // Set authentication cookie for cross-subdomain access
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
+      domain: ".vercel.app", // Share across subdomains (replace with your domain)
     });
 
-    // Set non-httpOnly cookie for frontend access
-    res.cookie("token", token, {
-      httpOnly: false, // Accessible by frontend
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-      path: "/",
-    });
-
+    // Set CORS headers for credentialed requests
     res.set("Access-Control-Allow-Origin", req.headers.origin);
     res.set("Access-Control-Allow-Credentials", "true");
-
 
     res.status(200).json({
       status: 200,
       success: true,
-      message: "Customer Successfully LoggedIn",
+      message: "Customer logged in successfully",
       data: { message: "Login successful", token },
     });
   } catch (error) {
@@ -120,46 +104,40 @@ const login = async (req, res) => {
       return res.status(401).json({
         status: 401,
         success: false,
-        message: "Unauthorized access",
-        data: null,
-        error: { code: "AUTH_ERROR", details: "Invalid email or password" },
+        message: "Invalid email or password",
+        error: { code: "AUTH_ERROR", details: error.message },
       });
     }
     res.status(500).json({
       status: 500,
       success: false,
       message: "Internal Server Error",
-      data: null,
       error: { code: "SERVER_ERROR", details: error.message },
     });
   }
 };
 
+// Logout function (unchanged, but included for completeness)
 const logout = async (req, res) => {
   try {
-    const token =
-      req.cookies.auth_token ||
-      (req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer ")
-        ? req.headers.authorization.split(" ")[1]
-        : null);
+    const token = req.cookies.auth_token || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
 
-    // If token is present, blacklist it
     if (token) {
       await customerService.logout(token);
     }
 
-    // Clear the auth_token cookie
     res.clearCookie("auth_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+      domain: ".vercel.app", // Clear cookie across subdomains
     });
 
     res.status(200).json({
       status: 200,
       success: true,
-      message: "Customer Logout successfully",
+      message: "Customer logged out successfully",
       data: { message: "Logout successful" },
     });
   } catch (error) {
@@ -167,7 +145,6 @@ const logout = async (req, res) => {
       status: 500,
       success: false,
       message: "Internal Server Error",
-      data: null,
       error: { code: "SERVER_ERROR", details: error.message },
     });
   }

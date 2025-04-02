@@ -112,6 +112,7 @@ export default function SignIn() {
       });
 
       const result = await response.json();
+      console.log("Login Response:", result);
       sessionStorage.setItem("auth_token", result.token);
       if (!response.ok) {
         const errorMessage = result.error?.details || result.message || "Login failed";
