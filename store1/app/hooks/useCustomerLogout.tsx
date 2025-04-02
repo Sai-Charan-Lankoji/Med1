@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUserContext } from '@/context/userContext';
+import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useUserContext } from "@/context/userContext";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 interface Customer {
@@ -29,16 +29,14 @@ export const useCustomerLogout = (): UseCustomerLogoutReturn => {
   const fetchCustomerData = useCallback(async () => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-        }      });
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch customer data');
+        throw new Error(errorData.message || "Failed to fetch customer data");
       }
 
       const { data } = await response.json();
@@ -55,7 +53,8 @@ export const useCustomerLogout = (): UseCustomerLogoutReturn => {
       });
       setError(null);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to fetch customer data';
+      const message =
+        err instanceof Error ? err.message : "Failed to fetch customer data";
       setError(message);
       setCustomer(null);
       setUser({ firstName: null, email: null, profilePhoto: null });
@@ -67,11 +66,11 @@ export const useCustomerLogout = (): UseCustomerLogoutReturn => {
     try {
       const currentCart = localStorage.getItem(`cart_${customerId}`);
       if (currentCart) {
-        localStorage.setItem('guest_cart', currentCart);
+        localStorage.setItem("guest_cart", currentCart);
         localStorage.removeItem(`cart_${customerId}`);
       }
     } catch (error) {
-      console.error('Error handling cart transition during logout:', error);
+      console.error("Error handling cart transition during logout:", error);
     }
   }, []);
 
@@ -90,35 +89,46 @@ export const useCustomerLogout = (): UseCustomerLogoutReturn => {
       if (!customer?.id) {
         await fetchCustomerData(); // Fetch customer data if not already available
         if (!customer?.id) {
-          throw new Error('Customer ID not found. Please log in again.');
+          throw new Error("Customer ID not found. Please log in again.");
         }
       }
 
-      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${NEXT_PUBLIC_API_URL}/api/customer/logout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to log out');
+        throw new Error(errorData.message || "Failed to log out");
       }
 
       handleCartTransition(customer.id);
       clearUserSession();
-      router.push('/');
+      document.cookie = "auth_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      router.push("/");
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'An error occurred during logout';
+      const message =
+        err instanceof Error ? err.message : "An error occurred during logout";
       setError(message);
       clearUserSession();
-      router.push('/login'); // Redirect to login on error
+      router.push("/login"); // Redirect to login on error
     } finally {
       setLoading(false);
     }
-  }, [customer, fetchCustomerData, handleCartTransition, clearUserSession, router]);
+  }, [
+    customer,
+    fetchCustomerData,
+    handleCartTransition,
+    clearUserSession,
+    router,
+  ]);
 
   return {
     logout,

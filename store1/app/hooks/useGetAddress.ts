@@ -48,7 +48,9 @@ const BASE_URL = NEXT_PUBLIC_API_URL;
 export const useAddresses = (): UseAddressesReturn => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | undefined>(undefined);
+  const [selectedAddressId, setSelectedAddressId] = useState<
+    string | undefined
+  >(undefined);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState<Partial<Address>>({
     street: "",
@@ -68,10 +70,9 @@ export const useAddresses = (): UseAddressesReturn => {
     try {
       const response = await fetch(`${BASE_URL}/api/customer/me`, {
         method: "GET",
-        headers: { "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-         }      });
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -90,7 +91,10 @@ export const useAddresses = (): UseAddressesReturn => {
       });
       setCustomerError(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to fetch customer data";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to fetch customer data";
       setCustomer(null);
       setCustomerError(message);
       toast.error(message);
@@ -105,11 +109,14 @@ export const useAddresses = (): UseAddressesReturn => {
 
     setIsLoadingAddresses(true);
     try {
-      const response = await fetch(`${BASE_URL}/api/address/customer/${customer.id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+      const response = await fetch(
+        `${BASE_URL}/api/address/customer/${customer.id}`,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -127,7 +134,8 @@ export const useAddresses = (): UseAddressesReturn => {
         throw new Error(result.message || "Invalid response format");
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to load addresses";
+      const message =
+        error instanceof Error ? error.message : "Failed to load addresses";
       setAddresses([]);
       setAddressError(message);
       toast.error(message);
@@ -166,7 +174,13 @@ export const useAddresses = (): UseAddressesReturn => {
       const result = await response.json();
       if (result.success && result.data) {
         setAddresses((prev) => [...prev, result.data]);
-        setNewAddress({ street: "", city: "", state: "", pincode: "", address_type: null });
+        setNewAddress({
+          street: "",
+          city: "",
+          state: "",
+          pincode: "",
+          address_type: null,
+        });
         setIsAddingAddress(false);
         setAddressError(null);
         toast.success("Address added successfully");
@@ -175,7 +189,8 @@ export const useAddresses = (): UseAddressesReturn => {
         throw new Error(result.message || "Failed to add address");
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to add address";
+      const message =
+        error instanceof Error ? error.message : "Failed to add address";
       setAddressError(message);
       toast.error(message);
     }

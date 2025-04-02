@@ -89,7 +89,7 @@ export const useCustomerSignup = () => {
           router.push(redirectAfterSignup);
           localStorage.removeItem("redirectAfterSignup");
         } else {
-          router.push("/dashboard");
+          router.push("/auth");
         }
       }
     } catch (error) {

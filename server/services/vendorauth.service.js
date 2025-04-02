@@ -4,7 +4,6 @@ const Vendor = require("../models/vendor.model");
 const VendorUser = require("../models/vendoruser.model");
 const TokenBlacklist = require("../models/tokenBlacklist.model");
 const { generateToken } = require("../utils/jwt");
-const TokenEncryption = require("../utils/encryption");
 const nodemailer = require("nodemailer");
 
 class VendorAuthService {
@@ -24,8 +23,7 @@ class VendorAuthService {
   }
 
   async authenticate(email, password) {
-    if (!email?.trim() || !password)
-      throw new Error("Email and password are required");
+    if (!email?.trim() || !password) throw new Error("Email and password are required");
 
     const vendor = await Vendor.findOne({ where: { contact_email: email } });
     if (vendor) {
@@ -36,9 +34,8 @@ class VendorAuthService {
           email: vendor.contact_email,
           role: "vendor",
         });
-        const encryptedToken = TokenEncryption.encrypt(token);
         const { password: _, ...vendorWithoutPassword } = vendor.toJSON();
-        return { vendor: vendorWithoutPassword, token: encryptedToken };
+        return { vendor: vendorWithoutPassword, token };
       } else {
         throw new Error("Invalid email or password");
       }
@@ -46,26 +43,35 @@ class VendorAuthService {
 
     const vendorUser = await VendorUser.findOne({ where: { email } });
     if (vendorUser) {
-      const isPasswordValid = await bcrypt.compare(
-        password,
-        vendorUser.password
-      );
+      const isPasswordValid = await bcrypt.compare(password, vendorUser.password);
       if (isPasswordValid) {
         const token = generateToken({
           id: vendorUser.id,
           email: vendorUser.email,
           role: "vendor_user",
         });
-        const encryptedToken = TokenEncryption.encrypt(token);
-        const { password: _, ...vendorUserWithoutPassword } =
-          vendorUser.toJSON();
-        return { vendor: vendorUserWithoutPassword, token: encryptedToken };
+        const { password: _, ...vendorUserWithoutPassword } = vendorUser.toJSON();
+        return { vendor: vendorUserWithoutPassword, token };
       } else {
         throw new Error("Invalid email or password");
       }
     }
 
     throw new Error("Invalid email or password");
+  }
+
+  async getVendorDetails(id) {
+    const vendor = await Vendor.findByPk(id, { attributes: { exclude: ["password"] } });
+    if (vendor) {
+      return { vendor };
+    }
+
+    const vendorUser = await VendorUser.findByPk(id, { attributes: { exclude: ["password"] } });
+    if (vendorUser) {
+      return { vendorUser };
+    }
+
+    return null;
   }
 
   async sendResetLink(email) {
@@ -75,19 +81,9 @@ class VendorAuthService {
       const user = vendor || (await VendorUser.findOne({ where: { email } }));
       if (!user) throw new Error("Email not found");
 
-      const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
+      const resetToken = jwt.sign({ email }, process.env.JWT_SECRET, { expiresIn: "1h" });
       const resetLink = `https://med1-five.vercel.app/forgot-password?token=${resetToken}`;
 
-      // Send email with reset link (using nodemailer)
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.SMTP_USERNAME,
-          pass: process.env.SMTP_PASSWORD,
-        },
-      });
       const mailOptions = {
         from: process.env.SMTP_USER,
         to: email,
@@ -95,7 +91,7 @@ class VendorAuthService {
         text: `Click this link to reset your password: ${resetLink}\nThis link expires in 1 hour.`,
       };
 
-      await transporter.sendMail(mailOptions);
+      await this.transporter.sendMail(mailOptions);
       return { message: "Reset link sent successfully" };
     } catch (error) {
       console.error("Failed to send reset email:", error);
@@ -104,12 +100,9 @@ class VendorAuthService {
   }
 
   async resetPasswordWithToken(token, newPassword) {
-    if (!token || !newPassword)
-      throw new Error("Token and new password are required");
+    if (!token || !newPassword) throw new Error("Token and new password are required");
     if (newPassword.length < VendorAuthService.PASSWORD_MIN_LENGTH) {
-      throw new Error(
-        `Password must be at least ${VendorAuthService.PASSWORD_MIN_LENGTH} characters long`
-      );
+      throw new Error(`Password must be at least ${VendorAuthService.PASSWORD_MIN_LENGTH} characters long`);
     }
 
     let decoded;
@@ -123,46 +116,25 @@ class VendorAuthService {
     const vendor = await Vendor.findOne({ where: { contact_email: email } });
     if (vendor) {
       const isPasswordSame = await bcrypt.compare(newPassword, vendor.password);
-      if (isPasswordSame)
-        throw new Error(
-          "New password must be different from the current password"
-        );
+      if (isPasswordSame) throw new Error("New password must be different from the current password");
 
-      vendor.password = await bcrypt.hash(
-        newPassword,
-        VendorAuthService.SALT_ROUNDS
-      );
+      vendor.password = await bcrypt.hash(newPassword, VendorAuthService.SALT_ROUNDS);
       vendor.updated_at = new Date();
       await vendor.save();
       const { password: _, ...vendorWithoutPassword } = vendor.toJSON();
-      return {
-        message: "Password reset successful for Vendor",
-        vendor: vendorWithoutPassword,
-      };
+      return { message: "Password reset successful for Vendor", vendor: vendorWithoutPassword };
     }
 
     const vendorUser = await VendorUser.findOne({ where: { email } });
     if (vendorUser) {
-      const isPasswordSame = await bcrypt.compare(
-        newPassword,
-        vendorUser.password
-      );
-      if (isPasswordSame)
-        throw new Error(
-          "New password must be different from the current password"
-        );
+      const isPasswordSame = await bcrypt.compare(newPassword, vendorUser.password);
+      if (isPasswordSame) throw new Error("New password must be different from the current password");
 
-      vendorUser.password = await bcrypt.hash(
-        newPassword,
-        VendorAuthService.SALT_ROUNDS
-      );
+      vendorUser.password = await bcrypt.hash(newPassword, VendorAuthService.SALT_ROUNDS);
       vendorUser.updated_at = new Date();
       await vendorUser.save();
       const { password: _, ...vendorUserWithoutPassword } = vendorUser.toJSON();
-      return {
-        message: "Password reset successful for Vendor User",
-        vendor: vendorUserWithoutPassword,
-      };
+      return { message: "Password reset successful for Vendor User", vendor: vendorUserWithoutPassword };
     }
 
     throw new Error("Email not found");
@@ -170,12 +142,9 @@ class VendorAuthService {
 
   async changePassword(id, { old_password, new_password }) {
     if (!id) throw new Error("Vendor ID is required");
-    if (!old_password || !new_password)
-      throw new Error("Old and new passwords are required");
+    if (!old_password || !new_password) throw new Error("Old and new passwords are required");
     if (new_password.length < VendorAuthService.PASSWORD_MIN_LENGTH) {
-      throw new Error(
-        `Password must be at least ${VendorAuthService.PASSWORD_MIN_LENGTH} characters long`
-      );
+      throw new Error(`Password must be at least ${VendorAuthService.PASSWORD_MIN_LENGTH} characters long`);
     }
 
     const vendor = await Vendor.findByPk(id);
@@ -183,26 +152,14 @@ class VendorAuthService {
       const isMatch = await bcrypt.compare(old_password, vendor.password);
       if (!isMatch) throw new Error("Old password is incorrect");
 
-      const isPasswordSame = await bcrypt.compare(
-        new_password,
-        vendor.password
-      );
-      if (isPasswordSame)
-        throw new Error(
-          "New password must be different from the current password"
-        );
+      const isPasswordSame = await bcrypt.compare(new_password, vendor.password);
+      if (isPasswordSame) throw new Error("New password must be different from the current password");
 
-      vendor.password = await bcrypt.hash(
-        new_password,
-        VendorAuthService.SALT_ROUNDS
-      );
+      vendor.password = await bcrypt.hash(new_password, VendorAuthService.SALT_ROUNDS);
       vendor.updated_at = new Date();
       await vendor.save();
       const { password: _, ...vendorWithoutPassword } = vendor.toJSON();
-      return {
-        message: "Password changed successfully",
-        vendor: vendorWithoutPassword,
-      };
+      return { message: "Password changed successfully", vendor: vendorWithoutPassword };
     }
 
     const vendorUser = await VendorUser.findByPk(id);
@@ -210,26 +167,14 @@ class VendorAuthService {
       const isMatch = await bcrypt.compare(old_password, vendorUser.password);
       if (!isMatch) throw new Error("Old password is incorrect");
 
-      const isPasswordSame = await bcrypt.compare(
-        new_password,
-        vendorUser.password
-      );
-      if (isPasswordSame)
-        throw new Error(
-          "New password must be different from the current password"
-        );
+      const isPasswordSame = await bcrypt.compare(new_password, vendorUser.password);
+      if (isPasswordSame) throw new Error("New password must be different from the current password");
 
-      vendorUser.password = await bcrypt.hash(
-        new_password,
-        VendorAuthService.SALT_ROUNDS
-      );
+      vendorUser.password = await bcrypt.hash(new_password, VendorAuthService.SALT_ROUNDS);
       vendorUser.updated_at = new Date();
       await vendorUser.save();
       const { password: _, ...vendorUserWithoutPassword } = vendorUser.toJSON();
-      return {
-        message: "Password changed successfully",
-        vendor: vendorUserWithoutPassword,
-      };
+      return { message: "Password changed successfully", vendor: vendorUserWithoutPassword };
     }
 
     throw new Error("Vendor or Vendor User not found");

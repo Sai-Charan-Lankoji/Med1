@@ -27,11 +27,8 @@ export const useNewCart = () => {
     try {
       const meResponse = await fetch(`${baseUrl}/api/customer/me`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-        },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // Include credentials for authentication
       });
 
       if (!meResponse.ok) {
@@ -128,7 +125,8 @@ export const useNewCart = () => {
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.error?.details || "Failed to add designable product to cart"
+            errorData.error?.details ||
+              "Failed to add designable product to cart"
           );
         }
 

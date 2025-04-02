@@ -28,14 +28,14 @@ const signup = async (req, res) => {
       vendor_id,
     });
 
-    // Set authentication cookie for cross-subdomain access
+    // Set cookie with environment-aware domain
     res.cookie("auth_token", token, {
-      httpOnly: true, // Prevent client-side access
-      secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Allow cross-site in production
-      maxAge: 24 * 60 * 60 * 1000, // 1 day expiration
-      path: "/", // Accessible across all paths
-      domain: ".vercel.app", // Share across subdomains (replace with your domain)
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
+      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined, // Omit domain in dev
     });
 
     res.status(201).json({
@@ -79,17 +79,16 @@ const login = async (req, res) => {
 
     const { token } = await customerService.login({ email, password });
 
-    // Set authentication cookie for cross-subdomain access
+    // Set cookie with environment-aware domain
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
-      domain: ".vercel.app", // Share across subdomains (replace with your domain)
+      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined, // omit domain in dev
     });
 
-    // Set CORS headers for credentialed requests
     res.set("Access-Control-Allow-Origin", req.headers.origin);
     res.set("Access-Control-Allow-Credentials", "true");
 

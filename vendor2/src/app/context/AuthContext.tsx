@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface AuthContextType {
   email: string | null;
@@ -9,12 +9,12 @@ interface AuthContextType {
   companyName: string | null;
   businessType: string | null;
   plan: string | null;
-  setAuthEmail: (email: string) => void;
-  setContactName: (contactName: string) => void;
-  setCompanyName: (companyName: string) => void;
-  setVendorId: (vendorId: string) => void;
-  setBusinessType: (businessType: string) => void;
-  setPlan: (plan: string) => void;
+  setAuthEmail: (email: string | null) => void;
+  setContactName: (contactName: string | null) => void;
+  setCompanyName: (companyName: string | null) => void;
+  setVendorId: (vendorId: string | null) => void;
+  setBusinessType: (businessType: string | null) => void;
+  setPlan: (plan: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -26,15 +26,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [companyName, setCompanyName] = useState<string | null>("Vendor Hub");
   const [businessType, setBusinessType] = useState<string | null>(null);
   const [plan, setPlan] = useState<string | null>(null);
-  
+
   useEffect(() => {
     const updateFromSessionStorage = () => {
-      const storedEmail = sessionStorage.getItem('email');
-      const storedContactName = sessionStorage.getItem('contact_name');
-      const storedVendorId = sessionStorage.getItem('vendor_id');
-      const storedCompanyName = sessionStorage.getItem('company_name');
-      const storedBusinessType = sessionStorage.getItem('business_type');
-      const storedPlan = sessionStorage.getItem('plan');
+      const storedEmail = sessionStorage.getItem("email");
+      const storedContactName = sessionStorage.getItem("contact_name");
+      const storedVendorId = sessionStorage.getItem("vendor_id");
+      const storedCompanyName = sessionStorage.getItem("company_name");
+      const storedBusinessType = sessionStorage.getItem("business_type");
+      const storedPlan = sessionStorage.getItem("plan");
 
       if (storedEmail) setAuthEmail(storedEmail);
       if (storedContactName) setContactName(storedContactName);
@@ -45,29 +45,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     updateFromSessionStorage();
-
-    window.addEventListener('storage', updateFromSessionStorage);
+    window.addEventListener("storage", updateFromSessionStorage);
 
     return () => {
-      window.removeEventListener('storage', updateFromSessionStorage);
+      window.removeEventListener("storage", updateFromSessionStorage);
     };
   }, []);
 
   return (
-    <AuthContext.Provider value={{ 
-      email, 
-      contactName, 
-      vendorId, 
-      companyName, 
-      businessType, 
-      plan, 
-      setAuthEmail, 
-      setContactName, 
-      setCompanyName, 
-      setVendorId, 
-      setBusinessType, 
-      setPlan 
-    }}>
+    <AuthContext.Provider
+      value={{
+        email,
+        contactName,
+        vendorId,
+        companyName,
+        businessType,
+        plan,
+        setAuthEmail,
+        setContactName,
+        setCompanyName,
+        setVendorId,
+        setBusinessType,
+        setPlan,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -76,8 +77,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };
-

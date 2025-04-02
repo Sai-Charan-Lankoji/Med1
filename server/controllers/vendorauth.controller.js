@@ -1,4 +1,5 @@
 const vendorAuthService = require("../services/vendorauth.service");
+const authMiddleware = require("../middleware/AuthMiddleware"); // Assuming this exists
 
 exports.login = async (req, res) => {
   try {
@@ -13,24 +14,23 @@ exports.login = async (req, res) => {
       });
     }
 
-    const { token, vendor } = await vendorAuthService.authenticate(email, password);
+    const { vendor, token } = await vendorAuthService.authenticate(email, password);
 
-    res.cookie("vendor_auth_token", token, {
+    // Set HTTP-only cookie with cross-subdomain support
+    res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      path: "/",
+      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined, // Cross-subdomain in production
     });
-
-    if (vendor) {
-      res.setHeader("Set-Cookie", `vendor_id=${vendor.id}; Path=/; HttpOnly; Secure; SameSite=None;`);
-    }
 
     res.status(200).json({
       status: 200,
       success: true,
       message: "Login successful",
-      data: { vendor, token },
+      data: { vendor }, // Token not returned in body
     });
   } catch (error) {
     if (error.message.includes("Invalid email or password")) {
@@ -42,6 +42,47 @@ exports.login = async (req, res) => {
         error: { code: "AUTH_ERROR", details: "Invalid email or password" },
       });
     }
+    res.status(500).json({
+      status: 500,
+      success: false,
+      message: "Internal Server Error",
+      data: null,
+      error: { code: "SERVER_ERROR", details: error.message },
+    });
+  }
+};
+
+exports.getCurrentVendor = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({
+        status: 401,
+        success: false,
+        message: "No user ID in token",
+        data: null,
+        error: { code: "AUTH_ERROR", details: "Authentication required" },
+      });
+    }
+
+    const vendorData = await vendorAuthService.getVendorDetails(userId);
+    if (!vendorData) {
+      return res.status(404).json({
+        status: 404,
+        success: false,
+        message: "Vendor not found",
+        data: null,
+        error: { code: "NOT_FOUND", details: "Vendor or Vendor User not found" },
+      });
+    }
+
+    res.status(200).json({
+      status: 200,
+      success: true,
+      message: "Vendor retrieved successfully",
+      data: vendorData,
+    });
+  } catch (error) {
     res.status(500).json({
       status: 500,
       success: false,
@@ -65,7 +106,7 @@ exports.sendResetLink = async (req, res) => {
       });
     }
 
-    const result = await vendorAuthService.sendResetLink(email);
+    await vendorAuthService.sendResetLink(email);
     res.status(200).json({
       status: 200,
       success: true,
@@ -206,10 +247,8 @@ exports.changePassword = async (req, res) => {
 exports.logout = async (req, res) => {
   try {
     const token =
-      req.cookies.vendor_auth_token ||
-      (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")
-        ? req.headers.authorization.split(" ")[1]
-        : null);
+      req.cookies.auth_token ||
+      (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
 
     if (!token) {
       return res.status(400).json({
@@ -223,10 +262,12 @@ exports.logout = async (req, res) => {
 
     await vendorAuthService.logout(token);
 
-    res.clearCookie("vendor_auth_token", {
+    res.clearCookie("auth_token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      path: "/",
+      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
     });
 
     res.status(200).json({
@@ -248,6 +289,7 @@ exports.logout = async (req, res) => {
 
 module.exports = {
   login: exports.login,
+  getCurrentVendor: exports.getCurrentVendor,
   sendResetLink: exports.sendResetLink,
   resetPassword: exports.resetPassword,
   changePassword: exports.changePassword,

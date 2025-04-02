@@ -57,7 +57,9 @@ export default function DesignArea({
   }
 
   const baseurl = process.env.NEXT_PUBLIC_API_URL;
-  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [autoSaveTimeout, setAutoSaveTimeout] = useState<NodeJS.Timeout | null>(
+    null
+  );
   const [lastSavedDesign, setLastSavedDesign] = useState<string | null>(null);
   const canvasState = useSelector((state: RootState) => state.setReducer);
   const {
@@ -71,9 +73,11 @@ export default function DesignArea({
   const { svgUrl } = useSvgContext();
   const dispatchForCanvas = useDispatch();
   const [downloadStatus, setDownloadStatus] = React.useState("");
-  const { svgcolors, dispatchColorPicker } = React.useContext(ColorPickerContext)!;
+  const { svgcolors, dispatchColorPicker } =
+    React.useContext(ColorPickerContext)!;
   const { menus, dispatchMenu } = React.useContext(MenuContext)!;
-  const { designs, dispatchDesign, currentBgColor, updateColor } = React.useContext(DesignContext)!;
+  const { designs, dispatchDesign, currentBgColor, updateColor } =
+    React.useContext(DesignContext)!;
   const design = designs.find((d) => d.isactive === true);
   const { handleZip } = useDownload();
   const { props, dispatchProps } = React.useContext(TextPropsContext)!;
@@ -107,11 +111,9 @@ export default function DesignArea({
       try {
         const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-          }        });
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
         if (!response.ok) throw new Error("Failed to fetch customer data");
         const { data } = await response.json();
         setCustomerData({
@@ -588,7 +590,8 @@ export default function DesignArea({
       const hasPendingAdd = localStorage.getItem("pendingCartAdd");
 
       if (isLogin && hasPendingAdd === "true") {
-        const pendingDesignStateStr = localStorage.getItem("pendingDesignState");
+        const pendingDesignStateStr =
+          localStorage.getItem("pendingDesignState");
         const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
 
         if (!pendingDesignStateStr || !pendingPropsStateStr) {
@@ -645,7 +648,8 @@ export default function DesignArea({
       const hasPendingUpdate = localStorage.getItem("pendingCartUpdate");
 
       if (isLogin && hasPendingUpdate === "true") {
-        const pendingDesignStateStr = localStorage.getItem("pendingDesignState");
+        const pendingDesignStateStr =
+          localStorage.getItem("pendingDesignState");
         const pendingPropsStateStr = localStorage.getItem("pendingPropsState");
         const pendingCartId = localStorage.getItem("pendingCartId");
 
@@ -654,10 +658,11 @@ export default function DesignArea({
         }
 
         try {
-          const pendingDesignState: IDesign[] = JSON.parse(pendingDesignStateStr);
-          const pendingPropsState: IProps & { designId?: string } = JSON.parse(
-            pendingPropsStateStr
+          const pendingDesignState: IDesign[] = JSON.parse(
+            pendingDesignStateStr
           );
+          const pendingPropsState: IProps & { designId?: string } =
+            JSON.parse(pendingPropsStateStr);
 
           const success = await updateCartItem(
             pendingCartId,

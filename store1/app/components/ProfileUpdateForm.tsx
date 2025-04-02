@@ -6,7 +6,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
 import { toast } from "react-hot-toast";
-import { Loader2, PlusCircle, Eye, EyeOff, User, Lock, Key, LogOut } from "lucide-react";
+import {
+  Loader2,
+  PlusCircle,
+  Eye,
+  EyeOff,
+  User,
+  Lock,
+  Key,
+  LogOut,
+} from "lucide-react";
 import Image from "next/image";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
@@ -41,7 +50,10 @@ type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 type TokenChangePasswordFormData = z.infer<typeof tokenChangePasswordSchema>;
 
-const updateCustomerProfile = async (id: string, formData: ProfileFormData & { profile_photo?: File }) => {
+const updateCustomerProfile = async (
+  id: string,
+  formData: ProfileFormData & { profile_photo?: File }
+) => {
   const form = new FormData();
   Object.entries(formData).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== "") {
@@ -56,7 +68,10 @@ const updateCustomerProfile = async (id: string, formData: ProfileFormData & { p
   });
 };
 
-const changeCustomerPassword = async (id: string, formData: ChangePasswordFormData) => {
+const changeCustomerPassword = async (
+  id: string,
+  formData: ChangePasswordFormData
+) => {
   return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/${id}/change-password`, {
     method: "PUT",
     body: JSON.stringify(formData),
@@ -77,14 +92,20 @@ const resetCustomerPassword = async (formData: ResetPasswordFormData) => {
   });
 };
 
-const changePasswordWithToken = async (token: string, formData: TokenChangePasswordFormData) => {
-  return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/reset-password-with-token`, {
-    method: "POST",
-    body: JSON.stringify({ token, new_password: formData.new_password }),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+const changePasswordWithToken = async (
+  token: string,
+  formData: TokenChangePasswordFormData
+) => {
+  return fetch(
+    `${NEXT_PUBLIC_API_URL}/api/customer/reset-password-with-token`,
+    {
+      method: "POST",
+      body: JSON.stringify({ token, new_password: formData.new_password }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 };
 
 export default function ProfileSettings() {
@@ -101,7 +122,11 @@ export default function ProfileSettings() {
   const searchParams = useSearchParams();
 
   // Use the useCustomerLogout hook
-  const { logout, loading: logoutLoading, error: logoutError } = useCustomerLogout();
+  const {
+    logout,
+    loading: logoutLoading,
+    error: logoutError,
+  } = useCustomerLogout();
 
   // Check for token in URL
   useEffect(() => {
@@ -149,11 +174,9 @@ export default function ProfileSettings() {
       try {
         const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-          }        });
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
         if (!response.ok) throw new Error("Failed to fetch profile data");
         const { data } = await response.json();
         setCustomerId(data.id);
@@ -230,7 +253,9 @@ export default function ProfileSettings() {
         return;
       }
 
-      const submissionData: Partial<ProfileFormData & { profile_photo?: File }> = {};
+      const submissionData: Partial<
+        ProfileFormData & { profile_photo?: File }
+      > = {};
       Object.entries(values).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
           submissionData[key as keyof ProfileFormData] = value;
@@ -242,17 +267,20 @@ export default function ProfileSettings() {
       const result = await response.json();
 
       if (!result.success) {
-        toast.error(`${result.status} - ${result.message}: ${result.error.details}`, {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
+        toast.error(
+          `${result.status} - ${result.message}: ${result.error.details}`,
+          {
+            duration: 4000,
+            position: "top-right",
+            style: {
+              background: "#fef2f2",
+              color: "#dc2626",
+              border: "1px solid #dc2626",
+              borderRadius: "8px",
+              padding: "12px",
+            },
+          }
+        );
         return;
       }
 
@@ -307,17 +335,20 @@ export default function ProfileSettings() {
       const result = await response.json();
 
       if (!result.success) {
-        toast.error(`${result.status} - ${result.message}: ${result.error.details}`, {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
+        toast.error(
+          `${result.status} - ${result.message}: ${result.error.details}`,
+          {
+            duration: 4000,
+            position: "top-right",
+            style: {
+              background: "#fef2f2",
+              color: "#dc2626",
+              border: "1px solid #dc2626",
+              borderRadius: "8px",
+              padding: "12px",
+            },
+          }
+        );
         return;
       }
 
@@ -357,17 +388,20 @@ export default function ProfileSettings() {
       const result = await response.json();
 
       if (!result.success) {
-        toast.error(`${result.status} - ${result.message}: ${result.error.details}`, {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
+        toast.error(
+          `${result.status} - ${result.message}: ${result.error.details}`,
+          {
+            duration: 4000,
+            position: "top-right",
+            style: {
+              background: "#fef2f2",
+              color: "#dc2626",
+              border: "1px solid #dc2626",
+              borderRadius: "8px",
+              padding: "12px",
+            },
+          }
+        );
         return;
       }
 
@@ -400,7 +434,9 @@ export default function ProfileSettings() {
     }
   };
 
-  const handleTokenChangePasswordSubmit = async (values: TokenChangePasswordFormData) => {
+  const handleTokenChangePasswordSubmit = async (
+    values: TokenChangePasswordFormData
+  ) => {
     setIsLoading(true);
     try {
       if (!token) {
@@ -422,17 +458,22 @@ export default function ProfileSettings() {
       const result = await response.json();
 
       if (!result.success) {
-        toast.error(`${result.status} - ${result.message}: ${result.error?.details || "Failed to reset password"}`, {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
+        toast.error(
+          `${result.status} - ${result.message}: ${
+            result.error?.details || "Failed to reset password"
+          }`,
+          {
+            duration: 4000,
+            position: "top-right",
+            style: {
+              background: "#fef2f2",
+              color: "#dc2626",
+              border: "1px solid #dc2626",
+              borderRadius: "8px",
+              padding: "12px",
+            },
+          }
+        );
         return;
       }
 
@@ -550,8 +591,13 @@ export default function ProfileSettings() {
       <div className="flex-1 p-10">
         {activeTab === "profile" && !token && (
           <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-10 transform transition-all duration-500 hover:shadow-2xl">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Profile Settings</h2>
-            <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-8">
+            <h2 className="text-3xl font-bold text-gray-800 mb-8">
+              Profile Settings
+            </h2>
+            <form
+              onSubmit={profileForm.handleSubmit(handleProfileSubmit)}
+              className="space-y-8"
+            >
               <div className="flex items-center space-x-6">
                 <div className="relative group">
                   <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-blue-100 transition-all duration-300 group-hover:ring-blue-400">
@@ -585,9 +631,13 @@ export default function ProfileSettings() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-semibold text-gray-800">
-                    {`${profileForm.getValues("first_name")} ${profileForm.getValues("last_name")}`}
+                    {`${profileForm.getValues(
+                      "first_name"
+                    )} ${profileForm.getValues("last_name")}`}
                   </h3>
-                  <p className="text-gray-500">{profileForm.getValues("email")}</p>
+                  <p className="text-gray-500">
+                    {profileForm.getValues("email")}
+                  </p>
                 </div>
               </div>
 
@@ -650,18 +700,26 @@ export default function ProfileSettings() {
         {activeTab === "change-password" && (
           <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-10 transform transition-all duration-500 hover:shadow-2xl">
             <h2 className="text-3xl font-bold text-gray-800 mb-8">
-              {!token ?  "Reset Your Password" :"Change Password" }
+              {!token ? "Reset Your Password" : "Change Password"}
             </h2>
             {!token ? (
               // UI for changing password with token
-              <form onSubmit={tokenChangePasswordForm.handleSubmit(handleTokenChangePasswordSubmit)} className="space-y-6">
+              <form
+                onSubmit={tokenChangePasswordForm.handleSubmit(
+                  handleTokenChangePasswordSubmit
+                )}
+                className="space-y-6"
+              >
                 <PasswordField
                   control={tokenChangePasswordForm.control}
                   name="new_password"
                   label="New Password"
                   show={showNewPassword}
                   onToggle={() => setShowNewPassword(!showNewPassword)}
-                  error={tokenChangePasswordForm.formState.errors.new_password?.message}
+                  error={
+                    tokenChangePasswordForm.formState.errors.new_password
+                      ?.message
+                  }
                 />
                 <div className="flex justify-between pt-6">
                   <button
@@ -689,14 +747,21 @@ export default function ProfileSettings() {
               </form>
             ) : (
               // Default change password UI
-              <form onSubmit={changePasswordForm.handleSubmit(handleChangePasswordSubmit)} className="space-y-6">
+              <form
+                onSubmit={changePasswordForm.handleSubmit(
+                  handleChangePasswordSubmit
+                )}
+                className="space-y-6"
+              >
                 <PasswordField
                   control={changePasswordForm.control}
                   name="old_password"
                   label="Old Password"
                   show={showOldPassword}
                   onToggle={() => setShowOldPassword(!showOldPassword)}
-                  error={changePasswordForm.formState.errors.old_password?.message}
+                  error={
+                    changePasswordForm.formState.errors.old_password?.message
+                  }
                 />
                 <PasswordField
                   control={changePasswordForm.control}
@@ -704,7 +769,9 @@ export default function ProfileSettings() {
                   label="New Password"
                   show={showNewPassword}
                   onToggle={() => setShowNewPassword(!showNewPassword)}
-                  error={changePasswordForm.formState.errors.new_password?.message}
+                  error={
+                    changePasswordForm.formState.errors.new_password?.message
+                  }
                 />
                 <div className="flex justify-between pt-6">
                   <button
@@ -736,8 +803,15 @@ export default function ProfileSettings() {
 
         {activeTab === "reset-password" && !token && (
           <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-10 transform transition-all duration-500 hover:shadow-2xl">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">Reset Password</h2>
-            <form onSubmit={resetPasswordForm.handleSubmit(handleResetPasswordSubmit)} className="space-y-6">
+            <h2 className="text-3xl font-bold text-gray-800 mb-8">
+              Reset Password
+            </h2>
+            <form
+              onSubmit={resetPasswordForm.handleSubmit(
+                handleResetPasswordSubmit
+              )}
+              className="space-y-6"
+            >
               <FormField
                 control={resetPasswordForm.control}
                 name="email"

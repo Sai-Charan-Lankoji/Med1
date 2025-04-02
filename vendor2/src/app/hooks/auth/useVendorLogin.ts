@@ -1,25 +1,27 @@
-'use client'
+"use client";
 
-import { useAuth } from '@/app/context/AuthContext';
-import { useState } from 'react'; 
-import { TokenEncryption } from '@/app/utils/encryption';
-import { Next_server } from '@/constant';
+import { useAuth } from "@/app/context/AuthContext";
+import { useState } from "react";
+import { Next_server } from "@/constant";
 
 interface VendorLoginResponse {
-  token: string | null;
-  vendor?: {
-    id: string;
-    business_type: string;
-    company_name: string;
-    plan: string;
-    contact_email: string;
-    contact_name: string;
-    plan_id: string;
-  };
-  vendorUser?: {
-    vendor_id: string;
-    first_name: string;
-    email: string;
+  error: any;
+  message: string;
+  data?: {
+    vendor?: {
+      id: string;
+      business_type: string;
+      company_name: string;
+      plan: string;
+      contact_email: string;
+      contact_name: string;
+      plan_id: string;
+    };
+    vendorUser?: {
+      vendor_id: string;
+      first_name: string;
+      email: string;
+    };
   };
 }
 
@@ -33,77 +35,87 @@ const useVendorLogin = () => {
     setError(null);
 
     if (!email || !password) {
-      setError('Email and password are required');
+      setError("Email and password are required");
       setLoading(false);
-      return;
+      return false;
     }
 
-    try { 
-      
+    try {
       const url = Next_server;
-      //`${url}/api/vendor/login`,
-      const response = await fetch( `${url}/api/vendor/login`,{
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+      const response = await fetch(`${url}/api/vendor/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include", // Send and receive cookies
       });
 
+      const result: VendorLoginResponse = await response.json();
+
       if (!response.ok) {
+        const errorMessage = result.error?.details || result.message || "Failed to login";
         if (response.status === 401) {
-          throw new Error('Invalid email or password');
+          throw new Error("Invalid email or password");
         } else if (response.status === 404) {
-          throw new Error('User not found');
+          throw new Error("User not found");
         } else if (response.status === 429) {
-          throw new Error('Too many login attempts. Please try again later.');
+          throw new Error("Too many login attempts. Please try again later.");
         } else {
-          throw new Error('An error occurred during login. Please try again.');
+          throw new Error(errorMessage);
         }
       }
 
-      const data: VendorLoginResponse = await response.json();
-      if (data.token) {  
-        const encryptedToken = await TokenEncryption.encrypt(data.token);
-          const decryptedToken = await TokenEncryption.decrypt(encryptedToken);
-         sessionStorage.setItem('auth_token',decryptedToken);
-        if (data.vendor) {
-          sessionStorage.setItem('vendor_id', data.vendor.id);
-          sessionStorage.setItem('business_type', data.vendor.business_type);
-          sessionStorage.setItem('company_name', data.vendor.company_name);
-          sessionStorage.setItem('plan', data.vendor.plan);
-          sessionStorage.setItem('email', data.vendor.contact_email);
-          sessionStorage.setItem('contact_name', data.vendor.contact_name);
-          sessionStorage.setItem("plan_id", data.vendor.plan_id);
-  
-          setAuthEmail(data.vendor.contact_email);
-          setContactName(data.vendor.contact_name);
-          setCompanyName(data.vendor.company_name);
-          setVendorId(data.vendor.id);
-          setBusinessType(data.vendor.business_type);
-          setPlan(data.vendor.plan);
-        } else if (data.vendorUser) {
-          sessionStorage.setItem('vendor_id', data.vendorUser.vendor_id);
-          sessionStorage.setItem('contact_name', data.vendorUser.first_name);
-          sessionStorage.setItem('email', data.vendorUser.email);
-          
-          setAuthEmail(data.vendorUser.email);
-          setContactName(data.vendorUser.first_name);
-          setVendorId(data.vendorUser.vendor_id);
-        } else {
-          throw new Error('Invalid response from server');
-        }
-        return true;
-      } else {
-        throw new Error('Invalid response from server');
-      }
+      // Fetch vendor details after successful login
+      const vendorData = await fetchVendorDetails();
+      updateAuthState(vendorData);
+
+      return true;
     } catch (err: any) {
-      console.error('Error during login:', err);
-      setError(err.message || 'An unknown error occurred');
+      console.error("Error during login:", err);
+      setError(err.message || "An unknown error occurred");
       return false;
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVendorDetails = async () => {
+    const response = await fetch(`${Next_server}/api/vendor/me`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // Send auth_token cookie
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error?.details || result.message || "Failed to fetch vendor details");
+    }
+    return result.data;
+  };
+
+  const updateAuthState = (vendorData: any) => {
+    if (vendorData.vendor) {
+      sessionStorage.setItem("vendor_id", vendorData.vendor.id);
+      sessionStorage.setItem("business_type", vendorData.vendor.business_type);
+      sessionStorage.setItem("company_name", vendorData.vendor.company_name);
+      sessionStorage.setItem("plan", vendorData.vendor.plan);
+      sessionStorage.setItem("email", vendorData.vendor.contact_email);
+      sessionStorage.setItem("contact_name", vendorData.vendor.contact_name);
+      sessionStorage.setItem("plan_id", vendorData.vendor.plan_id);
+
+      setAuthEmail(vendorData.vendor.contact_email);
+      setContactName(vendorData.vendor.contact_name);
+      setCompanyName(vendorData.vendor.company_name);
+      setVendorId(vendorData.vendor.id);
+      setBusinessType(vendorData.vendor.business_type);
+      setPlan(vendorData.vendor.plan);
+    } else if (vendorData.vendorUser) {
+      sessionStorage.setItem("vendor_id", vendorData.vendorUser.vendor_id);
+      sessionStorage.setItem("contact_name", vendorData.vendorUser.first_name);
+      sessionStorage.setItem("email", vendorData.vendorUser.email);
+
+      setAuthEmail(vendorData.vendorUser.email);
+      setContactName(vendorData.vendorUser.first_name);
+      setVendorId(vendorData.vendorUser.vendor_id);
     }
   };
 
@@ -111,4 +123,3 @@ const useVendorLogin = () => {
 };
 
 export default useVendorLogin;
-

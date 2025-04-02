@@ -41,11 +41,9 @@ export const useCustomerLogin = () => {
       // Step 2: Fetch user details after login
       const meResponse = await fetch(`${url}/api/customer/me`, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-        }      });
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!meResponse.ok) {
         throw new Error("Failed to fetch user details");

@@ -23,7 +23,7 @@ const LoginForm = () => {
   const [resetLoading, setResetLoading] = useState(false);
 
   const togglePasswordVisibility = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevents event bubbling to parent elements
+    e.stopPropagation();
     setShowPassword((prev) => !prev);
   };
 
@@ -55,6 +55,7 @@ const LoginForm = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
+        credentials: "include", // Send and receive cookies
       });
 
       const result = await response.json();
@@ -77,7 +78,10 @@ const LoginForm = () => {
         return;
       }
 
-      // Success case
+      // Fetch vendor details after successful login
+      const vendorData = await fetchVendorDetails();
+      updateSessionStorage(vendorData);
+
       toast.success(result.message || "Login successful", { duration: 4000 });
       setIsNavigating(true);
       setTimeout(() => router.push("/vendor/products"), 1200);
@@ -85,6 +89,36 @@ const LoginForm = () => {
       toast.error("Unexpected error: " + (err.message || "Please try again"), { duration: 4000 });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchVendorDetails = async () => {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/me`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // Send auth_token cookie
+    });
+    const result = await response.json();
+
+    if (!response.ok) {
+      throw new Error(result.error?.details || result.message || "Failed to fetch vendor details");
+    }
+    return result.data;
+  };
+
+  const updateSessionStorage = (vendorData: any) => {
+    if (vendorData.vendor) {
+      sessionStorage.setItem("vendor_id", vendorData.vendor.id);
+      sessionStorage.setItem("business_type", vendorData.vendor.business_type);
+      sessionStorage.setItem("company_name", vendorData.vendor.company_name);
+      sessionStorage.setItem("plan", vendorData.vendor.plan);
+      sessionStorage.setItem("email", vendorData.vendor.contact_email);
+      sessionStorage.setItem("contact_name", vendorData.vendor.contact_name);
+      sessionStorage.setItem("plan_id", vendorData.vendor.plan_id);
+    } else if (vendorData.vendorUser) {
+      sessionStorage.setItem("vendor_id", vendorData.vendorUser.vendor_id);
+      sessionStorage.setItem("contact_name", vendorData.vendorUser.first_name);
+      sessionStorage.setItem("email", vendorData.vendorUser.email);
     }
   };
 
@@ -105,6 +139,7 @@ const LoginForm = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: resetEmail }),
+        credentials: "include",
       });
 
       const result = await response.json();
@@ -235,7 +270,7 @@ const LoginForm = () => {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
+                    className="absolute hover:cursor-pointer inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();

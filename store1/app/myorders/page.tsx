@@ -31,7 +31,6 @@ import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
-
 // Define interfaces for type safety
 interface CustomerData {
   id: string;
@@ -115,10 +114,9 @@ export default function Orders() {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
         method: "GET",
-        headers: { "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-         }      });
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
       if (!response.ok) throw new Error("Failed to fetch customer data");
       const { data } = await response.json();
       setCustomerData({
@@ -267,7 +265,10 @@ export default function Orders() {
       });
     }
 
-    if (fulfillmentStatus === "partially_returned" || fulfillmentStatus === "returned") {
+    if (
+      fulfillmentStatus === "partially_returned" ||
+      fulfillmentStatus === "returned"
+    ) {
       timeline.push({
         status: "Returned",
         date:
@@ -326,7 +327,11 @@ export default function Orders() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-4 sm:px-6 lg:px-8">
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+      />
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 text-center mb-10 mt-12">
           My Orders
@@ -370,7 +375,11 @@ export default function Orders() {
                 </div>
 
                 {/* Tabs for Filtering */}
-                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+                <Tabs
+                  value={activeTab}
+                  onValueChange={setActiveTab}
+                  className="w-full sm:w-auto"
+                >
                   <TabsList className="flex flex-nowrap overflow-x-auto sm:overflow-x-hidden gap-2 bg-transparent p-0">
                     <TabsTrigger
                       value="all"
@@ -383,7 +392,13 @@ export default function Orders() {
                     >
                       All Orders
                     </TabsTrigger>
-                    {["pending", "processing", "shipped", "delivered", "canceled"].map((tab) => (
+                    {[
+                      "pending",
+                      "processing",
+                      "shipped",
+                      "delivered",
+                      "canceled",
+                    ].map((tab) => (
                       <TabsTrigger
                         key={tab}
                         value={tab}
@@ -428,12 +443,15 @@ export default function Orders() {
                           </span>
                           <Badge
                             className={`${
-                              statusColors[uiStatus as keyof typeof statusColors]
+                              statusColors[
+                                uiStatus as keyof typeof statusColors
+                              ]
                             } border text-sm py-1 px-2`}
                           >
                             {statusIcons[uiStatus as keyof typeof statusIcons]}
                             <span className="ml-1">
-                              {uiStatus.charAt(0).toUpperCase() + uiStatus.slice(1)}
+                              {uiStatus.charAt(0).toUpperCase() +
+                                uiStatus.slice(1)}
                             </span>
                           </Badge>
                         </div>
@@ -512,7 +530,10 @@ export default function Orders() {
 
         {/* Order Details Dialog */}
         {selectedOrder && (
-          <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+          <Dialog
+            open={!!selectedOrder}
+            onOpenChange={() => setSelectedOrder(null)}
+          >
             <DialogContent className="w-full max-w-4xl max-h-[90vh] overflow-y-auto bg-white rounded-xl shadow-lg border border-gray-200 p-0 transition-all duration-300 ease-in-out">
               <DialogHeader className="p-4 sm:p-6 border-b border-gray-100 flex justify-between items-center">
                 <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900">
@@ -528,9 +549,11 @@ export default function Orders() {
                       ]
                     }`}
                   >
-                    {statusMapping[
-                      selectedOrder.fulfillment_status as keyof typeof statusMapping
-                    ]}
+                    {
+                      statusMapping[
+                        selectedOrder.fulfillment_status as keyof typeof statusMapping
+                      ]
+                    }
                   </span>
                   <Button
                     variant="ghost"
@@ -550,7 +573,9 @@ export default function Orders() {
                   </h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="text-gray-500 font-medium">Order ID:</span>{" "}
+                      <span className="text-gray-500 font-medium">
+                        Order ID:
+                      </span>{" "}
                       <span className="text-gray-900">{selectedOrder.id}</span>
                     </div>
                     <div>
@@ -560,13 +585,16 @@ export default function Orders() {
                       </span>
                     </div>
                     <div>
-                      <span className="text-gray-500 font-medium">Payment:</span>{" "}
+                      <span className="text-gray-500 font-medium">
+                        Payment:
+                      </span>{" "}
                       <span className="text-gray-900">Credit Card</span>
                     </div>
                     <div>
                       <span className="text-gray-500 font-medium">Total:</span>{" "}
                       <span className="text-gray-900">
-                        ${selectedOrder.total_amount} {selectedOrder.currency_code}
+                        ${selectedOrder.total_amount}{" "}
+                        {selectedOrder.currency_code}
                       </span>
                     </div>
                   </div>
@@ -597,14 +625,18 @@ export default function Orders() {
                           <div className="flex-1">
                             <p
                               className={`text-sm font-medium ${
-                                step.completed ? "text-gray-900" : "text-gray-500"
+                                step.completed
+                                  ? "text-gray-900"
+                                  : "text-gray-500"
                               }`}
                             >
                               {step.status}
                             </p>
                             <p
                               className={`text-xs ${
-                                step.completed ? "text-gray-600" : "text-gray-400"
+                                step.completed
+                                  ? "text-gray-600"
+                                  : "text-gray-400"
                               }`}
                             >
                               {step.date}
@@ -661,7 +693,8 @@ export default function Orders() {
                           </p>
                           {item.selected_size && item.selected_color && (
                             <p className="text-xs text-gray-600">
-                              Size: {item.selected_size} • Color: {item.selected_color}
+                              Size: {item.selected_size} • Color:{" "}
+                              {item.selected_color}
                             </p>
                           )}
                         </div>
@@ -681,7 +714,9 @@ export default function Orders() {
                     </div>
                     <div className="flex justify-between text-sm font-semibold text-gray-900 mt-2">
                       <span>Total</span>
-                      <span className="text-blue-600">${selectedOrder.total_amount}</span>
+                      <span className="text-blue-600">
+                        ${selectedOrder.total_amount}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -693,7 +728,9 @@ export default function Orders() {
                   ] === "delivered" && (
                     <Button
                       variant="outline"
-                      onClick={() => router.push(`/orders/${selectedOrder.id}/review`)}
+                      onClick={() =>
+                        router.push(`/orders/${selectedOrder.id}/review`)
+                      }
                       className="border-blue-500 text-blue-600 hover:bg-blue-50 transition-all duration-200 rounded-lg px-6 py-2 shadow-sm"
                     >
                       Write a Review

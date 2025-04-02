@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const vendorAuthController = require("../controllers/vendorauth.controller");
+const authMiddleware = require("../middleware/AuthMiddleware"); // Assuming this exists
 
 /**
  * @swagger
  * /api/vendor/login:
  *   post:
- *     summary: Login a vendor or vendor user and return a token
+ *     summary: Login a vendor or vendor user
  *     tags: [VendorAuth]
  *     requestBody:
  *       required: true
@@ -28,38 +29,77 @@ const vendorAuthController = require("../controllers/vendorauth.controller");
  *                 example: "Password123!"
  *     responses:
  *       200:
- *         description: Login successful, token returned
+ *         description: Login successful, sets auth_token cookie
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
  *                 success:
  *                   type: boolean
- *                 token:
- *                   type: string
- *                 vendor:
- *                   type: object
- *                   properties:
- *                     id:
- *                       type: string
- *                     email:
- *                       type: string
- *       401:
- *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
+ *                   example: true
  *                 message:
  *                   type: string
- *                   example: "Invalid email or password"
+ *                   example: "Login successful"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     vendor:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *       401:
+ *         description: Invalid credentials
  */
 router.post("/login", vendorAuthController.login);
+
+/**
+ * @swagger
+ * /api/vendor/me:
+ *   get:
+ *     summary: Get current authenticated vendor details
+ *     tags: [VendorAuth]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Vendor details retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Vendor retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     vendor:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *       401:
+ *         description: Unauthorized - Token required or invalid
+ *       404:
+ *         description: Vendor not found
+ */
+router.get("/me", authMiddleware, vendorAuthController.getCurrentVendor);
 
 /**
  * @swagger
@@ -83,30 +123,10 @@ router.post("/login", vendorAuthController.login);
  *     responses:
  *       200:
  *         description: Reset link sent successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Reset link sent successfully"
  *       400:
- *         description: Invalid request or email not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Email not found"
+ *         description: Invalid request
+ *       404:
+ *         description: Email not found
  */
 router.post("/send-reset-link", vendorAuthController.sendResetLink);
 
@@ -128,8 +148,6 @@ router.post("/send-reset-link", vendorAuthController.sendResetLink);
  *             properties:
  *               token:
  *                 type: string
- *                 description: "JWT token received from reset link"
- *                 example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
  *               newPassword:
  *                 type: string
  *                 format: password
@@ -137,30 +155,10 @@ router.post("/send-reset-link", vendorAuthController.sendResetLink);
  *     responses:
  *       200:
  *         description: Password reset successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Password reset successful for Vendor"
  *       400:
- *         description: Invalid token, password, or request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Invalid or expired reset token"
+ *         description: Invalid token or request
+ *       404:
+ *         description: Email not found
  */
 router.post("/reset-password", vendorAuthController.resetPassword);
 
@@ -171,48 +169,15 @@ router.post("/reset-password", vendorAuthController.resetPassword);
  *     summary: Logout a vendor by blacklisting their token
  *     tags: [VendorAuth]
  *     security:
- *       - bearerAuth: []
+ *       - cookieAuth: []
  *     responses:
  *       200:
  *         description: Logout successful
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Logout successful"
  *       400:
  *         description: Token is required for logout
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Token is required for logout"
  *       500:
  *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Failed to blacklist token"
  */
-router.post("/logout", vendorAuthController.logout);
+router.post("/logout", authMiddleware, vendorAuthController.logout);
 
 module.exports = router;

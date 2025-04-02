@@ -1,14 +1,24 @@
-'use client';
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { NEXT_PUBLIC_API_URL } from '@/constants/constants';
-import { useRouter } from 'next/navigation';
+"use client";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
+import { useRouter } from "next/navigation";
 
 interface UserContextType {
   firstName: string | null;
   email: string | null;
   profilePhoto: string | null;
   isLogin: boolean;
-  setUser: (userData: { firstName: string | null; email: string | null; profilePhoto: string | null }) => void;
+  setUser: (userData: {
+    firstName: string | null;
+    email: string | null;
+    profilePhoto: string | null;
+  }) => void;
   setIsLogin: (status: boolean) => void;
   logout: () => Promise<void>;
 }
@@ -26,18 +36,20 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const fetchUserDetails = async () => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${sessionStorage.getItem("auth_token")}` 
-
-        }      });
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.data) {
           const { first_name, email, profile_photo } = result.data;
-          setUser({ firstName: first_name, email, profilePhoto: profile_photo });
+          setUser({
+            firstName: first_name,
+            email,
+            profilePhoto: profile_photo,
+          });
           setIsLogin(true);
         } else {
           setUser({ firstName: null, email: null, profilePhoto: null });
@@ -48,28 +60,42 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         setIsLogin(false);
       }
     } catch (error) {
-      console.error('Error fetching user details:', error);
+      console.error("Error fetching user details:", error);
       setUser({ firstName: null, email: null, profilePhoto: null });
       setIsLogin(false);
     }
   };
+  function clearCookies() {
+    const cookies = document.cookie.split(";");
+
+    for (let cookie of cookies) {
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    }
+
+}
 
   useEffect(() => {
     // Fetch user details on mount
     fetchUserDetails();
 
     const removeCustomerId = () => {
-      localStorage.removeItem('customerId');
+      localStorage.removeItem("customerId");
     };
 
-    window.addEventListener('beforeunload', removeCustomerId);
+    window.addEventListener("beforeunload", removeCustomerId);
 
     return () => {
-      window.removeEventListener('beforeunload', removeCustomerId);
+      window.removeEventListener("beforeunload", removeCustomerId);
     };
   }, []);
 
-  const setUser = (userData: { firstName: string | null; email: string | null; profilePhoto: string | null }) => {
+  const setUser = (userData: {
+    firstName: string | null;
+    email: string | null;
+    profilePhoto: string | null;
+  }) => {
     const { firstName, email, profilePhoto } = userData;
 
     setFirstName(firstName);
@@ -77,55 +103,84 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setProfilePhoto(profilePhoto || null);
 
     if (firstName && email) {
-      sessionStorage.setItem('firstName', firstName);
-      sessionStorage.setItem('email', email);
+      sessionStorage.setItem("firstName", firstName);
+      sessionStorage.setItem("email", email);
       if (profilePhoto) {
-        sessionStorage.setItem('profilePhoto', profilePhoto);
+        sessionStorage.setItem("profilePhoto", profilePhoto);
       } else {
-        sessionStorage.removeItem('profilePhoto');
+        sessionStorage.removeItem("profilePhoto");
       }
     } else {
-      sessionStorage.removeItem('firstName');
-      sessionStorage.removeItem('email');
-      sessionStorage.removeItem('profilePhoto');
+      sessionStorage.removeItem("firstName");
+      sessionStorage.removeItem("email");
+      sessionStorage.removeItem("profilePhoto");
     }
   };
 
   const logout = async () => {
     try {
-      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/logout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Include cookies for auth_token
-      });
+      const response = await fetch(
+        `${NEXT_PUBLIC_API_URL}/api/customer/logout`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Logout failed:', errorData);
-        throw new Error(errorData.message || 'Failed to logout');
+        console.error("Logout failed:", errorData);
+        throw new Error(errorData.message || "Failed to logout");
       }
 
       // Clear context and sessionStorage
       setUser({ firstName: null, email: null, profilePhoto: null });
       setIsLogin(false);
-      sessionStorage.removeItem('customerId');
-      sessionStorage.removeItem('customerEmail');
-      router.push("/"); // Redirect to homepage
+      if(response.status){
+      sessionStorage.clear();
+      localStorage.clear();  
+
+      clearCookies();
+
+      router.push("/auth"); // Redirect to homepage
+    }
+    else{
+      router.push("/"); // Redirect to login page
+    }
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
       // Clear state even if logout request fails
       setUser({ firstName: null, email: null, profilePhoto: null });
       setIsLogin(false);
-      sessionStorage.removeItem('customerId');
-      sessionStorage.removeItem('customerEmail');
-      router.push("/"); // Redirect to homepage
+      sessionStorage.removeItem("customerId");
+      sessionStorage.removeItem("customerEmail");
+
+      // Clear all cookies even on error
+      document.cookie.split(";").forEach(cookie => {
+        document.cookie = cookie
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      });
+
+      router.push("/");
     }
   };
 
   return (
-    <UserContext.Provider value={{ firstName, email, profilePhoto, isLogin, setUser, setIsLogin, logout }}>
+    <UserContext.Provider
+      value={{
+        firstName,
+        email,
+        profilePhoto,
+        isLogin,
+        setUser,
+        setIsLogin,
+        logout,
+      }}
+    >
       {children}
     </UserContext.Provider>
   );
@@ -134,7 +189,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 export const useUserContext = () => {
   const context = useContext(UserContext);
   if (!context) {
-    throw new Error('useUserContext must be used within a UserProvider');
+    throw new Error("useUserContext must be used within a UserProvider");
   }
   return context;
 };
