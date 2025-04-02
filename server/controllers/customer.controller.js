@@ -29,7 +29,7 @@ const signup = async (req, res) => {
     });
 
     // Set cookie without specifying domain
-    res.cookie("vendor_auth_token", token, {
+    res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
