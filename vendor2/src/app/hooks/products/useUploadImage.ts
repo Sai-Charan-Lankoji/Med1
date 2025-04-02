@@ -10,10 +10,11 @@ const uploadImage = async (file: File) => {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${baseUrl}/vendor/products/uploads`, {
+  // Use the correct route from your backend
+  const response = await fetch(`${baseUrl}/api/files`, {
     method: "POST",
     body: formData,
-    credentials: "include", // Include credentials if needed for authentication
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -21,8 +22,13 @@ const uploadImage = async (file: File) => {
     throw new Error(`Image upload failed: ${response.status} - ${errorText}`);
   }
 
-  const { fileUrl } = await response.json();
-  return fileUrl;
+  const data = await response.json();
+  
+  // Make sure your backend returns fileUrl and relativePath in the response
+  return { 
+    fileUrl: data.fileUrl, 
+    relativePath: data.relativePath || data.fileUrl 
+  };
 };
 
 export const useUploadImage = () => {
@@ -34,11 +40,11 @@ export const useUploadImage = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const fileUrl = await uploadImage(file);
+      const { fileUrl, relativePath } = await uploadImage(file);
       // Optional: Update cache if applicable
       // mutate(`${baseUrl}/vendor/products`, ...);
       setIsLoading(false);
-      return fileUrl;
+      return { fileUrl, relativePath }; // Return both
     } catch (error) {
       setIsLoading(false);
       setError(error);

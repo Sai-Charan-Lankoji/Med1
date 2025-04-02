@@ -13,7 +13,7 @@ const { startBillingScheduler } = require("./schedulers/billingScheduler");
 const notificationService = require("./services/notification.service.js");
 const defineRelationships = require("./models/relationship.model.js");
 const cookieParser = require("cookie-parser");
-
+const fileRoutes = require("./routes/file.route.js");
 // Initialize Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
@@ -140,6 +140,7 @@ const startServer = async () => {
 
     // Routes
     app.use("/api/address", require("./routes/customeraddreess.route.js"));
+    app.use('/api', fileRoutes);
     app.use("/api/vendors", require("./routes/vendor.route.js"));
     app.use("/api/orders", require("./routes/order.route.js"));
     app.use("/api/auth", require("./routes/adminRoutes/auth.route.js"));

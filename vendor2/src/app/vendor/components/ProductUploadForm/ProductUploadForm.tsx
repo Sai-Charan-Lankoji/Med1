@@ -9,6 +9,7 @@ import Select from "react-select";
 import Image from "next/image";
 import { productFormSchema, type ProductFormValues } from "./schema";
 import { useStock } from "@/app/hooks/useStock";
+import { useUploadImage } from "@/app/hooks/products/useUploadImage";
 
 import { Next_server } from "@/constant";
 import { vendor_id } from "@/app/utils/constant";
@@ -71,6 +72,7 @@ export function ProductUploadForm({
   const [selectedStock, setSelectedStock] = useState<any>(null);
   const isCustomizable = productType === "customizable";
   const { stocks, loading } = useStock();
+  const { uploadImage, isLoading: isUploading } = useUploadImage();
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -114,16 +116,32 @@ export function ProductUploadForm({
     };
   }, [form]);
 
-  const handleSideImageUpload = (side: string, e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSideImageUpload = async (side: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    
+    try {
+      // Set temporary preview using FileReader
       const reader = new FileReader();
       reader.onload = (fileEvent) => {
         if (fileEvent.target?.result) {
-          form.setValue(side as keyof ProductFormValues, fileEvent.target.result as string);
+          // This sets a temporary preview while the image uploads
+          form.setValue(`${side}_preview` as any, fileEvent.target.result as string);
         }
       };
       reader.readAsDataURL(file);
+      
+      // Actually upload the file
+      const { fileUrl, relativePath } = await uploadImage(file);
+      
+      // Store the relative path for submission to the backend
+      form.setValue(side as keyof ProductFormValues, relativePath);
+      
+      // Store the full URL for preview
+      form.setValue(`${side}_preview` as any, fileUrl);
+    } catch (error) {
+      console.error(`Error uploading ${side} image:`, error);
+      alert(`Failed to upload ${side.replace('_', ' ')} image`);
     }
   };
 
@@ -187,6 +205,11 @@ export function ProductUploadForm({
         stock_id: formData.stockId,
         vendor_id: vendor_id,
         discount: sale ? formData.discount : 0,
+        // Only send the relative paths, not the preview URLs
+        front_image: formData.front_image,
+        back_image: formData.back_image,
+        left_image: formData.left_image,
+        right_image: formData.right_image,
       };
 
       const response = await fetch(`${Next_server}/api/standardproducts`, {
@@ -649,11 +672,11 @@ export function ProductUploadForm({
                     <label className="label">
                       <span className="label-text font-medium capitalize">{side.replace("_", " ")}</span>
                     </label>
-                    {form.watch(side as keyof ProductFormValues) ? (
+                    {form.watch(`${side}_preview` as any) || form.watch(side as keyof ProductFormValues) ? (
                       <div className="relative rounded-lg overflow-hidden bg-base-200 border border-base-300">
                         <div className="h-48 flex items-center justify-center relative">
                           <Image
-                            src={form.watch(side as keyof ProductFormValues) as string}
+                            src={form.watch(`${side}_preview` as any) || form.watch(side as keyof ProductFormValues) as string}
                             alt={side.replace("_", " ")}
                             fill
                             className="object-contain"

@@ -244,6 +244,101 @@ class StockService {
       },
     }));
   }
+
+  async getAvailableStockByVendorId(vendorId) {
+    if (!vendorId) {
+      throw new Error("Vendor ID is required");
+    }
+
+    // Remove the colon prefix if it's still there
+    if (vendorId.startsWith(':')) {
+      vendorId = vendorId.substring(1);
+    }
+
+    console.log(`Service - Fetching available stocks for vendor: ${vendorId}`);
+    console.log(`Query conditions: { vendor_id: ${vendorId}, productId: null }`);
+    
+    // Direct SQL check to debug
+    try {
+      const [results, metadata] = await sequelize.query(
+        `SELECT COUNT(*) as count FROM stock WHERE vendor_id = '${vendorId}'`
+      );
+      console.log(`SQL direct query result (total stock count): ${JSON.stringify(results)}`);
+      
+      const [nullProductResults, nullMetadata] = await sequelize.query(
+        `SELECT COUNT(*) as count FROM stock WHERE vendor_id = '${vendorId}' AND product_id IS NULL`
+      );
+      console.log(`SQL direct query result (null product_id count): ${JSON.stringify(nullProductResults)}`);
+    } catch (err) {
+      console.error(`SQL direct query error: ${err.message}`);
+    }
+
+    const stocks = await Stock.findAll({
+      where: { 
+        vendor_id: vendorId,
+        productId: null  // Only get stocks that are not associated with products
+      },
+      include: [
+        {
+          model: StockVariant,
+          as: "StockVariants",
+        },
+      ],
+      logging: console.log // This will log the SQL query
+    });
+
+    console.log(`Service - Found ${stocks.length} stocks with null productId`);
+    
+    // Additional logging if no results
+    if (stocks.length === 0) {
+      // Check if there are any stocks at all for this vendor
+      const allStocks = await Stock.findAll({
+        where: { vendor_id: vendorId },
+        logging: console.log
+      });
+      console.log(`Service - Total stocks for vendor: ${allStocks.length}`);
+      
+      if (allStocks.length > 0) {
+        // Log each stock's productId for debugging
+        allStocks.forEach((stock, i) => {
+          console.log(`Stock ${i+1}: ID=${stock.stock_id}, productId=${stock.productId}, stockType=${stock.stockType}`);
+        });
+      } else {
+        //console.log(`WARNING: No stocks found for vendor ID: ${vendorId}`);
+        // Check if the vendor exists
+        try {
+          const [vendorResult] = await sequelize.query(
+            `SELECT * FROM vendor WHERE id = '${vendorId}'`
+          );
+          if (vendorResult.length > 0) {
+            //console.log(`Vendor exists: ${JSON.stringify(vendorResult[0])}`);
+          } else {
+            //console.log(`WARNING: Vendor with ID ${vendorId} does not exist in database`);
+          }
+        } catch (err) {
+          //console.error(`SQL vendor check error: ${err.message}`);
+        }
+      }
+    }
+
+    return stocks.map((stock) => ({
+      ...stock.toJSON(),
+      totals: {
+        totalQuantity: stock.totalQuantity,
+        availableQuantity: stock.availableQuantity,
+        onHoldQuantity: stock.onHoldQuantity,
+        exhaustedQuantity: stock.exhaustedQuantity,
+      },
+      availableVariants: {
+        sizes: [...new Set(stock.StockVariants.map((v) => v.size))].filter((size) =>
+          stock.StockVariants.some((sv) => sv.size === size && sv.availableQuantity > 0)
+        ),
+        colors: [...new Set(stock.StockVariants.map((v) => v.color).filter(Boolean))].filter((color) =>
+          stock.StockVariants.some((sv) => sv.color === color && sv.availableQuantity > 0)
+        ),
+      },
+    }));
+  }
 }
 
 module.exports = new StockService();

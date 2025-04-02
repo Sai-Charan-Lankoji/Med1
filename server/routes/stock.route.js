@@ -377,6 +377,29 @@ router.post("/restock", stockController.restockVariant);
 
 /**
  * @swagger
+ * /api/stock/vendor/{vendorId}/available:
+ *   get:
+ *     summary: Get all available stocks (not linked to products) by vendor ID
+ *     tags: [Stocks]
+ *     parameters:
+ *       - in: path
+ *         name: vendorId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the vendor to fetch available stocks for
+ *     responses:
+ *       200:
+ *         description: List of available stocks for the vendor
+ *       400:
+ *         description: Invalid or missing vendorId
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/vendor/available/:vendorId", stockController.getAvailableStockByVendorId);
+
+/**
+ * @swagger
  * /api/stock/vendor/{vendorId}:
  *   get:
  *     summary: Get all stocks by vendor ID
@@ -423,5 +446,43 @@ router.post("/restock", stockController.restockVariant);
  *         description: Internal server error
  */
 router.get("/vendor/:vendorId", stockController.getStocksByVendorId);
+
+/**
+ * @swagger
+ * /api/stock/vendor/available/:{vendorId}:
+ *   get:
+ *     summary: Get all available stocks (not linked to products) by vendor ID
+ *     tags: [Stocks]
+ *     parameters:
+ *       - in: path
+ *         name: vendorId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The ID of the vendor to fetch available stocks for
+ *     responses:
+ *       200:
+ *         description: List of available stocks for the vendor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 count:
+ *                   type: integer
+ *                   example: 5
+ *                 stocks:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Stock'
+ *       400:
+ *         description: Invalid or missing vendorId
+ *       500:
+ *         description: Internal server error
+ */
+router.get("/vendor/available/:{vendorId}", stockController.getAvailableStockByVendorId);
 
 module.exports = router;

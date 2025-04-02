@@ -26,7 +26,6 @@ class FileService {
     return `${sanitizedFilename}-${uniqueSuffix}${fileExtension}`;
   }
 
-
   async saveBase64File(base64String, req) {
     await this.createUploadDirectory();
 
@@ -38,11 +37,16 @@ class FileService {
     const buffer = Buffer.from(base64String, "base64");
     await fs.writeFile(filepath, buffer);
 
-    // Generate the file URL
+    // Generate the file URL and relative path
     const fileUrl = this.generateFileUrl(req, filename);
+    const relativePath = `/uploads/${filename}`;
     
-    return { filename, url: fileUrl };
-}
+    return { 
+      filename, 
+      url: fileUrl,
+      relativePath 
+    };
+  }
 
   async saveFile(file) {
     await this.createUploadDirectory();
@@ -55,6 +59,7 @@ class FileService {
     return {
       filename,
       filepath,
+      relativePath: `/uploads/${filename}`,
       size: file.size,
       mimetype: file.mimetype,
     };
@@ -64,6 +69,10 @@ class FileService {
     const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
     const host = req.get('host');
     return `${protocol}://${host}/uploads/${filename}`;
+  }
+
+  generateRelativePath(filename) {
+    return `/uploads/${filename}`;
   }
 
   async deleteFile(filename) {

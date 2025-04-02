@@ -201,4 +201,37 @@ exports.getStocksByVendorId = async (req, res) => {
   }
 };
 
+// New controller method for getting available stocks by vendor ID
+exports.getAvailableStockByVendorId = async (req, res) => {
+  try {
+    let { vendorId } = req.params;
+    
+    if (!vendorId) {
+      return res.status(400).json({
+        success: false,
+        message: "Vendor ID is required",
+      });
+    }
+
+    // Remove the colon prefix if present
+    if (vendorId.startsWith(':')) {
+      vendorId = vendorId.substring(1);
+      console.log(`Cleaned vendorId parameter: ${vendorId}`);
+    }
+
+    console.log(`Fetching available stocks for vendor: ${vendorId}`);
+    const stocks = await stockService.getAvailableStockByVendorId(vendorId);
+    console.log(`Found ${stocks.length} available stocks`);
+    
+    res.status(200).json({ 
+      success: true, 
+      count: stocks.length,
+      stocks 
+    });
+  } catch (error) {
+    console.error("Error fetching available stocks by vendor ID:", error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = exports;

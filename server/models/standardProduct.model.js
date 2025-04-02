@@ -16,9 +16,17 @@ const StandardProduct = sequelize.define(
       type: DataTypes.ENUM("Clothing", "Shoes", "Accessories", "Electronics", "Home"), 
       allowNull: false 
     },
-    sizes: { type: DataTypes.ARRAY(DataTypes.STRING), allowNull: true, defaultValue: [] },
-    colors: { type: DataTypes.JSONB, allowNull: true, defaultValue: [] },
-    
+    sizes: { 
+      type: DataTypes.ARRAY(DataTypes.STRING), 
+      allowNull: true, 
+      defaultValue: []
+      
+    },
+    colors: { 
+      type: DataTypes.JSONB, 
+      allowNull: true, 
+      defaultValue: [],
+    },
     stock_id: {
       type: DataTypes.UUID,
       allowNull: true,

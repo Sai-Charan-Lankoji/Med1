@@ -156,6 +156,26 @@ router.get("/vendor/:vendorId", standardProductController.getAllStandardProducts
 
 /**
  * @swagger
+ * /api/standardproducts/vendor/available{vendorId}:
+ *   get:
+ *     summary: List all available standard products (not linked to stock) by vendorId
+ *     tags: [StandardProducts]
+ *     parameters:
+ *       - in: path
+ *         name: vendorId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Available products found
+ *       404:
+ *         description: No available products found
+ */
+router.get("/vendor/available/:vendorId", standardProductController.getAvailableProductsByVendorId);
+
+/**
+ * @swagger
  * /api/standardproducts/{id}:
  *   get:
  *     summary: Get a standard product by ID

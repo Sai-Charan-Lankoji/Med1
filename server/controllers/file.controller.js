@@ -19,10 +19,12 @@ const uploadFile = async (req, res) => {
     
     // Generate URL
     const fileUrl = fileService.generateFileUrl(req, fileInfo.filename);
+    const relativePath = `/uploads/${fileInfo.filename}`; // This is the relative path
 
     res.status(200).json({
       message: 'File uploaded successfully',
-      fileUrl,
+      fileUrl, // Full URL for client-side display
+      relativePath, // Relative path for DB storage
       fileInfo: {
         filename: fileInfo.filename,
         size: fileInfo.size,

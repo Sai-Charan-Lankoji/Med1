@@ -26,6 +26,10 @@ export const productFormSchema = z
     left_image: z.string().nullable().optional(),
     right_image: z.string().nullable().optional(),
     product_type: z.enum(["standard", "customizable"]),
+    front_image_preview: z.string().nullable().optional(),
+    back_image_preview: z.string().nullable().optional(),
+    left_image_preview: z.string().nullable().optional(),
+    right_image_preview: z.string().nullable().optional(),
   })
   .refine(
     (data) => {
