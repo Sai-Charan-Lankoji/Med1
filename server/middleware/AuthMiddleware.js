@@ -4,15 +4,18 @@ const { promisify } = require("util");
 const jwtVerifyAsync = promisify(jwt.verify);
 
 const authMiddleware = async (req, res, next) => {
-  // Skip token check for logout endpoint
-  if (req.path === "/api/customer/logout" && req.method === "POST") {
+  // Skip token check for logout endpoints
+  if (
+    (req.path === "/api/customer/logout" && req.method === "POST") ||
+    (req.path === "/api/vendor/logout" && req.method === "POST")
+  ) {
     return next();
   }
 
   try {
-    // Extract token from cookies or Authorization header
-    const token = req.cookies.auth_token || 
-    (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
+    const token =
+      req.cookies.auth_token ||
+      (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
 
     if (!token) {
       return res.status(401).json({
@@ -22,7 +25,6 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Check if token is blacklisted
     const blacklisted = await TokenBlacklist.findOne({ where: { token } });
     if (blacklisted) {
       return res.status(401).json({
@@ -32,7 +34,6 @@ const authMiddleware = async (req, res, next) => {
       });
     }
 
-    // Verify token
     const decoded = await jwtVerifyAsync(token, process.env.JWT_SECRET, {
       algorithms: ["HS256"],
     });

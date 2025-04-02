@@ -55,7 +55,7 @@ const LoginForm = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
-        credentials: "include", // Send and receive cookies
+        credentials: "include",
       });
 
       const result = await response.json();
@@ -78,7 +78,6 @@ const LoginForm = () => {
         return;
       }
 
-      // Fetch vendor details after successful login
       const vendorData = await fetchVendorDetails();
       updateSessionStorage(vendorData);
 
@@ -96,7 +95,7 @@ const LoginForm = () => {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/me`, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      credentials: "include", // Send auth_token cookie
+      credentials: "include",
     });
     const result = await response.json();
 
@@ -270,12 +269,8 @@ const LoginForm = () => {
                   />
                   <button
                     type="button"
-                    className="absolute hover:cursor-pointer inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowPassword((prev) => !prev);
-                    }}
+                    className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
+                    onClick={togglePasswordVisibility}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     disabled={loading}
                   >
@@ -311,7 +306,6 @@ const LoginForm = () => {
           </div>
         </motion.div>
 
-        {/* Forgot Password Dialog */}
         {isDialogOpen && (
           <div className="modal modal-open">
             <div className="modal-box">

@@ -1,5 +1,5 @@
 const vendorAuthService = require("../services/vendorauth.service");
-const authMiddleware = require("../middleware/AuthMiddleware"); // Assuming this exists
+const authMiddleware = require("../middleware/AuthMiddleware");
 
 exports.login = async (req, res) => {
   try {
@@ -16,21 +16,20 @@ exports.login = async (req, res) => {
 
     const { vendor, token } = await vendorAuthService.authenticate(email, password);
 
-    // Set cookie without specifying domain
-    res.cookie("vendor_auth_token", token, {
+    res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
-      // domain: removed to default to backend's host (med1-wyou.onrender.com)
+      // No domain specified, defaults to backend host (med1-wyou.onrender.com)
     });
 
     res.status(200).json({
       status: 200,
       success: true,
       message: "Login successful",
-      data: { vendor }, // Token not returned in body
+      data: { vendor },
     });
   } catch (error) {
     if (error.message.includes("Invalid email or password")) {
@@ -266,8 +265,9 @@ exports.logout = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
       path: "/",
-      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
+      // No domain specified, defaults to backend host (med1-wyou.onrender.com)
     });
 
     res.status(200).json({
