@@ -28,16 +28,15 @@ const signup = async (req, res) => {
       vendor_id,
     });
 
-    // Set cookie with environment-aware domain
-    res.cookie("auth_token", token, {
+    // Set cookie without specifying domain
+    res.cookie("vendor_auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       maxAge: 24 * 60 * 60 * 1000,
       path: "/",
-      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined, // Omit domain in dev
+      // domain: removed to default to backend's host (med1-wyou.onrender.com)
     });
-
     res.status(201).json({
       status: 201,
       success: true,
@@ -79,18 +78,18 @@ const login = async (req, res) => {
 
     const { token } = await customerService.login({ email, password });
 
-    // Set cookie with environment-aware domain
-    res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-      path: "/",
-      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined, // omit domain in dev
-    });
+   // Set cookie without specifying domain
+   res.cookie("auth_token", token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    maxAge: 24 * 60 * 60 * 1000,
+    path: "/",
+    // domain: removed to default to backend's host (med1-wyou.onrender.com)
+  });
 
-    res.set("Access-Control-Allow-Origin", req.headers.origin);
-    res.set("Access-Control-Allow-Credentials", "true");
+  res.set("Access-Control-Allow-Origin", req.headers.origin);
+  res.set("Access-Control-Allow-Credentials", "true");
 
     res.status(200).json({
       status: 200,

@@ -16,14 +16,14 @@ exports.login = async (req, res) => {
 
     const { vendor, token } = await vendorAuthService.authenticate(email, password);
 
-    // Set HTTP-only cookie with cross-subdomain support
-    res.cookie("auth_token", token, {
+    // Set cookie without specifying domain
+    res.cookie("vendor_auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      maxAge: 24 * 60 * 60 * 1000,
       path: "/",
-      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined, // Cross-subdomain in production
+      // domain: removed to default to backend's host (med1-wyou.onrender.com)
     });
 
     res.status(200).json({
