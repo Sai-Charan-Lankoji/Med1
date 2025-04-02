@@ -212,7 +212,10 @@ const LoginForm = () => {
                   <span className="label-text">Password</span>
                   <button
                     type="button"
-                    onClick={() => setIsDialogOpen(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsDialogOpen(true);
+                    }}
                     className="label-text-alt link link-hover text-primary"
                   >
                     Forgot Password?
@@ -233,7 +236,11 @@ const LoginForm = () => {
                   <button
                     type="button"
                     className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
-                    onClick={togglePasswordVisibility}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowPassword((prev) => !prev);
+                    }}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                     disabled={loading}
                   >
