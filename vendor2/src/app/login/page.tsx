@@ -316,8 +316,11 @@ const LoginForm = () => {
                   <button
                     type="button"
                     className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
-                    onClick={togglePasswordVisibility}
-                    aria-label={
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowPassword((prev) => !prev);
+                    }}                    aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
                     disabled={loading}
