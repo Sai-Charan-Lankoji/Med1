@@ -140,8 +140,8 @@ export interface OrderData {
     tax_amount: number;
   }>;
 
-  shipping_address?: Address;
-  billing_address?: Address;
+  shipping_address_id: string;
+  billing_address_id: string;
   payment_method?: string;
 }
 

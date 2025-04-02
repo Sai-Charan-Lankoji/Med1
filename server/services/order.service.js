@@ -83,8 +83,8 @@ async updateOrderStatus(orderId, type, value) {
           customer_id: orderData.customer_id,
           email: orderData.email || null,
           public_api_key: orderData.public_api_key || null,
-          shipping_address: orderData.shipping_address || null,
-          billing_address: orderData.billing_address || null,
+          shipping_address: orderData.shipping_address_id || null,
+          billing_address: orderData.billing_address_id || null,
           merchant_transaction_id: orderData.merchant_transaction_id || null,
         },
         { transaction }

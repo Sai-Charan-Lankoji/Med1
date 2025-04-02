@@ -104,11 +104,11 @@ const OrderPage = () => {
     isLoadingAddresses,
   } = useAddresses();
   const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<
-    string | undefined
-  >(undefined);
+    string 
+  >("");
   const [selectedBillingAddressId, setSelectedBillingAddressId] = useState<
-    string | undefined
-  >(undefined);
+    string 
+  >("");
   const [isProcessingOrder, setIsProcessingOrder] = useState(false);
   const [selectedDesigns, setSelectedDesigns] = useState<
     Record<string, number>
@@ -552,8 +552,8 @@ const OrderPage = () => {
       vendor_id: store?.vendor_id || customerData.vendor_id,
       public_api_key: process.env.NEXT_PUBLIC_API_KEY || null,
       store_id: store?.id,
-      shipping_address: shippingAddress,
-      billing_address: billingAddress,
+      shipping_address_id: selectedShippingAddressId,
+      billing_address_id: selectedBillingAddressId,
       shipping_charges: calculateTotals().shippingCost,
       hsn_tax_details: taxDetails,
     };
@@ -630,16 +630,19 @@ const OrderPage = () => {
   };
 
   // Updated address form with all required fields
-  const renderAddressForm = (type: "shipping" | "billing") => (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (validateAddressForm()) {
-          handleAddAddress();
-        }
-      }}
-      className="space-y-6 p-6 bg-white rounded-xl shadow-md border border-gray-200"
-    >
+// Updated address form with 2-column layout
+const renderAddressForm = (type: "shipping" | "billing") => (
+  <form
+    onSubmit={(e) => {
+      e.preventDefault();
+      if (validateAddressForm()) {
+        handleAddAddress();
+      }
+    }}
+    className="space-y-6 p-6 bg-white rounded-xl shadow-md border border-gray-200"
+  >
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* First Name */}
       <div className="space-y-2">
         <Label
           htmlFor={`${type}-first_name`}
@@ -664,6 +667,8 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.first_name}</p>
         )}
       </div>
+
+      {/* Last Name */}
       <div className="space-y-2">
         <Label
           htmlFor={`${type}-last_name`}
@@ -688,7 +693,9 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.last_name}</p>
         )}
       </div>
-      <div className="space-y-2">
+
+      {/* Phone Number - Full width on larger screens */}
+      <div className="sm:col-span-2 space-y-2">
         <Label
           htmlFor={`${type}-phone_number`}
           className="text-sm font-semibold text-gray-700"
@@ -713,7 +720,9 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.phone_number}</p>
         )}
       </div>
-      <div className="space-y-2">
+
+      {/* Street Address - Full width on larger screens */}
+      <div className="sm:col-span-2 space-y-2">
         <Label
           htmlFor={`${type}-street`}
           className="text-sm font-semibold text-gray-700"
@@ -737,6 +746,8 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.street}</p>
         )}
       </div>
+
+      {/* City */}
       <div className="space-y-2">
         <Label
           htmlFor={`${type}-city`}
@@ -761,6 +772,8 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.city}</p>
         )}
       </div>
+
+      {/* State */}
       <div className="space-y-2">
         <Label
           htmlFor={`${type}-state`}
@@ -785,6 +798,8 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.state}</p>
         )}
       </div>
+
+      {/* Pincode */}
       <div className="space-y-2">
         <Label
           htmlFor={`${type}-pincode`}
@@ -810,6 +825,8 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.pincode}</p>
         )}
       </div>
+
+      {/* Country */}
       <div className="space-y-2">
         <Label
           htmlFor={`${type}-country`}
@@ -834,24 +851,25 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.country}</p>
         )}
       </div>
-      <div className="flex space-x-4 pt-4">
-        <Button
-          variant="outline"
-          onClick={() => setIsAddingAddress(false)}
-          className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg"
-          type="button"
-        >
-          Cancel
-        </Button>
-        <Button
-          type="submit"
-          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-        >
-          Save Address
-        </Button>
-      </div>
-    </form>
-  );
+    </div>
+    <div className="flex space-x-4 pt-4">
+      <Button
+        variant="outline"
+        onClick={() => setIsAddingAddress(false)}
+        className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg"
+        type="button"
+      >
+        Cancel
+      </Button>
+      <Button
+        type="submit"
+        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+      >
+        Save Address
+      </Button>
+    </div>
+  </form>
+);
 
   if (isLoadingCart || isLoadingAddresses) {
     return (
@@ -1449,7 +1467,7 @@ const OrderPage = () => {
                           id="same-as-shipping"
                           className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                           checked={
-                            !selectedBillingAddressId ||
+                            !!selectedBillingAddressId &&
                             selectedBillingAddressId === selectedShippingAddressId
                           }
                           onChange={() => {
@@ -1462,7 +1480,7 @@ const OrderPage = () => {
                                   addr.address_type === "billing" &&
                                   addr.id !== selectedShippingAddressId
                               );
-                              setSelectedBillingAddressId(billingAddr?.id);
+                              setSelectedBillingAddressId(billingAddr?.id || "");
                             } else {
                               setSelectedBillingAddressId(
                                 selectedShippingAddressId
