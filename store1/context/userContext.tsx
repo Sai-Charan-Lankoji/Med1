@@ -65,16 +65,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setIsLogin(false);
     }
   };
-  function clearCookies() {
-    const cookies = document.cookie.split(";");
-
-    for (let cookie of cookies) {
-        const eqPos = cookie.indexOf("=");
-        const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
-        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
-    }
-
-}
 
   useEffect(() => {
     // Fetch user details on mount
@@ -126,7 +116,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+          credentials: "include", // Include cookies for auth_token
         }
       );
 
@@ -139,17 +129,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       // Clear context and sessionStorage
       setUser({ firstName: null, email: null, profilePhoto: null });
       setIsLogin(false);
-      if(response.status){
-      sessionStorage.clear();
-      localStorage.clear();  
-
-      clearCookies();
-
-      router.push("/auth"); // Redirect to homepage
-    }
-    else{
-      router.push("/"); // Redirect to login page
-    }
+      sessionStorage.removeItem("customerId");
+      sessionStorage.removeItem("customerEmail");
+      router.push("/"); // Redirect to homepage
     } catch (error) {
       console.error("Error during logout:", error);
       // Clear state even if logout request fails
@@ -157,15 +139,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       setIsLogin(false);
       sessionStorage.removeItem("customerId");
       sessionStorage.removeItem("customerEmail");
-
-      // Clear all cookies even on error
-      document.cookie.split(";").forEach(cookie => {
-        document.cookie = cookie
-          .replace(/^ +/, "")
-          .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-      });
-
-      router.push("/");
+      router.push("/"); // Redirect to homepage
     }
   };
 
