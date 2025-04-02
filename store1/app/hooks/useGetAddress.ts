@@ -1,20 +1,10 @@
+"use client";
+
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-toastify";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
-interface Address {
-  id: string;
-  customer_id: string;
-  customer_email: string;
-  street: string;
-  city: string;
-  state: string;
-  pincode: string;
-  address_type: "billing" | "shipping" | null;
-  created_at: string;
-  updated_at: string | null;
-  deleted_at: string | null;
-  metadata: Record<string, any> | null;
-}
+import { Address } from "@/@types/models";
+ 
 
 interface Customer {
   id: string;
@@ -29,8 +19,6 @@ interface Customer {
 interface UseAddressesReturn {
   customer: Customer | null;
   addresses: Address[];
-  selectedAddressId: string | undefined;
-  setSelectedAddressId: (id: string | undefined) => void;
   isAddingAddress: boolean;
   setIsAddingAddress: (value: boolean) => void;
   newAddress: Partial<Address>;
@@ -48,9 +36,6 @@ const BASE_URL = NEXT_PUBLIC_API_URL;
 export const useAddresses = (): UseAddressesReturn => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [selectedAddressId, setSelectedAddressId] = useState<
-    string | undefined
-  >(undefined);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
   const [newAddress, setNewAddress] = useState<Partial<Address>>({
     street: "",
@@ -126,9 +111,6 @@ export const useAddresses = (): UseAddressesReturn => {
       const result = await response.json();
       if (result.success && Array.isArray(result.data)) {
         setAddresses(result.data);
-        if (result.data.length > 0 && !selectedAddressId) {
-          setSelectedAddressId(result.data[0].id);
-        }
         setAddressError(null);
       } else {
         throw new Error(result.message || "Invalid response format");
@@ -142,7 +124,7 @@ export const useAddresses = (): UseAddressesReturn => {
     } finally {
       setIsLoadingAddresses(false);
     }
-  }, [customer?.id, selectedAddressId]);
+  }, [customer?.id]);
 
   // Add new address
   const handleAddAddress = useCallback(async () => {
@@ -184,7 +166,7 @@ export const useAddresses = (): UseAddressesReturn => {
         setIsAddingAddress(false);
         setAddressError(null);
         toast.success("Address added successfully");
-        await fetchAddressesData();
+        await fetchAddressesData(); // Refresh addresses after adding
       } else {
         throw new Error(result.message || "Failed to add address");
       }
@@ -211,8 +193,6 @@ export const useAddresses = (): UseAddressesReturn => {
   return {
     customer,
     addresses,
-    selectedAddressId,
-    setSelectedAddressId,
     isAddingAddress,
     setIsAddingAddress,
     newAddress,

@@ -94,8 +94,15 @@ const OrderPage = () => {
   const [selectedItems, setSelectedItems] = useState<ICartItem[]>([]);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { addresses, newAddress, setNewAddress, handleAddAddress } =
-    useAddresses();
+  const {
+    addresses,
+    isAddingAddress,
+    setIsAddingAddress,
+    newAddress,
+    setNewAddress,
+    handleAddAddress,
+    isLoadingAddresses,
+  } = useAddresses();
   const [selectedShippingAddressId, setSelectedShippingAddressId] = useState<
     string | undefined
   >(undefined);
@@ -112,8 +119,6 @@ const OrderPage = () => {
   const [imageViewMode, setImageViewMode] = useState<
     Record<string, "apparel" | "uploaded">
   >({});
-  const [isAddingShipping, setIsAddingShipping] = useState(false);
-  const [isAddingBilling, setIsAddingBilling] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"phonepe" | "">("");
   const [activeStep, setActiveStep] = useState<
     "items" | "shipping" | "payment"
@@ -415,8 +420,18 @@ const OrderPage = () => {
       : sides.slice(0, -1).join(", ") + " & " + sides.slice(-1);
   };
 
+  // Validate all required fields for address creation
   const validateAddressForm = () => {
     const errors: Record<string, string> = {};
+    if (!newAddress.first_name || newAddress.first_name.trim() === "")
+      errors.first_name = "First name is required";
+    if (!newAddress.last_name || newAddress.last_name.trim() === "")
+      errors.last_name = "Last name is required";
+    if (!newAddress.phone_number || newAddress.phone_number.trim() === "") {
+      errors.phone_number = "Phone number is required";
+    } else if (!/^[0-9]{10,15}$/.test(newAddress.phone_number)) {
+      errors.phone_number = "Phone number must be 10-15 digits";
+    }
     if (!newAddress.street || newAddress.street.trim() === "")
       errors.street = "Street address is required";
     if (!newAddress.city || newAddress.city.trim() === "")
@@ -428,8 +443,26 @@ const OrderPage = () => {
     } else if (!/^\d{6}$/.test(newAddress.pincode)) {
       errors.pincode = "Pincode must be 6 digits";
     }
+    if (!newAddress.country || newAddress.country.trim() === "")
+      errors.country = "Country is required";
     setAddressFormErrors(errors);
     return Object.keys(errors).length === 0;
+  };
+
+  // Initialize newAddress with customer data and address type
+  const initNewAddress = (type: "shipping" | "billing") => {
+    setNewAddress({
+      first_name: customerData?.first_name || "",
+      last_name: customerData?.last_name || "",
+      phone_number: customerData?.phone || "",
+      street: "",
+      city: "",
+      state: "",
+      pincode: "",
+      country: "India",
+      address_type: type,
+    });
+    setIsAddingAddress(true);
   };
 
   const handleOrderSubmit = async () => {
@@ -595,11 +628,91 @@ const OrderPage = () => {
       }
     }
   };
+
+  // Updated address form with all required fields
   const renderAddressForm = (type: "shipping" | "billing") => (
     <form
-      onSubmit={handleAddAddress}
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (validateAddressForm()) {
+          handleAddAddress();
+        }
+      }}
       className="space-y-6 p-6 bg-white rounded-xl shadow-md border border-gray-200"
     >
+      <div className="space-y-2">
+        <Label
+          htmlFor={`${type}-first_name`}
+          className="text-sm font-semibold text-gray-700"
+        >
+          First Name <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-first_name`}
+          name="first_name"
+          value={newAddress.first_name || ""}
+          onChange={(e) =>
+            setNewAddress({ ...newAddress, first_name: e.target.value })
+          }
+          placeholder="Enter first name"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            addressFormErrors.first_name ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          required
+        />
+        {addressFormErrors.first_name && (
+          <p className="text-sm text-red-500">{addressFormErrors.first_name}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label
+          htmlFor={`${type}-last_name`}
+          className="text-sm font-semibold text-gray-700"
+        >
+          Last Name <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-last_name`}
+          name="last_name"
+          value={newAddress.last_name || ""}
+          onChange={(e) =>
+            setNewAddress({ ...newAddress, last_name: e.target.value })
+          }
+          placeholder="Enter last name"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            addressFormErrors.last_name ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          required
+        />
+        {addressFormErrors.last_name && (
+          <p className="text-sm text-red-500">{addressFormErrors.last_name}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label
+          htmlFor={`${type}-phone_number`}
+          className="text-sm font-semibold text-gray-700"
+        >
+          Phone Number <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-phone_number`}
+          name="phone_number"
+          type="tel"
+          value={newAddress.phone_number || ""}
+          onChange={(e) =>
+            setNewAddress({ ...newAddress, phone_number: e.target.value })
+          }
+          placeholder="Enter phone number (10-15 digits)"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            addressFormErrors.phone_number ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          required
+        />
+        {addressFormErrors.phone_number && (
+          <p className="text-sm text-red-500">{addressFormErrors.phone_number}</p>
+        )}
+      </div>
       <div className="space-y-2">
         <Label
           htmlFor={`${type}-street`}
@@ -612,11 +725,7 @@ const OrderPage = () => {
           name="street"
           value={newAddress.street || ""}
           onChange={(e) =>
-            setNewAddress({
-              ...newAddress,
-              street: e.target.value,
-              address_type: type,
-            })
+            setNewAddress({ ...newAddress, street: e.target.value })
           }
           placeholder="Enter your street address"
           className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
@@ -701,14 +810,34 @@ const OrderPage = () => {
           <p className="text-sm text-red-500">{addressFormErrors.pincode}</p>
         )}
       </div>
+      <div className="space-y-2">
+        <Label
+          htmlFor={`${type}-country`}
+          className="text-sm font-semibold text-gray-700"
+        >
+          Country <span className="text-red-500">*</span>
+        </Label>
+        <Input
+          id={`${type}-country`}
+          name="country"
+          value={newAddress.country || ""}
+          onChange={(e) =>
+            setNewAddress({ ...newAddress, country: e.target.value })
+          }
+          placeholder="Enter country"
+          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            addressFormErrors.country ? "border-red-500 focus:ring-red-500" : ""
+          }`}
+          required
+        />
+        {addressFormErrors.country && (
+          <p className="text-sm text-red-500">{addressFormErrors.country}</p>
+        )}
+      </div>
       <div className="flex space-x-4 pt-4">
         <Button
           variant="outline"
-          onClick={() =>
-            type === "shipping"
-              ? setIsAddingShipping(false)
-              : setIsAddingBilling(false)
-          }
+          onClick={() => setIsAddingAddress(false)}
           className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg"
           type="button"
         >
@@ -724,7 +853,7 @@ const OrderPage = () => {
     </form>
   );
 
-  if (isLoadingCart) {
+  if (isLoadingCart || isLoadingAddresses) {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
         <Loader2 className="animate-spin text-blue-600 h-12 w-12 mb-4" />
@@ -1223,8 +1352,8 @@ const OrderPage = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6">
-                {isAddingShipping ? (
-                  renderAddressForm("shipping")
+                {isAddingAddress ? (
+                  renderAddressForm(newAddress.address_type === "billing" ? "billing" : "shipping")
                 ) : (
                   <div className="space-y-6">
                     <div className="space-y-4">
@@ -1240,7 +1369,7 @@ const OrderPage = () => {
                           </p>
                           <Button
                             variant="outline"
-                            onClick={() => setIsAddingShipping(true)}
+                            onClick={() => initNewAddress("shipping")}
                             className="border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg"
                           >
                             <Plus className="h-4 w-4 mr-2" /> Add Shipping
@@ -1291,8 +1420,8 @@ const OrderPage = () => {
                                       )}
                                     </Label>
                                     <p className="mt-1 text-gray-700 text-sm">
-                                      {addr.street}, {addr.city}, {addr.state} -{" "}
-                                      {addr.pincode}
+                                      {addr.first_name} {addr.last_name}, {addr.phone_number}, {addr.street}, {addr.city}, {addr.state} -{" "}
+                                      {addr.pincode}, {addr.country}
                                     </p>
                                   </div>
                                 </div>
@@ -1301,7 +1430,7 @@ const OrderPage = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setIsAddingShipping(true)}
+                            onClick={() => initNewAddress("shipping")}
                             className="mt-2 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg"
                           >
                             <Plus className="h-4 w-4 mr-2" /> Add New Address
@@ -1314,47 +1443,59 @@ const OrderPage = () => {
                       <h3 className="text-lg font-semibold text-gray-700">
                         Billing Address
                       </h3>
-                      {isAddingBilling ? (
-                        renderAddressForm("billing")
-                      ) : (
+                      <div className="flex items-center mb-4">
+                        <input
+                          type="checkbox"
+                          id="same-as-shipping"
+                          className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          checked={
+                            !selectedBillingAddressId ||
+                            selectedBillingAddressId === selectedShippingAddressId
+                          }
+                          onChange={() => {
+                            if (
+                              selectedBillingAddressId ===
+                              selectedShippingAddressId
+                            ) {
+                              const billingAddr = addresses.find(
+                                (addr) =>
+                                  addr.address_type === "billing" &&
+                                  addr.id !== selectedShippingAddressId
+                              );
+                              setSelectedBillingAddressId(billingAddr?.id);
+                            } else {
+                              setSelectedBillingAddressId(
+                                selectedShippingAddressId
+                              );
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="same-as-shipping"
+                          className="ml-2 text-sm text-gray-700 font-medium"
+                        >
+                          Same as shipping address
+                        </label>
+                      </div>
+                      {selectedBillingAddressId !== selectedShippingAddressId && (
                         <>
-                          <div className="flex items-center mb-4">
-                            <input
-                              type="checkbox"
-                              id="same-as-shipping"
-                              className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                              checked={
-                                !selectedBillingAddressId ||
-                                selectedBillingAddressId ===
-                                  selectedShippingAddressId
-                              }
-                              onChange={() => {
-                                if (
-                                  selectedBillingAddressId ===
-                                  selectedShippingAddressId
-                                ) {
-                                  const billingAddr = addresses.find(
-                                    (addr) =>
-                                      addr.address_type === "billing" &&
-                                      addr.id !== selectedShippingAddressId
-                                  );
-                                  setSelectedBillingAddressId(billingAddr?.id);
-                                } else {
-                                  setSelectedBillingAddressId(
-                                    selectedShippingAddressId
-                                  );
-                                }
-                              }}
-                            />
-                            <label
-                              htmlFor="same-as-shipping"
-                              className="ml-2 text-sm text-gray-700 font-medium"
-                            >
-                              Same as shipping address
-                            </label>
-                          </div>
-                          {selectedBillingAddressId !==
-                            selectedShippingAddressId && (
+                          {addresses.filter(
+                            (addr) => addr.address_type === "billing"
+                          ).length === 0 ? (
+                            <div className="bg-gray-50 p-6 rounded-lg text-center border border-gray-200">
+                              <p className="text-gray-600 mb-4">
+                                No billing addresses found
+                              </p>
+                              <Button
+                                variant="outline"
+                                onClick={() => initNewAddress("billing")}
+                                className="border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg"
+                              >
+                                <Plus className="h-4 w-4 mr-2" /> Add Billing
+                                Address
+                              </Button>
+                            </div>
+                          ) : (
                             <RadioGroup
                               value={selectedBillingAddressId}
                               onValueChange={setSelectedBillingAddressId}
@@ -1397,8 +1538,8 @@ const OrderPage = () => {
                                         )}
                                       </Label>
                                       <p className="mt-1 text-gray-700 text-sm">
-                                        {addr.street}, {addr.city}, {addr.state}{" "}
-                                        - {addr.pincode}
+                                        {addr.first_name} {addr.last_name}, {addr.phone_number}, {addr.street}, {addr.city}, {addr.state} -{" "}
+                                        {addr.pincode}, {addr.country}
                                       </p>
                                     </div>
                                   </div>
@@ -1408,7 +1549,7 @@ const OrderPage = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setIsAddingBilling(true)}
+                            onClick={() => initNewAddress("billing")}
                             className="mt-2 border-blue-500 text-blue-600 hover:bg-blue-50 rounded-lg"
                           >
                             <Plus className="h-4 w-4 mr-2" /> Add New Billing

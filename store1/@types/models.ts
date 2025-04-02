@@ -73,6 +73,11 @@ export interface IDesign {
 }
 export interface Address {
   id: string;
+  first_name: string;
+  last_name: string;
+  phone_number: string;
+  address_type: string | null;
+  country: string;
   customer_id: string;
   customer_email: string;
   street: string;

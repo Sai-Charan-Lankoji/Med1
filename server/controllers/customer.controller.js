@@ -521,19 +521,19 @@ const changeCustomerPassword = async (req, res) => {
 
 const resetCustomerPassword = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, origin } = req.body; // Extract origin from request body
 
-    if (!email) {
+    if (!email || !origin) {
       return res.status(400).json({
         status: 400,
         success: false,
         message: "Invalid request parameters",
         data: null,
-        error: { code: "VALIDATION_ERROR", details: "Email is required" },
+        error: { code: "VALIDATION_ERROR", details: "Email and origin are required" },
       });
     }
 
-    await customerService.resetCustomerPassword(email);
+    await customerService.resetCustomerPassword(email, origin); // Pass origin to service
 
     return res.status(200).json({
       status: 200,

@@ -83,9 +83,10 @@ const changeCustomerPassword = async (
 };
 
 const resetCustomerPassword = async (formData: ResetPasswordFormData) => {
+  const origin = window.location.origin; // Get the frontend URL
   return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/reset-password`, {
     method: "POST",
-    body: JSON.stringify(formData),
+    body: JSON.stringify({ ...formData, origin }), // Include origin in the request body
     headers: {
       "Content-Type": "application/json",
     },
@@ -386,7 +387,7 @@ export default function ProfileSettings() {
     try {
       const response = await resetCustomerPassword(values);
       const result = await response.json();
-
+  
       if (!result.success) {
         toast.error(
           `${result.status} - ${result.message}: ${result.error.details}`,
@@ -404,7 +405,7 @@ export default function ProfileSettings() {
         );
         return;
       }
-
+  
       toast.success(`${result.status} - ${result.message}`, {
         duration: 4000,
         position: "top-right",

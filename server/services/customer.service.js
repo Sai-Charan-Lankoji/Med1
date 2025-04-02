@@ -3,9 +3,10 @@ const TokenBlacklist = require("../models/tokenBlacklist.model");
 const { generateToken } = require("../utils/jwt");
 const bcrypt = require("bcrypt");
 const TokenEncryption = require("../utils/encryption");
-const nodemailer = require("nodemailer"); // For sending emails
+const nodemailer = require("nodemailer");
+
 class CustomerService {
-  static SALT_ROUNDS = 10; // Match admin's 12 or adjust as needed
+  static SALT_ROUNDS = 10;
   static PASSWORD_MIN_LENGTH = 8;
 
   validateSignupData(data) {
@@ -57,7 +58,7 @@ class CustomerService {
       const token = generateToken({
         id: customer.id,
         email: customer.email,
-        role: "customer", // Explicit role for customer
+        role: "customer",
       });
 
       const encryptedToken = TokenEncryption.encrypt(token);
@@ -95,7 +96,6 @@ class CustomerService {
         role: "customer",
       });
 
-      // const encryptedToken = TokenEncryption.encrypt(token);
       return { token: token };
     } catch (error) {
       throw new Error(`Login failed: ${error.message}`);
@@ -125,7 +125,7 @@ class CustomerService {
         attributes: { exclude: ["password_hash"] },
         order: [["created_at", "DESC"]],
       };
-      if (role) query.where = { role }; // Filter by role if provided
+      if (role) query.where = { role };
 
       const { count, rows } = await Customer.findAndCountAll(query);
       return {
@@ -139,7 +139,6 @@ class CustomerService {
     }
   }
 
-  // Retain unique methods
   async getCustomerDetails(customer_id) {
     if (!customer_id) {
       throw new Error("Customer ID is required.");
@@ -172,8 +171,6 @@ class CustomerService {
     return customer;
   }
 
-  SALT_ROUNDS = 10;
-
   validateInput(data) {
     const { email, first_name, last_name, phone } = data;
 
@@ -205,10 +202,12 @@ class CustomerService {
 
       const updateFields = {};
       if (updateData.email) updateFields.email = updateData.email;
-      if (updateData.first_name) updateFields.first_name = updateData.first_name;
+      if (updateData.first_name)
+        updateFields.first_name = updateData.first_name;
       if (updateData.last_name) updateFields.last_name = updateData.last_name;
       if (updateData.phone) updateFields.phone = updateData.phone;
-      if (updateData.profile_photo) updateFields.profile_photo = updateData.profile_photo;
+      if (updateData.profile_photo)
+        updateFields.profile_photo = updateData.profile_photo;
 
       if (Object.keys(updateFields).length === 0) {
         return {
@@ -247,13 +246,19 @@ class CustomerService {
         throw new Error("Customer not found");
       }
 
-      const isMatch = await bcrypt.compare(old_password, customer.password_hash);
+      const isMatch = await bcrypt.compare(
+        old_password,
+        customer.password_hash
+      );
       if (!isMatch) {
         throw new Error("Old password is incorrect");
       }
 
       const newPasswordHash = await bcrypt.hash(new_password, this.SALT_ROUNDS);
-      await customer.update({ password_hash: newPasswordHash, updated_at: new Date() });
+      await customer.update({
+        password_hash: newPasswordHash,
+        updated_at: new Date(),
+      });
 
       return {
         id: customer.id,
@@ -270,7 +275,7 @@ class CustomerService {
     }
   }
 
-  async resetCustomerPassword(email) {
+  async resetCustomerPassword(email, origin) {
     try {
       const customer = await Customer.findOne({ where: { email } });
       if (!customer) {
@@ -281,6 +286,9 @@ class CustomerService {
       const resetToken = Math.random().toString(36).slice(2);
       // In a real app, store the token in the database with an expiration time
       // For this example, we'll just send it in the email
+
+      // Construct the reset link using the provided origin
+      const resetLink = `${origin}/profile?token=${resetToken}`;
 
       // Send email with reset link (using nodemailer)
       const transporter = nodemailer.createTransport({
@@ -295,7 +303,7 @@ class CustomerService {
         from: process.env.SMTP_USERNAME,
         to: email,
         subject: "Password Reset Request",
-        text: `Click the following link to reset your password: http://localhost:3000/profile?token=${resetToken}`,
+        text: `Click the following link to reset your password: ${resetLink}`,
       };
 
       await transporter.sendMail(mailOptions);
