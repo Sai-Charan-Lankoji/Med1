@@ -138,7 +138,7 @@ const NavigationBar = () => {
       <div className="navbar bg-base-100 shadow-md border-b border-base-300">
         {/* Navbar start - Brand/Logo section */}
         <div className="navbar-start ml-2">
-          <Link href={isAuthenticated ? "/vendor/dashboard" : "/"} className="btn btn-ghost normal-case text-xl text-primary">
+          <Link href={isAuthenticated ? "/vendor" : "/"} className="btn btn-ghost normal-case text-xl text-primary">
             <div className="flex items-center gap-2">
               <Store className="h-6 w-6" />
               <span>{companyName || "Vendor Hub"}</span>
@@ -167,9 +167,9 @@ const NavigationBar = () => {
           {isAuthenticated ? (
             <>
               {/* Help/Support button - only for authenticated users */}
-              <label htmlFor="support-modal" className="btn btn-ghost btn-circle">
+              {/* <label htmlFor="support-modal" className="btn btn-ghost btn-circle">
                 <HelpCircle className="h-5 w-5" />
-              </label>
+              </label> */}
 
               {/* Notifications dropdown - only for authenticated users */}
               <div className="dropdown dropdown-end">
@@ -359,7 +359,7 @@ const NavigationBar = () => {
       </div>
 
       {/* Support Modal - Using DaisyUI modal */}
-      <input type="checkbox" id="support-modal" className="modal-toggle" />
+      {/* <input type="checkbox" id="support-modal" className="modal-toggle" />
       <div className="modal">
         <div className="modal-box">
           <form>
@@ -394,7 +394,7 @@ const NavigationBar = () => {
           </form>
         </div>
         <label className="modal-backdrop" htmlFor="support-modal"></label>
-      </div>
+      </div> */}
     </>
   );
 };

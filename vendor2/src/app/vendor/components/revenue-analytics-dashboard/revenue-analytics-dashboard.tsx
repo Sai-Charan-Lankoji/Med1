@@ -324,7 +324,7 @@ export default function RevenueAnalytics() {
   };
 
   return (
-    <div className="flex-1 space-y-6 p-4 md:p-8 bg-base-200">
+    <div className=" container flex-1 space-y-6 p-4 md:p-8 bg-base-200">
       {/* Header with Filter Buttons */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <h2 className="text-3xl font-bold text-primary flex items-center gap-2">

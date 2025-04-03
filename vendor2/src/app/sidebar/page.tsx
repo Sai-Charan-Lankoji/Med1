@@ -43,15 +43,15 @@ const Sidebar = () => {
             {!isCollapsed ? (
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center text-primary-content font-bold">
-                  {companyName?.charAt(0) || "V"}
+                  {/* {companyName?.charAt(0) || "V"} */} V
                 </div>
                 <span className="text-lg font-semibold text-primary">
-                  {companyName || "Vendor Hub"}
+                  {/* {companyName || "Vendor Hub"} */} Vendor Hub
                 </span>
               </div>
             ) : (
               <div className="w-10 h-10 rounded-md bg-primary flex items-center justify-center text-primary-content font-bold mx-auto">
-                {companyName?.charAt(0) || "V"}
+                {/* {companyName?.charAt(0) || "V"} */} V
               </div>
             )}
           </div>

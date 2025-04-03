@@ -90,7 +90,7 @@ const LoginForm = () => {
 
       toast.success(result.message || "Login successful", { duration: 4000 });
       setIsNavigating(true);
-      setTimeout(() => router.push("/vendor/products"), 1200);
+      setTimeout(() => router.push("/vendor"), 1200);
     } catch (err: any) {
       toast.error("Unexpected error: " + (err.message || "Please try again"), {
         duration: 4000,

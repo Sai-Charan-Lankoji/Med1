@@ -46,12 +46,7 @@ const menuItems = [
     href: "/vendor/stock-management",
     description: "Inventory management",
   },
-  {
-    title: "Analytics",
-    icon: LayoutDashboard,
-    href: "/vendor/Revenue-Analytics",
-    description: "Revenue and performance",
-  },
+  
   {
     title: "Users",
     icon: User,
@@ -77,7 +72,7 @@ export default function MenuItems({ collapsed, currentPath }: MenuItemsProps) {
           return (
             <li
               key={item.href}
-              className={cn(collapsed && "tooltip tooltip-right", "group")}
+              className={cn(collapsed &&  "group")}
               data-tip={collapsed ? item.title : ""}
             >
               <Link
