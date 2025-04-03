@@ -71,7 +71,8 @@ const Thumbnail = () => {
 
     try {
       const results = await Promise.all(uploadPromises);
-      uploadedFilePaths.push(...results);
+      const fileUrls = results.map((result) => result.fileUrl);
+      uploadedFilePaths.push(...fileUrls);
       setUploadedImages((prev) => [...prev, ...uploadedFilePaths]);
       setProductFormData((prev) => ({
         ...prev,

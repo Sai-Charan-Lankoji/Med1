@@ -48,8 +48,8 @@ const AddProductForm = () => {
     for (const file of Array.from(files)) {
       setOriginalFileName(file.name);
       try {
-        const fileUrl = await uploadImage(file);
-        uploadedFilePaths.push(fileUrl);
+        const result = await uploadImage(file);
+        uploadedFilePaths.push(result.fileUrl);
         if (uploadedFilePaths.length === files.length) {
           setUploadedImages((prev) => [...prev, ...uploadedFilePaths]);
           toast.success("Image uploaded successfully");
