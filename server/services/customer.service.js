@@ -5,9 +5,49 @@ const bcrypt = require("bcrypt");
 const TokenEncryption = require("../utils/encryption");
 const nodemailer = require("nodemailer");
 
+// Fixed CustomerService class with consistent URL handling
 class CustomerService {
   static SALT_ROUNDS = 10;
   static PASSWORD_MIN_LENGTH = 8;
+
+  // Helper method to add full URL to profile_photo
+  addProfilePhotoUrl(customer, req) {
+    if (!customer) return customer;
+
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.PRODUCTION_URL || 'https://med1-wyou.onrender.com'
+      : `${req.protocol}://${req.get('host')}`;
+
+    // Process a single customer
+    const processCustomer = (item) => {
+      // Convert Sequelize model to plain object if needed
+      const result = item.toJSON ? item.toJSON() : { ...item };
+      
+      // Replace relative path with full URL for profile_photo
+      if (result.profile_photo) {
+        if (result.profile_photo.startsWith('/uploads/')) {
+          // For relative paths, replace with full URL
+          result.profile_photo = `${baseUrl}${result.profile_photo}`;
+        }
+        // For absolute URLs, keep as is
+        
+        // Add a timestamp parameter for cache busting if needed
+        if (process.env.FORCE_IMAGE_REFRESH === 'true') {
+          result.profile_photo += `?t=${Date.now()}`;
+        }
+      }
+      
+      return result;
+    };
+    
+    // If it's a single customer
+    if (!Array.isArray(customer)) {
+      return processCustomer(customer);
+    }
+    
+    // If it's an array of customers
+    return customer.map(item => processCustomer(item));
+  }
 
   validateSignupData(data) {
     const { email, password, first_name, last_name, phone } = data;
@@ -32,7 +72,8 @@ class CustomerService {
     }
   }
 
-  async signup(data) {
+  // Adding req parameter to signup
+  async signup(data, req) {
     try {
       this.validateSignupData(data);
       const { email, first_name, last_name, password, phone, vendor_id } = data;
@@ -62,15 +103,19 @@ class CustomerService {
       });
 
       const encryptedToken = TokenEncryption.encrypt(token);
-      const { password_hash: _, ...customerWithoutPassword } =
-        customer.toJSON();
-      return { user: customerWithoutPassword, token: encryptedToken };
+      const { password_hash: _, ...customerWithoutPassword } = customer.toJSON();
+      
+      // Process customer data through addProfilePhotoUrl (even for new signups)
+      const processedCustomer = this.addProfilePhotoUrl({...customerWithoutPassword}, req);
+      
+      return { user: processedCustomer, token: encryptedToken };
     } catch (error) {
       throw new Error(`Signup failed: ${error.message}`);
     }
   }
 
-  async login(data) {
+  // Adding req parameter to login
+  async login(data, req) {
     try {
       const { email, password } = data;
       if (!email?.trim() || !password) {
@@ -96,7 +141,14 @@ class CustomerService {
         role: "customer",
       });
 
-      return { token: token };
+      // Process customer through addProfilePhotoUrl before returning
+      const { password_hash: _, ...customerData } = customer.toJSON();
+      const processedCustomer = this.addProfilePhotoUrl(customerData, req);
+
+      return { 
+        token: token,
+        user: processedCustomer  // Also return user data with processed URL
+      };
     } catch (error) {
       throw new Error(`Login failed: ${error.message}`);
     }
@@ -116,7 +168,7 @@ class CustomerService {
     }
   }
 
-  async getUsers(page = 1, limit = 10, role) {
+  async getUsers(page = 1, limit = 10, role, req) {
     try {
       const offset = (page - 1) * limit;
       const query = {
@@ -128,8 +180,12 @@ class CustomerService {
       if (role) query.where = { role };
 
       const { count, rows } = await Customer.findAndCountAll(query);
+      
+      // Apply URL transformation to the rows
+      const processedRows = this.addProfilePhotoUrl(rows, req);
+      
       return {
-        users: rows,
+        users: processedRows,
         total: count,
         page,
         total_pages: Math.ceil(count / limit),
@@ -139,26 +195,29 @@ class CustomerService {
     }
   }
 
-  async getCustomerDetails(customer_id) {
+  async getCustomerDetails(customer_id, req) {
     if (!customer_id) {
       throw new Error("Customer ID is required.");
     }
-    return await Customer.findByPk(customer_id);
+    const customer = await Customer.findByPk(customer_id);
+    return this.addProfilePhotoUrl(customer, req);
   }
 
-  async getCustomerByVendorId(vendor_id) {
+  async getCustomerByVendorId(vendor_id, req) {
     if (!vendor_id) {
       throw new Error("Vendor ID is required.");
     }
     console.log("Querying customers with vendor_id:", vendor_id);
-    return await Customer.findAll({ where: { vendor_id } });
+    const customers = await Customer.findAll({ where: { vendor_id } });
+    return this.addProfilePhotoUrl(customers, req);
   }
 
-  async list() {
-    return await Customer.findAll();
+  async list(req) {
+    const customers = await Customer.findAll();
+    return this.addProfilePhotoUrl(customers, req);
   }
 
-  async getCustomerByEmail(email) {
+  async getCustomerByEmail(email, req) {
     if (!email) {
       throw new Error("Email is required.");
     }
@@ -168,7 +227,7 @@ class CustomerService {
       throw new Error("Customer not found.");
     }
 
-    return customer;
+    return this.addProfilePhotoUrl(customer, req);
   }
 
   validateInput(data) {
@@ -191,7 +250,7 @@ class CustomerService {
     }
   }
 
-  async updateCustomerDetails(id, updateData) {
+  async updateCustomerDetails(id, updateData, req) {
     try {
       const customer = await Customer.findByPk(id);
       if (!customer) {
@@ -224,22 +283,16 @@ class CustomerService {
       updateFields.updated_at = new Date();
       await customer.update(updateFields);
 
-      return {
-        id: customer.id,
-        email: customer.email,
-        first_name: customer.first_name,
-        last_name: customer.last_name,
-        phone: customer.phone,
-        profile_photo: customer.profile_photo,
-        updated_at: customer.updated_at,
-      };
+      // After updating, fetch the customer and add image URL
+      const updatedCustomer = await Customer.findByPk(id);
+      return this.addProfilePhotoUrl(updatedCustomer, req);
     } catch (error) {
       console.error("Service Error updating customer:", error.message);
       throw error;
     }
   }
 
-  async changeCustomerPassword(id, { old_password, new_password }) {
+  async changeCustomerPassword(id, { old_password, new_password }, req) {
     try {
       const customer = await Customer.findByPk(id);
       if (!customer) {
@@ -260,15 +313,9 @@ class CustomerService {
         updated_at: new Date(),
       });
 
-      return {
-        id: customer.id,
-        email: customer.email,
-        first_name: customer.first_name,
-        last_name: customer.last_name,
-        phone: customer.phone,
-        profile_photo: customer.profile_photo,
-        updated_at: customer.updated_at,
-      };
+      // After password change, fetch customer and add image URL
+      const updatedCustomer = await Customer.findByPk(id);
+      return this.addProfilePhotoUrl(updatedCustomer, req);
     } catch (error) {
       console.error("Service Error changing password:", error.message);
       throw error;

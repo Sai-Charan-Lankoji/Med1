@@ -19,6 +19,7 @@ const signup = async (req, res) => {
       });
     }
 
+    // Pass req to the signup method
     const { user, token } = await customerService.signup({
       email,
       first_name,
@@ -26,7 +27,7 @@ const signup = async (req, res) => {
       password,
       phone,
       vendor_id,
-    });
+    }, req); // Pass req object here
 
     // Set cookie without specifying domain
     res.cookie("auth_token", token, {
@@ -76,26 +77,27 @@ const login = async (req, res) => {
       });
     }
 
-    const { token } = await customerService.login({ email, password });
+    // Pass req to the login method
+    const { token, user } = await customerService.login({ email, password }, req);
 
-   // Set cookie without specifying domain
-   res.cookie("auth_token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 24 * 60 * 60 * 1000,
-    path: "/",
-    // domain: removed to default to backend's host (med1-wyou.onrender.com)
-  });
+    // Set cookie without specifying domain
+    res.cookie("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      maxAge: 24 * 60 * 60 * 1000,
+      path: "/",
+      // domain: removed to default to backend's host (med1-wyou.onrender.com)
+    });
 
-  res.set("Access-Control-Allow-Origin", req.headers.origin);
-  res.set("Access-Control-Allow-Credentials", "true");
+    res.set("Access-Control-Allow-Origin", req.headers.origin);
+    res.set("Access-Control-Allow-Credentials", "true");
 
     res.status(200).json({
       status: 200,
       success: true,
       message: "Customer logged in successfully",
-      data: { message: "Login successful", token },
+      data: { message: "Login successful", token, user }, // Also return user data
     });
   } catch (error) {
     if (error.message.includes("Invalid credentials")) {
@@ -153,7 +155,7 @@ const getCurrentUser = async (req, res) => {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ success: false, message: "No user ID in token", error: { code: "AUTH_ERROR" } });
 
-    const customer = await customerService.getCustomerDetails(userId);
+    const customer = await customerService.getCustomerDetails(userId, req);
     if (!customer) return res.status(404).json({ success: false, message: "Customer not found", error: { code: "NOT_FOUND" } });
 
     res.status(200).json({ success: true, message: "Retrieved Customer Successfully", data: customer });
@@ -167,7 +169,8 @@ const getUsers = async (req, res) => {
     const customers = await customerService.getUsers(
       parseInt(page) || 1,
       parseInt(limit) || 10,
-      role
+      role,
+      req // Pass the request object
     );
 
     if (!customers || customers.length === 0) {
@@ -210,7 +213,7 @@ const getCustomerDetails = async (req, res) => {
       });
     }
 
-    const customer = await customerService.getCustomerDetails(id);
+    const customer = await customerService.getCustomerDetails(id, req);
     if (!customer) {
       return res.status(404).json({
         status: 404,
@@ -251,7 +254,7 @@ const customerByVendorId = async (req, res) => {
       });
     }
 
-    const customers = await customerService.getCustomerByVendorId(vendor_id);
+    const customers = await customerService.getCustomerByVendorId(vendor_id, req);
     if (!customers || customers.length === 0) {
       return res.status(404).json({
         status: 404,
@@ -284,7 +287,7 @@ const customerByVendorId = async (req, res) => {
 
 const getAllCustomers = async (req, res) => {
   try {
-    const customers = await customerService.list();
+    const customers = await customerService.list(req);
     if (!customers || customers.length === 0) {
       return res.status(204).json({
         status: 204,
@@ -324,7 +327,7 @@ const getCustomerByEmail = async (req, res) => {
       });
     }
 
-    const customer = await customerService.getCustomerByEmail(email);
+    const customer = await customerService.getCustomerByEmail(email, req);
     if (!customer) {
       return res.status(404).json({
         status: 404,
@@ -408,7 +411,7 @@ const updateCustomerDetails = async (req, res) => {
       last_name,
       phone,
       profile_photo,
-    });
+    }, req);
 
     return res.status(200).json({
       status: 200,
@@ -479,7 +482,7 @@ const changeCustomerPassword = async (req, res) => {
     const updatedCustomer = await customerService.changeCustomerPassword(id, {
       old_password,
       new_password,
-    });
+    }, req);
 
     return res.status(200).json({
       status: 200,
