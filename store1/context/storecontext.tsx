@@ -26,8 +26,7 @@ export const StoreProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-    const { data, isLoading: fetchLoading } = useGetStore(origin);
-    console.log("store URL: ", origin);
+    const { data, isLoading: fetchLoading } = useGetStore(encodeURIComponent(origin));
 
     useEffect(() => {
         if (!fetchLoading && data) {
