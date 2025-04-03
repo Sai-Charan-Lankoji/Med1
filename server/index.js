@@ -157,7 +157,7 @@ const startServer = async () => {
     app.use("/api", require("./routes/file.route.js"));
     app.use("/api/standardproducts", require("./routes/standardProduct.route.js"));
     app.use("/api/wishlists", require("./routes/wishlist.route.js"));
-    app.use("/api", require("./routes/revenue.js"));
+    app.use("/api", require("./routes/revenue.route.js"));
     app.use("/api/admin", require("./routes/admindiscount.route.js"));
     app.use("/api/suppliers", require("./routes/supplier.route.js"));
     app.use("/consignments", require("./routes/consignment.route.js"));
