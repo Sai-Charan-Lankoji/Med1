@@ -49,7 +49,6 @@ const CartPage = () => {
   //   };
   //   fetchAuthToken();
   // }, []);
-
   useEffect(() => {
     if (!isCartLoaded && !loading) {
       fetchCartData()
