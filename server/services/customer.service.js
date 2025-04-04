@@ -13,7 +13,7 @@ class CustomerService {
     if (!customer) return customer;
 
     const baseUrl = process.env.NODE_ENV === "production"
-      ? process.env.PRODUCTION_URL
+      ? "https://med1-wyou.onrender.com"
       : `${req.protocol}://${req.get("host")}`;
 
     const processCustomer = (item) => {
