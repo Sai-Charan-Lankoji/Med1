@@ -8,9 +8,11 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
 import LoadingOverlay from "@/components/ui/LoadingOverlay";
+import { useAuth } from "../context/AuthContext";
 
 const LoginForm = () => {
   const router = useRouter();
+  const { setVendorId, setAuthEmail, setContactName, setCompanyName, setBusinessType, setPlan } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,89 +36,72 @@ const LoginForm = () => {
   };
 
   const validatePassword = (password: string) => {
-    if (password.length < 8)
-      setPasswordError("Password must be at least 8 characters long");
+    if (password.length < 8) setPasswordError("Password must be at least 8 characters long");
     else setPasswordError("");
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Email and password are required", { duration: 4000 });
+      toast.error("Email and password are required");
       return;
     }
     if (emailError || passwordError) {
-      toast.error("Please fix the errors before submitting", {
-        duration: 4000,
-      });
+      toast.error("Please fix the errors before submitting");
       return;
     }
 
     setLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/vendor/login`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      });
 
       const result = await response.json();
-
       if (!response.ok) {
-        const errorMessage =
-          result.error?.details || result.message || "Failed to login";
-        switch (result.status) {
-          case 400:
-            toast.error("Invalid request: " + errorMessage, { duration: 4000 });
-            break;
-          case 401:
-            toast.error("Unauthorized: " + errorMessage, { duration: 4000 });
-            break;
-          case 500:
-            toast.error("Server error: " + errorMessage, { duration: 4000 });
-            break;
-          default:
-            toast.error(errorMessage, { duration: 4000 });
-        }
+        toast.error(result.message || "Failed to login");
         return;
       }
 
       const vendorData = await fetchVendorDetails();
+      // Update AuthContext directly
+      if (vendorData.vendor) {
+        setVendorId(vendorData.vendor.id);
+        setAuthEmail(vendorData.vendor.contact_email);
+        setContactName(vendorData.vendor.contact_name);
+        setCompanyName(vendorData.vendor.company_name);
+        setBusinessType(vendorData.vendor.business_type);
+        setPlan(vendorData.vendor.plan);
+      } else if (vendorData.vendorUser) {
+        setVendorId(vendorData.vendorUser.vendor_id);
+        setAuthEmail(vendorData.vendorUser.email);
+        setContactName(vendorData.vendorUser.first_name);
+      }
+      // Update sessionStorage for persistence
       updateSessionStorage(vendorData);
 
-      toast.success(result.message || "Login successful", { duration: 4000 });
+      toast.success(result.message || "Login successful");
       setIsNavigating(true);
       setTimeout(() => router.push("/vendor"), 1200);
     } catch (err: any) {
-      toast.error("Unexpected error: " + (err.message || "Please try again"), {
-        duration: 4000,
-      });
+      toast.error("Unexpected error: " + (err.message || "Please try again"));
     } finally {
       setLoading(false);
     }
   };
 
   const fetchVendorDetails = async () => {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/vendor/me`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      }
-    );
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/me`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
     const result = await response.json();
-
     if (!response.ok) {
-      throw new Error(
-        result.error?.details ||
-          result.message ||
-          "Failed to fetch vendor details"
-      );
+      throw new Error(result.message || "Failed to fetch vendor details");
     }
     return result.data;
   };
@@ -140,61 +125,39 @@ const LoginForm = () => {
   const handleResetPasswordRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail) {
-      toast.error("Please enter your email", { duration: 4000 });
+      toast.error("Please enter your email");
       return;
     }
     if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(resetEmail)) {
-      toast.error("Please enter a valid email address", { duration: 4000 });
+      toast.error("Please enter a valid email address");
       return;
     }
 
     setResetLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/vendor/send-reset-link`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: resetEmail }),
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/vendor/send-reset-link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: resetEmail }),
+        credentials: "include",
+      });
 
       const result = await response.json();
       if (!response.ok) {
-        const errorMessage =
-          result.error?.details ||
-          result.message ||
-          "Failed to send reset link";
-        switch (result.status) {
-          case 400:
-            toast.error("Invalid request: " + errorMessage, { duration: 4000 });
-            break;
-          case 404:
-            toast.error("Email not found", { duration: 4000 });
-            break;
-          case 500:
-            toast.error("Server error: " + errorMessage, { duration: 4000 });
-            break;
-          default:
-            toast.error(errorMessage, { duration: 4000 });
-        }
+        toast.error(result.message || "Failed to send reset link");
         return;
       }
 
-      toast.success(result.message || "Reset link sent to your email", {
-        duration: 4000,
-      });
+      toast.success(result.message || "Reset link sent to your email");
       setResetEmail("");
       setIsDialogOpen(false);
     } catch (err: any) {
-      toast.error("Unexpected error: " + (err.message || "Please try again"), {
-        duration: 4000,
-      });
+      toast.error("Unexpected error: " + (err.message || "Please try again"));
     } finally {
       setResetLoading(false);
     }
   };
+
   return (
     <>
       <Toaster position="top-right" />
@@ -216,22 +179,11 @@ const LoginForm = () => {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{
-                delay: 0.2,
-                type: "spring",
-                stiffness: 260,
-                damping: 20,
-              }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 260, damping: 20 }}
               className="avatar flex justify-center mb-6"
             >
               <div className="w-24 h-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                <Image
-                  src="/medusaLogo.png"
-                  alt="Logo"
-                  width={96}
-                  height={96}
-                  priority
-                />
+                <Image src="/medusaLogo.png" alt="Logo" width={96} height={96} priority />
               </div>
             </motion.div>
 
@@ -244,11 +196,7 @@ const LoginForm = () => {
               Welcome Back
             </motion.h2>
 
-            <form
-              onSubmit={handleSubmit}
-              method="post"
-              className="space-y-6 mt-6"
-            >
+            <form onSubmit={handleSubmit} method="post" className="space-y-6 mt-6">
               <motion.label
                 className="form-control"
                 initial={{ x: -20, opacity: 0 }}
@@ -264,20 +212,16 @@ const LoginForm = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => validateEmail(email)}
-                  className={`input input-bordered w-full ${
-                    emailError ? "input-error" : ""
-                  }`}
+                  className={`input input-bordered w-full ${emailError ? "input-error" : ""}`}
                   placeholder="you@example.com"
                   disabled={loading}
                   required
                 />
                 {emailError && (
                   <div className="label">
-                    <span className="label-text-alt text-error">
-                      {emailError}
-                    </span>
+                    <span className="label-text-alt text-error">{emailError}</span>
                   </div>
-                )}
+              )}
               </motion.label>
 
               <motion.label
@@ -306,9 +250,7 @@ const LoginForm = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     onBlur={() => validatePassword(password)}
-                    className={`input input-bordered w-full pr-10 ${
-                      passwordError ? "input-error" : ""
-                    }`}
+                    className={`input input-bordered w-full pr-10 ${passwordError ? "input-error" : ""}`}
                     placeholder="••••••••"
                     disabled={loading}
                     required
@@ -316,27 +258,16 @@ const LoginForm = () => {
                   <button
                     type="button"
                     className="absolute inset-y-0 right-0 flex items-center px-3 text-base-content/70 hover:text-primary transition-colors"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setShowPassword((prev) => !prev);
-                    }}                    aria-label={
-                      showPassword ? "Hide password" : "Show password"
-                    }
+                    onClick={togglePasswordVisibility}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
                     disabled={loading}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
                 {passwordError && (
                   <div className="label">
-                    <span className="label-text-alt text-error">
-                      {passwordError}
-                    </span>
+                    <span className="label-text-alt text-error">{passwordError}</span>
                   </div>
                 )}
               </motion.label>
@@ -347,11 +278,7 @@ const LoginForm = () => {
                 transition={{ delay: 0.6 }}
                 className="form-control mt-6"
               >
-                <button
-                  type="submit"
-                  className="btn btn-primary w-full"
-                  disabled={loading}
-                >
+                <button type="submit" className="btn btn-primary w-full" disabled={loading}>
                   {loading ? (
                     <span className="loading loading-spinner loading-sm"></span>
                   ) : (
@@ -363,9 +290,7 @@ const LoginForm = () => {
 
             <div className="divider mt-6">OR</div>
             <div className="text-center">
-              <p className="text-base-content/70 mb-4">
-                {"Don't have an account?"}
-              </p>
+              <p className="text-base-content/70 mb-4">{"Don't have an account?"}</p>
               <Link href="/plans" className="btn btn-outline btn-primary">
                 Create Account
               </Link>
@@ -377,9 +302,7 @@ const LoginForm = () => {
           <div className="modal modal-open">
             <div className="modal-box">
               <h3 className="font-bold text-lg">Reset Password</h3>
-              <p className="py-4">
-                Enter your email to receive a password reset link.
-              </p>
+              <p className="py-4">Enter your email to receive a password reset link.</p>
               <form onSubmit={handleResetPasswordRequest} className="space-y-4">
                 <div className="form-control">
                   <label className="label">
@@ -395,11 +318,7 @@ const LoginForm = () => {
                   />
                 </div>
                 <div className="modal-action">
-                  <button
-                    type="submit"
-                    className="btn btn-primary"
-                    disabled={resetLoading}
-                  >
+                  <button type="submit" className="btn btn-primary" disabled={resetLoading}>
                     {resetLoading ? (
                       <span className="loading loading-spinner loading-sm"></span>
                     ) : (
