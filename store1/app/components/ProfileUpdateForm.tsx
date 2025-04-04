@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import * as z from "zod";
-import { toast } from "react-hot-toast";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import {
   Loader2,
   PlusCircle,
@@ -15,11 +16,16 @@ import {
   Lock,
   Key,
   LogOut,
+  MapPin,
+  Edit2,
+  Trash2,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import { useCustomerLogout } from "../hooks/useCustomerLogout";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
+// Zod Schemas
 const profileSchema = z.object({
   email: z.string().email().optional(),
   first_name: z.string().min(2).max(50).optional(),
@@ -45,11 +51,27 @@ const tokenChangePasswordSchema = z.object({
   new_password: z.string().min(6, "New password must be at least 6 characters"),
 });
 
+const addressSchema = z.object({
+  first_name: z.string().min(2, "First name must be at least 2 characters"),
+  last_name: z.string().min(2, "Last name must be at least 2 characters"),
+  phone_number: z.string().regex(/^[0-9]{10,15}$/, "Phone number must be 10-15 digits"),
+  street: z.string().min(1, "Street is required"),
+  city: z.string().min(1, "City is required"),
+  state: z.string().min(1, "State is required"),
+  pincode: z.string().regex(/^\d{5,10}$/, "Pincode must be 5-10 digits"),
+  country: z.string().min(1, "Country is required"),
+  address_type: z.enum(["billing", "shipping"], { message: "Address type must be billing or shipping" }),
+  is_default: z.boolean().optional(),
+  email: z.string().email().optional()
+});
+
 type ProfileFormData = z.infer<typeof profileSchema>;
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 type TokenChangePasswordFormData = z.infer<typeof tokenChangePasswordSchema>;
+type AddressFormData = z.infer<typeof addressSchema>;
 
+// API Functions
 const updateCustomerProfile = async (
   id: string,
   formData: ProfileFormData & { profile_photo?: File }
@@ -64,7 +86,7 @@ const updateCustomerProfile = async (
   return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/${id}`, {
     method: "PUT",
     body: form,
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    credentials: "include",
   });
 };
 
@@ -75,21 +97,17 @@ const changeCustomerPassword = async (
   return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/${id}/change-password`, {
     method: "PUT",
     body: JSON.stringify(formData),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
   });
 };
 
 const resetCustomerPassword = async (formData: ResetPasswordFormData) => {
-  const origin = window.location.origin; // Get the frontend URL
+  const origin = window.location.origin;
   return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/reset-password`, {
     method: "POST",
-    body: JSON.stringify({ ...formData, origin }), // Include origin in the request body
-    headers: {
-      "Content-Type": "application/json",
-    },
+    body: JSON.stringify({ ...formData, origin }),
+    headers: { "Content-Type": "application/json" },
   });
 };
 
@@ -97,16 +115,44 @@ const changePasswordWithToken = async (
   token: string,
   formData: TokenChangePasswordFormData
 ) => {
-  return fetch(
-    `${NEXT_PUBLIC_API_URL}/api/customer/reset-password-with-token`,
-    {
-      method: "POST",
-      body: JSON.stringify({ token, new_password: formData.new_password }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/customer/reset-password-with-token`, {
+    method: "POST",
+    body: JSON.stringify({ token, new_password: formData.new_password }),
+    headers: { "Content-Type": "application/json" },
+  });
+};
+
+const fetchCustomerAddresses = async (customerId: string) => {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/address/customer/${customerId}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+};
+
+const createCustomerAddress = async (customerId: string, email: string, formData: AddressFormData) => {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/address/create`, {
+    method: "POST",
+    body: JSON.stringify({ ...formData, customer_id: customerId, customer_email: email }),
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+};
+
+const updateCustomerAddress = async (addressId: string, formData: AddressFormData) => {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/address/${addressId}`, {
+    method: "PUT",
+    body: JSON.stringify(formData),
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+};
+
+const deleteCustomerAddress = async (addressId: string) => {
+  return fetch(`${NEXT_PUBLIC_API_URL}/api/address/${addressId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
 };
 
 export default function ProfileSettings() {
@@ -118,145 +164,123 @@ export default function ProfileSettings() {
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [token, setToken] = useState<string | null>(null);
+  const [addresses, setAddresses] = useState<any[]>([]);
+  const [isAddressDialogOpen, setIsAddressDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [editingAddress, setEditingAddress] = useState<any | null>(null);
+  const [addressToDelete, setAddressToDelete] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
 
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Use the useCustomerLogout hook
-  const {
-    logout,
-    loading: logoutLoading,
-    error: logoutError,
-  } = useCustomerLogout();
-
-  // Check for token in URL
-  useEffect(() => {
-    const tokenFromUrl = searchParams.get("token");
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-      setActiveTab("change-password"); // Automatically switch to change-password tab
-    }
-  }, [searchParams]);
+  const { logout, loading: logoutLoading, error: logoutError } = useCustomerLogout();
 
   const profileForm = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      email: "",
-      first_name: "",
-      last_name: "",
-      phone: "",
-    },
+    defaultValues: { email: "", first_name: "", last_name: "", phone: "" },
   });
 
   const changePasswordForm = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
-    defaultValues: {
-      old_password: "",
-      new_password: "",
-    },
+    defaultValues: { old_password: "", new_password: "" },
   });
 
   const resetPasswordForm = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
-    defaultValues: {
-      email: "",
-    },
+    defaultValues: { email: "" },
   });
 
   const tokenChangePasswordForm = useForm<TokenChangePasswordFormData>({
     resolver: zodResolver(tokenChangePasswordSchema),
+    defaultValues: { new_password: "" },
+  });
+
+  const addressForm = useForm<AddressFormData>({
+    resolver: zodResolver(addressSchema),
     defaultValues: {
-      new_password: "",
+      first_name: "",
+      last_name: "",
+      phone_number: "",
+      street: "",
+      city: "",
+      state: "",
+      pincode: "",
+      country: "",
+      address_type: "shipping",
+      is_default: false,
     },
   });
 
   useEffect(() => {
-    const fetchCustomerData = async () => {
-      try {
-        const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-        });
-        if (!response.ok) throw new Error("Failed to fetch profile data");
-        const { data } = await response.json();
-        setCustomerId(data.id);
-        profileForm.reset({
-          email: data.email,
-          first_name: data.first_name,
-          last_name: data.last_name,
-          phone: data.phone,
-        });
-        resetPasswordForm.setValue("email", data.email);
-        setAvatarUrl(data.profile_photo || "");
-        toast.success("Profile data loaded successfully!", {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#f0fdf4",
-            color: "#16a34a",
-            border: "1px solid #16a34a",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
-      } catch (error) {
-        toast.error("Failed to load profile data", {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
+    const tokenFromUrl = searchParams.get("token");
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl);
+      setActiveTab("change-password");
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const fetchCustomerDataAndAddresses = async () => {
+      // Fetch customer data only once on mount
+      if (!customerId) {
+        try {
+          const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          });
+          if (!response.ok) throw new Error("Failed to fetch profile data");
+          const { data } = await response.json();
+          setCustomerId(data.id);
+          setEmail(data.email);
+          profileForm.reset({
+            email: data.email,
+            first_name: data.first_name,
+            last_name: data.last_name,
+            phone: data.phone,
+          });
+          resetPasswordForm.setValue("email", data.email);
+          setAvatarUrl(data.profile_photo || "");
+          toast.success("Profile data loaded successfully!", { autoClose: 3000 });
+        } catch (error) {
+          toast.error("Failed to load profile data", { autoClose: 3000 });
+          return; // Exit if profile fetch fails
+        }
+      }
+
+      // Fetch addresses only after customerId is set
+      if (customerId) {
+        try {
+          const response = await fetchCustomerAddresses(customerId);
+          const result = await response.json();
+          if (result.success) {
+            setAddresses(result.data);
+          } else {
+            toast.error(result.message || "Failed to load addresses", { autoClose: 3000 });
+          }
+        } catch (error) {
+          toast.error("Error fetching addresses", { autoClose: 3000 });
+        }
       }
     };
-    fetchCustomerData();
-  }, [profileForm, resetPasswordForm]);
+
+    fetchCustomerDataAndAddresses();
+  }, [customerId, profileForm, resetPasswordForm]); // Dependency array includes customerId to trigger address fetch once set
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
       setFile(selectedFile);
       setAvatarUrl(URL.createObjectURL(selectedFile));
-      toast.success("Profile photo selected!", {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#f0fdf4",
-          color: "#16a34a",
-          border: "1px solid #16a34a",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+      toast.success("Profile photo selected!", { autoClose: 3000 });
     }
   };
 
   const handleProfileSubmit = async (values: ProfileFormData) => {
     setIsLoading(true);
     try {
-      if (!customerId) {
-        toast.error("Customer Id not found...", {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
-        return;
-      }
-
-      const submissionData: Partial<
-        ProfileFormData & { profile_photo?: File }
-      > = {};
+      if (!customerId) throw new Error("Customer ID not found");
+      const submissionData: Partial<ProfileFormData & { profile_photo?: File }> = {};
       Object.entries(values).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") {
           submissionData[key as keyof ProfileFormData] = value;
@@ -267,48 +291,11 @@ export default function ProfileSettings() {
       const response = await updateCustomerProfile(customerId, submissionData);
       const result = await response.json();
 
-      if (!result.success) {
-        toast.error(
-          `${result.status} - ${result.message}: ${result.error.details}`,
-          {
-            duration: 4000,
-            position: "top-right",
-            style: {
-              background: "#fef2f2",
-              color: "#dc2626",
-              border: "1px solid #dc2626",
-              borderRadius: "8px",
-              padding: "12px",
-            },
-          }
-        );
-        return;
-      }
-
-      toast.success(`${result.status} - ${result.message}`, {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#f0fdf4",
-          color: "#16a34a",
-          border: "1px solid #16a34a",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+      if (!result.success) throw new Error(result.message || "Failed to update profile");
+      toast.success(result.message || "Profile updated successfully!", { autoClose: 3000 });
       router.refresh();
-    } catch (error) {
-      toast.error("Unexpected error occurred", {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#fef2f2",
-          color: "#dc2626",
-          border: "1px solid #dc2626",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred", { autoClose: 3000 });
     } finally {
       setIsLoading(false);
     }
@@ -317,66 +304,15 @@ export default function ProfileSettings() {
   const handleChangePasswordSubmit = async (values: ChangePasswordFormData) => {
     setIsLoading(true);
     try {
-      if (!customerId) {
-        toast.error("Customer Id not found...", {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
-        return;
-      }
-
+      if (!customerId) throw new Error("Customer ID not found");
       const response = await changeCustomerPassword(customerId, values);
       const result = await response.json();
 
-      if (!result.success) {
-        toast.error(
-          `${result.status} - ${result.message}: ${result.error.details}`,
-          {
-            duration: 4000,
-            position: "top-right",
-            style: {
-              background: "#fef2f2",
-              color: "#dc2626",
-              border: "1px solid #dc2626",
-              borderRadius: "8px",
-              padding: "12px",
-            },
-          }
-        );
-        return;
-      }
-
-      toast.success(`${result.status} - ${result.message}`, {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#f0fdf4",
-          color: "#16a34a",
-          border: "1px solid #16a34a",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+      if (!result.success) throw new Error(result.message || "Failed to change password");
+      toast.success(result.message || "Password changed successfully!", { autoClose: 3000 });
       changePasswordForm.reset();
-    } catch (error) {
-      toast.error("Unexpected error occurred", {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#fef2f2",
-          color: "#dc2626",
-          border: "1px solid #dc2626",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred", { autoClose: 3000 });
     } finally {
       setIsLoading(false);
     }
@@ -387,123 +323,74 @@ export default function ProfileSettings() {
     try {
       const response = await resetCustomerPassword(values);
       const result = await response.json();
-  
-      if (!result.success) {
-        toast.error(
-          `${result.status} - ${result.message}: ${result.error.details}`,
-          {
-            duration: 4000,
-            position: "top-right",
-            style: {
-              background: "#fef2f2",
-              color: "#dc2626",
-              border: "1px solid #dc2626",
-              borderRadius: "8px",
-              padding: "12px",
-            },
-          }
-        );
-        return;
-      }
-  
-      toast.success(`${result.status} - ${result.message}`, {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#f0fdf4",
-          color: "#16a34a",
-          border: "1px solid #16a34a",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+
+      if (!result.success) throw new Error(result.message || "Failed to send reset link");
+      toast.success(result.message || "Reset link sent successfully!", { autoClose: 3000 });
       resetPasswordForm.reset();
-    } catch (error) {
-      toast.error("Unexpected error occurred", {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#fef2f2",
-          color: "#dc2626",
-          border: "1px solid #dc2626",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred", { autoClose: 3000 });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleTokenChangePasswordSubmit = async (
-    values: TokenChangePasswordFormData
-  ) => {
+  const handleTokenChangePasswordSubmit = async (values: TokenChangePasswordFormData) => {
     setIsLoading(true);
     try {
-      if (!token) {
-        toast.error("Invalid or missing token", {
-          duration: 4000,
-          position: "top-right",
-          style: {
-            background: "#fef2f2",
-            color: "#dc2626",
-            border: "1px solid #dc2626",
-            borderRadius: "8px",
-            padding: "12px",
-          },
-        });
-        return;
-      }
-
+      if (!token) throw new Error("Invalid or missing token");
       const response = await changePasswordWithToken(token, values);
       const result = await response.json();
 
-      if (!result.success) {
-        toast.error(
-          `${result.status} - ${result.message}: ${
-            result.error?.details || "Failed to reset password"
-          }`,
-          {
-            duration: 4000,
-            position: "top-right",
-            style: {
-              background: "#fef2f2",
-              color: "#dc2626",
-              border: "1px solid #dc2626",
-              borderRadius: "8px",
-              padding: "12px",
-            },
-          }
-        );
-        return;
-      }
-
-      toast.success(`${result.status} - ${result.message}`, {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#f0fdf4",
-          color: "#16a34a",
-          border: "1px solid #16a34a",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+      if (!result.success) throw new Error(result.message || "Failed to reset password");
+      toast.success(result.message || "Password reset successfully!", { autoClose: 3000 });
       tokenChangePasswordForm.reset();
-      setToken(null); // Clear token after successful reset
-      router.push("/login"); // Redirect to login page after successful reset
-    } catch (error) {
-      toast.error("Unexpected error occurred", {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#fef2f2",
-          color: "#dc2626",
-          border: "1px solid #dc2626",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+      setToken(null);
+      router.push("/auth");
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred", { autoClose: 3000 });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddressSubmit = async (values: AddressFormData) => {
+    setIsLoading(true);
+    try {
+      if (!customerId) throw new Error("Customer ID not found");
+      const response = editingAddress
+        ? await updateCustomerAddress(editingAddress.id, values)
+        : await createCustomerAddress(customerId, email, values);
+      const result = await response.json();
+
+      if (!result.success) throw new Error(result.message || "Failed to save address");
+      toast.success(result.message || `${editingAddress ? "Address updated" : "Address added"} successfully!`, { autoClose: 3000 });
+      setIsAddressDialogOpen(false);
+      setEditingAddress(null);
+      addressForm.reset();
+      const addressesResponse = await fetchCustomerAddresses(customerId);
+      const addressesResult = await addressesResponse.json();
+      if (addressesResult.success) setAddresses(addressesResult.data);
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred", { autoClose: 3000 });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteAddress = async () => {
+    if (!addressToDelete) return;
+    setIsLoading(true);
+    try {
+      const response = await deleteCustomerAddress(addressToDelete);
+      const result = await response.json();
+
+      if (!result.success) throw new Error(result.message || "Failed to delete address");
+      toast.success(result.message || "Address deleted successfully!", { autoClose: 3000 });
+      setAddresses(addresses.filter((addr) => addr.id !== addressToDelete));
+      setIsDeleteDialogOpen(false);
+      setAddressToDelete(null);
+    } catch (error: any) {
+      toast.error(error.message || "An unexpected error occurred", { autoClose: 3000 });
     } finally {
       setIsLoading(false);
     }
@@ -512,115 +399,96 @@ export default function ProfileSettings() {
   const handleLogoutClick = async () => {
     try {
       await logout();
+      toast.success("Logged out successfully!", { autoClose: 3000 });
     } catch (error) {
-      toast.error(logoutError || "Failed to log out", {
-        duration: 4000,
-        position: "top-right",
-        style: {
-          background: "#fef2f2",
-          color: "#dc2626",
-          border: "1px solid #dc2626",
-          borderRadius: "8px",
-          padding: "12px",
-        },
-      });
+      toast.error(logoutError || "Failed to log out", { autoClose: 3000 });
     }
   };
 
+  const openEditAddressDialog = (address: any) => {
+    setEditingAddress(address);
+    addressForm.reset({
+      first_name: address.first_name,
+      last_name: address.last_name,
+      phone_number: address.phone_number,
+      street: address.street,
+      city: address.city,
+      state: address.state,
+      pincode: address.pincode,
+      country: address.country,
+      address_type: address.address_type,
+      is_default: address.is_default,
+    });
+    setIsAddressDialogOpen(true);
+  };
+
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-gray-200">
-      {/* Sidebar */}
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-100 to-gray-300">
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
       {!token && (
-        <div className="w-72 bg-white shadow-2xl p-8 flex flex-col justify-between transition-all duration-300">
+        <div className="w-72 bg-white shadow-xl p-6 flex flex-col justify-between">
           <div>
-            <h2 className="text-2xl font-extrabold text-gray-800 mb-8 flex items-center">
-              <User className="w-6 h-6 mr-2 text-blue-600" />
-              Settings
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+              <User className="w-6 h-6 mr-2 text-indigo-600" /> Settings
             </h2>
-            <nav className="space-y-3">
+            <nav className="space-y-2">
               <button
                 onClick={() => setActiveTab("profile")}
-                className={`flex items-center w-full px-4 py-3 text-left rounded-xl transition-all duration-300 ${
-                  activeTab === "profile"
-                    ? "bg-blue-600 text-white shadow-lg"
-                    : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-                }`}
+                className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === "profile" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-indigo-100"}`}
               >
-                <User className="w-5 h-5 mr-3" />
-                Profile
+                <User className="inline w-5 h-5 mr-2" /> Profile
               </button>
-              {/* <button
+              <button
                 onClick={() => setActiveTab("change-password")}
-                className={`flex items-center w-full px-4 py-3 text-left rounded-xl transition-all duration-300 ${
-                  activeTab === "change-password"
-                    ? "bg-blue-600 text-white shadow-lg"
-                    : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-                }`}
+                className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === "change-password" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-indigo-100"}`}
               >
-                <Lock className="w-5 h-5 mr-3" />
-                Change Password
-              </button> */}
+                <Lock className="inline w-5 h-5 mr-2" /> Change Password
+              </button>
               <button
                 onClick={() => setActiveTab("reset-password")}
-                className={`flex items-center w-full px-4 py-3 text-left rounded-xl transition-all duration-300 ${
-                  activeTab === "reset-password"
-                    ? "bg-blue-600 text-white shadow-lg"
-                    : "text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-                }`}
+                className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === "reset-password" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-indigo-100"}`}
               >
-                <Key className="w-5 h-5 mr-3" />
-                Reset Password
+                <Key className="inline w-5 h-5 mr-2" /> Reset Password
+              </button>
+              <button
+                onClick={() => setActiveTab("addresses")}
+                className={`w-full text-left px-4 py-2 rounded-lg ${activeTab === "addresses" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-indigo-100"}`}
+              >
+                <MapPin className="inline w-5 h-5 mr-2" /> Addresses
               </button>
             </nav>
           </div>
           <button
             onClick={handleLogoutClick}
             disabled={logoutLoading}
-            className={`flex items-center w-full px-4 py-3 text-left rounded-xl transition-all duration-300 ${
-              logoutLoading
-                ? "text-gray-400 cursor-not-allowed"
-                : "text-red-600 hover:bg-red-50"
-            }`}
+            className={`w-full text-left px-4 py-2 rounded-lg ${logoutLoading ? "text-gray-400 cursor-not-allowed" : "text-red-600 hover:bg-red-100"}`}
           >
-            <LogOut className="w-5 h-5 mr-3" />
-            {logoutLoading ? "Logging out..." : "Logout"}
+            <LogOut className="inline w-5 h-5 mr-2" /> {logoutLoading ? "Logging out..." : "Logout"}
           </button>
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="flex-1 p-10">
+      <div className="flex-1 p-8">
         {activeTab === "profile" && !token && (
-          <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl p-10 transform transition-all duration-500 hover:shadow-2xl">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">
-              Profile Settings
-            </h2>
-            <form
-              onSubmit={profileForm.handleSubmit(handleProfileSubmit)}
-              className="space-y-8"
-            >
-              <div className="flex items-center space-x-6">
-                <div className="relative group">
-                  <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-blue-100 transition-all duration-300 group-hover:ring-blue-400">
+          <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile Settings</h2>
+            <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="relative">
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-indigo-200">
                     {avatarUrl ? (
-                      <Image
-                        src={avatarUrl}
-                        width={112}
-                        height={112}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
+                      <Image src={avatarUrl} width={96} height={96} alt="Profile" className="object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-3xl font-bold">
+                      <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-500 text-2xl font-bold">
                         {profileForm.getValues("first_name")?.[0]}
                       </div>
                     )}
                   </div>
                   <label
                     htmlFor="profile_photo"
-                    className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-2 cursor-pointer transition-all duration-300 hover:bg-blue-700 shadow-md"
+                    className="absolute bottom-0 right-0 bg-indigo-600 rounded-full p-1 cursor-pointer hover:bg-indigo-700"
                   >
-                    <PlusCircle className="w-6 h-6 text-white" />
+                    <PlusCircle className="w-5 h-5 text-white" />
                   </label>
                   <input
                     id="profile_photo"
@@ -631,67 +499,25 @@ export default function ProfileSettings() {
                   />
                 </div>
                 <div>
-                  <h3 className="text-2xl font-semibold text-gray-800">
-                    {`${profileForm.getValues(
-                      "first_name"
-                    )} ${profileForm.getValues("last_name")}`}
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    {`${profileForm.getValues("first_name")} ${profileForm.getValues("last_name")}`}
                   </h3>
-                  <p className="text-gray-500">
-                    {profileForm.getValues("email")}
-                  </p>
+                  <p className="text-gray-600">{profileForm.getValues("email")}</p>
                 </div>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormField
-                  control={profileForm.control}
-                  name="first_name"
-                  label="First Name"
-                  error={profileForm.formState.errors.first_name?.message}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="last_name"
-                  label="Last Name"
-                  error={profileForm.formState.errors.last_name?.message}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="email"
-                  label="Email"
-                  type="email"
-                  error={profileForm.formState.errors.email?.message}
-                />
-                <FormField
-                  control={profileForm.control}
-                  name="phone"
-                  label="Phone"
-                  type="tel"
-                  error={profileForm.formState.errors.phone?.message}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={profileForm.control} name="first_name" label="First Name" error={profileForm.formState.errors.first_name?.message} />
+                <FormField control={profileForm.control} name="last_name" label="Last Name" error={profileForm.formState.errors.last_name?.message} />
+                <FormField control={profileForm.control} name="email" label="Email" type="email" error={profileForm.formState.errors.email?.message} />
+                <FormField control={profileForm.control} name="phone" label="Phone" type="tel" error={profileForm.formState.errors.phone?.message} />
               </div>
-
-              <div className="flex justify-between pt-6">
+              <div className="flex justify-end space-x-4">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-md"
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                      Updating...
-                    </>
-                  ) : (
-                    "Update Profile"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push("/")}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md"
-                >
-                  Back to Dashboard
+                  {isLoading ? <Loader2 className="animate-spin inline mr-2" /> : "Update Profile"}
                 </button>
               </div>
             </form>
@@ -699,70 +525,37 @@ export default function ProfileSettings() {
         )}
 
         {activeTab === "change-password" && (
-          <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-10 transform transition-all duration-500 hover:shadow-2xl">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">
-              {!token ? "Reset Your Password" : "Change Password"}
-            </h2>
-            {!token ? (
-              // UI for changing password with token
-              <form
-                onSubmit={tokenChangePasswordForm.handleSubmit(
-                  handleTokenChangePasswordSubmit
-                )}
-                className="space-y-6"
-              >
+          <div className="max-w-lg mx-auto bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">{token ? "Reset Password" : "Change Password"}</h2>
+            {token ? (
+              <form onSubmit={tokenChangePasswordForm.handleSubmit(handleTokenChangePasswordSubmit)} className="space-y-6">
                 <PasswordField
                   control={tokenChangePasswordForm.control}
                   name="new_password"
                   label="New Password"
                   show={showNewPassword}
                   onToggle={() => setShowNewPassword(!showNewPassword)}
-                  error={
-                    tokenChangePasswordForm.formState.errors.new_password
-                      ?.message
-                  }
+                  error={tokenChangePasswordForm.formState.errors.new_password?.message}
                 />
-                <div className="flex justify-between pt-6">
+                <div className="flex justify-end space-x-4">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-md"
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                        Resetting...
-                      </>
-                    ) : (
-                      "Reset Password"
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push("/login")}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md"
-                  >
-                    Back to Login
+                    {isLoading ? <Loader2 className="animate-spin inline mr-2" /> : "Reset Password"}
                   </button>
                 </div>
               </form>
             ) : (
-              // Default change password UI
-              <form
-                onSubmit={changePasswordForm.handleSubmit(
-                  handleChangePasswordSubmit
-                )}
-                className="space-y-6"
-              >
+              <form onSubmit={changePasswordForm.handleSubmit(handleChangePasswordSubmit)} className="space-y-6">
                 <PasswordField
                   control={changePasswordForm.control}
                   name="old_password"
                   label="Old Password"
                   show={showOldPassword}
                   onToggle={() => setShowOldPassword(!showOldPassword)}
-                  error={
-                    changePasswordForm.formState.errors.old_password?.message
-                  }
+                  error={changePasswordForm.formState.errors.old_password?.message}
                 />
                 <PasswordField
                   control={changePasswordForm.control}
@@ -770,31 +563,15 @@ export default function ProfileSettings() {
                   label="New Password"
                   show={showNewPassword}
                   onToggle={() => setShowNewPassword(!showNewPassword)}
-                  error={
-                    changePasswordForm.formState.errors.new_password?.message
-                  }
+                  error={changePasswordForm.formState.errors.new_password?.message}
                 />
-                <div className="flex justify-between pt-6">
+                <div className="flex justify-end space-x-4">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-md"
+                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
                   >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                        Changing...
-                      </>
-                    ) : (
-                      "Change Password"
-                    )}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push("/")}
-                    className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md"
-                  >
-                    Back to Dashboard
+                    {isLoading ? <Loader2 className="animate-spin inline mr-2" /> : "Change Password"}
                   </button>
                 </div>
               </form>
@@ -803,16 +580,9 @@ export default function ProfileSettings() {
         )}
 
         {activeTab === "reset-password" && !token && (
-          <div className="max-w-lg mx-auto bg-white rounded-2xl shadow-xl p-10 transform transition-all duration-500 hover:shadow-2xl">
-            <h2 className="text-3xl font-bold text-gray-800 mb-8">
-              Reset Password
-            </h2>
-            <form
-              onSubmit={resetPasswordForm.handleSubmit(
-                handleResetPasswordSubmit
-              )}
-              className="space-y-6"
-            >
+          <div className="max-w-lg mx-auto bg-white rounded-xl shadow-md p-6">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Reset Password</h2>
+            <form onSubmit={resetPasswordForm.handleSubmit(handleResetPasswordSubmit)} className="space-y-6">
               <FormField
                 control={resetPasswordForm.control}
                 name="email"
@@ -820,30 +590,161 @@ export default function ProfileSettings() {
                 type="email"
                 error={resetPasswordForm.formState.errors.email?.message}
               />
-              <div className="flex justify-between pt-6">
+              <div className="flex justify-end space-x-4">
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all duration-300 shadow-md"
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="animate-spin mr-2 h-5 w-5" />
-                      Sending...
-                    </>
-                  ) : (
-                    "Send Reset Link"
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => router.push("/")}
-                  className="px-6 py-3 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 focus:outline-none focus:ring-4 focus:ring-gray-300 transition-all duration-300 shadow-md"
-                >
-                  Back to Dashboard
+                  {isLoading ? <Loader2 className="animate-spin inline mr-2" /> : "Send Reset Link"}
                 </button>
               </div>
             </form>
+          </div>
+        )}
+
+        {activeTab === "addresses" && !token && (
+          <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-md p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">Manage Addresses</h2>
+              <button
+                onClick={() => { setEditingAddress(null); setIsAddressDialogOpen(true); addressForm.reset(); }}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center"
+              >
+                <PlusCircle className="w-5 h-5 mr-2" /> Add Address
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {addresses.map((address) => (
+                <div key={address.id} className="bg-gray-50 p-4 rounded-lg shadow-sm border border-gray-200">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800">{`${address.first_name} ${address.last_name}`}</h3>
+                      <p className="text-gray-600">{address.street}, {address.city}, {address.state} {address.pincode}, {address.country}</p>
+                      <p className="text-gray-600">Phone: {address.phone_number}</p>
+                      <p className="text-sm text-gray-500">{address.address_type} {address.is_default && "(Default)"}</p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => openEditAddressDialog(address)}
+                        className="p-2 text-indigo-600 hover:text-indigo-800"
+                      >
+                        <Edit2 className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={() => { setAddressToDelete(address.id); setIsDeleteDialogOpen(true); }}
+                        className="p-2 text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Address Dialog */}
+        {isAddressDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-lg">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">{editingAddress ? "Edit Address" : "Add Address"}</h2>
+                <button onClick={() => setIsAddressDialogOpen(false)} className="text-gray-600 hover:text-gray-800">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <form onSubmit={addressForm.handleSubmit(handleAddressSubmit)} className="space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField control={addressForm.control} name="first_name" label="First Name" error={addressForm.formState.errors.first_name?.message} />
+                  <FormField control={addressForm.control} name="last_name" label="Last Name" error={addressForm.formState.errors.last_name?.message} />
+                  <FormField control={addressForm.control} name="phone_number" label="Phone Number" type="tel" error={addressForm.formState.errors.phone_number?.message} />
+                  <FormField control={addressForm.control} name="street" label="Street" error={addressForm.formState.errors.street?.message} />
+                  <FormField control={addressForm.control} name="city" label="City" error={addressForm.formState.errors.city?.message} />
+                  <FormField control={addressForm.control} name="state" label="State" error={addressForm.formState.errors.state?.message} />
+                  <FormField control={addressForm.control} name="pincode" label="Pincode" error={addressForm.formState.errors.pincode?.message} />
+                  <FormField control={addressForm.control} name="country" label="Country" error={addressForm.formState.errors.country?.message} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address Type</label>
+                  <Controller
+                    control={addressForm.control}
+                    name="address_type"
+                    render={({ field }) => (
+                      <select
+                        {...field}
+                        className="w-full px-4 py-2 border rounded-lg text-black"
+                      >
+                        <option value="shipping">Shipping</option>
+                        <option value="billing">Billing</option>
+                      </select>
+                    )}
+                  />
+                  {addressForm.formState.errors.address_type && (
+                    <p className="text-sm text-red-500 mt-1">{addressForm.formState.errors.address_type.message}</p>
+                  )}
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Controller
+                    control={addressForm.control}
+                    name="is_default"
+                    render={({ field }) => (
+                      <input
+                        type="checkbox"
+                        {...field}
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
+                        value={field.value ? "true" : "false"}
+                      />
+                    )}
+                  />
+                  <label className="text-sm font-medium text-gray-700">Set as Default</label>
+                </div>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddressDialogOpen(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin inline mr-2" /> : editingAddress ? "Update" : "Add"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {isDeleteDialogOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl p-6 w-full max-w-md">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Confirm Delete</h2>
+              <p className="text-gray-600 mb-6">Are you sure you want to delete this address?</p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={() => setIsDeleteDialogOpen(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteAddress}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400"
+                >
+                  {isLoading ? <Loader2 className="animate-spin inline mr-2" /> : "Confirm"}
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -858,7 +759,7 @@ const FormField: React.FC<{
   type?: string;
   error?: string;
 }> = ({ control, name, label, type = "text", error }) => (
-  <div className="space-y-2">
+  <div className="space-y-1">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <Controller
       control={control}
@@ -867,9 +768,7 @@ const FormField: React.FC<{
         <input
           {...field}
           type={type}
-          className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 ${
-            error ? "border-red-400 focus:ring-red-400" : "border-gray-300"
-          }`}
+          className={`w-full px-3 py-2 border rounded-lg text-black ${error ? "border-red-500" : "border-gray-300"}`}
           placeholder={`Enter ${label.toLowerCase()}`}
         />
       )}
@@ -886,7 +785,7 @@ const PasswordField: React.FC<{
   onToggle: () => void;
   error?: string;
 }> = ({ control, name, label, show, onToggle, error }) => (
-  <div className="space-y-2">
+  <div className="space-y-1">
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <div className="relative">
       <Controller
@@ -896,9 +795,7 @@ const PasswordField: React.FC<{
           <input
             {...field}
             type={show ? "text" : "password"}
-            className={`w-full px-4 py-3 border rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition-all duration-300 ${
-              error ? "border-red-400 focus:ring-red-400" : "border-gray-300"
-            }`}
+            className={`w-full px-3 py-2 border rounded-lg text-black ${error ? "border-red-500" : "border-gray-300"}`}
             placeholder={`Enter ${label.toLowerCase()}`}
           />
         )}
@@ -906,7 +803,7 @@ const PasswordField: React.FC<{
       <button
         type="button"
         onClick={onToggle}
-        className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700 transition-all duration-300"
+        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
       >
         {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
       </button>

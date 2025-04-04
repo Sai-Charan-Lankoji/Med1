@@ -1,11 +1,16 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const addressController = require('../controllers/customeraddress.controller');
-const authMiddleware = require('../middleware/AuthMiddleware');
+const addressController = require("../controllers/customeraddress.controller");
+const authMiddleware = require("../middleware/AuthMiddleware");
 
 /**
  * @swagger
  * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
  *   schemas:
  *     Address:
  *       type: object
@@ -26,8 +31,8 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *           description: Unique ID of the customer
  *         customer_email:
  *           type: string
- *           description: Email of the customer
  *           format: email
+ *           description: Email of the customer
  *         first_name:
  *           type: string
  *           description: First name of the customer
@@ -98,6 +103,8 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *     Error:
  *       type: object
  *       properties:
+ *         status:
+ *           type: integer
  *         success:
  *           type: boolean
  *         message:
@@ -110,6 +117,7 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *             details:
  *               type: string
  *       example:
+ *         status: 500
  *         success: false
  *         message: "Internal Server Error"
  *         error:
@@ -139,6 +147,8 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
  *                 success:
  *                   type: boolean
  *                 message:
@@ -146,6 +156,7 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *                 data:
  *                   $ref: '#/components/schemas/Address'
  *               example:
+ *                 status: 201
  *                 success: true
  *                 message: "Address created successfully"
  *                 data:
@@ -171,11 +182,25 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 400
  *               success: false
  *               message: "Invalid request parameters"
  *               error:
  *                 code: "VALIDATION_ERROR"
  *                 details: "All fields are required"
+ *       409:
+ *         description: Address already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               status: 409
+ *               success: false
+ *               message: "Address already exists"
+ *               error:
+ *                 code: "DUPLICATE_ADDRESS"
+ *                 details: "This address is already registered for the customer"
  *       422:
  *         description: Invalid input data
  *         content:
@@ -183,6 +208,7 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 422
  *               success: false
  *               message: "Invalid input"
  *               error:
@@ -195,7 +221,7 @@ const authMiddleware = require('../middleware/AuthMiddleware');
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/create', authMiddleware, addressController.createAddress);
+router.post("/create", authMiddleware, addressController.createAddress);
 
 /**
  * @swagger
@@ -220,6 +246,8 @@ router.post('/create', authMiddleware, addressController.createAddress);
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
  *                 success:
  *                   type: boolean
  *                 message:
@@ -229,6 +257,7 @@ router.post('/create', authMiddleware, addressController.createAddress);
  *                   items:
  *                     $ref: '#/components/schemas/Address'
  *               example:
+ *                 status: 200
  *                 success: true
  *                 message: "Customer addresses retrieved successfully"
  *                 data:
@@ -254,6 +283,7 @@ router.post('/create', authMiddleware, addressController.createAddress);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 400
  *               success: false
  *               message: "Invalid request parameters"
  *               error:
@@ -266,6 +296,7 @@ router.post('/create', authMiddleware, addressController.createAddress);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 404
  *               success: false
  *               message: "Customer addresses not found"
  *               error:
@@ -278,7 +309,7 @@ router.post('/create', authMiddleware, addressController.createAddress);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/customer/:customerId', authMiddleware, addressController.getCustomerAddresses);
+router.get("/customer/:customerId", authMiddleware, addressController.getCustomerAddresses);
 
 /**
  * @swagger
@@ -303,6 +334,8 @@ router.get('/customer/:customerId', authMiddleware, addressController.getCustome
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
  *                 success:
  *                   type: boolean
  *                 message:
@@ -310,6 +343,7 @@ router.get('/customer/:customerId', authMiddleware, addressController.getCustome
  *                 data:
  *                   $ref: '#/components/schemas/Address'
  *               example:
+ *                 status: 200
  *                 success: true
  *                 message: "Address retrieved successfully"
  *                 data:
@@ -335,6 +369,7 @@ router.get('/customer/:customerId', authMiddleware, addressController.getCustome
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 400
  *               success: false
  *               message: "Invalid request parameters"
  *               error:
@@ -347,6 +382,7 @@ router.get('/customer/:customerId', authMiddleware, addressController.getCustome
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 404
  *               success: false
  *               message: "Address not found"
  *               error:
@@ -359,7 +395,7 @@ router.get('/customer/:customerId', authMiddleware, addressController.getCustome
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.get('/:addressId', authMiddleware, addressController.getAddressById);
+router.get("/:addressId", authMiddleware, addressController.getAddressById);
 
 /**
  * @swagger
@@ -442,6 +478,8 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
  *                 success:
  *                   type: boolean
  *                 message:
@@ -449,6 +487,7 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *                 data:
  *                   $ref: '#/components/schemas/Address'
  *               example:
+ *                 status: 200
  *                 success: true
  *                 message: "Address updated successfully"
  *                 data:
@@ -474,6 +513,7 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 400
  *               success: false
  *               message: "Invalid request parameters"
  *               error:
@@ -486,6 +526,7 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 422
  *               success: false
  *               message: "Invalid input"
  *               error:
@@ -498,6 +539,7 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 404
  *               success: false
  *               message: "Address not found"
  *               error:
@@ -510,7 +552,7 @@ router.get('/:addressId', authMiddleware, addressController.getAddressById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:addressId', authMiddleware, addressController.updateAddress);
+router.put("/:addressId", authMiddleware, addressController.updateAddress);
 
 /**
  * @swagger
@@ -535,6 +577,8 @@ router.put('/:addressId', authMiddleware, addressController.updateAddress);
  *             schema:
  *               type: object
  *               properties:
+ *                 status:
+ *                   type: integer
  *                 success:
  *                   type: boolean
  *                 message:
@@ -542,6 +586,7 @@ router.put('/:addressId', authMiddleware, addressController.updateAddress);
  *                 data:
  *                   type: null
  *               example:
+ *                 status: 200
  *                 success: true
  *                 message: "Address deleted successfully"
  *                 data: null
@@ -552,6 +597,7 @@ router.put('/:addressId', authMiddleware, addressController.updateAddress);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 400
  *               success: false
  *               message: "Invalid request parameters"
  *               error:
@@ -564,6 +610,7 @@ router.put('/:addressId', authMiddleware, addressController.updateAddress);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  *             example:
+ *               status: 404
  *               success: false
  *               message: "Address not found"
  *               error:
@@ -576,6 +623,6 @@ router.put('/:addressId', authMiddleware, addressController.updateAddress);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.delete('/:addressId', authMiddleware, addressController.deleteAddress);
+router.delete("/:addressId", authMiddleware, addressController.deleteAddress);
 
 module.exports = router;
