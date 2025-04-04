@@ -1,11 +1,5 @@
 "use client";
-import {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 import { useRouter } from "next/navigation";
 
@@ -14,11 +8,7 @@ interface UserContextType {
   email: string | null;
   profilePhoto: string | null;
   isLogin: boolean;
-  setUser: (userData: {
-    firstName: string | null;
-    email: string | null;
-    profilePhoto: string | null;
-  }) => void;
+  setUser: (userData: { firstName: string | null; email: string | null; profilePhoto: string | null }) => void;
   setIsLogin: (status: boolean) => void;
   logout: () => Promise<void>;
 }
@@ -32,7 +22,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isLogin, setIsLogin] = useState<boolean>(false);
   const router = useRouter();
 
-  // Fetch user details on mount to check if already logged in
   const fetchUserDetails = async () => {
     try {
       const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/me`, {
@@ -45,61 +34,40 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         const result = await response.json();
         if (result.success && result.data) {
           const { first_name, email, profile_photo } = result.data;
-          setUser({
-            firstName: first_name,
-            email,
-            profilePhoto: profile_photo,
-          });
+          setUser({ firstName: first_name, email, profilePhoto: profile_photo });
           setIsLogin(true);
         } else {
-          setUser({ firstName: null, email: null, profilePhoto: null });
-          setIsLogin(false);
+          resetUserState();
         }
       } else {
-        setUser({ firstName: null, email: null, profilePhoto: null });
-        setIsLogin(false);
+        resetUserState();
       }
     } catch (error) {
-      console.error("Error fetching user details:", error);
-      setUser({ firstName: null, email: null, profilePhoto: null });
-      setIsLogin(false);
+      console.error("Failed to fetch user details:", error);
+      resetUserState();
     }
   };
 
+  const resetUserState = () => {
+    setUser({ firstName: null, email: null, profilePhoto: null });
+    setIsLogin(false);
+  };
+
   useEffect(() => {
-    // Fetch user details on mount
     fetchUserDetails();
-
-    const removeCustomerId = () => {
-      localStorage.removeItem("customerId");
-    };
-
-    window.addEventListener("beforeunload", removeCustomerId);
-
-    return () => {
-      window.removeEventListener("beforeunload", removeCustomerId);
-    };
   }, []);
 
-  const setUser = (userData: {
-    firstName: string | null;
-    email: string | null;
-    profilePhoto: string | null;
-  }) => {
+  const setUser = (userData: { firstName: string | null; email: string | null; profilePhoto: string | null }) => {
     const { firstName, email, profilePhoto } = userData;
-
     setFirstName(firstName);
     setEmail(email);
-    setProfilePhoto(profilePhoto || null);
+    setProfilePhoto(profilePhoto);
 
     if (firstName && email) {
       sessionStorage.setItem("firstName", firstName);
       sessionStorage.setItem("email", email);
-      if (profilePhoto) {
-        sessionStorage.setItem("profilePhoto", profilePhoto);
-      } else {
-        sessionStorage.removeItem("profilePhoto");
-      }
+      if (profilePhoto) sessionStorage.setItem("profilePhoto", profilePhoto);
+      else sessionStorage.removeItem("profilePhoto");
     } else {
       sessionStorage.removeItem("firstName");
       sessionStorage.removeItem("email");
@@ -109,52 +77,33 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      const response = await fetch(
-        `${NEXT_PUBLIC_API_URL}/api/customer/logout`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // Include cookies for auth_token
-        }
-      );
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/customer/logout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("Logout failed:", errorData);
-        throw new Error(errorData.message || "Failed to logout");
+        throw new Error(errorData.message || "Logout failed");
       }
-
-      // Clear context and sessionStorage
-      setUser({ firstName: null, email: null, profilePhoto: null });
-      setIsLogin(false);
-      sessionStorage.removeItem("customerId");
-      sessionStorage.removeItem("customerEmail");
-      router.push("/"); // Redirect to homepage
     } catch (error) {
-      console.error("Error during logout:", error);
-      // Clear state even if logout request fails
+      console.error("Logout error:", error);
+    } finally {
       setUser({ firstName: null, email: null, profilePhoto: null });
       setIsLogin(false);
+      sessionStorage.removeItem("firstName");
+      sessionStorage.removeItem("email");
+      sessionStorage.removeItem("profilePhoto");
       sessionStorage.removeItem("customerId");
       sessionStorage.removeItem("customerEmail");
-      router.push("/"); // Redirect to homepage
+      localStorage.removeItem("customerId");
+      router.push("/");
     }
   };
 
   return (
-    <UserContext.Provider
-      value={{
-        firstName,
-        email,
-        profilePhoto,
-        isLogin,
-        setUser,
-        setIsLogin,
-        logout,
-      }}
-    >
+    <UserContext.Provider value={{ firstName, email, profilePhoto, isLogin, setUser, setIsLogin, logout }}>
       {children}
     </UserContext.Provider>
   );
@@ -162,8 +111,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
 export const useUserContext = () => {
   const context = useContext(UserContext);
-  if (!context) {
-    throw new Error("useUserContext must be used within a UserProvider");
-  }
+  if (!context) throw new Error("useUserContext must be used within a UserProvider");
   return context;
 };

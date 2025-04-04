@@ -2,122 +2,79 @@ const customerService = require("../services/customer.service");
 const FileService = require("../services/file.service");
 const multer = require("multer");
 const fileService = new FileService();
-const upload = multer(); // Use Multer to parse multipart form-data
+const upload = multer();
 
-// Signup function
+// Standardized response helper
+const sendResponse = (res, status, success, message, data = null, error = null) => {
+  res.status(status).json({ status, success, message, data, error });
+};
+
 const signup = async (req, res) => {
   try {
     const { email, first_name, last_name, password, phone, vendor_id } = req.body;
 
-    // Validate required fields
+    // Comprehensive input validation
     if (!email || !first_name || !last_name || !password || !phone) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        error: { code: "VALIDATION_ERROR", details: "All fields are required" },
+      return sendResponse(res, 400, false, "All fields are required", null, {
+        code: "VALIDATION_ERROR",
+        details: "Email, first_name, last_name, password, and phone are required",
       });
     }
 
-    // Pass req to the signup method
-    const { user, token } = await customerService.signup({
-      email,
-      first_name,
-      last_name,
-      password,
-      phone,
-      vendor_id,
-    }, req); // Pass req object here
+    const user = await customerService.signup({ email, first_name, last_name, password, phone, vendor_id }, req);
 
-    // Set cookie without specifying domain
-    res.cookie("auth_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-      path: "/",
-      // domain: removed to default to backend's host (med1-wyou.onrender.com)
-    });
-    res.status(201).json({
-      status: 201,
-      success: true,
-      message: "Customer signed up successfully",
-      data: user,
-    });
+    // No token or cookie set here; user must log in separately
+    sendResponse(res, 201, true, "Customer signed up successfully. Please log in.", user);
   } catch (error) {
-    if (error.message.includes("already registered")) {
-      return res.status(409).json({
-        status: 409,
-        success: false,
-        message: "Email already registered",
-        error: { code: "RESOURCE_EXISTS", details: error.message },
+    if (error.message.includes("already exists")) {
+      return sendResponse(res, 409, false, "Email already registered", null, {
+        code: "RESOURCE_EXISTS",
+        details: error.message,
       });
     }
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      error: { code: "SERVER_ERROR", details: error.message },
+    sendResponse(res, 500, false, "Internal Server Error", null, {
+      code: "SERVER_ERROR",
+      details: error.message,
     });
   }
 };
 
-// Login function
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate required fields
     if (!email || !password) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        error: { code: "VALIDATION_ERROR", details: "Email and password are required" },
+      return sendResponse(res, 400, false, "Email and password are required", null, {
+        code: "VALIDATION_ERROR",
+        details: "Email and password are required",
       });
     }
 
-    // Pass req to the login method
     const { token, user } = await customerService.login({ email, password }, req);
 
-    // Set cookie without specifying domain
     res.cookie("auth_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 24 * 60 * 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
       path: "/",
-      // domain: removed to default to backend's host (med1-wyou.onrender.com)
     });
 
-    res.set("Access-Control-Allow-Origin", req.headers.origin);
-    res.set("Access-Control-Allow-Credentials", "true");
-
-    res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Customer logged in successfully",
-      data: { message: "Login successful", token, user }, // Also return user data
-    });
+    sendResponse(res, 200, true, "Customer logged in successfully", { user });
   } catch (error) {
     if (error.message.includes("Invalid credentials")) {
-      return res.status(401).json({
-        status: 401,
-        success: false,
-        message: "Invalid email or password",
-        error: { code: "AUTH_ERROR", details: error.message },
+      return sendResponse(res, 401, false, "Invalid email or password", null, {
+        code: "AUTH_ERROR",
+        details: error.message,
       });
     }
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      error: { code: "SERVER_ERROR", details: error.message },
+    sendResponse(res, 500, false, "Internal Server Error", null, {
+      code: "SERVER_ERROR",
+      details: error.message,
     });
   }
 };
 
-// Logout function (unchanged, but included for completeness)
 const logout = async (req, res) => {
   try {
     const token = req.cookies.auth_token || (req.headers.authorization?.startsWith("Bearer ") ? req.headers.authorization.split(" ")[1] : null);
@@ -131,157 +88,74 @@ const logout = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       path: "/",
-      domain: ".vercel.app", // Clear cookie across subdomains
     });
 
-    res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Customer logged out successfully",
-      data: { message: "Logout successful" },
-    });
+    sendResponse(res, 200, true, "Customer logged out successfully", null);
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      error: { code: "SERVER_ERROR", details: error.message },
+    sendResponse(res, 500, false, "Internal Server Error", null, {
+      code: "SERVER_ERROR",
+      details: error.message,
     });
   }
 };
 
+// Other methods remain largely unchanged but use consistent error handling
 const getCurrentUser = async (req, res) => {
   try {
     const userId = req.user?.id;
-    if (!userId) return res.status(401).json({ success: false, message: "No user ID in token", error: { code: "AUTH_ERROR" } });
+    if (!userId) return sendResponse(res, 401, false, "No user ID in token", null, { code: "AUTH_ERROR" });
 
     const customer = await customerService.getCustomerDetails(userId, req);
-    if (!customer) return res.status(404).json({ success: false, message: "Customer not found", error: { code: "NOT_FOUND" } });
+    if (!customer) return sendResponse(res, 404, false, "Customer not found", null, { code: "NOT_FOUND" });
 
-    res.status(200).json({ success: true, message: "Retrieved Customer Successfully", data: customer });
+    sendResponse(res, 200, true, "Retrieved Customer Successfully", customer);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Server error", error: { code: "SERVER_ERROR", details: error.message } });
+    sendResponse(res, 500, false, "Server error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
+
 const getUsers = async (req, res) => {
   try {
     const { page, limit, role } = req.query;
-    const customers = await customerService.getUsers(
-      parseInt(page) || 1,
-      parseInt(limit) || 10,
-      role,
-      req // Pass the request object
-    );
+    const customers = await customerService.getUsers(parseInt(page) || 1, parseInt(limit) || 10, role, req);
 
-    if (!customers || customers.length === 0) {
-      return res.status(404).json({
-        status: 404,
-        success: false,
-        message: "Resource not found",
-        data: null,
-        error: { code: "NOT_FOUND", details: "No users found" },
-      });
+    if (!customers || customers.users.length === 0) {
+      return sendResponse(res, 404, false, "No users found", null, { code: "NOT_FOUND" });
     }
 
-    res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Request successful",
-      data: customers,
-    });
+    sendResponse(res, 200, true, "Request successful", customers);
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: error.message },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
 
 const getCustomerDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        data: null,
-        error: { code: "VALIDATION_ERROR", details: "Customer ID is required" },
-      });
-    }
+    if (!id) return sendResponse(res, 400, false, "Customer ID is required", null, { code: "VALIDATION_ERROR" });
 
     const customer = await customerService.getCustomerDetails(id, req);
-    if (!customer) {
-      return res.status(404).json({
-        status: 404,
-        success: false,
-        message: "Resource not found",
-        data: null,
-        error: { code: "NOT_FOUND", details: "Customer not found" },
-      });
-    }
+    if (!customer) return sendResponse(res, 404, false, "Customer not found", null, { code: "NOT_FOUND" });
 
-    res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Request successful",
-      data: customer,
-    });
+    sendResponse(res, 200, true, "Request successful", customer);
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: error.message },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
 
 const customerByVendorId = async (req, res) => {
   try {
     const { vendor_id } = req.params;
-    if (!vendor_id) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        data: null,
-        error: { code: "VALIDATION_ERROR", details: "Vendor ID is required" },
-      });
-    }
+    if (!vendor_id) return sendResponse(res, 400, false, "Vendor ID is required", null, { code: "VALIDATION_ERROR" });
 
     const customers = await customerService.getCustomerByVendorId(vendor_id, req);
     if (!customers || customers.length === 0) {
-      return res.status(404).json({
-        status: 404,
-        success: false,
-        message: "Resource not found",
-        data: null,
-        error: {
-          code: "NOT_FOUND",
-          details: "No customers found for this vendor ID",
-        },
-      });
+      return sendResponse(res, 404, false, "No customers found for this vendor ID", null, { code: "NOT_FOUND" });
     }
 
-    res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Request successful",
-      data: customers,
-    });
+    sendResponse(res, 200, true, "Request successful", customers);
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: error.message },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
 
@@ -289,72 +163,26 @@ const getAllCustomers = async (req, res) => {
   try {
     const customers = await customerService.list(req);
     if (!customers || customers.length === 0) {
-      return res.status(204).json({
-        status: 204,
-        success: true,
-        message: "No content available",
-        data: null,
-      });
+      return sendResponse(res, 204, true, "No content available", null);
     }
 
-    res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Request successful",
-      data: customers,
-    });
+    sendResponse(res, 200, true, "Request successful", customers);
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: error.message },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
 
 const getCustomerByEmail = async (req, res) => {
   try {
     const { email } = req.params;
-    if (!email) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        data: null,
-        error: { code: "VALIDATION_ERROR", details: "Email is required" },
-      });
-    }
+    if (!email) return sendResponse(res, 400, false, "Email is required", null, { code: "VALIDATION_ERROR" });
 
     const customer = await customerService.getCustomerByEmail(email, req);
-    if (!customer) {
-      return res.status(404).json({
-        status: 404,
-        success: false,
-        message: "Resource not found",
-        data: null,
-        error: {
-          code: "NOT_FOUND",
-          details: "Customer not found with this email",
-        },
-      });
-    }
+    if (!customer) return sendResponse(res, 404, false, "Customer not found with this email", null, { code: "NOT_FOUND" });
 
-    res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Request successful",
-      data: customer,
-    });
+    sendResponse(res, 200, true, "Request successful", customer);
   } catch (error) {
-    res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: error.message },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
 
@@ -363,46 +191,12 @@ const updateCustomerDetails = async (req, res) => {
     const { id } = req.params;
     const { email, first_name, last_name, phone } = req.body;
 
-    if (!id) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        data: null,
-        error: { code: "VALIDATION_ERROR", details: "Customer ID is required" },
-      });
-    }
-
-    if (req.method !== "PUT") {
-      return res.status(405).json({
-        status: 405,
-        success: false,
-        message: "Method Not Allowed",
-        data: null,
-        error: { code: "INVALID_METHOD", details: "Use PUT instead" },
-      });
-    }
+    if (!id) return sendResponse(res, 400, false, "Customer ID is required", null, { code: "VALIDATION_ERROR" });
 
     let profile_photo = null;
     if (req.file) {
-      try {
-        const fileData = await fileService.saveBase64File(
-          req.file.buffer.toString("base64"),
-          req
-        );
-        profile_photo = fileData.url;
-      } catch (fileError) {
-        return res.status(422).json({
-          status: 422,
-          success: false,
-          message: "Invalid input",
-          data: null,
-          error: {
-            code: "INVALID_DATA",
-            details: "Failed to process profile photo",
-          },
-        });
-      }
+      const fileData = await fileService.saveBase64File(req.file.buffer.toString("base64"), req);
+      profile_photo = fileData.url;
     }
 
     const updatedCustomer = await customerService.updateCustomerDetails(id, {
@@ -413,41 +207,15 @@ const updateCustomerDetails = async (req, res) => {
       profile_photo,
     }, req);
 
-    return res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Request successful",
-      data: updatedCustomer,
-    });
+    sendResponse(res, 200, true, "Request successful", updatedCustomer);
   } catch (error) {
     if (error.message === "Customer not found") {
-      return res.status(404).json({
-        status: 404,
-        success: false,
-        message: "Resource not found",
-        data: null,
-        error: { code: "NOT_FOUND", details: "Customer does not exist" },
-      });
+      return sendResponse(res, 404, false, "Customer does not exist", null, { code: "NOT_FOUND" });
     }
-
     if (error.message.includes("duplicate key")) {
-      return res.status(409).json({
-        status: 409,
-        success: false,
-        message: "Conflict detected",
-        data: null,
-        error: { code: "RESOURCE_EXISTS", details: "Email already in use" },
-      });
+      return sendResponse(res, 409, false, "Email already in use", null, { code: "RESOURCE_EXISTS" });
     }
-
-    console.error("Controller Error:", error);
-    return res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: "An unexpected error occurred" },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
 
@@ -456,115 +224,43 @@ const changeCustomerPassword = async (req, res) => {
     const { id } = req.params;
     const { old_password, new_password } = req.body;
 
-    if (!id) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        data: null,
-        error: { code: "VALIDATION_ERROR", details: "Customer ID is required" },
-      });
+    if (!id || !old_password || !new_password) {
+      return sendResponse(res, 400, false, "Customer ID, old and new passwords are required", null, { code: "VALIDATION_ERROR" });
     }
 
-    if (!old_password || !new_password) {
-      return res.status(422).json({
-        status: 422,
-        success: false,
-        message: "Invalid input",
-        data: null,
-        error: {
-          code: "INVALID_DATA",
-          details: "Old and new passwords are required",
-        },
-      });
-    }
+    const updatedCustomer = await customerService.changeCustomerPassword(id, { old_password, new_password }, req);
 
-    const updatedCustomer = await customerService.changeCustomerPassword(id, {
-      old_password,
-      new_password,
-    }, req);
-
-    return res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Password changed successfully",
-      data: updatedCustomer,
-    });
+    sendResponse(res, 200, true, "Password changed successfully", updatedCustomer);
   } catch (error) {
     if (error.message === "Customer not found") {
-      return res.status(404).json({
-        status: 404,
-        success: false,
-        message: "Resource not found",
-        data: null,
-        error: { code: "NOT_FOUND", details: "Customer does not exist" },
-      });
+      return sendResponse(res, 404, false, "Customer does not exist", null, { code: "NOT_FOUND" });
     }
-
     if (error.message === "Old password is incorrect") {
-      return res.status(401).json({
-        status: 401,
-        success: false,
-        message: "Unauthorized access",
-        data: null,
-        error: { code: "AUTH_ERROR", details: "Invalid old password" },
-      });
+      return sendResponse(res, 401, false, "Invalid old password", null, { code: "AUTH_ERROR" });
     }
-
-    console.error("Controller Error:", error);
-    return res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: "An unexpected error occurred" },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
 
 const resetCustomerPassword = async (req, res) => {
   try {
-    const { email, origin } = req.body; // Extract origin from request body
+    const { email, origin } = req.body;
 
     if (!email || !origin) {
-      return res.status(400).json({
-        status: 400,
-        success: false,
-        message: "Invalid request parameters",
-        data: null,
-        error: { code: "VALIDATION_ERROR", details: "Email and origin are required" },
-      });
+      return sendResponse(res, 400, false, "Email and origin are required", null, { code: "VALIDATION_ERROR" });
     }
 
-    await customerService.resetCustomerPassword(email, origin); // Pass origin to service
+    await customerService.resetCustomerPassword(email, origin);
 
-    return res.status(200).json({
-      status: 200,
-      success: true,
-      message: "Password reset link sent to your email",
-      data: null,
-    });
+    sendResponse(res, 200, true, "Password reset link sent to your email", null);
   } catch (error) {
     if (error.message === "Customer not found") {
-      return res.status(404).json({
-        status: 404,
-        success: false,
-        message: "Resource not found",
-        data: null,
-        error: { code: "NOT_FOUND", details: "Customer does not exist" },
-      });
+      return sendResponse(res, 404, false, "Customer does not exist", null, { code: "NOT_FOUND" });
     }
-
-    console.error("Controller Error:", error);
-    return res.status(500).json({
-      status: 500,
-      success: false,
-      message: "Internal Server Error",
-      data: null,
-      error: { code: "SERVER_ERROR", details: "An unexpected error occurred" },
-    });
+    sendResponse(res, 500, false, "Internal Server Error", null, { code: "SERVER_ERROR", details: error.message });
   }
 };
+
 module.exports = {
   signup,
   login,

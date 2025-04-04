@@ -629,8 +629,7 @@ const OrderPage = () => {
     }
   };
 
-  // Updated address form with all required fields
-// Updated address form with 2-column layout
+ 
 const renderAddressForm = (type: "shipping" | "billing") => (
   <form
     onSubmit={(e) => {
@@ -642,232 +641,232 @@ const renderAddressForm = (type: "shipping" | "billing") => (
     className="space-y-6 p-6 bg-white rounded-xl shadow-md border border-gray-200"
   >
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {/* First Name */}
-      <div className="space-y-2">
-        <Label
-          htmlFor={`${type}-first_name`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          First Name <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-first_name`}
-          name="first_name"
-          value={newAddress.first_name || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, first_name: e.target.value })
-          }
-          placeholder="Enter first name"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.first_name ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          required
-        />
-        {addressFormErrors.first_name && (
-          <p className="text-sm text-red-500">{addressFormErrors.first_name}</p>
-        )}
-      </div>
+        {/* First Name */}
+        <div className="space-y-2">
+          <Label
+            htmlFor={`${type}-first_name`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            First Name <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-first_name`}
+            name="first_name"
+            value={newAddress.first_name || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, first_name: e.target.value })
+            }
+            placeholder="Enter first name"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.first_name ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            required
+          />
+          {addressFormErrors.first_name && (
+            <p className="text-sm text-red-500">{addressFormErrors.first_name}</p>
+          )}
+        </div>
 
-      {/* Last Name */}
-      <div className="space-y-2">
-        <Label
-          htmlFor={`${type}-last_name`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          Last Name <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-last_name`}
-          name="last_name"
-          value={newAddress.last_name || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, last_name: e.target.value })
-          }
-          placeholder="Enter last name"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.last_name ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          required
-        />
-        {addressFormErrors.last_name && (
-          <p className="text-sm text-red-500">{addressFormErrors.last_name}</p>
-        )}
-      </div>
+        {/* Last Name */}
+        <div className="space-y-2">
+          <Label
+            htmlFor={`${type}-last_name`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            Last Name <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-last_name`}
+            name="last_name"
+            value={newAddress.last_name || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, last_name: e.target.value })
+            }
+            placeholder="Enter last name"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.last_name ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            required
+          />
+          {addressFormErrors.last_name && (
+            <p className="text-sm text-red-500">{addressFormErrors.last_name}</p>
+          )}
+        </div>
 
-      {/* Phone Number - Full width on larger screens */}
-      <div className="sm:col-span-2 space-y-2">
-        <Label
-          htmlFor={`${type}-phone_number`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          Phone Number <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-phone_number`}
-          name="phone_number"
-          type="tel"
-          value={newAddress.phone_number || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, phone_number: e.target.value })
-          }
-          placeholder="Enter phone number (10-15 digits)"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.phone_number ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          required
-        />
-        {addressFormErrors.phone_number && (
-          <p className="text-sm text-red-500">{addressFormErrors.phone_number}</p>
-        )}
-      </div>
+        {/* Phone Number */}
+        <div className="sm:col-span-2 space-y-2">
+          <Label
+            htmlFor={`${type}-phone_number`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            Phone Number <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-phone_number`}
+            name="phone_number"
+            type="tel"
+            value={newAddress.phone_number || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, phone_number: e.target.value })
+            }
+            placeholder="Enter phone number (10-15 digits)"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.phone_number ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            required
+          />
+          {addressFormErrors.phone_number && (
+            <p className="text-sm text-red-500">{addressFormErrors.phone_number}</p>
+          )}
+        </div>
 
-      {/* Street Address - Full width on larger screens */}
-      <div className="sm:col-span-2 space-y-2">
-        <Label
-          htmlFor={`${type}-street`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          Street Address <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-street`}
-          name="street"
-          value={newAddress.street || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, street: e.target.value })
-          }
-          placeholder="Enter your street address"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.street ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          required
-        />
-        {addressFormErrors.street && (
-          <p className="text-sm text-red-500">{addressFormErrors.street}</p>
-        )}
-      </div>
+        {/* Street Address */}
+        <div className="sm:col-span-2 space-y-2">
+          <Label
+            htmlFor={`${type}-street`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            Street Address <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-street`}
+            name="street"
+            value={newAddress.street || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, street: e.target.value })
+            }
+            placeholder="Enter your street address"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.street ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            required
+          />
+          {addressFormErrors.street && (
+            <p className="text-sm text-red-500">{addressFormErrors.street}</p>
+          )}
+        </div>
 
-      {/* City */}
-      <div className="space-y-2">
-        <Label
-          htmlFor={`${type}-city`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          City <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-city`}
-          name="city"
-          value={newAddress.city || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, city: e.target.value })
-          }
-          placeholder="Enter your city"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.city ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          required
-        />
-        {addressFormErrors.city && (
-          <p className="text-sm text-red-500">{addressFormErrors.city}</p>
-        )}
-      </div>
+        {/* City */}
+        <div className="space-y-2">
+          <Label
+            htmlFor={`${type}-city`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            City <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-city`}
+            name="city"
+            value={newAddress.city || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, city: e.target.value })
+            }
+            placeholder="Enter your city"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.city ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            required
+          />
+          {addressFormErrors.city && (
+            <p className="text-sm text-red-500">{addressFormErrors.city}</p>
+          )}
+        </div>
 
-      {/* State */}
-      <div className="space-y-2">
-        <Label
-          htmlFor={`${type}-state`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          State <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-state`}
-          name="state"
-          value={newAddress.state || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, state: e.target.value })
-          }
-          placeholder="Enter your state"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.state ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          required
-        />
-        {addressFormErrors.state && (
-          <p className="text-sm text-red-500">{addressFormErrors.state}</p>
-        )}
-      </div>
+        {/* State */}
+        <div className="space-y-2">
+          <Label
+            htmlFor={`${type}-state`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            State <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-state`}
+            name="state"
+            value={newAddress.state || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, state: e.target.value })
+            }
+            placeholder="Enter your state"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.state ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            required
+          />
+          {addressFormErrors.state && (
+            <p className="text-sm text-red-500">{addressFormErrors.state}</p>
+          )}
+        </div>
 
-      {/* Pincode */}
-      <div className="space-y-2">
-        <Label
-          htmlFor={`${type}-pincode`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          Pincode <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-pincode`}
-          name="pincode"
-          value={newAddress.pincode || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, pincode: e.target.value })
-          }
-          placeholder="Enter 6-digit pincode"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.pincode ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          maxLength={6}
-          required
-        />
-        {addressFormErrors.pincode && (
-          <p className="text-sm text-red-500">{addressFormErrors.pincode}</p>
-        )}
-      </div>
+        {/* Pincode */}
+        <div className="space-y-2">
+          <Label
+            htmlFor={`${type}-pincode`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            Pincode <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-pincode`}
+            name="pincode"
+            value={newAddress.pincode || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, pincode: e.target.value })
+            }
+            placeholder="Enter 6-digit pincode"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.pincode ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            maxLength={6}
+            required
+          />
+          {addressFormErrors.pincode && (
+            <p className="text-sm text-red-500">{addressFormErrors.pincode}</p>
+          )}
+        </div>
 
-      {/* Country */}
-      <div className="space-y-2">
-        <Label
-          htmlFor={`${type}-country`}
-          className="text-sm font-semibold text-gray-700"
-        >
-          Country <span className="text-red-500">*</span>
-        </Label>
-        <Input
-          id={`${type}-country`}
-          name="country"
-          value={newAddress.country || ""}
-          onChange={(e) =>
-            setNewAddress({ ...newAddress, country: e.target.value })
-          }
-          placeholder="Enter country"
-          className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            addressFormErrors.country ? "border-red-500 focus:ring-red-500" : ""
-          }`}
-          required
-        />
-        {addressFormErrors.country && (
-          <p className="text-sm text-red-500">{addressFormErrors.country}</p>
-        )}
+        {/* Country */}
+        <div className="space-y-2">
+          <Label
+            htmlFor={`${type}-country`}
+            className="text-sm font-semibold text-gray-700"
+          >
+            Country <span className="text-red-500">*</span>
+          </Label>
+          <Input
+            id={`${type}-country`}
+            name="country"
+            value={newAddress.country || ""}
+            onChange={(e) =>
+              setNewAddress({ ...newAddress, country: e.target.value })
+            }
+            placeholder="Enter country"
+            className={`rounded-lg border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              addressFormErrors.country ? "border-red-500 focus:ring-red-500" : ""
+            }`}
+            required
+          />
+          {addressFormErrors.country && (
+            <p className="text-sm text-red-500">{addressFormErrors.country}</p>
+          )}
+        </div>
       </div>
-    </div>
-    <div className="flex space-x-4 pt-4">
-      <Button
-        variant="outline"
-        onClick={() => setIsAddingAddress(false)}
-        className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg"
-        type="button"
-      >
-        Cancel
-      </Button>
-      <Button
-        type="submit"
-        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-      >
-        Save Address
-      </Button>
-    </div>
+      <div className="flex space-x-4 pt-4">
+        <Button
+          variant="outline"
+          onClick={() => setIsAddingAddress(false)}
+          className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-100 rounded-lg"
+          type="button"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
+        >
+          Save Address
+        </Button>
+      </div>
   </form>
 );
 
