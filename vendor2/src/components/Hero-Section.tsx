@@ -1,6 +1,6 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { motion, useScroll, useTransform } from "framer-motion"
@@ -30,6 +30,7 @@ import {
 } from "lucide-react"
 import CountUp from "react-countup"
 import { useInView } from "react-intersection-observer"
+import DemoRequestModal from "./DemoRequest"
 
 export default function LandingPage() {
   // Animation variants
@@ -60,6 +61,9 @@ export default function LandingPage() {
   const [designModuleRef, designModuleInView] = useInView({ threshold: 0.2, triggerOnce: true })
   const [integrationsRef, integrationsInView] = useInView({ threshold: 0.2, triggerOnce: true })
 
+  // Add this state
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false)
+
   return (
     <>
       {/* Hero Section */}
@@ -84,54 +88,59 @@ export default function LandingPage() {
                 alt="Vendor dashboard preview"
                 width={800}
                 height={500}
-                className="w-full object-cover"
+                className="w-full h-auto object-cover aspect-[16/10]" // Added aspect ratio and height control
               />
               {/* Floating UI Elements */}
+              {/* Monthly Revenue - Top Right */}
               <motion.div
-                className="absolute -top-1 -right-14 p-4 bg-base-100 rounded-xl shadow-lg border border-base-200 rotate-3 "
+                className="absolute top-0 right-0 md:-top-4 md:-right-10 lg:-top-6 lg:-right-14 p-3 md:p-4 bg-base-100 rounded-xl shadow-lg border border-base-200 rotate-3 z-10"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8 }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-success/10 text-success rounded-full">
-                    <TrendingUp size={16} />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 bg-success/10 text-success rounded-full">
+                    <TrendingUp size={14} className="md:w-4 md:h-4 lg:w-5 lg:h-5" />
                   </div>
                   <div>
-                    <p className="text-xs opacity-70">Monthly Revenue</p>
-                    <p className="font-bold text-sm">$12,458.50</p>
+                    <p className="text-[10px] md:text-xs opacity-70">Monthly Revenue</p>
+                    <p className="font-bold text-xs md:text-sm">$12,458.50</p>
                   </div>
                 </div>
               </motion.div>
+
+              {/* New Orders - Bottom Left */}
               <motion.div
-                className="absolute -bottom-1 -left-8 p-4 bg-base-100 rounded-xl shadow-lg border border-base-200 rotate-3"
+                className="absolute bottom-0 left-0 md:-bottom-4 md:-left-6 lg:-bottom-6 lg:-left-8 p-3 md:p-4 bg-base-100 rounded-xl shadow-lg border border-base-200 rotate-3 z-20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1 }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 text-primary rounded-full">
-                    <Package size={16} />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 bg-primary/10 text-primary rounded-full">
+                    <Package size={14} className="md:w-4 md:h-4 lg:w-5 lg:h-5" />
                   </div>
                   <div>
-                    <p className="text-xs opacity-70">New Orders</p>
-                    <p className="font-bold text-sm">24 Today</p>
+                    <p className="text-[10px] md:text-xs opacity-70">New Orders</p>
+                    <p className="font-bold text-xs md:text-sm">24 Today</p>
                   </div>
                 </div>
               </motion.div>
+
+              {/* Active Customers - Bottom Right */}
               <motion.div
-                className="absolute top-55 right-45 p-4 bg-base-100 rounded-xl shadow-lg border border-base-200 rotate-1"
+                className="absolute bottom-0 right-0 md:-bottom-4 md:-right-10 lg:-bottom-6 lg:-right-14 p-3 md:p-4 bg-base-100 rounded-xl shadow-lg border border-base-200 -rotate-2 z-30"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 }}
               >
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-secondary/10 text-secondary rounded-full">
-                    <Users size={16} />
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 bg-secondary/10 text-secondary rounded-full">
+                    <Users size={14} className="md:w-4 md:h-4 lg:w-5 lg:h-5" />
                   </div>
                   <div>
-                    <p className="text-xs opacity-70">Active Customers</p>
-                    <p className="font-bold text-sm">1,234</p>
+                    <p className="text-[10px] md:text-xs opacity-70">Active Customers</p>
+                    <p className="font-bold text-xs md:text-sm">1,234</p>
                   </div>
                 </div>
               </motion.div>
@@ -151,25 +160,25 @@ export default function LandingPage() {
               </p>
             </motion.div>
             <motion.div variants={itemVariant} className="flex flex-col sm:flex-row gap-4">
-              <Link href="/signup" className="btn btn-primary">
-                Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+              <Link href="/plans" className="btn btn-primary">
+                Start Your Journey <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
-              <Link href="/demo" className="btn btn-outline">
+              <button onClick={() => setIsDemoModalOpen(true)} className="btn btn-outline">
                 Request Demo
-              </Link>
+              </button>
             </motion.div>
             <motion.div variants={itemVariant} className="mt-8 flex flex-wrap gap-6">
               <div className="flex items-center gap-2">
                 <div className="badge badge-sm p-1 badge-success">
                   <Check size={12} />
                 </div>
-                <span className="text-sm">No credit card required</span>
+                <span className="text-sm">Transparent pricing</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="badge badge-sm p-1 badge-success">
                   <Check size={12} />
                 </div>
-                <span className="text-sm">14-day free trial</span>
+                <span className="text-sm">30-day money-back guarantee</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="badge badge-sm p-1 badge-success">
@@ -250,7 +259,7 @@ export default function LandingPage() {
                   </motion.li>
                 ))}
               </ul>
-              <Link href="/tshirt-designer" className="btn btn-primary">
+              <Link href="https://vendorhub.vercel.app/dashboard" className="btn btn-primary">
                 See Designer Demo
               </Link>
             </motion.div>
@@ -270,7 +279,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <Image
-                  src="https://picsum.photos/800/600?random=2"
+                  src="/custom.png"
                   alt="T-Shirt Design Module"
                   width={800}
                   height={600}
@@ -453,9 +462,9 @@ export default function LandingPage() {
               { name: "Stripe", icon: <CreditCard className="w-8 h-8" />, color: "primary" },
               { name: "PayPal", icon: <DollarSign className="w-8 h-8" />, color: "info" },
               { name: "Razorpay", icon: <Banknote className="w-8 h-8" />, color: "success" },
-              { name: "Square", icon: <LayoutGrid className="w-8 h-8" />, color: "warning" },
-              { name: "Adyen", icon: <Globe className="w-8 h-8" />, color: "error" },
-              { name: "Klarna", icon: <CreditCard className="w-8 h-8" />, color: "secondary" }
+              { name: "PayU", icon: <LayoutGrid className="w-8 h-8" />, color: "warning" },
+              { name: "Paytm", icon: <Globe className="w-8 h-8" />, color: "error" },
+              { name: "Cashfree", icon: <CreditCard className="w-8 h-8" />, color: "secondary" }
             ].map((gateway, index) => (
               <motion.div
                 key={index}
@@ -503,11 +512,11 @@ export default function LandingPage() {
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[
               { name: "DHL", icon: <Truck className="w-8 h-8" />, color: "warning" },
-              { name: "FedEx", icon: <Plane className="w-8 h-8" />, color: "primary" },
-              { name: "UPS", icon: <Package className="w-8 h-8" />, color: "error" },
-              { name: "USPS", icon: <Mail className="w-8 h-8" />, color: "info" },
-              { name: "ShipStation", icon: <BarChart3 className="w-8 h-8" />, color: "success" },
-              { name: "EasyPost", icon: <PackageOpen className="w-8 h-8" />, color: "secondary" }
+              { name: "Delhivery", icon: <Plane className="w-8 h-8" />, color: "primary" },
+              { name: "Shiprocket", icon: <Package className="w-8 h-8" />, color: "error" },
+              { name: "DTDC", icon: <Mail className="w-8 h-8" />, color: "info" },
+              { name: "FedEx", icon: <BarChart3 className="w-8 h-8" />, color: "success" },
+              { name: "Bluedart", icon: <PackageOpen className="w-8 h-8" />, color: "secondary" }
             ].map((shipper, index) => (
               <motion.div
                 key={index}
@@ -577,9 +586,9 @@ export default function LandingPage() {
                   </motion.li>
                 ))}
               </ul>
-              <Link href="/inventory-management" className="btn btn-primary">
+              {/* <Link href="/inventory-management" className="btn btn-primary">
                 Explore Inventory Tools
-              </Link>
+              </Link> */}
             </motion.div>
             <motion.div
               className="lg:w-1/2 relative"
@@ -718,9 +727,9 @@ export default function LandingPage() {
           </div>
 
           <div className="flex justify-center mt-12">
-            <Link href="/analytics" className="btn btn-outline btn-wide">
+            {/* <Link href="/analytics" className="btn btn-outline btn-wide">
               Explore Analytics Features
-            </Link>
+            </Link> */}
           </div>
         </div>
       </div>
@@ -866,13 +875,13 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Link href="/plans" className="btn btn-primary btn-lg">
-                  Start Free Trial <ChevronRight className="ml-1 h-5 w-5" />
+                  Grow with Us <ChevronRight className="ml-1 h-5 w-5" />
                 </Link>
-                <Link href="/plans" className="btn btn-outline btn-lg">
-                  View Pricing
-                </Link>
+                <button onClick={() => setIsDemoModalOpen(true)} className="btn btn-outline btn-lg">
+                  Request Demo
+                </button>
               </div>
-              <p className="mt-4 text-sm text-base-content/50">No credit card needed. 14-day free trial.</p>
+              <p className="mt-4 text-sm text-base-content/50">30-day money-back guarantee</p>
             </div>
           </motion.div>
         </div>
@@ -972,6 +981,8 @@ export default function LandingPage() {
           </Link>
         </div>
       </footer>
+
+      <DemoRequestModal isOpen={isDemoModalOpen} onClose={() => setIsDemoModalOpen(false)} />
     </>
   )
 }

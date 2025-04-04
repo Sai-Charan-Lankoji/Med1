@@ -11,9 +11,11 @@ const { swaggerSpecs } = require("./swagger/swagger");
 const { listStores } = require("./services/store.service.js");
 const { startBillingScheduler } = require("./schedulers/billingScheduler");
 const notificationService = require("./services/notification.service.js");
+const demoRequestService = require('./services/demo.service.js');
 const defineRelationships = require("./models/relationship.model.js");
 const cookieParser = require("cookie-parser");
 const fileRoutes = require("./routes/file.route.js");
+const demoRequestRoutes = require('./routes/demo.route.js');
 // Initialize Express app and HTTP server
 const app = express();
 const server = http.createServer(app);
@@ -86,6 +88,10 @@ io.on("connection", (socket) => {
     socket.join(`vendor_${vendorId}`);
     console.log(`Client ${socket.id} joined room: vendor_${vendorId}`);
   });
+  socket.on("joinAdminRoom", () => {
+    socket.join("admin_room");
+    console.log(`Client ${socket.id} joined admin room`);
+  });
   socket.on("disconnect", () => {
     console.log("Client disconnected:", socket.id);
   });
@@ -105,6 +111,8 @@ const startServer = async () => {
     // Initialize services
     startBillingScheduler();
     notificationService.setSocketIo(io);
+    
+    demoRequestService.setSocketIo(io);
 
     // Ensure allowed origins are populated before starting
     await updateAllowedOrigins();
@@ -165,6 +173,7 @@ const startServer = async () => {
     app.use("/api/stock", require("./routes/stock.route.js"));
     app.use("/api/notifications", require("./routes/notification.route.js"));
     app.use("/api/transporters", require("./routes/transport.route.js"));
+    app.use('/api/demo-requests', demoRequestRoutes);
 
     // Periodic update of allowed origins
     setInterval(updateAllowedOrigins, 60000);

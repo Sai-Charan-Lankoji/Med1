@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { FaUsers, FaDollarSign, FaCog, FaChevronDown } from "react-icons/fa";
+import { FaUsers, FaDollarSign, FaCog, FaChevronDown, FaPlayCircle } from "react-icons/fa";
 import { LogOut } from "lucide-react";
 import Image from "next/image";
 import clsx from "clsx";
@@ -58,6 +58,7 @@ export default function Sidebar({ user }: { user: User }) {
     { href: "/admin/vendors", label: "Vendors", icon: FaUsers },
     { href: "/admin/plans", label: "Plans", icon: FaDollarSign },
     { href: "/admin/billingServices", label: "Billing Services", icon: FaCog },
+    { href: "/admin/demo-requests", label: "Demo Requests", icon: FaPlayCircle },
   ];
 
   return (

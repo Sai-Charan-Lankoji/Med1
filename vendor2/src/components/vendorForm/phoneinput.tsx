@@ -47,12 +47,12 @@ export function PhoneInput({
 
   const handleCountrySelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value
-    setPhoneValue('') // Reset phone input when country changes
-    setIsValid(true)  // Reset validation state
+    setPhoneValue('') 
+    setIsValid(true)  
     onCountryChange(value)
   }
 
-  // Update local phone value when prop changes
+  // Updates local phone value when prop changes
   useEffect(() => {
     setPhoneValue(value)
   }, [value])

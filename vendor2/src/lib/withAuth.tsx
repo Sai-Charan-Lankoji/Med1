@@ -14,8 +14,8 @@ const withAuth = <P extends object>(
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-      const vendorId = typeof window !== "undefined" ? sessionStorage.getItem("vendor_id") : null;
-       if (!vendorId) {
+      // const vendorId = typeof window !== "undefined" ? sessionStorage.getItem("vendor_id") : null;
+       if (!vendor_id) {
         router.replace("/");
       } 
       else {

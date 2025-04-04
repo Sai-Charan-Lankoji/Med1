@@ -7,7 +7,7 @@ export const BusinessTypes = [
   { value: "Paper Design Printing", label: "Paper Design Printing" },
 ] as const;
 
-// Address schema for reuse in vendor and registration addresses
+// Address schema 
 const AddressSchema = z.object({
   address_1: z.string().nonempty("Address 1 is required"),
   address_2: z.string().optional(),
