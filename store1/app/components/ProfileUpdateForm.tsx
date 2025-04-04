@@ -647,80 +647,99 @@ export default function ProfileSettings() {
 
         {/* Address Dialog */}
         {isAddressDialogOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl p-6 w-full max-w-lg">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">{editingAddress ? "Edit Address" : "Add Address"}</h2>
-                <button onClick={() => setIsAddressDialogOpen(false)} className="text-gray-600 hover:text-gray-800">
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <form onSubmit={addressForm.handleSubmit(handleAddressSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <FormField control={addressForm.control} name="first_name" label="First Name" error={addressForm.formState.errors.first_name?.message} />
-                  <FormField control={addressForm.control} name="last_name" label="Last Name" error={addressForm.formState.errors.last_name?.message} />
-                  <FormField control={addressForm.control} name="phone_number" label="Phone Number" type="tel" error={addressForm.formState.errors.phone_number?.message} />
-                  <FormField control={addressForm.control} name="street" label="Street" error={addressForm.formState.errors.street?.message} />
-                  <FormField control={addressForm.control} name="city" label="City" error={addressForm.formState.errors.city?.message} />
-                  <FormField control={addressForm.control} name="state" label="State" error={addressForm.formState.errors.state?.message} />
-                  <FormField control={addressForm.control} name="pincode" label="Pincode" error={addressForm.formState.errors.pincode?.message} />
-                  <FormField control={addressForm.control} name="country" label="Country" error={addressForm.formState.errors.country?.message} />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Address Type</label>
-                  <Controller
-                    control={addressForm.control}
-                    name="address_type"
-                    render={({ field }) => (
-                      <select
-                        {...field}
-                        className="w-full px-4 py-2 border rounded-lg text-black"
-                      >
-                        <option value="shipping">Shipping</option>
-                        <option value="billing">Billing</option>
-                      </select>
-                    )}
-                  />
-                  {addressForm.formState.errors.address_type && (
-                    <p className="text-sm text-red-500 mt-1">{addressForm.formState.errors.address_type.message}</p>
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Controller
-                    control={addressForm.control}
-                    name="is_default"
-                    render={({ field }) => (
-                      <input
-                        type="checkbox"
-                        {...field}
-                        checked={field.value}
-                        onChange={(e) => field.onChange(e.target.checked)}
-                        className="h-4 w-4 text-indigo-600 border-gray-300 rounded"
-                        value={field.value ? "true" : "false"}
-                      />
-                    )}
-                  />
-                  <label className="text-sm font-medium text-gray-700">Set as Default</label>
-                </div>
-                <div className="flex justify-end space-x-4">
-                  <button
-                    type="button"
-                    onClick={() => setIsAddressDialogOpen(false)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400"
-                  >
-                    {isLoading ? <Loader2 className="animate-spin inline mr-2" /> : editingAddress ? "Update" : "Add"}
-                  </button>
-                </div>
-              </form>
-            </div>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4 sm:px-6">
+        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-xl flex flex-col">
+          {/* Header */}
+          <div className="flex justify-between items-center px-6 py-4 border-b sticky top-0 bg-white z-10">
+            <h2 className="text-xl font-semibold text-gray-900">
+              {editingAddress ? "Edit Address" : "Add Address"}
+            </h2>
+            <button
+              onClick={() => setIsAddressDialogOpen(false)}
+              className="text-gray-500 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded"
+              aria-label="Close"
+            >
+              <X className="w-6 h-6" />
+            </button>
           </div>
+      
+          {/* Scrollable Form Body */}
+          <div className="overflow-y-auto px-6 py-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+            <form onSubmit={addressForm.handleSubmit(handleAddressSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField control={addressForm.control} name="first_name" label="First Name" error={addressForm.formState.errors.first_name?.message} />
+                <FormField control={addressForm.control} name="last_name" label="Last Name" error={addressForm.formState.errors.last_name?.message} />
+                <FormField control={addressForm.control} name="phone_number" label="Phone Number" type="tel" error={addressForm.formState.errors.phone_number?.message} />
+                <FormField control={addressForm.control} name="street" label="Street" error={addressForm.formState.errors.street?.message} />
+                <FormField control={addressForm.control} name="city" label="City" error={addressForm.formState.errors.city?.message} />
+                <FormField control={addressForm.control} name="state" label="State" error={addressForm.formState.errors.state?.message} />
+                <FormField control={addressForm.control} name="pincode" label="Pincode" error={addressForm.formState.errors.pincode?.message} />
+                <FormField control={addressForm.control} name="country" label="Country" error={addressForm.formState.errors.country?.message} />
+              </div>
+      
+              {/* Address Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address Type</label>
+                <Controller
+                  control={addressForm.control}
+                  name="address_type"
+                  render={({ field }) => (
+                    <select
+                      {...field}
+                      className="w-full px-4 py-2 border rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    >
+                      <option value="shipping">Shipping</option>
+                      <option value="billing">Billing</option>
+                    </select>
+                  )}
+                />
+                {addressForm.formState.errors.address_type && (
+                  <p className="text-sm text-red-500 mt-1">{addressForm.formState.errors.address_type.message}</p>
+                )}
+              </div>
+      
+              {/* Default Checkbox */}
+              <div className="flex items-center space-x-2">
+                <Controller
+                  control={addressForm.control}
+                  name="is_default"
+                  render={({ field }) => (
+                    <input
+                      type="checkbox"
+                      {...field}
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                      value={field.value ? "true" : "false"}
+                    />
+                  )}
+                />
+                <label className="text-sm font-medium text-gray-700">Set as Default</label>
+              </div>
+            </form>
+          </div>
+      
+          {/* Footer */}
+          <div className="flex justify-end items-center gap-4 px-6 py-4 border-t bg-white sticky bottom-0 z-10">
+            <button
+              type="button"
+              onClick={() => setIsAddressDialogOpen(false)}
+              className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="address-form"
+              disabled={isLoading}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+            >
+              {isLoading ? <Loader2 className="animate-spin inline w-4 h-4 mr-2" /> : editingAddress ? "Update" : "Add"}
+            </button>
+          </div>
+        </div>
+      </div>
+      
         )}
 
         {/* Delete Confirmation Dialog */}
