@@ -134,9 +134,7 @@ const NavigationBar = () => {
 
   return (
     <>
-      {/* Modern DaisyUI 5 Navbar */}
       <div className="navbar bg-base-100 shadow-md border-b border-base-300">
-        {/* Navbar start - Brand/Logo section */}
         <div className="navbar-start ml-2">
           <Link href={isAuthenticated ? "/vendor" : "/"} className="btn btn-ghost normal-case text-xl text-primary">
             <div className="flex items-center gap-2">
@@ -146,12 +144,7 @@ const NavigationBar = () => {
           </Link>
         </div>
 
-      
-        
-
-        {/* Navbar end - profile and notification elements */}
         <div className="navbar-end gap-2 mr-2">
-          {/* Theme selector */}
           <select
             value={theme}
             onChange={(e) => setTheme(e.target.value)}
@@ -166,12 +159,6 @@ const NavigationBar = () => {
 
           {isAuthenticated ? (
             <>
-              {/* Help/Support button - only for authenticated users */}
-              {/* <label htmlFor="support-modal" className="btn btn-ghost btn-circle">
-                <HelpCircle className="h-5 w-5" />
-              </label> */}
-
-              {/* Notifications dropdown - only for authenticated users */}
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost btn-circle">
                   <div className="indicator">
@@ -296,7 +283,6 @@ const NavigationBar = () => {
                 </div>
               </div>
 
-              {/* User profile dropdown - for authenticated users */}
               <div className="dropdown dropdown-end">
                 <label tabIndex={0} className="btn btn-ghost">
                   <div className="flex items-center gap-2">
@@ -347,7 +333,6 @@ const NavigationBar = () => {
               </div>
             </>
           ) : (
-            /* Login button - for non-authenticated users */
             pathname !== "/login" && (
               <Link href="/login" className="btn btn-outline btn-primary">
                 <UserRound className="h-4 w-4 mr-2" />
@@ -357,44 +342,6 @@ const NavigationBar = () => {
           )}
         </div>
       </div>
-
-      {/* Support Modal - Using DaisyUI modal */}
-      {/* <input type="checkbox" id="support-modal" className="modal-toggle" />
-      <div className="modal">
-        <div className="modal-box">
-          <form>
-            <h3 className="font-bold text-lg">Support</h3>
-            <p className="py-2 text-sm text-base-content/70">How can we help? We usually respond in a few hours</p>
-            
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text font-medium">Subject</span>
-              </label>
-              <input 
-                type="text" 
-                placeholder="What is it about?" 
-                className="input input-bordered w-full" 
-              />
-            </div>
-            
-            <div className="form-control w-full">
-              <label className="label">
-                <span className="label-text font-medium">Message</span>
-              </label>
-              <textarea 
-                className="textarea textarea-bordered h-24" 
-                placeholder="Write your message here..."
-              ></textarea>
-            </div>
-            
-            <div className="modal-action">
-              <label htmlFor="support-modal" className="btn btn-outline">Cancel</label>
-              <button type="submit" className="btn btn-primary">Send Message</button>
-            </div>
-          </form>
-        </div>
-        <label className="modal-backdrop" htmlFor="support-modal"></label>
-      </div> */}
     </>
   );
 };
