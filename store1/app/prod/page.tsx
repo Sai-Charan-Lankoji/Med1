@@ -11,7 +11,6 @@ import { useStore } from "@/context/storecontext";
 import { useGetStandardProducts } from "../hooks/useGetStandardProducts";
 import StandardProducts from "../components/StandardProdcuts";
 import ProductDetailModal from "../components/ProductDetailModal";
-import axios from "axios";
 import { NEXT_PUBLIC_API_URL } from "@/constants/constants";
 
 const InfiniteScrollContainer: React.FC<{ children: React.ReactNode }> = ({
@@ -102,10 +101,21 @@ const ProductGallery: React.FC = () => {
 
   const logProductView = async (productId: string, storeId: string) => {
     try {
-      await axios.post(`${NEXT_PUBLIC_API_URL}/api/product-view`, {
-        product_id: productId,
-        store_id: storeId, // Changed to store_id
+      const response = await fetch(`${NEXT_PUBLIC_API_URL}/api/product-view`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          product_id: productId,
+          store_id: storeId, // Changed to store_id
+        }),
       });
+  
+      if (!response.ok) {
+        throw new Error(`Failed to log product view: ${response.statusText}`);
+      }
+  
       console.log(`Product view logged for ${productId}`);
     } catch (error) {
       console.error("Failed to log product view:", error);

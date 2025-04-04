@@ -41,17 +41,17 @@ const CartPage = () => {
 
   const allCartItems: ICartItem[] = [...designableCartItems, ...getStandardCartItems()];
 
-  useEffect(() => {
-    const fetchAuthToken = async () => {
-      const res = await fetch("/api/auth-token");
-      const data = await res.json();
-      setAuthToken(data.authToken);
-    };
-    fetchAuthToken();
-  }, []);
+  // useEffect(() => {
+  //   const fetchAuthToken = async () => {
+  //     const res = await fetch("/api/auth-token");
+  //     const data = await res.json();
+  //     setAuthToken(data.authToken);
+  //   };
+  //   fetchAuthToken();
+  // }, []);
 
   useEffect(() => {
-    if (authToken && !isCartLoaded && !loading) {
+    if (!isCartLoaded && !loading) {
       fetchCartData()
         .then(() => setIsCartLoaded(true))
         .catch((err) => {
@@ -60,7 +60,7 @@ const CartPage = () => {
           console.error("Cart fetch error:", err);
         });
     }
-  }, [authToken, fetchCartData, isCartLoaded, loading]);
+  }, [fetchCartData, isCartLoaded, loading]);
 
   const toggleViewMode = (itemId: string) => {
     setImageViewMode((prev) => ({
@@ -183,11 +183,11 @@ const CartPage = () => {
       toast.error("Please select at least one item");
       return;
     }
-    if (!authToken) {
-      setError("Please log in to proceed");
-      toast.error("Please log in to proceed");
-      return;
-    }
+    // if (!authToken) {
+    //   setError("Please log in to proceed");
+    //   toast.error("Please log in to proceed");
+    //   return;
+    // }
     localStorage.setItem("selectedCartItems", JSON.stringify([...selectedItems]));
     router.push("/order");
   };
@@ -546,13 +546,13 @@ const CartPage = () => {
                 <Button
                   className="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2 transition-all duration-200 shadow-md disabled:bg-gray-400 disabled:cursor-not-allowed"
                   onClick={handleProceedToCheckout}
-                  disabled={loading || selectedItems.size === 0 || !authToken}
+                  disabled={loading || selectedItems.size === 0 }
                 >
                   Proceed to Checkout
                 </Button>
-                {error && (
+                {/* {error && (
                   <p className="text-red-500 text-sm mt-4 text-center bg-red-50 p-2 rounded-lg border border-red-200">{error}</p>
-                )}
+                )} */}
               </div>
             </div>
           )}

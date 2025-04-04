@@ -5,7 +5,6 @@ import Navbar from "./navbar/page";
 import React from "react";
 import { UserProvider } from "@/context/userContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { MedusaProvider } from "medusa-react";
 import { SvgProvider } from "@/context/svgcontext";
 import { store } from "../reducer/store";
 import { Provider } from "react-redux";
